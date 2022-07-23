@@ -6,7 +6,7 @@ A web app for viewing artistic gymnastics results from local New Zealand Competi
 - [SvelteKit](https://kit.svelte.dev/)
 - [Tailwind CSS](https://tailwindcss.com/docs/guides/sveltekit)
 - [daisyUI](https://daisyui.com)
-- ['gridjs-svelte'](https://github.com/iamyuu/gridjs-svelte)
+- [gridjs-svelte](https://github.com/iamyuu/gridjs-svelte)
 
 ## Data Sources
 
