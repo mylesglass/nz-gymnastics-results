@@ -10,7 +10,7 @@
 </div>
 
 <div class="overflow-x-auto mx-4">
-    <WagTable perPage={perPage} data={dataset}/>
+    <WagTable perPage={perPage} dataset={dataset}/>
 </div>
 
 <!-- Modal -->

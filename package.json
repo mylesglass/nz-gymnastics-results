@@ -29,6 +29,7 @@
 	"dependencies": {
 		"daisyui": "^2.19.1",
 		"gridjs": "^5.0.2",
-		"gridjs-svelte": "^2.1.1"
+		"gridjs-svelte": "^2.1.1",
+		"svelte-csv": "^1.2.8"
 	}
 }
