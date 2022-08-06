@@ -80,7 +80,8 @@
 		},
 		{
 			id: 'competition',
-			name: 'Competition'
+			name: 'Competition',
+            formatter: (cell) => `${cell.substring(0, 27)}...`
 		},
 		{
 			id: 'round-type',
@@ -91,7 +92,8 @@
 			columns: [
 				{
 					id: 'v-rank',
-					name: 'Rank'
+					name: 'Rank',
+                    width: '30px'
 				},
 				{
 					id: 'v-d',
@@ -160,23 +162,26 @@
 		}
 	];
 
-	let currentViewMode = 'simple';
-	let currentColumns = simpleColumns;
-
-	const simpleStyle = {
+    const simpleStyle = {
 		td: {
 			'font-size': '1em'
 		}
 	};
 
 	const detailedStyle = {
+        th: {
+            'padding': '2px 2px',
+            'font-size': '0.7em'
+        },
 		td: {
 			'font-size': '0.7em',
-			'padding': '2px 2px'
+			'padding': '6px 2px'
 		}
 	};
 
-	let currentStyle = simpleStyle;
+	let currentViewMode = 'detailed';
+	let currentColumns = detailedColumns;
+    let currentStyle = detailedStyle;
 
 	const tableHeader = [
 		'gnz-id',
@@ -293,7 +298,6 @@
 									type="radio"
 									bind:group={currentViewMode}
 									class="radio checked:bg-blue-500"
-									checked
 									value={'simple'}
 									on:change={viewModeToggle}
 								/>
@@ -306,6 +310,7 @@
 									type="radio"
 									bind:group={currentViewMode}
 									class="radio checked:bg-red-500"
+                                    checked
 									value={'detailed'}
 									on:change={viewModeToggle}
 								/>
