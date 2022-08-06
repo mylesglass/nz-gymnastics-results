@@ -8,6 +8,9 @@ A web app for viewing artistic gymnastics results from local New Zealand Competi
 - [daisyUI](https://daisyui.com)
 - [gridjs-svelte](https://github.com/iamyuu/gridjs-svelte)
 
+## To do
+- [ ] loader for when data is being loaded/processed
+
 ## Data Sources
 
 Easily the trickiest bit of this project, getting the data into a consistent format. All gymnastics results are publically available via the [Gymnastics NZ Event Calendar](https://www.gymnasticsnz.com/events-calendar-results/), but often in .pdf or .xlsx. Originally I tried to create a scraper to pull data from the .pdfs, but this turned to custard when the format of ScoreHolders exported .pdf changed and broke my scraper. 
