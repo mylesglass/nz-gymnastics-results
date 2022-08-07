@@ -10,8 +10,8 @@
 			<p class="py-6">
 				{description}
 			</p>
-			<a href="/wag" class="btn btn-primary">WAG</a>
-			<button href="/mag" class="btn btn-primary">MAG</button>
+			<a href="/wag" class="btn">WAG</a>
+			<button href="/mag" class="btn" disabled>MAG</button>
 		</div>
 	</div>
 </div>
