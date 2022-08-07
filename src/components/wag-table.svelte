@@ -1,7 +1,6 @@
 <script>
 	import Grid from 'gridjs-svelte';
 	import { csvGenerator } from '../csvGenerator';
-	import { onMount } from 'svelte';
 
 	let grid;
 
@@ -62,10 +61,8 @@
 		},
 		{
 			id: 'club',
-			name: 'Club',
-			width: '200px'
+			name: 'Club'
 		},
-		,
 		{
 			id: 'level',
 			name: 'STEP'
@@ -98,22 +95,14 @@
 					id: 'v-d',
 					name: 'D',
 					formatter: (cell) => {
-						if (isNaN(cell)) {
-							return cell;
-						} else {
-							return `${cell.toFixed(1)}`;
-						}
+						return formatCell(cell, 1);
 					}
 				},
 				{
 					id: 'v-total',
 					name: 'Total',
 					formatter: (cell) => {
-						if (isNaN(cell)) {
-							return cell;
-						} else {
-							return `${cell.toFixed(3)}`;
-						}
+						return formatCell(cell, 3);
 					}
 				}
 			]
@@ -129,22 +118,14 @@
 					id: 'ub-d',
 					name: 'D',
 					formatter: (cell) => {
-						if (isNaN(cell)) {
-							return cell;
-						} else {
-							return `${cell.toFixed(1)}`;
-						}
+						return formatCell(cell, 1);
 					}
 				},
 				{
 					id: 'ub-total',
 					name: 'Total',
 					formatter: (cell) => {
-						if (isNaN(cell)) {
-							return cell;
-						} else {
-							return `${cell.toFixed(3)}`;
-						}
+						return formatCell(cell, 3);
 					}
 				}
 			]
@@ -160,22 +141,14 @@
 					id: 'bb-d',
 					name: 'D',
 					formatter: (cell) => {
-						if (isNaN(cell)) {
-							return cell;
-						} else {
-							return `${cell.toFixed(1)}`;
-						}
+						return formatCell(cell, 1);
 					}
 				},
 				{
 					id: 'bb-total',
 					name: 'Total',
 					formatter: (cell) => {
-						if (isNaN(cell)) {
-							return cell;
-						} else {
-							return `${cell.toFixed(3)}`;
-						}
+						return formatCell(cell, 3);
 					}
 				}
 			]
@@ -191,22 +164,14 @@
 					id: 'fx-d',
 					name: 'D',
 					formatter: (cell) => {
-						if (isNaN(cell)) {
-							return cell;
-						} else {
-							return `${cell.toFixed(1)}`;
-						}
+						return formatCell(cell, 1);
 					}
 				},
 				{
 					id: 'fx-total',
 					name: 'Total',
 					formatter: (cell) => {
-						if (isNaN(cell)) {
-							return cell;
-						} else {
-							return `${cell.toFixed(3)}`;
-						}
+						return formatCell(cell, 3);
 					}
 				}
 			]
@@ -222,16 +187,20 @@
 					id: 'aa-score',
 					name: 'AA Score',
 					formatter: (cell) => {
-						if (isNaN(cell)) {
-							return cell;
-						} else {
-							return `${cell.toFixed(3)}`;
-						}
+						return formatCell(cell, 3);
 					}
 				}
 			]
 		}
 	];
+
+	function formatCell (cell, decimalPlace) {
+		if (isNaN(cell) || !cell) {
+			return 'DNS';
+		} else {
+			return `${Number(cell).toFixed(decimalPlace)}`;
+		}
+	}
 
 	const simpleStyle = {
 		td: {
