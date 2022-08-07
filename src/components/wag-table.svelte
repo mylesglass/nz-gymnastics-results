@@ -328,7 +328,6 @@
 		'Gymsport Manukau',
 		'Hamilton City Gymnastics',
 		'Harbour City Gymnastics',
-		'Harbour',
 		'Hastings Gymnastics Club',
 		'Howick Gymnastics Club',
 		'Huntly Gymnastics Club',
