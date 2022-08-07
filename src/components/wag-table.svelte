@@ -42,12 +42,12 @@
 			id: 'aa-score',
 			name: 'AA',
 			formatter: (cell) => {
-						if(isNaN(cell)) {
-							return cell
-						} else {
-							return `${cell.toFixed(3)}`
-						}
-					}
+				if (isNaN(cell)) {
+					return cell;
+				} else {
+					return `${cell.toFixed(3)}`;
+				}
+			}
 		}
 	];
 
@@ -63,7 +63,7 @@
 		{
 			id: 'club',
 			name: 'Club',
-			width : '200px'
+			width: '200px'
 		},
 		,
 		{
@@ -79,10 +79,9 @@
 			id: 'competition',
 			name: 'Competition',
 			formatter: (cell) => {
-				if(cell.length > 28) {
-					return `${cell.substring(0, 28)}...`
-				}	
-				else {
+				if (cell.length > 28) {
+					return `${cell.substring(0, 28)}...`;
+				} else {
 					return cell;
 				}
 			},
@@ -99,10 +98,10 @@
 					id: 'v-d',
 					name: 'D',
 					formatter: (cell) => {
-						if(isNaN(cell)) {
-							return cell
+						if (isNaN(cell)) {
+							return cell;
 						} else {
-							return `${cell.toFixed(1)}`
+							return `${cell.toFixed(1)}`;
 						}
 					}
 				},
@@ -110,10 +109,10 @@
 					id: 'v-total',
 					name: 'Total',
 					formatter: (cell) => {
-						if(isNaN(cell)) {
-							return cell
+						if (isNaN(cell)) {
+							return cell;
 						} else {
-							return `${cell.toFixed(3)}`
+							return `${cell.toFixed(3)}`;
 						}
 					}
 				}
@@ -130,10 +129,10 @@
 					id: 'ub-d',
 					name: 'D',
 					formatter: (cell) => {
-						if(isNaN(cell)) {
-							return cell
+						if (isNaN(cell)) {
+							return cell;
 						} else {
-							return `${cell.toFixed(1)}`
+							return `${cell.toFixed(1)}`;
 						}
 					}
 				},
@@ -141,10 +140,10 @@
 					id: 'ub-total',
 					name: 'Total',
 					formatter: (cell) => {
-						if(isNaN(cell)) {
-							return cell
+						if (isNaN(cell)) {
+							return cell;
 						} else {
-							return `${cell.toFixed(3)}`
+							return `${cell.toFixed(3)}`;
 						}
 					}
 				}
@@ -161,10 +160,10 @@
 					id: 'bb-d',
 					name: 'D',
 					formatter: (cell) => {
-						if(isNaN(cell)) {
-							return cell
+						if (isNaN(cell)) {
+							return cell;
 						} else {
-							return `${cell.toFixed(1)}`
+							return `${cell.toFixed(1)}`;
 						}
 					}
 				},
@@ -172,10 +171,10 @@
 					id: 'bb-total',
 					name: 'Total',
 					formatter: (cell) => {
-						if(isNaN(cell)) {
-							return cell
+						if (isNaN(cell)) {
+							return cell;
 						} else {
-							return `${cell.toFixed(3)}`
+							return `${cell.toFixed(3)}`;
 						}
 					}
 				}
@@ -192,10 +191,10 @@
 					id: 'fx-d',
 					name: 'D',
 					formatter: (cell) => {
-						if(isNaN(cell)) {
-							return cell
+						if (isNaN(cell)) {
+							return cell;
 						} else {
-							return `${cell.toFixed(1)}`
+							return `${cell.toFixed(1)}`;
 						}
 					}
 				},
@@ -203,10 +202,10 @@
 					id: 'fx-total',
 					name: 'Total',
 					formatter: (cell) => {
-						if(isNaN(cell)) {
-							return cell
+						if (isNaN(cell)) {
+							return cell;
 						} else {
-							return `${cell.toFixed(3)}`
+							return `${cell.toFixed(3)}`;
 						}
 					}
 				}
@@ -223,15 +222,15 @@
 					id: 'aa-score',
 					name: 'AA Score',
 					formatter: (cell) => {
-						if(isNaN(cell)) {
-							return cell
+						if (isNaN(cell)) {
+							return cell;
 						} else {
-							return `${cell.toFixed(3)}`
+							return `${cell.toFixed(3)}`;
 						}
 					}
 				}
 			]
-		},
+		}
 	];
 
 	const simpleStyle = {
@@ -298,47 +297,132 @@
 	let drawerToggle = false;
 
 	// selection variables
-	let selectedClub = 'All'
+	let selectedClub = 'All';
 	let selectedRegion = 'All';
 	let selectedCompetition = 'All';
 	let selectedLevel = 'All';
 	let selectedDivision = 'All';
 
-	let lookupObj;
-
 	let clubs = [
 		'All',
+		'ARGOS Gymnastics Club',
+		'Affinity Gymnastics Academy',
+		'Aspiring GymSports',
+		'Aspiring Gymsports',
+		'Balclutha Gymnastics Club',
+		'Blenheim Gymnastics Club',
+		'Capital Gymnastics',
+		'Central Gymnastics',
+		'College Street Gymnastics Club',
+		'Counties Manukau Gymnastics',
+		'Dunedin Gymnastics Academy',
+		'Dynamic Gymnastic Sports',
+		'Dynamic Gymnastics Sports',
+		'Eastern Suburbs Gymnastics Club',
+		'Fantastic Gymnastics',
+		'Franklin Gymnastics',
+		'Gisborne Gymnastics Club',
+		'Gore Gymnastics Club',
+		'Gymnastics Nelson',
+		'Gymnastics Waitara',
+		'Gymsport Manukau',
+		'Hamilton City Gymnastics',
+		'Harbour City Gymnastics',
+		'Harbour',
+		'Hastings Gymnastics Club',
+		'Howick Gymnastics Club',
+		'Huntly Gymnastics Club',
+		'Hutt Valley Gymnastics',
+		'ICE Gymsports North Canterbury',
+		'Impact Gymsports Academy',
+		'Invercargill Gymnastics Club',
+		'Invert Sports Centre',
+		'Kaitaia Gymnastics Club',
+		'Kapiti Gymnastics',
+		'Kerikeri Gymnastics Club',
+		'Levin Gymnastics Club',
+		'Manawatu Gymsports',
+		'Mid Island Gym Sports',
+		'Mt Tauhara Gymnastics Club',
+		'North Harbour Gymnastics',
+		'Olympia Gymnastics Sport',
+		'Omni Gymnastics Centre',
+		'Onslow Gymnastics Club',
+		'Pathfinders Gymnastics Club',
+		'Piako Gymnastics Club',
+		'Queenstown Gymnastics Club',
+		'Rimutaka Gymsports',
+		'South Canterbury Gymsports',
+		'St Bernadettes Gymnastics Club',
+		'Te Awamutu',
+		'Te Puke Gymsports',
+		'Te Wero Gymnastics',
+		'Timaru Gymnastics Club',
+		'Tri Star Gymnastics',
+		'Turn and Gymnastics Circle',
+		'Twisters Tawa Gymnastics Club',
+		'Waimate Gymnastics Club',
+		'Waitakere Gymnastics Club',
+		'West Melton Gymnastics Club',
+		'Whanganui Boys & Girls Gym Club',
+		'Whangarei Academy of Gymnastics'
 	];
-	
-	let competitions, divisions, levels, regions = {};
 
-	onMount(() => {
-		let lookup = {};
-		for (let i = 0; i < dataset.length; i++) {
-			let jsontext = `{"club" : ${dataset[i].club}, "competition": ${dataset[i].competition}, "division": ${dataset[i].division}, "level": ${dataset[i].level}}`;
-			lookup[jsontext] = true;
-		}
-		lookupObj = Object.keys(lookup);
-		console.log(lookupObj);
-	})
+	let competitions = [
+		'All',
+		'Levin',
+		'2022 Tri Star Elementary Championships',
+		'2022 Te Wero Whakataetae',
+		'South Island Gymnastics Championships 2022',
+		'Rimutaka Junior Champs 2022',
+		'Midlands Junior Artistic Competition 2022',
+		'Kapiti Championships',
+		'Hastings Gymnastics Junior Competition 2022',
+		'Hamilton City Junior Artistic Competition 2022',
+		'College Street Junior Competition 2022',
+		'2022 New Zealand Gymnastics Championships - Artistic',
+		'Canterbury Intermediate & Senior Championships 2022',
+		'Auckland Manukau Champs',
+		'2022 Central Champs',
+		'Capital Juniors 2022',
+		'Midlands Junior-Senior Artistic Championships 2022',
+		'2022 Tri Star Championships and NZSS',
+		'Southern Artistic Championships Competition',
+		'WAGS Senior Club Competition ART (Qualifier)',
+		'Manawatu Senior Opens',
+		'Gymnastics Waitara - Senior Opens 2022',
+		'HBPB Opens',
+		'CSG Classic 2022',
+		'Hamilton City Senior Artistic Competition 2022',
+		'DGA Interclub Competition',
+		'KB Memorial 2022',
+		'MIGS Junior-Senior Artistic Competition 2022',
+		'HBPB Juniors',
+		'Affinity Gymnastics Academy Junior & Senior Challenge 2022',
+		'Hutt Valley Competition 2022',
+		'Wellington Champs 2022',
+		'Manawatu Junior Opens'
+	];
+
+	let levels = ['All', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'JI', 'SI'];
 
 	function updateTableData() {
 		let filteredData = dataset;
 
 		if (selectedClub != 'All') {
-			filteredData = filteredData.filter(row => row.club === selectedClub);
+			filteredData = filteredData.filter((row) => row.club === selectedClub);
 		}
 
 		if (selectedDivision != 'All') {
-			filteredData = filteredData.filter(row => row.division === selectedDivision);
+			filteredData = filteredData.filter((row) => row.division === selectedDivision);
 		}
 
 		if (selectedLevel != 'All') {
-			filteredData = filteredData.filter(row => row.level === selectedLevel);
+			filteredData = filteredData.filter((row) => row.level === selectedLevel);
 		}
 
 		if (selectedCompetition != 'All') {
-			filteredData = filteredData.filter(row => row.competition === selectedCompetition);
+			filteredData = filteredData.filter((row) => row.competition === selectedCompetition);
 		}
 
 		pkg.data = filteredData;
@@ -364,8 +448,28 @@
 
 	function downloadCSV() {
 		let filename = 'wag-results-' + Date.now() + '.csv';
-		let tableKeys = Object.keys(dataset[0]);
-		csvGenerator(dataset, tableKeys, tableHeader, filename);
+
+		let filteredData = dataset;
+
+		if (selectedClub != 'All') {
+			filteredData = filteredData.filter((row) => row.club === selectedClub);
+		}
+
+		if (selectedDivision != 'All') {
+			filteredData = filteredData.filter((row) => row.division === selectedDivision);
+		}
+
+		if (selectedLevel != 'All') {
+			filteredData = filteredData.filter((row) => row.level === selectedLevel);
+		}
+
+		if (selectedCompetition != 'All') {
+			filteredData = filteredData.filter((row) => row.competition === selectedCompetition);
+		}
+
+		let tableKeys = Object.keys(filteredData[0]);
+
+		csvGenerator(filteredData, tableKeys, tableHeader, filename);
 	}
 
 	function updateResultsPerPage() {
@@ -384,6 +488,9 @@
 	<input id="my-drawer" type="checkbox" class="drawer-toggle" bind:checked={drawerToggle} />
 	<div class="drawer-content">
 		<label for="my-drawer" class="mt-2 btn btn-primary drawer-button ">Filter results</label>
+		<button class="btn btn-secondary mt-4" on:click={downloadCSV}
+			>Download CSV of current table</button
+		>
 		<Grid {...pkg} bind:instance={grid} />
 	</div>
 	<div class="drawer-side">
@@ -459,15 +566,14 @@
 					</select>
 					<p>STEP</p>
 					<select
-						name=""
-						id=""
+						name="level-select"
 						class="select select-bordered w-full max-w-xs"
 						bind:value={selectedLevel}
 						on:change={updateTableData}
 					>
-						<option selected>All</option>
-						<option>1</option>
-						<option>2</option>
+						{#each levels as level}
+							<option>{level}</option>
+						{/each}
 					</select>
 					<p>Division</p>
 					<select
@@ -480,6 +586,7 @@
 						<option selected>All</option>
 						<option>OVER</option>
 						<option>UNDER</option>
+						<option>NONE</option>
 					</select>
 					<p>Competition</p>
 					<select
@@ -489,9 +596,9 @@
 						bind:value={selectedCompetition}
 						on:change={updateTableData}
 					>
-						<option selected>All</option>
-						<option>OVER</option>
-						<option>UNDER</option>
+						{#each competitions as comp}
+							<option>{comp}</option>
+						{/each}
 					</select>
 					<p>Region</p>
 					<select
@@ -511,9 +618,6 @@
 					<!-- Apply -->
 
 					<!-- Download -->
-					<button class="btn btn-secondary mt-4" on:click={downloadCSV}
-						>Download CSV of current table</button
-					>
 				</div>
 			</form>
 		</ul>
