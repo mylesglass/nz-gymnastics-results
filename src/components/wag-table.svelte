@@ -41,11 +41,7 @@
 			id: 'aa-score',
 			name: 'AA',
 			formatter: (cell) => {
-				if (isNaN(cell)) {
-					return cell;
-				} else {
-					return `${cell.toFixed(3)}`;
-				}
+				return formatCell(cell, 3);
 			}
 		}
 	];
@@ -81,8 +77,7 @@
 				} else {
 					return cell;
 				}
-			},
-			width: '250px'
+			}
 		},
 		{
 			name: 'Vault',
@@ -194,7 +189,7 @@
 		}
 	];
 
-	function formatCell (cell, decimalPlace) {
+	function formatCell(cell, decimalPlace) {
 		if (isNaN(cell) || !cell) {
 			return 'DNS';
 		} else {
@@ -455,10 +450,22 @@
 <div class="drawer">
 	<input id="my-drawer" type="checkbox" class="drawer-toggle" bind:checked={drawerToggle} />
 	<div class="drawer-content">
-		<label for="my-drawer" class="mt-2 btn btn-primary drawer-button ">Filter results</label>
-		<button class="btn btn-secondary mt-4" on:click={downloadCSV}
-			>Download CSV of current table</button
-		>
+		<div class="flex flex-wrap overflow-hidden">
+			<div class="w-1/3 overflow-hidden">
+				<p>Womens Artistic Gymnastics</p>
+			</div>
+
+			<div class="w-1/3 overflow-hidden">
+				<label for="my-drawer" class="mt-2 btn btn-primary drawer-button ">Filter results</label>
+			</div>
+
+			<div class="w-1/3 overflow-hidden">
+				<button class="btn btn-secondary mt-4" on:click={downloadCSV}
+					>Download CSV of current table</button
+				>
+			</div>
+		</div>
+
 		<Grid {...pkg} bind:instance={grid} />
 	</div>
 	<div class="drawer-side">
