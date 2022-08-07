@@ -6,7 +6,7 @@
 	</div>
 </div>
 
-<div class="overflow-x-auto mx-4">
+<div class="mx-4">
     <WagTable perPage={perPage} dataset={dataset}/>
 </div>
 
