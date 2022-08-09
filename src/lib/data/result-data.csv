@@ -44,9 +44,9 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 301928,Summer Tavendale,Hutt Valley Gymnastics,2,UNDER,Levin,AA,1,14.15,5.0,5  ,13.85,5.0,5E  ,13.5,5.0,8  ,13.4,5.0,3E  ,54.9,5  ,10 July 2022
 681169,Darcie Sanson,Levin Gymnastics Club,2,UNDER,Levin,AA,1,14.1,5.0,6  ,13.8,5.0,7  ,13.55,5.0,6E  ,13.1,5.0,6  ,54.55,6  ,10 July 2022
 567515,Phrayze Blake,Rimutaka Gymsports,2,UNDER,Levin,AA,1,14.25,5.0,3  ,13.05,5.0,9  ,13.65,5.0,4E  ,13.5,5.0,1E  ,54.45,7  ,10 July 2022
-542475,Poppy Smith,Onslow Gymnastic Club,2,UNDER,Levin,AA,1,13.95,5.0,9  ,13.25,5.0,8  ,14.0,5.0,2  ,13.0,5.0,7  ,54.2,8  ,10 July 2022
+542475,Poppy Smith,Onslow Gymnastics Club,2,UNDER,Levin,AA,1,13.95,5.0,9  ,13.25,5.0,8  ,14.0,5.0,2  ,13.0,5.0,7  ,54.2,8  ,10 July 2022
 301915,Annabel McColl,Hutt Valley Gymnastics,2,UNDER,Levin,AA,1,13.6,5.0,12  ,14.25,5.0,1  ,12.4,5.0,11  ,11.65,5.0,9  ,51.9,9  ,10 July 2022
-619985,Adalise Hyde,Onslow Gymnastic Club,2,UNDER,Levin,AA,1,14.05,5.0,7  ,12.6,5.0,11  ,13.15,5.0,9  ,11.5,4.5,10  ,51.3,10  ,10 July 2022
+619985,Adalise Hyde,Onslow Gymnastics Club,2,UNDER,Levin,AA,1,14.05,5.0,7  ,12.6,5.0,11  ,13.15,5.0,9  ,11.5,4.5,10  ,51.3,10  ,10 July 2022
 586294,Indigo Davis,Rimutaka Gymsports,2,UNDER,Levin,AA,1,13.8,5.0,10  ,12.5,5.0,12  ,12.5,5.0,10  ,11.25,4.5,11  ,50.05,11  ,10 July 2022
 607328,Evangeline Ting,Rimutaka Gymsports,2,UNDER,Levin,AA,1,13.7,5.0,11  ,12.65,5.0,10  ,11.3,5.0,12  ,8.05,3.5,12  ,45.7,12  ,10 July 2022
 589361,Nartlada Scibunwo,Hutt Valley Gymnastics,2,OVER,Levin,AA,1,13.8,5.0,5  ,13.4,5.0,3  ,13.6,5.0,2  ,13.85,5.0,1  ,54.65,1  ,10 July 2022
@@ -82,12 +82,12 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 229045,Ema Gatland,Hutt Valley Gymnastics,4,UNDER,Levin,AA,1,12.1,5.0,8  ,14.0,5.0,2  ,13.4,5.0,2  ,13.2,4.5,2  ,52.7,2  ,10 July 2022
 271154,Anaya Dunlop,Rimutaka Gymsports,4,UNDER,Levin,AA,1,13.2,5.0,3E  ,13.35,5.0,3  ,12.65,4.5,5  ,13.15,5.0,3  ,52.35,3  ,10 July 2022
 295479,Chloe Ropata-Mart,Levin Gymnastics Club,4,UNDER,Levin,AA,1,13.8,5.0,2  ,12.55,5.0,4  ,13.05,5.0,3E  ,12.6,5.0,6  ,52.0,4  ,10 July 2022
-290641,Ashley Elliott,Onslow Gymnastic Club,4,UNDER,Levin,AA,1,13.2,5.0,3E  ,11.0,5.0,9  ,13.05,5.0,3E  ,12.2,5.0,8  ,49.45,5  ,10 July 2022
+290641,Ashley Elliott,Onslow Gymnastics Club,4,UNDER,Levin,AA,1,13.2,5.0,3E  ,11.0,5.0,9  ,13.05,5.0,3E  ,12.2,5.0,8  ,49.45,5  ,10 July 2022
 254140,Rose Passmore,Hutt Valley Gymnastics,4,UNDER,Levin,AA,1,12.2,5.0,7  ,12.35,5.0,6E  ,11.9,4.5,6  ,12.95,5.0,5  ,49.4,6  ,10 July 2022
 272524,Erin Worsley,Hutt Valley Gymnastics,4,UNDER,Levin,AA,1,12.25,5.0,6  ,12.35,5.0,6E  ,10.45,3.7,8  ,13.1,5.0,4  ,48.15,7  ,10 July 2022
 278519,Gabby Pearman,Capital Gymnastics,4,UNDER,Levin,AA,1,12.65,5.0,5  ,12.5,5.0,5  ,10.3,4.0,9  ,12.55,5.0,7  ,48.0,8  ,10 July 2022
 256579,Georgia Hogg,Capital Gymnastics,4,UNDER,Levin,AA,1,11.2,4.0,9  ,11.85,5.0,8  ,11.6,4.5,7  ,11.35,4.5,9  ,46.0,9  ,10 July 2022
-295631,Jessica Calvert,Onslow Gymnastic Club,4,UNDER,Levin,AA,1,13.15,5.0,7  ,14.05,5.0,1  ,13.35,5.0,3  ,13.5,5.0,4E  ,54.05,1  ,10 July 2022
+295631,Jessica Calvert,Onslow Gymnastics Club,4,UNDER,Levin,AA,1,13.15,5.0,7  ,14.05,5.0,1  ,13.35,5.0,3  ,13.5,5.0,4E  ,54.05,1  ,10 July 2022
 278716,Madeline Joe,Hutt Valley Gymnastics,4,UNDER,Levin,AA,1,14.25,5.0,1  ,12.75,5.0,7E  ,13.0,5.0,5  ,13.9,5.0,1  ,53.9,2  ,10 July 2022
 278485,Tallulah Kelly,Capital Gymnastics,4,UNDER,Levin,AA,1,13.45,5.0,3E  ,13.65,5.0,2E  ,12.8,5.0,6E  ,13.55,5.0,3  ,53.45,3  ,10 July 2022
 219201,Eleanor Henry,Hutt Valley Gymnastics,4,UNDER,Levin,AA,1,13.55,5.0,2  ,13.65,5.0,2E  ,11.95,5.0,11  ,13.5,5.0,4E  ,52.65,4  ,10 July 2022
@@ -100,15 +100,15 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 281437,Savannah Currie,Hutt Valley Gymnastics,4,UNDER,Levin,AA,1,12.75,5.0,8  ,11.9,5.0,9E  ,12.8,5.0,6E  ,12.0,4.5,11  ,49.45,11  ,10 July 2022
 295813,Halo Bishop,Whanganui Boys & Girls Gym Club,4,UNDER,Levin,AA,1,13.45,5.0,3E  ,13.1,5.0,6  ,10.95,4.5,12  ,10.15,4.0,12  ,47.65,12  ,10 July 2022
 296472,Vaibhavi Tandon,Hutt Valley Gymnastics,4,OVER,Levin,AA,1,14.2,5.0,1  ,13.15,5.0,2  ,11.85,4.5,9  ,13.45,5.0,1  ,52.65,1  ,10 July 2022
-249317,Madison Lynch,Onslow Gymnastic Club,4,OVER,Levin,AA,1,13.2,5.0,5  ,13.55,5.0,1  ,12.9,4.5,2  ,12.25,5.0,8E  ,51.9,2  ,10 July 2022
+249317,Madison Lynch,Onslow Gymnastics Club,4,OVER,Levin,AA,1,13.2,5.0,5  ,13.55,5.0,1  ,12.9,4.5,2  ,12.25,5.0,8E  ,51.9,2  ,10 July 2022
 227746,Sydney Fergus,Twisters Tawa Gymnastics Club,4,OVER,Levin,AA,1,13.5,5.0,4  ,11.95,5.0,11E  ,14.0,5.0,1  ,12.15,5.0,11  ,51.6,3  ,10 July 2022
 274593,Alexandra Rennie,Whanganui Boys & Girls Gym Club,4,OVER,Levin,AA,1,12.85,5.0,8  ,13.0,5.0,4  ,12.1,4.7,8  ,12.75,5.0,2E  ,50.7,4  ,10 July 2022
 568991,Ren Comrie,Levin Gymnastics Club,4,OVER,Levin,AA,1,12.9,5.0,7  ,12.7,5.0,6  ,12.55,5.0,5  ,12.45,4.5,7  ,50.6,5  ,10 July 2022
 192731,Emma Cooper,Rimutaka Gymsports,4,OVER,Levin,AA,1,14.0,5.0,2  ,12.75,5.0,5  ,11.0,4.5,13  ,12.7,5.0,4  ,50.45,6  ,10 July 2022
-284779,Lia Vlaar,Onslow Gymnastic Club,4,OVER,Levin,AA,1,12.8,5.0,9  ,12.35,5.0,9  ,12.7,5.0,3E  ,12.25,5.0,8E  ,50.1,7  ,10 July 2022
+284779,Lia Vlaar,Onslow Gymnastics Club,4,OVER,Levin,AA,1,12.8,5.0,9  ,12.35,5.0,9  ,12.7,5.0,3E  ,12.25,5.0,8E  ,50.1,7  ,10 July 2022
 198831,Millie Richardson,Whanganui Boys & Girls Gym Club,4,OVER,Levin,AA,1,12.1,5.0,13  ,13.05,5.0,3  ,12.35,5.0,6  ,12.5,5.0,6  ,50.0,8  ,10 July 2022
-261652,Amelia Hogg,Onslow Gymnastic Club,4,OVER,Levin,AA,1,12.35,5.0,11  ,12.55,5.0,7  ,11.6,5.0,10  ,12.75,5.0,2E  ,49.25,9E  ,10 July 2022
-236735,Eva Catherwood,Onslow Gymnastic Club,4,OVER,Levin,AA,1,13.55,5.0,3  ,12.45,5.0,8  ,10.7,4.5,14  ,12.55,5.0,5  ,49.25,9E  ,10 July 2022
+261652,Amelia Hogg,Onslow Gymnastics Club,4,OVER,Levin,AA,1,12.35,5.0,11  ,12.55,5.0,7  ,11.6,5.0,10  ,12.75,5.0,2E  ,49.25,9E  ,10 July 2022
+236735,Eva Catherwood,Onslow Gymnastics Club,4,OVER,Levin,AA,1,13.55,5.0,3  ,12.45,5.0,8  ,10.7,4.5,14  ,12.55,5.0,5  ,49.25,9E  ,10 July 2022
 254219,Aubane Farcy,Rimutaka Gymsports,4,OVER,Levin,AA,1,12.15,5.0,12  ,12.2,5.0,10  ,12.15,5.0,7  ,11.85,4.5,13  ,48.35,11  ,10 July 2022
 249818,Rihi Kale,Twisters Tawa Gymnastics Club,4,OVER,Levin,AA,1,12.65,5.0,10  ,11.95,5.0,11E  ,12.7,4.5,3E  ,10.9,4.5,14  ,48.2,12  ,10 July 2022
 524298,Jayme McLean,Whanganui Boys & Girls Gym Club,4,OVER,Levin,AA,1,13.15,5.0,6  ,11.1,5.0,14  ,11.05,5.0,12  ,12.2,5.0,10  ,47.5,13  ,10 July 2022
@@ -721,8 +721,8 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 634370,Lucy Sandland,Kapiti Gymnastics,1,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,14.2,5.0,0,14.25,5.0,0,14.033,5.0,0,13.133,4.5,0,55.616,,2022-06-12
 622535,Layla Lakomy-Nelson,Kapiti Gymnastics,1,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.1,5.0,0,13.4,5.0,0,13.933,5.0,0,14.2,5.0,0,54.633,,2022-06-12
 591080,Rose Kearney,Kapiti Gymnastics,1,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.45,5.0,0,14.0,5.0,0,13.9,5.0,0,13.833,5.0,0,55.183,,2022-06-12
-619770,Immy Mazur,Onslow Gymnastic Club,1,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,11.95,5.0,0,12.4,5.0,0,12.366,5.0,0,12.333,4.5,0,49.049,,2022-06-12
-657131,Emma Hood,Onslow Gymnastic Club,1,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.5,5.0,0,11.75,5.0,0,13.4,5.0,0,11.133,4.0,0,49.783,,2022-06-12
+619770,Immy Mazur,Onslow Gymnastics Club,1,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,11.95,5.0,0,12.4,5.0,0,12.366,5.0,0,12.333,4.5,0,49.049,,2022-06-12
+657131,Emma Hood,Onslow Gymnastics Club,1,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.5,5.0,0,11.75,5.0,0,13.4,5.0,0,11.133,4.0,0,49.783,,2022-06-12
 590918,Roya Denston,Rimutaka Gymsports,1,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.9,5.0,0,13.8,5.0,0,14.4,5.0,0,12.366,5.0,0,54.466,,2022-06-12
 672421,Indigo Horrigan,Twisters Tawa Gymnastics Club,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.75,5.0,0,13.7,5.0,0,14.433,5.0,0,12.9,4.5,0,53.783,,2022-06-12
 629304,Taylor Usher,Hutt Valley Gymnastics,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.7,5.0,0,13.55,5.0,0,13.9,5.0,0,12.333,4.5,0,52.483,,2022-06-12
@@ -735,7 +735,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 681188,Lux Makutu,Levin Gymnastics Club,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,14.3,5.0,0,13.8,5.0,0,13.366,5.0,0,14.1,5.0,0,55.566,,2022-06-12
 681190,Lylah Huse,Levin Gymnastics Club,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.05,5.0,0,14.0,5.0,0,12.766,4.5,0,13.466,5.0,0,53.282,,2022-06-12
 663574,Heidee Pratt,Levin Gymnastics Club,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.75,5.0,0,14.1,5.0,0,13.733,5.0,0,13.3,5.0,0,54.883,,2022-06-12
-633246,Isabelle Van der Krogt,Onslow Gymnastic Club,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.85,5.0,0,7.65,4.5,0,13.366,5.0,0,12.433,5.0,0,46.299,,2022-06-12
+633246,Isabelle Van der Krogt,Onslow Gymnastics Club,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.85,5.0,0,7.65,4.5,0,13.366,5.0,0,12.433,5.0,0,46.299,,2022-06-12
 532211,Amaya McNabb,Rimutaka Gymsports,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,14.15,5.0,0,9.9,4.0,0,13.266,5.0,0,11.4,4.5,0,48.716,,2022-06-12
 278758,Indi Glover,Rimutaka Gymsports,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.45,5.0,0,13.5,5.0,0,13.666,5.0,0,12.4,4.5,0,53.016,,2022-06-12
 625271,Bailey Salt,Capital Gymnastics,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.35,5.0,0,13.9,5.0,0,13.166,4.5,0,12.6,4.5,0,52.016,,2022-06-12
@@ -745,8 +745,8 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 670457,Evie Connell,Hutt Valley Gymnastics,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.0,5.0,0,11.55,5.0,0,11.933,5.0,0,11.066,4.0,0,47.549,,2022-06-12
 557006,Ava Moraes-Schulz,Hutt Valley Gymnastics,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,14.3,5.0,0,13.9,5.0,0,14.0,5.0,0,12.8,4.5,0,55.0,,2022-06-12
 663578,Alice Monaghan,Levin Gymnastics Club,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.6,5.0,0,14.0,5.0,0,13.066,5.0,0,12.666,4.5,0,53.332,,2022-06-12
-641599,Olympia Barrington-Prowse,Onslow Gymnastic Club,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.45,5.0,0,13.65,5.0,0,13.4,5.0,0,12.7,4.5,0,53.2,,2022-06-12
-657184,Ellie Brownie,Onslow Gymnastic Club,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.25,5.0,0,12.3,5.0,0,14.2,5.0,0,13.366,4.5,0,53.116,,2022-06-12
+641599,Olympia Barrington-Prowse,Onslow Gymnastics Club,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.45,5.0,0,13.65,5.0,0,13.4,5.0,0,12.7,4.5,0,53.2,,2022-06-12
+657184,Ellie Brownie,Onslow Gymnastics Club,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.25,5.0,0,12.3,5.0,0,14.2,5.0,0,13.366,4.5,0,53.116,,2022-06-12
 585251,Alani Cripps,Rimutaka Gymsports,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.0,5.0,0,12.75,5.0,0,12.8,5.0,0,12.6,4.5,0,51.15,,2022-06-12
 503680,Natalia Zimmermann,Rimutaka Gymsports,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.95,5.0,0,12.65,5.0,0,12.666,4.5,0,11.0,4.5,0,49.266,,2022-06-12
 521694,Capri England,Rimutaka Gymsports,1,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.05,5.0,0,12.65,5.0,0,12.066,5.0,0,12.133,4.5,0,49.899,,2022-06-12
@@ -768,8 +768,8 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 587481,Keira Lee,Kapiti Gymnastics,2,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.85,5.0,0,12.6,5.0,0,13.4,4.5,0,13.566,5.0,0,53.416,,2022-06-12
 642011,Annabelle Webb,Kapiti Gymnastics,2,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.85,5.0,0,13.466,5.0,0,13.0,4.7,0,13.2,5.0,0,53.516,,2022-06-12
 681169,Darcie Sanson,Levin Gymnastics Club,2,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.55,5.0,0,13.2,5.0,0,12.366,4.5,0,12.133,4.5,0,51.249,,2022-06-12
-598418,Eden Lipscombe,Onslow Gymnastic Club,2,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.85,5.0,0,13.4,5.0,0,13.566,5.0,0,13.666,5.0,0,54.482,,2022-06-12
-593266,Grace Coulter,Onslow Gymnastic Club,2,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.9,5.0,0,13.666,5.0,0,13.9,5.0,0,12.933,5.0,0,54.399,,2022-06-12
+598418,Eden Lipscombe,Onslow Gymnastics Club,2,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.85,5.0,0,13.4,5.0,0,13.566,5.0,0,13.666,5.0,0,54.482,,2022-06-12
+593266,Grace Coulter,Onslow Gymnastics Club,2,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.9,5.0,0,13.666,5.0,0,13.9,5.0,0,12.933,5.0,0,54.399,,2022-06-12
 606951,Vaidehi Sandhu,Rimutaka Gymsports,2,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.55,5.0,0,12.4,5.0,0,12.633,4.5,0,11.6,5.0,0,50.183,,2022-06-12
 658016,Lauren Mann,Rimutaka Gymsports,2,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.85,5.0,0,12.4,5.0,0,11.8,4.0,0,12.233,5.0,0,50.283,,2022-06-12
 598365,Lily Isaac,Capital Gymnastics,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.8,5.0,0,13.966,5.0,0,14.0,5.0,0,13.766,5.0,0,55.532,,2022-06-12
@@ -780,8 +780,8 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 530239,Madison Grant,Kapiti Gymnastics,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.85,5.0,0,13.866,5.0,0,13.6,5.0,0,13.033,5.0,0,54.349,,2022-06-12
 568057,Gemma White,Levin Gymnastics Club,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.0,5.0,0,11.966,5.0,0,12.533,4.5,0,13.0,5.0,0,50.499,,2022-06-12
 653110,Ava Scott,Levin Gymnastics Club,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.8,5.0,0,12.5,5.0,0,12.366,4.5,0,10.3,3.5,0,47.966,,2022-06-12
-619985,Adalise Hyde,Onslow Gymnastic Club,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.6,5.0,0,13.0,5.0,0,13.433,5.0,0,9.7,3.0,0,49.733,,2022-06-12
-641598,Sienna Barrington Prowse,Onslow Gymnastic Club,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.15,5.0,0,13.733,5.0,0,13.8,5.0,0,12.166,4.5,0,52.849,,2022-06-12
+619985,Adalise Hyde,Onslow Gymnastics Club,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.6,5.0,0,13.0,5.0,0,13.433,5.0,0,9.7,3.0,0,49.733,,2022-06-12
+641598,Sienna Barrington Prowse,Onslow Gymnastics Club,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.15,5.0,0,13.733,5.0,0,13.8,5.0,0,12.166,4.5,0,52.849,,2022-06-12
 607328,Evangeline Ting,Rimutaka Gymsports,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.6,5.0,0,11.8,5.0,0,12.1,4.5,0,11.966,5.0,0,49.466,,2022-06-12
 560188,Amber Dunlop,Rimutaka Gymsports,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.85,5.0,0,12.133,5.0,0,12.766,5.0,0,11.233,4.5,0,49.982,,2022-06-12
 262678,Bonnie Filer,Rimutaka Gymsports,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.75,5.0,0,11.1,5.0,0,12.233,4.0,0,11.2,5.0,0,48.283,,2022-06-12
@@ -798,15 +798,15 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 301922,Brielle Laurenson,Hutt Valley Gymnastics,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.65,5.0,0,12.833,5.0,0,12.1,4.5,0,11.033,4.5,0,49.616,,2022-06-12
 249298,Emily Broster,Hutt Valley Gymnastics,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.2,5.0,0,12.833,5.0,0,12.6,4.5,0,10.833,4.5,0,49.466,,2022-06-12
 301928,Summer Tavendale,Hutt Valley Gymnastics,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.15,5.0,0,13.9,5.0,0,13.833,5.0,0,12.6,5.0,0,53.483,,2022-06-12
-542475,Poppy Smith,Onslow Gymnastic Club,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.4,5.0,0,13.233,5.0,0,13.333,4.5,0,12.1,5.0,0,52.066,,2022-06-12
-619794,Harper McPheat,Onslow Gymnastic Club,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.25,5.0,0,12.166,5.0,0,12.733,4.7,0,13.7,5.0,0,51.849,,2022-06-12
+542475,Poppy Smith,Onslow Gymnastics Club,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.4,5.0,0,13.233,5.0,0,13.333,4.5,0,12.1,5.0,0,52.066,,2022-06-12
+619794,Harper McPheat,Onslow Gymnastics Club,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.25,5.0,0,12.166,5.0,0,12.733,4.7,0,13.7,5.0,0,51.849,,2022-06-12
 576717,Rian Priestley,Rimutaka Gymsports,2,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.35,5.0,0,11.733,5.0,0,10.433,3.7,0,10.933,4.0,0,46.449,,2022-06-12
 207979,Cleo Struthers,Harbour City Gymnastics,3,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.25,5.0,0,12.566,5.0,0,11.3,4.0,0,11.433,4.0,0,48.549,,2022-06-12
 562648,Charlotte McColl,Hutt Valley Gymnastics,3,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.15,5.0,0,13.1,5.0,0,11.333,3.5,0,12.866,4.5,0,50.449,,2022-06-12
 249301,Hannah Broster,Hutt Valley Gymnastics,3,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.85,5.0,0,12.433,5.0,0,12.6,5.0,0,13.633,5.0,0,52.516,,2022-06-12
 302066,Siobhan Bingham,Kapiti Gymnastics,3,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.45,5.0,0,12.166,5.0,0,10.933,4.2,0,12.766,5.0,0,48.315,,2022-06-12
 617735,Sophie Chisholm,Kapiti Gymnastics,3,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.55,5.0,0,13.166,5.0,0,14.033,5.0,0,13.8,5.0,0,53.549,,2022-06-12
-542219,Ashleigh McPheat,Onslow Gymnastic Club,3,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.8,5.0,0,13.0,5.0,0,11.033,4.0,0,13.733,5.0,0,50.566,,2022-06-12
+542219,Ashleigh McPheat,Onslow Gymnastics Club,3,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.8,5.0,0,13.0,5.0,0,11.033,4.0,0,13.733,5.0,0,50.566,,2022-06-12
 265687,Olivia Glover,Rimutaka Gymsports,3,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.75,5.0,0,12.333,5.0,0,10.366,3.7,0,11.833,4.5,0,47.282,,2022-06-12
 296680,Isabelle Jennings - Millar,Rimutaka Gymsports,3,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.1,5.0,0,10.133,4.5,0,10.733,4.0,0,11.233,4.5,0,45.199,,2022-06-12
 574666,Ava Jackson,Rimutaka Gymsports,3,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.55,5.0,0,11.733,4.5,0,11.733,4.5,0,13.833,5.0,0,50.849,,2022-06-12
@@ -825,15 +825,15 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 283315,Ruby Fleet,Kapiti Gymnastics,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.75,5.0,0,12.733,5.0,0,11.866,4.5,0,13.533,5.0,0,51.882,,2022-06-12
 296576,Scarlett Harper,Kapiti Gymnastics,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.3,5.0,0,12.1,5.0,0,11.633,4.5,0,12.533,4.5,0,49.566,,2022-06-12
 663576,Jade Milson,Levin Gymnastics Club,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,11.85,5.0,0,13.233,5.0,0,10.533,3.5,0,13.066,5.0,0,48.682,,2022-06-12
-562627,Antonia Gorbushina,Onslow Gymnastic Club,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.7,5.0,0,12.7,5.0,0,13.433,4.5,0,13.9,5.0,0,52.733,,2022-06-12
-570512,Obi Haworth,Onslow Gymnastic Club,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.4,5.0,0,12.666,5.0,0,14.166,5.0,0,12.866,4.5,0,52.098,,2022-06-12
+562627,Antonia Gorbushina,Onslow Gymnastics Club,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.7,5.0,0,12.7,5.0,0,13.433,4.5,0,13.9,5.0,0,52.733,,2022-06-12
+570512,Obi Haworth,Onslow Gymnastics Club,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.4,5.0,0,12.666,5.0,0,14.166,5.0,0,12.866,4.5,0,52.098,,2022-06-12
 600969,Charlotte Kirkwood,Twisters Tawa Gymnastics Club,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.2,5.0,0,12.966,5.0,0,11.9,5.0,0,12.066,4.5,0,49.132,,2022-06-12
 600797,Emma Marks,Twisters Tawa Gymnastics Club,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.9,5.0,0,13.133,5.0,0,13.533,5.0,0,12.733,4.5,0,52.299,,2022-06-12
 600802,Yolandy Russell,Twisters Tawa Gymnastics Club,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.2,5.0,0,13.7,5.0,0,11.666,4.0,0,12.133,4.5,0,49.699,,2022-06-12
 566951,Avee Hickey,Twisters Tawa Gymnastics Club,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.75,5.0,0,13.366,5.0,0,13.0,4.5,0,14.3,5.0,0,54.416,,2022-06-12
 545409,Hazel Beavis,Hutt Valley Gymnastics,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.85,5.0,0,13.733,5.0,0,13.0,4.5,0,13.9,5.0,0,53.483,,2022-06-12
 272474,Libby Hall,Hutt Valley Gymnastics,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.95,5.0,0,13.366,5.0,0,12.566,4.5,0,14.266,5.0,0,54.148,,2022-06-12
-295643,Sofia Creighton,Onslow Gymnastic Club,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,14.25,5.0,0,13.1,5.0,0,11.7,4.0,0,13.733,5.0,0,52.783,,2022-06-12
+295643,Sofia Creighton,Onslow Gymnastics Club,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,14.25,5.0,0,13.1,5.0,0,11.7,4.0,0,13.733,5.0,0,52.783,,2022-06-12
 254139,Toscane Farcy,Rimutaka Gymsports,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.15,5.0,0,12.266,5.0,0,11.6,4.0,0,10.133,4.0,0,46.149,,2022-06-12
 522656,Georgia Campbell,Rimutaka Gymsports,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.35,5.0,0,12.6,5.0,0,11.966,4.2,0,10.5,4.0,0,47.416,,2022-06-12
 302417,Ari Burton,Rimutaka Gymsports,3,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,14.15,5.0,0,14.133,5.0,0,13.633,5.0,0,13.9,5.0,0,55.816,,2022-06-12
@@ -850,10 +850,10 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 230301,Chloe Courtnage,Kapiti Gymnastics,4,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.8,5.0,0,0.0,0.0,0,10.7,4.0,0,11.05,4.0,0,34.55,,2022-06-12
 568991,Ren Comrie,Levin Gymnastics Club,4,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.65,5.0,0,0.0,0.0,0,12.95,5.0,0,13.5,5.0,0,40.1,,2022-06-12
 567989,Kana Komikado,Levin Gymnastics Club,4,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.8,5.0,0,0.0,0.0,0,12.4,5.0,0,13.65,5.0,0,39.85,,2022-06-12
-284779,Lia Vlaar,Onslow Gymnastic Club,4,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,11.0,5.0,0,0.0,0.0,0,9.15,4.0,0,12.1,5.0,0,32.25,,2022-06-12
-261652,Amelia Hogg,Onslow Gymnastic Club,4,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.2,5.0,0,0.0,0.0,0,12.85,4.5,0,12.9,5.0,0,37.95,,2022-06-12
-249317,Madison Lynch,Onslow Gymnastic Club,4,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.2,5.0,0,0.0,0.0,0,11.05,4.5,0,12.1,4.5,0,36.35,,2022-06-12
-236735,Eva Catherwood,Onslow Gymnastic Club,4,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.7,5.0,0,0.0,0.0,0,11.15,4.5,0,12.7,5.0,0,37.55,,2022-06-12
+284779,Lia Vlaar,Onslow Gymnastics Club,4,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,11.0,5.0,0,0.0,0.0,0,9.15,4.0,0,12.1,5.0,0,32.25,,2022-06-12
+261652,Amelia Hogg,Onslow Gymnastics Club,4,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.2,5.0,0,0.0,0.0,0,12.85,4.5,0,12.9,5.0,0,37.95,,2022-06-12
+249317,Madison Lynch,Onslow Gymnastics Club,4,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.2,5.0,0,0.0,0.0,0,11.05,4.5,0,12.1,4.5,0,36.35,,2022-06-12
+236735,Eva Catherwood,Onslow Gymnastics Club,4,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.7,5.0,0,0.0,0.0,0,11.15,4.5,0,12.7,5.0,0,37.55,,2022-06-12
 201410,Grace McGall,Rimutaka Gymsports,4,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.15,5.0,0,12.6,5.0,0,13.05,5.0,0,13.45,5.0,0,52.25,,2022-06-12
 192731,Emma Cooper,Rimutaka Gymsports,4,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,14.05,5.0,0,12.75,5.0,0,12.3,5.0,0,12.7,5.0,0,51.8,,2022-06-12
 608523,Ruby Brewer,Rimutaka Gymsports,4,OVER,Rimutaka Junior Champs 2022,"All-Around, Teams",,12.1,5.0,0,12.4,5.0,0,13.25,5.0,0,13.05,5.0,0,50.8,,2022-06-12
@@ -878,9 +878,9 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 567993,Skyla Horan-Walker,Levin Gymnastics Club,4,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,11.9,5.0,0,0.0,0.0,0,9.55,3.5,0,11.2,4.5,0,32.65,,2022-06-12
 295479,Chloe Ropata-Martin,Levin Gymnastics Club,4,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.8,5.0,0,0.0,0.0,0,11.8,4.5,0,12.7,5.0,0,38.3,,2022-06-12
 569849,Sydnee Hallett,Levin Gymnastics Club,4,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.95,5.0,0,0.0,0.0,0,11.8,5.0,0,11.8,5.0,0,37.55,,2022-06-12
-290641,Ashley Elliott,Onslow Gymnastic Club,4,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.65,5.0,0,0.0,0.0,0,11.65,4.5,0,10.95,4.0,0,36.25,,2022-06-12
-261649,Octavia Burns,Onslow Gymnastic Club,4,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.35,5.0,0,0.0,0.0,0,10.55,4.0,0,12.7,5.0,0,36.6,,2022-06-12
-295631,Jessica Calvert,Onslow Gymnastic Club,4,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.25,5.0,0,0.0,0.0,0,11.7,4.5,0,13.35,4.5,0,38.3,,2022-06-12
+290641,Ashley Elliott,Onslow Gymnastics Club,4,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.65,5.0,0,0.0,0.0,0,11.65,4.5,0,10.95,4.0,0,36.25,,2022-06-12
+261649,Octavia Burns,Onslow Gymnastics Club,4,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.35,5.0,0,0.0,0.0,0,10.55,4.0,0,12.7,5.0,0,36.6,,2022-06-12
+295631,Jessica Calvert,Onslow Gymnastics Club,4,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.25,5.0,0,0.0,0.0,0,11.7,4.5,0,13.35,4.5,0,38.3,,2022-06-12
 271154,Anaya Dunlop,Rimutaka Gymsports,4,UNDER,Rimutaka Junior Champs 2022,"All-Around, Teams",,13.55,5.0,0,12.0,5.0,0,12.25,5.0,0,13.65,5.0,0,51.45,,2022-06-12
 613217,Violet Thomas,ARGOS Gymnastics Club,3,UNDER,Midlands Junior Artistic Competition 2022,All-around,,13.733,5.0,0,13.1,5.0,0,10.566,4.5,0,13.1,5.0,0,50.499,,2022-07-30
 574319,Katara Tana,ARGOS Gymnastics Club,3,UNDER,Midlands Junior Artistic Competition 2022,All-around,,13.766,5.0,0,13.233,5.0,0,12.266,5.0,0,13.533,5.0,0,52.798,,2022-07-30
@@ -993,8 +993,8 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 519771,Caitlin Grylls,Te Puke Gymsports,4,OVER,Midlands Junior Artistic Competition 2022,All-around,,13.6,5.0,0,11.25,5.0,0,12.55,5.0,0,12.7,5.0,0,50.1,,2022-07-30
 672413,Izzy Mordaunt,Twisters Tawa Gymnastics Club,1,OVER,Kapiti Championships,"AA, Teams, App",,14.0,5.0,0,12.95,5.0,0,13.4,5.0,0,13.95,5.0,0,54.3,,2022-06-25
 634707,Isabelle Chaney,Twisters Tawa Gymnastics Club,1,OVER,Kapiti Championships,"AA, Teams, App",,14.05,5.0,0,13.3,5.0,0,14.05,5.0,0,13.3,5.0,0,54.7,,2022-06-25
-619770,Immy Mazur,Onslow Gymnastic Club,1,OVER,Kapiti Championships,"AA, Teams, App",,13.6,5.0,0,13.25,5.0,0,13.35,5.0,0,13.55,5.0,0,53.75,,2022-06-25
-657131,Emma Hood,Onslow Gymnastic Club,1,OVER,Kapiti Championships,"AA, Teams, App",,13.9,5.0,0,10.95,4.5,0,13.45,5.0,0,13.1,5.0,0,51.4,,2022-06-25
+619770,Immy Mazur,Onslow Gymnastics Club,1,OVER,Kapiti Championships,"AA, Teams, App",,13.6,5.0,0,13.25,5.0,0,13.35,5.0,0,13.55,5.0,0,53.75,,2022-06-25
+657131,Emma Hood,Onslow Gymnastics Club,1,OVER,Kapiti Championships,"AA, Teams, App",,13.9,5.0,0,10.95,4.5,0,13.45,5.0,0,13.1,5.0,0,51.4,,2022-06-25
 510660,Aliya Roff,Manawatu Gymsports,1,UNDER,Kapiti Championships,"AA, Teams, App",,14.05,5.0,0,12.9,5.0,0,13.45,5.0,0,13.4,5.0,0,53.8,,2022-06-25
 302387,Keitaria Aumua,Manawatu Gymsports,1,UNDER,Kapiti Championships,"AA, Teams, App",,13.4,5.0,0,10.05,4.5,0,12.45,5.0,0,13.3,5.0,0,49.2,,2022-06-25
 584287,Emily Sue,Manawatu Gymsports,1,UNDER,Kapiti Championships,"AA, Teams, App",,13.25,5.0,0,13.4,5.0,0,12.25,5.0,0,12.55,5.0,0,51.45,,2022-06-25
@@ -1016,8 +1016,8 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 628509,Chloe Rankin,Hutt Valley Gymnastics,1,UNDER,Kapiti Championships,"AA, Teams, App",,13.7,5.0,0,13.8,5.0,0,12.85,5.0,0,13.7,5.0,0,54.05,,2022-06-25
 301942,Frankie Bennett,Hutt Valley Gymnastics,1,UNDER,Kapiti Championships,"AA, Teams, App",,13.65,5.0,0,13.8,5.0,0,13.65,5.0,0,13.85,5.0,0,54.95,,2022-06-25
 623657,Esther-rose Sarich,Hutt Valley Gymnastics,1,UNDER,Kapiti Championships,"AA, Teams, App",,13.7,5.0,0,14.15,5.0,0,13.65,5.0,0,14.35,5.0,0,55.85,,2022-06-25
-641599,Olympia Barrington-Prowse,Onslow Gymnastic Club,1,UNDER,Kapiti Championships,"AA, Teams, App",,14.0,5.0,0,13.7,5.0,0,13.0,5.0,0,13.4,5.0,0,54.1,,2022-06-25
-650678,Riva Fernandez,Onslow Gymnastic Club,1,UNDER,Kapiti Championships,"AA, Teams, App",,13.05,5.0,0,12.65,5.0,0,13.4,5.0,0,13.0,5.0,0,52.1,,2022-06-25
+641599,Olympia Barrington-Prowse,Onslow Gymnastics Club,1,UNDER,Kapiti Championships,"AA, Teams, App",,14.0,5.0,0,13.7,5.0,0,13.0,5.0,0,13.4,5.0,0,54.1,,2022-06-25
+650678,Riva Fernandez,Onslow Gymnastics Club,1,UNDER,Kapiti Championships,"AA, Teams, App",,13.05,5.0,0,12.65,5.0,0,13.4,5.0,0,13.0,5.0,0,52.1,,2022-06-25
 672410,Cielo Zheng,Twisters Tawa Gymnastics Club,1,OVER,Kapiti Championships,"AA, Teams, App",,14.35,5.0,0,13.45,5.0,0,13.75,5.0,0,14.0,5.0,0,55.55,,2022-06-25
 606951,Vaidehi Sandhu,Rimutaka Gymsports,2,OVER,Kapiti Championships,"AA, Teams, App",,12.95,5.0,0,13.1,5.0,0,11.35,4.0,0,13.15,5.0,0,50.55,,2022-06-25
 626440,Casey Sharratt,Whanganui Boys & Girls Gym Club,2,OVER,Kapiti Championships,"AA, Teams, App",,12.85,5.0,0,12.85,5.0,0,10.85,3.5,0,12.85,5.0,0,49.4,,2022-06-25
@@ -1026,8 +1026,8 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 525722,Ruby Bartley,Whanganui Boys & Girls Gym Club,2,OVER,Kapiti Championships,"AA, Teams, App",,13.3,5.0,0,13.05,5.0,0,12.5,4.5,0,12.9,5.0,0,51.75,,2022-06-25
 573348,Olivia S,Hutt Valley Gymnastics,2,OVER,Kapiti Championships,"AA, Teams, App",,13.05,5.0,0,13.4,5.0,0,12.45,4.5,0,11.55,4.0,0,50.45,,2022-06-25
 560638,Izaleah Collings,Hutt Valley Gymnastics,2,OVER,Kapiti Championships,"AA, Teams, App",,13.25,5.0,0,13.45,5.0,0,13.7,5.0,0,13.1,5.0,0,53.5,,2022-06-25
-598418,Eden Lipscombe,Onslow Gymnastic Club,2,OVER,Kapiti Championships,"AA, Teams, App",,13.6,5.0,0,14.05,5.0,0,12.95,4.5,0,13.75,5.0,0,54.35,,2022-06-25
-593266,Grace Coulter,Onslow Gymnastic Club,2,OVER,Kapiti Championships,"AA, Teams, App",,14.05,5.0,0,13.85,5.0,0,14.4,5.0,0,14.3,5.0,0,56.6,,2022-06-25
+598418,Eden Lipscombe,Onslow Gymnastics Club,2,OVER,Kapiti Championships,"AA, Teams, App",,13.6,5.0,0,14.05,5.0,0,12.95,4.5,0,13.75,5.0,0,54.35,,2022-06-25
+593266,Grace Coulter,Onslow Gymnastics Club,2,OVER,Kapiti Championships,"AA, Teams, App",,14.05,5.0,0,13.85,5.0,0,14.4,5.0,0,14.3,5.0,0,56.6,,2022-06-25
 567515,Phrayze Blake,Rimutaka Gymsports,2,UNDER,Kapiti Championships,"AA, Teams, App",,13.3,5.0,0,13.6,5.0,0,13.45,5.0,0,13.7,5.0,0,54.05,,2022-06-25
 576717,Rian Priestley,Rimutaka Gymsports,2,UNDER,Kapiti Championships,"AA, Teams, App",,12.4,5.0,0,12.6,5.0,0,12.15,4.5,0,12.75,5.0,0,49.9,,2022-06-25
 607020,Lexie Sim,Whanganui Boys & Girls Gym Club,2,UNDER,Kapiti Championships,"AA, Teams, App",,12.75,5.0,0,12.65,5.0,0,11.1,4.0,0,11.55,5.0,0,48.05,,2022-06-25
@@ -1038,11 +1038,11 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 249298,Emily Broster,Hutt Valley Gymnastics,2,UNDER,Kapiti Championships,"AA, Teams, App",,13.2,5.0,0,13.55,5.0,0,12.5,5.0,0,12.3,4.5,0,51.55,,2022-06-25
 301928,Summer Tavendale,Hutt Valley Gymnastics,2,UNDER,Kapiti Championships,"AA, Teams, App",,12.95,5.0,0,14.05,5.0,0,13.8,5.0,0,13.3,5.0,0,54.1,,2022-06-25
 296408,Sofia Water,Hutt Valley Gymnastics,2,UNDER,Kapiti Championships,"AA, Teams, App",,13.75,5.0,0,13.65,5.0,0,12.2,4.5,0,13.85,5.0,0,53.45,,2022-06-25
-619985,Adalise Hyde,Onslow Gymnastic Club,2,UNDER,Kapiti Championships,"AA, Teams, App",,13.7,5.0,0,13.1,5.0,0,13.15,5.0,0,13.4,5.0,0,53.35,,2022-06-25
-619726,Lucy Eccles,Onslow Gymnastic Club,2,UNDER,Kapiti Championships,"AA, Teams, App",,13.35,5.0,0,13.3,5.0,0,13.2,4.5,0,12.95,5.0,0,52.8,,2022-06-25
-542475,Poppy Smith,Onslow Gymnastic Club,2,UNDER,Kapiti Championships,"AA, Teams, App",,13.1,5.0,0,13.0,5.0,0,12.5,4.5,0,13.15,5.0,0,51.75,,2022-06-25
-641598,Sienna Barrington Prowse,Onslow Gymnastic Club,2,UNDER,Kapiti Championships,"AA, Teams, App",,13.55,5.0,0,14.0,5.0,0,14.25,5.0,0,13.25,5.0,0,55.05,,2022-06-25
-619794,Harper McPheat,Onslow Gymnastic Club,2,UNDER,Kapiti Championships,"AA, Teams, App",,13.65,5.0,0,13.7,5.0,0,11.65,4.5,0,13.35,5.0,0,52.35,,2022-06-25
+619985,Adalise Hyde,Onslow Gymnastics Club,2,UNDER,Kapiti Championships,"AA, Teams, App",,13.7,5.0,0,13.1,5.0,0,13.15,5.0,0,13.4,5.0,0,53.35,,2022-06-25
+619726,Lucy Eccles,Onslow Gymnastics Club,2,UNDER,Kapiti Championships,"AA, Teams, App",,13.35,5.0,0,13.3,5.0,0,13.2,4.5,0,12.95,5.0,0,52.8,,2022-06-25
+542475,Poppy Smith,Onslow Gymnastics Club,2,UNDER,Kapiti Championships,"AA, Teams, App",,13.1,5.0,0,13.0,5.0,0,12.5,4.5,0,13.15,5.0,0,51.75,,2022-06-25
+641598,Sienna Barrington Prowse,Onslow Gymnastics Club,2,UNDER,Kapiti Championships,"AA, Teams, App",,13.55,5.0,0,14.0,5.0,0,14.25,5.0,0,13.25,5.0,0,55.05,,2022-06-25
+619794,Harper McPheat,Onslow Gymnastics Club,2,UNDER,Kapiti Championships,"AA, Teams, App",,13.65,5.0,0,13.7,5.0,0,11.65,4.5,0,13.35,5.0,0,52.35,,2022-06-25
 262678,Bonnie Filer,Rimutaka Gymsports,2,NONE,Kapiti Championships,"AA, Teams, App",,12.4,5.0,0,12.25,5.0,0,12.45,4.5,0,13.1,5.0,0,50.2,,2022-06-25
 273388,Riley Kauika,Manawatu Gymsports,4,OVER,Kapiti Championships,"AA, Teams, App",,12.7,5.0,0,10.25,4.5,0,10.2,4.2,0,11.4,4.5,0,44.55,,2022-06-25
 177843,Emily Carpenter,Manawatu Gymsports,4,OVER,Kapiti Championships,"AA, Teams, App",,11.35,5.0,0,10.05,4.5,0,11.8,4.5,0,11.3,4.5,0,44.5,,2022-06-25
@@ -1059,11 +1059,11 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 198831,Millie Richardson,Whanganui Boys & Girls Gym Club,4,OVER,Kapiti Championships,"AA, Teams, App",,12.95,5.0,0,11.95,5.0,0,11.85,4.2,0,13.15,5.0,0,49.9,,2022-06-25
 230301,Chloe Courtnage,Kapiti Gymnastics,4,OVER,Kapiti Championships,"AA, Teams, App",,12.65,5.0,0,12.8,5.0,0,10.45,4.0,0,11.75,4.5,0,47.65,,2022-06-25
 296472,Vaibhavi Tandon,Hutt Valley Gymnastics,4,OVER,Kapiti Championships,"AA, Teams, App",,13.95,5.0,0,13.55,5.0,0,12.85,4.5,0,11.85,4.5,0,52.2,,2022-06-25
-284779,Lia Vlaar,Onslow Gymnastic Club,4,OVER,Kapiti Championships,"AA, Teams, App",,13.5,5.0,0,12.45,5.0,0,12.7,4.7,0,11.55,4.5,0,50.2,,2022-06-25
-227729,Devon Cook,Onslow Gymnastic Club,4,OVER,Kapiti Championships,"AA, Teams, App",,13.6,5.0,0,12.85,5.0,0,10.6,4.0,0,11.8,5.0,0,48.85,,2022-06-25
-261652,Amelia Hogg,Onslow Gymnastic Club,4,OVER,Kapiti Championships,"AA, Teams, App",,12.7,5.0,0,12.65,5.0,0,12.2,4.0,0,12.45,4.5,0,50.0,,2022-06-25
-249317,Madison Lynch,Onslow Gymnastic Club,4,OVER,Kapiti Championships,"AA, Teams, App",,13.7,5.0,0,13.25,5.0,0,11.65,5.0,0,12.35,4.5,0,50.95,,2022-06-25
-236735,Eva Catherwood,Onslow Gymnastic Club,4,OVER,Kapiti Championships,"AA, Teams, App",,13.9,5.0,0,13.1,5.0,0,13.0,5.0,0,12.65,5.0,0,52.65,,2022-06-25
+284779,Lia Vlaar,Onslow Gymnastics Club,4,OVER,Kapiti Championships,"AA, Teams, App",,13.5,5.0,0,12.45,5.0,0,12.7,4.7,0,11.55,4.5,0,50.2,,2022-06-25
+227729,Devon Cook,Onslow Gymnastics Club,4,OVER,Kapiti Championships,"AA, Teams, App",,13.6,5.0,0,12.85,5.0,0,10.6,4.0,0,11.8,5.0,0,48.85,,2022-06-25
+261652,Amelia Hogg,Onslow Gymnastics Club,4,OVER,Kapiti Championships,"AA, Teams, App",,12.7,5.0,0,12.65,5.0,0,12.2,4.0,0,12.45,4.5,0,50.0,,2022-06-25
+249317,Madison Lynch,Onslow Gymnastics Club,4,OVER,Kapiti Championships,"AA, Teams, App",,13.7,5.0,0,13.25,5.0,0,11.65,5.0,0,12.35,4.5,0,50.95,,2022-06-25
+236735,Eva Catherwood,Onslow Gymnastics Club,4,OVER,Kapiti Championships,"AA, Teams, App",,13.9,5.0,0,13.1,5.0,0,13.0,5.0,0,12.65,5.0,0,52.65,,2022-06-25
 296107,Emelia Bailey,Manawatu Gymsports,4,UNDER,Kapiti Championships,"AA, Teams, App",,12.05,5.0,0,9.9,4.5,0,0.0,0.0,0,10.85,4.5,0,32.8,,2022-06-25
 296029,Emily Gillard,Manawatu Gymsports,4,UNDER,Kapiti Championships,"AA, Teams, App",,13.9,5.0,0,13.4,5.0,0,11.8,4.2,0,10.85,4.0,0,49.95,,2022-06-25
 273384,Isobel Taylor,Manawatu Gymsports,4,UNDER,Kapiti Championships,"AA, Teams, App",,12.05,5.0,0,10.85,5.0,0,10.7,5.0,0,12.8,5.0,0,46.4,,2022-06-25
@@ -1083,9 +1083,9 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 281437,Savannah Currie,Hutt Valley Gymnastics,4,UNDER,Kapiti Championships,"AA, Teams, App",,13.35,5.0,0,13.5,5.0,0,12.75,4.7,0,12.6,5.0,0,52.2,,2022-06-25
 219201,Eleanor Henry,Hutt Valley Gymnastics,4,UNDER,Kapiti Championships,"AA, Teams, App",,13.25,5.0,0,13.25,5.0,0,12.8,4.5,0,13.35,5.0,0,52.65,,2022-06-25
 301962,Elsiana Shearer Orr,Hutt Valley Gymnastics,4,UNDER,Kapiti Championships,"AA, Teams, App",,14.4,5.0,0,14.05,5.0,0,13.65,5.0,0,12.55,4.5,0,54.65,,2022-06-25
-290641,Ashley Elliott,Onslow Gymnastic Club,4,UNDER,Kapiti Championships,"AA, Teams, App",,13.3,5.0,0,12.3,5.0,0,13.35,5.0,0,12.1,4.5,0,51.05,,2022-06-25
-261649,Octavia Burns,Onslow Gymnastic Club,4,UNDER,Kapiti Championships,"AA, Teams, App",,13.35,5.0,0,12.95,5.0,0,13.15,5.0,0,11.9,5.0,0,51.35,,2022-06-25
-295631,Jessica Calvert,Onslow Gymnastic Club,4,UNDER,Kapiti Championships,"AA, Teams, App",,13.4,5.0,0,14.15,5.0,0,14.35,5.0,0,13.6,5.0,0,55.5,,2022-06-25
+290641,Ashley Elliott,Onslow Gymnastics Club,4,UNDER,Kapiti Championships,"AA, Teams, App",,13.3,5.0,0,12.3,5.0,0,13.35,5.0,0,12.1,4.5,0,51.05,,2022-06-25
+261649,Octavia Burns,Onslow Gymnastics Club,4,UNDER,Kapiti Championships,"AA, Teams, App",,13.35,5.0,0,12.95,5.0,0,13.15,5.0,0,11.9,5.0,0,51.35,,2022-06-25
+295631,Jessica Calvert,Onslow Gymnastics Club,4,UNDER,Kapiti Championships,"AA, Teams, App",,13.4,5.0,0,14.15,5.0,0,14.35,5.0,0,13.6,5.0,0,55.5,,2022-06-25
 236682,Eryn Foster,Hutt Valley Gymnastics,4,NONE,Kapiti Championships,"AA, Teams, App",,13.8,5.0,0,13.15,5.0,0,12.5,5.0,0,13.65,5.0,0,53.1,,2022-06-25
 254219,Aubane Farcy,Rimutaka Gymsports,4,OVER,Kapiti Championships,"AA, Teams, App",,12.15,5.0,0,10.9,5.0,0,12.3,5.0,0,11.85,4.5,0,47.2,,2022-06-25
 ,Riley Wong,Eastern Suburbs Gymnastics Club,1,UNDER,Midlands Junior Artistic Competition 2022,All-around,,13.35,5.0,0,13.2,5.0,0,12.266,4.5,0,13.5,5.0,0,52.316,,2022-07-30
@@ -1302,9 +1302,9 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 272458,Elise McLaughlin,Hutt Valley Gymnastics,3,UNDER,Kapiti Championships,"AA, Team, App",,13.4,5.0,0,12.25,5.0,0,12.8,5.0,0,12.4,5.0,0,50.85,,2022-06-25
 249301,Hannah Broster,Hutt Valley Gymnastics,3,OVER,Kapiti Championships,"AA, Team, App",,13.6,5.0,0,12.45,5.0,0,13.1,5.0,0,13.566,5.0,0,52.716,,2022-06-25
 272530,Hana Roberts,Hutt Valley Gymnastics,3,UNDER,Kapiti Championships,"AA, Team, App",,12.9,5.0,0,12.4,5.0,0,13.75,5.0,0,12.833,5.0,0,51.883,,2022-06-25
-562627,Antonia Gorbushina,Onslow Gymnastic Club,3,UNDER,Kapiti Championships,"AA, Team, App",,13.35,5.0,0,12.1,5.0,0,12.95,4.5,0,13.066,5.0,0,51.466,,2022-06-25
-295643,Sofia Creighton,Onslow Gymnastic Club,3,UNDER,Kapiti Championships,"AA, Team, App",,13.6,5.0,0,13.95,5.0,0,12.4,4.5,0,13.9,5.0,0,53.85,,2022-06-25
-542219,Ashleigh McPheat,Onslow Gymnastic Club,3,OVER,Kapiti Championships,"AA, Team, App",,13.5,5.0,0,13.9,5.0,0,11.9,4.5,0,14.1,5.0,0,53.4,,2022-06-25
+562627,Antonia Gorbushina,Onslow Gymnastics Club,3,UNDER,Kapiti Championships,"AA, Team, App",,13.35,5.0,0,12.1,5.0,0,12.95,4.5,0,13.066,5.0,0,51.466,,2022-06-25
+295643,Sofia Creighton,Onslow Gymnastics Club,3,UNDER,Kapiti Championships,"AA, Team, App",,13.6,5.0,0,13.95,5.0,0,12.4,4.5,0,13.9,5.0,0,53.85,,2022-06-25
+542219,Ashleigh McPheat,Onslow Gymnastics Club,3,OVER,Kapiti Championships,"AA, Team, App",,13.5,5.0,0,13.9,5.0,0,11.9,4.5,0,14.1,5.0,0,53.4,,2022-06-25
 254217,Elanna Sofeni,Rimutaka Gymsports,3,NONE,Kapiti Championships,"AA, Team, App",,14.15,5.0,0,11.85,4.5,0,8.6,3.5,0,13.566,5.0,0,48.166,,2022-06-25
 218585,Sophie Long,Manawatu Gymsports,5,OVER,Kapiti Championships,"AA, Team, App",,13.1,5.0,0,12.6,5.0,0,12.8,5.0,0,13.55,5.0,0,52.05,,2022-06-25
 278682,Lucy McFarlane,Rimutaka Gymsports,5,UNDER,Kapiti Championships,"AA, Team, App",,13.8,5.0,0,13.55,5.0,0,11.9,4.2,0,13.5,5.0,0,52.75,,2022-06-25
@@ -1316,8 +1316,8 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 226366,Sia Vaka,Hutt Valley Gymnastics,5,OVER,Kapiti Championships,"AA, Team, App",,14.1,5.0,0,12.25,5.0,0,12.45,4.5,0,13.05,5.0,0,51.85,,2022-06-25
 245525,Marieve Wilson - Bray,Hutt Valley Gymnastics,5,OVER,Kapiti Championships,"AA, Team, App",,0.0,0.0,0,13.1,5.0,0,9.65,5.0,0,0.0,0.0,0,22.75,,2022-06-25
 206213,Mariska Sue,Hutt Valley Gymnastics,5,OVER,Kapiti Championships,"AA, Team, App",,13.35,5.0,0,12.6,5.0,0,12.05,5.0,0,12.45,5.0,0,50.45,,2022-06-25
-227748,Zoe Tatham,Onslow Gymnastic Club,5,OVER,Kapiti Championships,"AA, Team, App",,13.15,5.0,0,12.65,5.0,0,11.1,5.0,0,13.45,5.0,0,50.35,,2022-06-25
-249821,Ashleigh Keall,Onslow Gymnastic Club,5,OVER,Kapiti Championships,"AA, Team, App",,13.0,5.0,0,12.4,5.0,0,13.25,5.0,0,12.95,5.0,0,51.6,,2022-06-25
+227748,Zoe Tatham,Onslow Gymnastics Club,5,OVER,Kapiti Championships,"AA, Team, App",,13.15,5.0,0,12.65,5.0,0,11.1,5.0,0,13.45,5.0,0,50.35,,2022-06-25
+249821,Ashleigh Keall,Onslow Gymnastics Club,5,OVER,Kapiti Championships,"AA, Team, App",,13.0,5.0,0,12.4,5.0,0,13.25,5.0,0,12.95,5.0,0,51.6,,2022-06-25
 201094,Eva McEwan,Harbour City Gymnastics,5,OVER,Kapiti Championships,"AA, Team, App",,12.95,5.0,0,11.85,5.0,0,11.15,4.0,0,12.3,5.0,0,48.25,,2022-06-25
 261097,Nara Wyatt,Harbour City Gymnastics,5,OVER,Kapiti Championships,"AA, Team, App",,13.0,5.0,0,12.1,5.0,0,13.0,5.0,0,11.75,4.5,0,49.85,,2022-06-25
 296689,Naomi Guershom,Rimutaka Gymsports,5,OVER,Kapiti Championships,"AA, Team, App",,12.4,5.0,0,12.25,5.0,0,10.7,4.5,0,12.9,5.0,0,48.25,,2022-06-25
@@ -1336,8 +1336,8 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 158129,Abbey Malin,Rimutaka Gymsports,7,OVER,Kapiti Championships,"AA, Team, App",,10.933,2.4,0,9.133,2.1,0,3.8,1.3,0,0.0,0.0,0,23.866,,2022-06-25
 107862,Kathryn Sofeni,Rimutaka Gymsports,7,OVER,Kapiti Championships,"AA, Team, App",,10.4,1.6,0,10.166,2.8,0,10.866,2.9,0,11.166,3.6,0,42.598,,2022-06-25
 267437,Allegra Ruruku-Hunt,Kapiti Gymnastics,7,OVER,Kapiti Championships,"AA, Team, App",,10.533,2.0,0,11.066,3.0,0,0.0,0.0,0,12.266,4.1,0,33.865,,2022-06-25
-220967,Natasha Stewart,Onslow Gymnastic Club,7,OVER,Kapiti Championships,"AA, Team, App",,0.0,0.0,0,9.266,1.8,0,7.766,2.3,0,0.0,0.0,0,17.032,,2022-06-25
-220976,Anna Elliott,Onslow Gymnastic Club,7,OVER,Kapiti Championships,"AA, Team, App",,11.133,2.4,0,11.2,3.4,0,10.4,3.6,0,11.8,3.9,0,44.533,,2022-06-25
+220967,Natasha Stewart,Onslow Gymnastics Club,7,OVER,Kapiti Championships,"AA, Team, App",,0.0,0.0,0,9.266,1.8,0,7.766,2.3,0,0.0,0.0,0,17.032,,2022-06-25
+220976,Anna Elliott,Onslow Gymnastics Club,7,OVER,Kapiti Championships,"AA, Team, App",,11.133,2.4,0,11.2,3.4,0,10.4,3.6,0,11.8,3.9,0,44.533,,2022-06-25
 168329,Michaela McPhee,Harbour City Gymnastics,7,OVER,Kapiti Championships,"AA, Team, App",,10.6,1.6,0,9.2,2.1,0,9.033,2.3,0,10.166,3.1,0,38.999,,2022-06-25
 141980,Elise Kibblewhite,Harbour City Gymnastics,7,OVER,Kapiti Championships,"AA, Team, App",,10.466,1.6,0,10.333,2.9,0,7.333,2.6,0,11.0,3.5,0,39.132,,2022-06-25
 607939,Georgia  Clearwater,Central Gymnastics,1,UNDER,Hastings Gymnastics Junior Competition 2022,All-around,,12.65,5.0,0,6.766,4.0,0,13.533,5.0,0,13.066,5.0,0,46.015,,2022-06-18
@@ -1955,7 +1955,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 240902,Elizabeth Longhurst,Hutt Valley Gymnastics,7,UNDER,2022 New Zealand Gymnastics Championships - Artistic,Team & All-around,,10.7,1.6,0,11.466,3.1,0,12.15,3.7,0,12.5,3.7,0,46.816,,2022-07-13
 212830,Leah Austin,Hutt Valley Gymnastics,7,UNDER,2022 New Zealand Gymnastics Championships - Artistic,Team & All-around,,11.0,2.4,0,10.433,3.1,0,12.6,3.9,0,11.633,3.5,0,45.666,,2022-07-13
 245523,Maia McLaughlan,Hutt Valley Gymnastics,7,UNDER,2022 New Zealand Gymnastics Championships - Artistic,Team & All-around,,10.733,1.6,0,11.766,3.1,0,10.7,3.7,0,13.0,4.1,0,46.199,,2022-07-13
-220976,Anna Elliott,Onslow Gymnastic Club,7,OVER,2022 New Zealand Gymnastics Championships - Artistic,Team & All-around,,11.133,2.4,0,8.966,3.1,0,12.05,4.1,0,12.466,4.0,0,44.615,,2022-07-13
+220976,Anna Elliott,Onslow Gymnastics Club,7,OVER,2022 New Zealand Gymnastics Championships - Artistic,Team & All-around,,11.133,2.4,0,8.966,3.1,0,12.05,4.1,0,12.466,4.0,0,44.615,,2022-07-13
 283902,Natsumi Sekizaki,Waitakere Gymnastics Club,7,UNDER,2022 New Zealand Gymnastics Championships - Artistic,Team & All-around,,10.3,2.0,0,12.5,3.9,0,12.2,4.2,0,12.533,4.1,0,47.533,,2022-07-13
 547967,Olivia Hermez,Eastern Suburbs Gymnastics Club,7,UNDER,2022 New Zealand Gymnastics Championships - Artistic,Team & All-around,,12.166,3.4,0,10.3,3.1,0,10.4,2.9,0,13.1,4.1,0,45.966,,2022-07-13
 105397,Olivia Sue,Eastern Suburbs Gymnastics Club,7,UNDER,2022 New Zealand Gymnastics Championships - Artistic,Team & All-around,,11.5,3.2,0,11.4,3.1,0,12.3,4.3,0,12.333,4.0,0,47.533,,2022-07-13
@@ -2068,7 +2068,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 531971,Klara McKeefry,Counties Manukau Gymnastics,6,OVER,2022 New Zealand Gymnastics Championships - Artistic,Team & Apparatus Finals,,13.0,5.0,0,12.133,5.0,0,13.55,5.0,0,13.5,5.0,0,52.183,,2022-07-13
 216501,Abby Powell,Howick Gymnastics Club,6,OVER,2022 New Zealand Gymnastics Championships - Artistic,Team & Apparatus Finals,,13.5,5.0,0,12.0,5.0,0,12.4,4.7,0,12.0,5.0,0,49.9,,2022-07-13
 531998,Kayla Roberts,Counties Manukau Gymnastics,6,OVER,2022 New Zealand Gymnastics Championships - Artistic,Team & Apparatus Finals,,13.4,5.0,0,12.166,5.0,0,13.5,5.0,0,11.966,4.5,0,51.032,,2022-07-13
-542037,Mone Sato,Harbour,6,NONE,2022 New Zealand Gymnastics Championships - Artistic,Team & Apparatus Finals,,13.166,5.0,0,11.7,5.0,0,12.5,5.0,0,13.9,5.0,0,51.266,,2022-07-13
+542037,Mone Sato,North Harbour Gymnastics,6,NONE,2022 New Zealand Gymnastics Championships - Artistic,Team & Apparatus Finals,,13.166,5.0,0,11.7,5.0,0,12.5,5.0,0,13.9,5.0,0,51.266,,2022-07-13
 542014,Lexie Chen,North Harbour Gymnastics,6,UNDER,2022 New Zealand Gymnastics Championships - Artistic,Team & Apparatus Finals,,13.333,5.0,0,12.633,5.0,0,12.7,5.0,0,13.2,5.0,0,51.866,,2022-07-13
 542089,Taylor Jeffreys,North Harbour Gymnastics,6,OVER,2022 New Zealand Gymnastics Championships - Artistic,Team & Apparatus Finals,,13.266,5.0,0,13.166,5.0,0,13.75,5.0,0,13.1,5.0,0,53.282,,2022-07-13
 541926,Agnes Karlsson,North Harbour Gymnastics,6,UNDER,2022 New Zealand Gymnastics Championships - Artistic,Team & Apparatus Finals,,13.8,5.0,0,12.333,5.0,0,10.8,4.5,0,13.433,5.0,0,50.366,,2022-07-13
@@ -2157,7 +2157,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 117504,Lara Cooper,Hutt Valley Gymnastics,7,OVER,2022 New Zealand Gymnastics Championships - Artistic,Apparatus Finals,,0.0,0.0,0,0.0,0.0,0,10.5,4.1,0,0.0,0.0,0,10.5,,2022-07-13
 212830,Leah Austin,Hutt Valley Gymnastics,7,UNDER,2022 New Zealand Gymnastics Championships - Artistic,Apparatus Finals,,0.0,0.0,0,0.0,0.0,0,12.6,3.9,0,0.0,0.0,0,12.6,,2022-07-13
 245523,Maia McLaughlan,Hutt Valley Gymnastics,7,UNDER,2022 New Zealand Gymnastics Championships - Artistic,Apparatus Finals,,0.0,0.0,0,12.366,3.5,0,0.0,0.0,0,12.666,4.1,0,25.032,,2022-07-13
-220976,Anna Elliott,Onslow Gymnastic Club,7,OVER,2022 New Zealand Gymnastics Championships - Artistic,Apparatus Finals,,0.0,0.0,0,0.0,0.0,0,12.1,3.6,0,12.366,3.9,0,24.466,,2022-07-13
+220976,Anna Elliott,Onslow Gymnastics Club,7,OVER,2022 New Zealand Gymnastics Championships - Artistic,Apparatus Finals,,0.0,0.0,0,0.0,0.0,0,12.1,3.6,0,12.366,3.9,0,24.466,,2022-07-13
 267437,Allegra Ruruku-Hunt,Kapiti Gymnastics,7,OVER,2022 New Zealand Gymnastics Championships - Artistic,Apparatus Finals,,0.0,0.0,0,0.0,0.0,0,11.6,4.1,0,0.0,0.0,0,11.6,,2022-07-13
 278730,Te Ana Waiariki,Hutt Valley Gymnastics,7,UNDER,2022 New Zealand Gymnastics Championships - Artistic,Apparatus Finals,,11.033,2.4,0,12.066,3.5,0,0.0,0.0,0,0.0,0.0,0,23.099,,2022-07-13
 125086,Emma Hoffman,Gymnastics Nelson,7,OVER,2022 New Zealand Gymnastics Championships - Artistic,Apparatus Finals,,11.866,3.2,0,0.0,0.0,0,0.0,0.0,0,0.0,0.0,0,11.866,,2022-07-13
@@ -2838,10 +2838,10 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 641778,Lauren Carr,Hutt Valley Gymnastics,7,OVER,2022 Central Champs,AA,1,12.133,3.2,1,11.766,3.4,4,11.933,4.1,4,12.95,4.3,2,48.782,1,31 May 2022
 616085,Zahara Slatter,Manawatu Gymsports,7,OVER,2022 Central Champs,AA,1,11.4,2.4,3,12.7,3.9,2,10.3,3.1,12,11.6,3.7,14,46.0,2,31 May 2022
 267437,Allegra Ruruku-Hunt,Kapiti Gymnastics,7,OVER,2022 Central Champs,AA,1,10.866,2.0,13,10.333,2.4,12,11.9,4.1,5=,12.55,4.1,5,45.649,3,31 May 2022
-220976,Anna Elliott,Onslow Gymnastic Club,7,OVER,2022 Central Champs,AA,1,11.433,2.4,2,9.333,2.3,21,12.066,3.7,3,12.45,3.9,6,45.282,4,31 May 2022
+220976,Anna Elliott,Onslow Gymnastics Club,7,OVER,2022 Central Champs,AA,1,11.433,2.4,2,9.333,2.3,21,12.066,3.7,3,12.45,3.9,6,45.282,4,31 May 2022
 182720,Ariria Blackburn,Manawatu Gymsports,7,OVER,2022 Central Champs,AA,1,11.066,2.4,8,10.666,3.1,9,11.8,3.7,7=,11.65,4.0,13,45.182,5,31 May 2022
 226602,Lucy Moore,Christchurch School of Gymnastics,7,OVER,2022 Central Champs,AA,1,10.433,1.6,20=,11.9,3.9,3,11.9,3.9,5=,10.75,3.5,21,44.983,6=,31 May 2022
-220967,Natasha Stewart,Onslow Gymnastic Club,7,OVER,2022 Central Champs,AA,1,11.033,2.4,9=,10.6,2.4,10,11.8,3.7,7=,11.55,3.5,15,44.983,6=,31 May 2022
+220967,Natasha Stewart,Onslow Gymnastics Club,7,OVER,2022 Central Champs,AA,1,11.033,2.4,9=,10.6,2.4,10,11.8,3.7,7=,11.55,3.5,15,44.983,6=,31 May 2022
 198325,Charlee Wood,Manawatu Gymsports,7,OVER,2022 Central Champs,AA,1,11.033,2.4,9=,9.633,2.1,18,12.333,3.8,2,11.75,3.3,12,44.749,8,31 May 2022
 117504,Lara Cooper,Hutt Valley Gymnastics,7,OVER,2022 Central Champs,AA,1,10.9,1.6,12,9.833,2.3,15=,11.233,4.1,10,12.4,3.6,7,44.366,9,31 May 2022
 141980,Elise Kibblewhite,Harbour City Gymnastics,7,OVER,2022 Central Champs,AA,1,11.133,3.4,6,11.0,3.0,6,9.533,2.3,19,12.65,3.8,4,44.316,10,31 May 2022
@@ -2880,7 +2880,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 105411,Kahu Barsdell,Eastern Suburbs Gymnastics Club,7,OVER,2022 Central Champs,AA,1,10.6,3.4,16,12.7,4.1,1,13.033,4.6,1,12.766,4.2,1,49.099,1,31 May 2022
 195043,Ashlee Reddecliffe,Gymnastics Nelson,7,OVER,2022 Central Champs,AA,1,12.2,3.4,1,11.933,3.9,2,10.4,3.0,11,11.766,4.2,12,46.299,2,31 May 2022
 641778,Lauren Carr,Hutt Valley Gymnastics,7,OVER,2022 Central Champs,AA,1,11.866,3.2,2,10.533,3.8,9,10.733,3.6,9,12.533,4.1,3,45.665,3,31 May 2022
-220976,Anna Elliott,Onslow Gymnastic Club,7,OVER,2022 Central Champs,AA,1,11.4,2.4,3,9.666,2.0,16,11.8,3.7,2,12.433,3.9,5,45.299,4,31 May 2022
+220976,Anna Elliott,Onslow Gymnastics Club,7,OVER,2022 Central Champs,AA,1,11.4,2.4,3,9.666,2.0,16,11.8,3.7,2,12.433,3.9,5,45.299,4,31 May 2022
 182720,Ariria Blackburn,Manawatu Gymsports,7,OVER,2022 Central Champs,AA,1,11.133,2.4,6,10.7,3.1,4=,11.45,3.6,6,11.8,4.0,11,45.083,5,31 May 2022
 267437,Allegra Ruruku-Hunt,Kapiti Gymnastics,7,OVER,2022 Central Champs,AA,1,10.633,2.0,15,10.566,2.7,7=,11.333,4.1,7,12.5,4.2,4,45.032,6,31 May 2022
 616085,Zahara Slatter,Manawatu Gymsports,7,OVER,2022 Central Champs,AA,1,11.366,2.4,4,11.133,3.9,3,9.033,3.5,23,12.4,4.0,6,43.932,7,31 May 2022
@@ -2889,7 +2889,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 117504,Lara Cooper,Hutt Valley Gymnastics,7,OVER,2022 Central Champs,AA,1,10.266,1.6,22,10.166,2.3,13,11.0,3.6,8,12.133,3.6,8,43.565,10=,31 May 2022
 141980,Elise Kibblewhite,Harbour City Gymnastics,7,OVER,2022 Central Champs,AA,1,10.666,1.6,13=,10.7,2.7,4=,10.166,2.2,13=,12.033,3.8,9,43.565,10=,31 May 2022
 267024,Susannah Charlier,Hutt Valley Gymnastics,7,OVER,2022 Central Champs,AA,1,11.033,2.4,8,9.6,2.1,17,10.333,3.3,12,11.866,4.0,10,42.832,12,31 May 2022
-220967,Natasha Stewart,Onslow Gymnastic Club,7,OVER,2022 Central Champs,AA,1,9.0,2.0,27,10.633,2.4,6,11.533,3.7,4=,11.6,3.5,13,42.766,13,31 May 2022
+220967,Natasha Stewart,Onslow Gymnastics Club,7,OVER,2022 Central Champs,AA,1,9.0,2.0,27,10.633,2.4,6,11.533,3.7,4=,11.6,3.5,13,42.766,13,31 May 2022
 180094,Sophia Paviour-Smith,Capital Gymnastics,7,OVER,2022 Central Champs,AA,1,11.166,2.6,5,10.566,2.4,7=,8.333,3.3,25,12.566,4.2,2,42.631,14,31 May 2022
 248334,Jaylyn Tasker,Gymnastics Nelson,7,OVER,2022 Central Champs,AA,1,10.233,1.6,23=,9.4,2.5,19=,10.633,3.3,10,12.3,4.1,7,42.566,15,31 May 2022
 198325,Charlee Wood,Manawatu Gymsports,7,OVER,2022 Central Champs,AA,1,11.1,2.4,7,10.066,2.4,14,10.166,3.0,13=,10.733,2.8,20=,42.065,16,31 May 2022
@@ -2985,9 +2985,9 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 268212,Chloe Moreton,Twisters Tawa Gymnastics Club,5,OVER,2022 Central Champs,AA,1,12.85,5.0,9=,13.2,5.0,5,12.45,5.0,7,12.466,5.0,5,50.966,6,31 May 2022
 226366,Sia Vaka,Hutt Valley Gymnastics,5,OVER,2022 Central Champs,AA,1,14.1,5.0,1,12.7,5.0,7,12.15,4.5,9,12.0,4.5,7=,50.95,7,31 May 2022
 206213,Mariska Sue,Hutt Valley Gymnastics,5,OVER,2022 Central Champs,AA,1,12.85,5.0,9=,12.566,5.0,10,12.3,4.5,8,12.0,5.0,7=,49.716,8,31 May 2022
-227748,Zoe Tatham,Onslow Gymnastic Club,5,OVER,2022 Central Champs,AA,1,13.7,5.0,2,13.333,5.0,4,10.8,4.5,11,11.666,5.0,9,49.499,9,31 May 2022
+227748,Zoe Tatham,Onslow Gymnastics Club,5,OVER,2022 Central Champs,AA,1,13.7,5.0,2,13.333,5.0,4,10.8,4.5,11,11.666,5.0,9,49.499,9,31 May 2022
 158025,Kate Livengood,Harbour City Gymnastics,5,OVER,2022 Central Champs,AA,1,13.55,5.0,4,13.066,5.0,6,10.75,4.5,12,11.6,5.0,10,48.966,10,31 May 2022
-249821,Ashleigh Keall,Onslow Gymnastic Club,5,OVER,2022 Central Champs,AA,1,13.05,5.0,8,12.4,5.0,11,11.2,4.2,10,11.433,5.0,11,48.083,11,31 May 2022
+249821,Ashleigh Keall,Onslow Gymnastics Club,5,OVER,2022 Central Champs,AA,1,13.05,5.0,8,12.4,5.0,11,11.2,4.2,10,11.433,5.0,11,48.083,11,31 May 2022
 295759,Jessie Dravitzki,Twisters Tawa Gymnastics Club,5,OVER,2022 Central Champs,AA,1,13.45,5.0,6,DNS,DNS,DNS,12.6,5.0,5,10.266,4.5,12,DNF,-,31 May 2022
 278578,Laura Rees,Capital Gymnastics,5,UNDER,2022 Central Champs,AA,,12.15,5.0,11,14.133,5.0,1,13.55,5.0,2,13.433,5.0,1=,53.266,1,31 May 2022
 256633,Carmen Lee,Capital Gymnastics,5,UNDER,2022 Central Champs,AA,,11.45,5.0,12,13.366,5.0,2,14.35,5.0,1,13.433,5.0,1=,52.599,2,31 May 2022
@@ -3008,9 +3008,9 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 266996,Kaia Mackenzie Erkens,Capital Gymnastics,5,OVER,2022 Central Champs,AA,1,12.65,5.0,25=,12.95,5.0,2,13.55,5.0,5,12.133,5.0,17,51.283,5,31 May 2022
 226366,Sia Vaka,Hutt Valley Gymnastics,5,OVER,2022 Central Champs,AA,1,14.05,5.0,1,11.85,5.0,24,11.8,5.0,17=,13.333,5.0,1,51.033,6,31 May 2022
 158025,Kate Livengood,Harbour City Gymnastics,5,OVER,2022 Central Champs,AA,1,13.65,5.0,6,12.7,5.0,4=,12.85,5.0,6,11.7,5.0,23,50.9,7,31 May 2022
-249821,Ashleigh Keall,Onslow Gymnastic Club,5,OVER,2022 Central Champs,AA,1,13.0,5.0,12=,12.9,5.0,3,12.6,5.0,8,12.366,5.0,14,50.866,8,31 May 2022
+249821,Ashleigh Keall,Onslow Gymnastics Club,5,OVER,2022 Central Champs,AA,1,13.0,5.0,12=,12.9,5.0,3,12.6,5.0,8,12.366,5.0,14,50.866,8,31 May 2022
 285375,Elise Morton,Gymnastics Nelson,5,OVER,2022 Central Champs,AA,1,13.6,5.0,7=,10.95,5.0,31,12.75,4.5,7,13.0,5.0,7,50.3,9,31 May 2022
-227748,Zoe Tatham,Onslow Gymnastic Club,5,OVER,2022 Central Champs,AA,1,13.6,5.0,7=,12.6,5.0,6=,11.55,4.5,20,12.5,5.0,12,50.25,10,31 May 2022
+227748,Zoe Tatham,Onslow Gymnastics Club,5,OVER,2022 Central Champs,AA,1,13.6,5.0,7=,12.6,5.0,6=,11.55,4.5,20,12.5,5.0,12,50.25,10,31 May 2022
 206213,Mariska Sue,Hutt Valley Gymnastics,5,OVER,2022 Central Champs,AA,1,12.95,5.0,16=,12.0,5.0,16=,11.65,4.5,19,13.266,5.0,2,49.866,11,31 May 2022
 295759,Jessie Dravitzki,Twisters Tawa Gymnastics Club,5,OVER,2022 Central Champs,AA,1,13.6,5.0,7=,12.15,5.0,15,12.45,5.0,9,11.466,5.0,28,49.666,12,31 May 2022
 255988,Emma Barry,Manawatu Gymsports,5,OVER,2022 Central Champs,AA,1,13.0,5.0,12=,11.9,5.0,21=,12.05,5.0,15,12.6,5.0,9=,49.55,13,31 May 2022
@@ -3662,11 +3662,11 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 534480,Millie Scott,Invercargill Gymnastics Club,8,UNDER,Southern Artistic Championships Competition,AA,1,12.25,3.4,1,8.433,1.8,2,9.25,3.2,2,10.566,3.1,2,40.499,2,23 May 2022
 575099,Maddison Young,Gore Gymnastics Club,1,OVER,Southern Artistic Championships Competition,AA,1,13.9,5.0,1,12.6,4.5,2,13.25,5.0,2=,13.8,5.0,1,53.55,1,23 May 2022
 589512,Alice Mackle,College Street Gymnastics Club,1,OVER,Southern Artistic Championships Competition,AA,1,13.75,5.0,2,13.15,5.0,1,11.6,5.0,8,13.45,5.0,2,51.95,2,23 May 2022
-582532,Hazel D'souza,Gore Gymnastics Club,SI,OVER,Southern Artistic Championships Competition,AA,1,13.5,5.0,3=,11.7,4.0,6,13.25,5.0,2=,13.4,5.0,3,51.85,3,23 May 2022
-609991,Hannah Hunt,Gore Gymnastics Club,SI,OVER,Southern Artistic Championships Competition,AA,1,13.5,5.0,3=,12.3,4.5,4,12.9,5.0,5,12.8,5.0,5,51.5,4,23 May 2022
+582532,Hazel D'souza,Gore Gymnastics Club,1,OVER,Southern Artistic Championships Competition,AA,1,13.5,5.0,3=,11.7,4.0,6,13.25,5.0,2=,13.4,5.0,3,51.85,3,23 May 2022
+609991,Hannah Hunt,Gore Gymnastics Club,2,OVER,Southern Artistic Championships Competition,AA,1,13.5,5.0,3=,12.3,4.5,4,12.9,5.0,5,12.8,5.0,5,51.5,4,23 May 2022
 669152,Willow Brunton,Gore Gymnastics Club,1,OVER,Southern Artistic Championships Competition,AA,1,13.35,5.0,6,11.95,4.0,5,13.45,5.0,1,12.7,5.0,6,51.45,5,23 May 2022
 684970,Claudia Dillon,Gore Gymnastics Club,1,OVER,Southern Artistic Championships Competition,AA,1,13.1,5.0,8,11.0,4.0,7,13.15,5.0,4,12.85,5.0,4,50.1,6,23 May 2022
-560322,Shanae Taylor,Gore Gymnastics Club,SI,OVER,Southern Artistic Championships Competition,AA,1,13.15,5.0,7,12.45,4.5,3,12.25,4.5,7,11.95,4.5,8,49.8,7,23 May 2022
+560322,Shanae Taylor,Gore Gymnastics Club,1,OVER,Southern Artistic Championships Competition,AA,1,13.15,5.0,7,12.45,4.5,3,12.25,4.5,7,11.95,4.5,8,49.8,7,23 May 2022
 588871,Gracie Sinclair,Gore Gymnastics Club,1,OVER,Southern Artistic Championships Competition,AA,1,13.4,5.0,5,8.7,3.5,8,12.75,5.0,6,12.0,5.0,7,46.85,8,23 May 2022
 596074,Gracen Marshall,College Street Gymnastics Club,1,UNDER,Southern Artistic Championships Competition,AA,1,12.95,5.0,4,13.35,5.0,1,13.0,5.0,1,12.3,5.0,2=,51.6,1,23 May 2022
 135708,Madeleine Pettersson,Invercargill Gymnastics Club,1,UNDER,Southern Artistic Championships Competition,AA,1,13.9,5.0,1,11.8,4.5,3,11.85,5.0,7,13.3,5.0,1,50.85,2,23 May 2022
@@ -3770,7 +3770,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 119377,Christina Misich,Waitakere Gymnastics Club,8,OVER,WAGS Senior Club Competition ART (Qualifier),AA,1,,,,,,,,,,,,,26.633,4,
 691434,Zoe Llewellyn,Waitakere Gymnastics Club,9,NONE,WAGS Senior Club Competition ART (Qualifier),AA,1,,,,,,,,,,,,,38.432,1,
 617735,Sophie Chisholm,Kapiti Gymnastics,3,OVER,Capital Juniors 2022,AA,1,14.35,5.0,1,13.45,5.0,4,14.05,5.0,1,14.15,5.0,1,56.0,1,23 May 2022
-542219,Ashleigh McPheat,Onslow Gymnastic Club,3,OVER,Capital Juniors 2022,AA,1,13.6,5.0,4,13.8,5.0,2,14.0,5.0,2,14.0,5.0,2,55.4,2,23 May 2022
+542219,Ashleigh McPheat,Onslow Gymnastics Club,3,OVER,Capital Juniors 2022,AA,1,13.6,5.0,4,13.8,5.0,2,14.0,5.0,2,14.0,5.0,2,55.4,2,23 May 2022
 254158,Tayla Campbell,Rimutaka Gymsports,3,OVER,Capital Juniors 2022,AA,1,13.35,5.0,7,13.9,5.0,1,13.5,5.0,3,13.3,5.0,6,54.05,3,23 May 2022
 249301,Hannah Broster,Hutt Valley Gymnastics,3,OVER,Capital Juniors 2022,AA,1,13.65,5.0,3,12.75,5.0,5,13.15,5.0,4,13.6,5.0,4,53.15,4,23 May 2022
 284539,Amelia Harris,Rimutaka Gymsports,3,OVER,Capital Juniors 2022,AA,1,13.3,5.0,8,13.55,5.0,3,12.1,4.2,8,13.55,5.0,5,52.5,5,23 May 2022
@@ -3789,16 +3789,16 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 596102,Xanthe McCutcheon,Harbour City Gymnastics,3,UNDER,Capital Juniors 2022,AA,1,13.5,5.0,14=,12.8,5.0,22=,13.05,4.5,12,13.8,5.0,2=,53.15,8=,23 May 2022
 600802,Yolandy Russell,Twisters Tawa Gymnastics Club,3,UNDER,Capital Juniors 2022,AA,1,13.75,5.0,7,13.3,5.0,9=,13.3,4.5,9,12.8,5.0,13,53.15,8=,23 May 2022
 261751,Olive Salmon,Manawatu Gymsports,3,UNDER,Capital Juniors 2022,AA,1,13.4,5.0,17,14.25,5.0,1,11.85,4.2,27,13.45,5.0,8,52.95,10,23 May 2022
-295643,Sofia Creighton,Onslow Gymnastic Club,3,UNDER,Capital Juniors 2022,AA,1,14.2,5.0,1,13.3,5.0,9=,13.2,4.5,10,12.15,4.5,23,52.85,11,23 May 2022
+295643,Sofia Creighton,Onslow Gymnastics Club,3,UNDER,Capital Juniors 2022,AA,1,14.2,5.0,1,13.3,5.0,9=,13.2,4.5,10,12.15,4.5,23,52.85,11,23 May 2022
 296548,Alexa Ngan,Hutt Valley Gymnastics,3,UNDER,Capital Juniors 2022,AA,1,13.1,5.0,20,12.4,5.0,27,13.45,5.0,7,13.8,5.0,2=,52.75,12,23 May 2022
 633272,Kia Hewitt,Manawatu Gymsports,3,UNDER,Capital Juniors 2022,AA,1,13.8,5.0,6,13.1,5.0,14=,13.1,4.5,11,12.65,5.0,15,52.65,13,23 May 2022
-562627,Antonia Gorbushina,Onslow Gymnastic Club,3,UNDER,Capital Juniors 2022,AA,1,13.65,5.0,10,12.9,5.0,20=,13.35,4.5,8,12.35,5.0,20,52.25,14,23 May 2022
+562627,Antonia Gorbushina,Onslow Gymnastics Club,3,UNDER,Capital Juniors 2022,AA,1,13.65,5.0,10,12.9,5.0,20=,13.35,4.5,8,12.35,5.0,20,52.25,14,23 May 2022
 286779,Aurora Edwards,Manawatu Gymsports,3,UNDER,Capital Juniors 2022,AA,1,13.45,5.0,16,12.9,5.0,20=,12.65,4.5,15=,13.15,5.0,11,52.15,15,23 May 2022
 600797,Emma Marks,Twisters Tawa Gymnastics Club,3,UNDER,Capital Juniors 2022,AA,1,12.5,5.0,30,12.65,5.0,25,14.15,5.0,3,12.5,5.0,17=,51.8,16,23 May 2022
 682542,Carita Lindhér,Capital Gymnastics,3,UNDER,Capital Juniors 2022,AA,1,13.25,5.0,18,13.6,5.0,5=,12.3,5.0,18=,12.6,5.0,16,51.75,17,23 May 2022
 548814,Mila Birch,Harbour City Gymnastics,3,UNDER,Capital Juniors 2022,AA,1,13.7,5.0,8=,12.8,5.0,22=,12.1,5.0,22=,12.75,5.0,14,51.35,18,23 May 2022
 537780,Loula Dewes,Hutt Valley Gymnastics,3,UNDER,Capital Juniors 2022,AA,1,13.55,5.0,13,13.55,5.0,7=,12.75,4.5,14,11.05,4.0,33,50.9,19=,23 May 2022
-570512,Obi Haworth,Onslow Gymnastic Club,3,UNDER,Capital Juniors 2022,AA,1,13.0,5.0,24,13.05,5.0,16=,13.0,4.5,13,11.85,4.5,26,50.9,19=,23 May 2022
+570512,Obi Haworth,Onslow Gymnastics Club,3,UNDER,Capital Juniors 2022,AA,1,13.0,5.0,24,13.05,5.0,16=,13.0,4.5,13,11.85,4.5,26,50.9,19=,23 May 2022
 591839,Gaia Gilbertson,Manawatu Gymsports,3,UNDER,Capital Juniors 2022,AA,1,13.5,5.0,14=,13.1,5.0,14=,12.65,5.0,15=,11.45,4.5,29,50.7,21,23 May 2022
 600969,Charlotte Kirkwood,Twisters Tawa Gymnastics Club,3,UNDER,Capital Juniors 2022,AA,1,12.85,5.0,26=,12.8,5.0,22=,12.5,4.5,17,12.4,4.5,19,50.55,22,23 May 2022
 283315,Ruby Fleet,Kapiti Gymnastics,3,UNDER,Capital Juniors 2022,AA,1,13.15,5.0,19,13.25,5.0,11,10.55,4.0,32,13.3,5.0,9=,50.25,23,23 May 2022
@@ -3816,29 +3816,29 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 567989,Kana Komikado,Levin Gymnastics Club,4,OVER,Capital Juniors 2022,AA,1,13.75,5.0,4,13.7,5.0,2,13.15,5.0,1,14.1,5.0,1,54.7,1,23 May 2022
 296689,Naomi Guershom,Rimutaka Gymsports,4,OVER,Capital Juniors 2022,AA,1,14.15,5.0,1,13.2,5.0,4,12.5,4.5,3,13.95,5.0,3,53.8,2,23 May 2022
 567991,Ren Comrie,Levin Gymnastics Club,4,OVER,Capital Juniors 2022,AA,1,13.45,5.0,6=,13.75,5.0,1,11.1,3.5,10=,14.0,5.0,2,52.3,3,23 May 2022
-236735,Eva Catherwood,Onslow Gymnastic Club,4,OVER,Capital Juniors 2022,AA,1,13.95,5.0,2,12.1,5.0,15,12.4,5.0,4,12.9,5.0,8,51.35,4,23 May 2022
+236735,Eva Catherwood,Onslow Gymnastics Club,4,OVER,Capital Juniors 2022,AA,1,13.95,5.0,2,12.1,5.0,15,12.4,5.0,4,12.9,5.0,8,51.35,4,23 May 2022
 281440,Sienna Boyd,Hutt Valley Gymnastics,4,OVER,Capital Juniors 2022,AA,1,13.45,5.0,6=,12.15,5.0,14,12.0,4.5,5=,13.25,5.0,6,50.85,5,23 May 2022
 236682,Eryn Foster,Hutt Valley Gymnastics,4,OVER,Capital Juniors 2022,AA,1,13.1,5.0,10,12.5,5.0,10,12.6,5.0,2,12.55,4.5,11,50.75,6,23 May 2022
 201410,Grace McGall,Rimutaka Gymsports,4,OVER,Capital Juniors 2022,AA,1,12.75,5.0,12,12.75,5.0,7,11.7,4.2,9,13.5,5.0,4,50.7,7,23 May 2022
 192731,Emma Cooper,Rimutaka Gymsports,4,OVER,Capital Juniors 2022,AA,1,13.8,5.0,3,12.25,5.0,12,11.85,5.0,7=,12.45,4.5,12,50.35,8,23 May 2022
 633734,Charlie Edhouse,Hutt Valley Gymnastics,4,OVER,Capital Juniors 2022,AA,1,12.7,5.0,13,12.7,5.0,8,12.0,5.0,5=,12.65,4.5,9,50.05,9,23 May 2022
 192269,Poppy Cowan,Hutt Valley Gymnastics,4,OVER,Capital Juniors 2022,AA,1,13.15,5.0,9,12.8,5.0,6,10.9,4.5,12,13.1,5.0,7,49.95,10,23 May 2022
-261652,Amelia Hogg,Onslow Gymnastic Club,4,OVER,Capital Juniors 2022,AA,1,11.8,5.0,16,13.3,5.0,3,11.85,4.5,7=,12.6,5.0,10,49.55,11,23 May 2022
+261652,Amelia Hogg,Onslow Gymnastics Club,4,OVER,Capital Juniors 2022,AA,1,11.8,5.0,16,13.3,5.0,3,11.85,4.5,7=,12.6,5.0,10,49.55,11,23 May 2022
 608523,Ruby Brewer,Rimutaka Gymsports,4,OVER,Capital Juniors 2022,AA,1,13.0,5.0,11,12.95,5.0,5,11.1,5.0,10=,12.4,4.5,13,49.45,12,23 May 2022
-249317,Madison Lynch,Onslow Gymnastic Club,4,OVER,Capital Juniors 2022,AA,1,12.4,5.0,14=,12.6,5.0,9,10.45,4.5,13=,13.45,5.0,5,48.9,13,23 May 2022
-227729,Devon Cook,Onslow Gymnastic Club,4,OVER,Capital Juniors 2022,AA,1,13.5,5.0,5,12.2,5.0,13,10.45,3.5,13=,11.45,4.5,16,47.6,14,23 May 2022
-284779,Lia Vlaar,Onslow Gymnastic Club,4,OVER,Capital Juniors 2022,AA,1,13.45,5.0,6=,11.55,5.0,16,10.15,4.0,16,12.35,4.5,14,47.5,15,23 May 2022
+249317,Madison Lynch,Onslow Gymnastics Club,4,OVER,Capital Juniors 2022,AA,1,12.4,5.0,14=,12.6,5.0,9,10.45,4.5,13=,13.45,5.0,5,48.9,13,23 May 2022
+227729,Devon Cook,Onslow Gymnastics Club,4,OVER,Capital Juniors 2022,AA,1,13.5,5.0,5,12.2,5.0,13,10.45,3.5,13=,11.45,4.5,16,47.6,14,23 May 2022
+284779,Lia Vlaar,Onslow Gymnastics Club,4,OVER,Capital Juniors 2022,AA,1,13.45,5.0,6=,11.55,5.0,16,10.15,4.0,16,12.35,4.5,14,47.5,15,23 May 2022
 230301,Chloe Courtnage,Kapiti Gymnastics,4,OVER,Capital Juniors 2022,AA,1,12.4,5.0,14=,12.3,5.0,11,10.25,4.0,15,11.9,5.0,15,46.85,16,23 May 2022
 229045,Ema Gatland,Hutt Valley Gymnastics,4,UNDER,Capital Juniors 2022,AA,1,13.6,5.0,2,13.95,5.0,2,13.2,5.0,2,13.6,5.0,3,54.35,1,23 May 2022
-295631,Jess Calvert,Onslow Gymnastic Club,4,UNDER,Capital Juniors 2022,AA,1,11.8,5.0,11,14.25,5.0,1,13.4,5.0,1,13.8,5.0,1,53.25,2,23 May 2022
+295631,Jess Calvert,Onslow Gymnastics Club,4,UNDER,Capital Juniors 2022,AA,1,11.8,5.0,11,14.25,5.0,1,13.4,5.0,1,13.8,5.0,1,53.25,2,23 May 2022
 271154,Anaya Dunlop,Rimutaka Gymsports,4,UNDER,Capital Juniors 2022,AA,1,13.55,5.0,3,11.95,5.0,5,12.85,5.0,3,13.7,5.0,2,52.05,3,23 May 2022
 569849,Sydnee Hallett,Levin Gymnastics Club,4,UNDER,Capital Juniors 2022,AA,1,13.05,5.0,6,12.85,5.0,3,12.55,4.5,4,13.1,5.0,4,51.55,4,23 May 2022
 295479,Chloe Ropata-Martin,Levin Gymnastics Club,4,UNDER,Capital Juniors 2022,AA,1,13.3,5.0,5,12.2,5.0,4,11.35,4.0,7=,12.8,4.5,5,49.65,5,23 May 2022
-261649,Octavia Burns,Onslow Gymnastic Club,4,UNDER,Capital Juniors 2022,AA,1,13.65,5.0,1,10.9,5.0,10,11.35,4.5,7=,12.35,5.0,7,48.25,6,23 May 2022
+261649,Octavia Burns,Onslow Gymnastics Club,4,UNDER,Capital Juniors 2022,AA,1,13.65,5.0,1,10.9,5.0,10,11.35,4.5,7=,12.35,5.0,7,48.25,6,23 May 2022
 272524,Erin Worsley,Hutt Valley Gymnastics,4,UNDER,Capital Juniors 2022,AA,1,13.4,5.0,4,10.7,5.0,11,11.25,4.5,9,12.65,5.0,6,48.0,7,23 May 2022
 254140,Rose Passmore,Hutt Valley Gymnastics,4,UNDER,Capital Juniors 2022,AA,1,12.7,5.0,8,11.3,5.0,8,11.65,4.5,6,12.1,4.5,8,47.75,8,23 May 2022
 198065,Mia Grant,Kapiti Gymnastics,4,UNDER,Capital Juniors 2022,AA,1,12.85,5.0,7,11.75,5.0,6,11.05,4.0,10,11.9,4.5,9,47.55,9,23 May 2022
-290641,Ashley Elliott,Onslow Gymnastic Club,4,UNDER,Capital Juniors 2022,AA,1,12.6,5.0,9,11.4,5.0,7,11.7,4.5,5,11.15,4.0,11,46.85,10,23 May 2022
+290641,Ashley Elliott,Onslow Gymnastics Club,4,UNDER,Capital Juniors 2022,AA,1,12.6,5.0,9,11.4,5.0,7,11.7,4.5,5,11.15,4.0,11,46.85,10,23 May 2022
 567993,Skyla Horan-Walker,Levin Gymnastics Club,4,UNDER,Capital Juniors 2022,AA,1,11.95,5.0,10,11.25,5.0,9,10.4,4.0,11,11.45,4.5,10,45.05,11,23 May 2022
 296472,Vaibhavi Tandon,Hutt Valley Gymnastics,4,OVER,Capital Juniors 2022,AA,1,14.15,5.0,1,12.9,5.0,3,12.7,4.5,3,12.95,5.0,1,52.7,1,23 May 2022
 663020,Ella Maguire,Harbour City Gymnastics,4,OVER,Capital Juniors 2022,AA,1,13.9,5.0,3,13.2,5.0,2,12.25,4.5,5,11.85,4.5,7,51.2,2,23 May 2022
@@ -3871,11 +3871,11 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 261788,Shannon Tindle,Manawatu Gymsports,5,OVER,Capital Juniors 2022,AA,1,13.15,5.0,8=,12.5,5.0,7,12.65,4.5,2,12.5,5.0,5=,50.8,2,23 May 2022
 268212,Chloe Moreton,Twisters Tawa Gymnastics Club,5,OVER,Capital Juniors 2022,AA,1,12.8,5.0,13=,12.45,5.0,8=,13.45,5.0,1,12.0,4.5,13=,50.7,3,23 May 2022
 216131,Isla Leith,Kapiti Gymnastics,5,OVER,Capital Juniors 2022,AA,1,13.2,5.0,7,12.3,5.0,12,12.45,5.0,4=,12.5,5.0,5=,50.45,4,23 May 2022
-249821,Ashleigh Keall,Onslow Gymnastic Club,5,OVER,Capital Juniors 2022,AA,1,12.85,5.0,12,12.6,5.0,6,12.35,5.0,6,12.6,5.0,3=,50.4,5,23 May 2022
+249821,Ashleigh Keall,Onslow Gymnastics Club,5,OVER,Capital Juniors 2022,AA,1,12.85,5.0,12,12.6,5.0,6,12.35,5.0,6,12.6,5.0,3=,50.4,5,23 May 2022
 272548,Lucia Hertanto,Hutt Valley Gymnastics,5,OVER,Capital Juniors 2022,AA,1,13.45,5.0,4,13.15,5.0,2,11.6,4.5,15,12.0,4.5,13=,50.2,6,23 May 2022
 638469,Grace Lee,Twisters Tawa Gymnastics Club,5,OVER,Capital Juniors 2022,AA,1,13.1,5.0,10,12.45,5.0,8=,11.8,5.0,14,12.6,5.0,3=,49.95,7,23 May 2022
 206213,Mariska Sue,Hutt Valley Gymnastics,5,OVER,Capital Juniors 2022,AA,1,12.8,5.0,13=,12.05,5.0,15=,12.3,5.0,7=,12.45,5.0,7,49.6,8,23 May 2022
-227748,Zoe Tatham,Onslow Gymnastic Club,5,OVER,Capital Juniors 2022,AA,1,13.4,5.0,5=,12.75,5.0,5,11.35,5.0,16,12.05,5.0,11=,49.55,9,23 May 2022
+227748,Zoe Tatham,Onslow Gymnastics Club,5,OVER,Capital Juniors 2022,AA,1,13.4,5.0,5=,12.75,5.0,5,11.35,5.0,16,12.05,5.0,11=,49.55,9,23 May 2022
 158025,Kate Livengood,Harbour City Gymnastics,5,OVER,Capital Juniors 2022,AA,1,13.5,5.0,3,12.35,5.0,11,12.15,4.7,11=,11.35,5.0,21,49.35,10,23 May 2022
 261097,Nara Wyatt,Harbour City Gymnastics,5,OVER,Capital Juniors 2022,AA,1,13.15,5.0,8=,12.15,5.0,14,12.2,4.5,9=,11.6,5.0,18,49.1,11,23 May 2022
 256035,Ella Field,Manawatu Gymsports,5,OVER,Capital Juniors 2022,AA,1,12.45,5.0,21=,12.05,5.0,15=,12.55,4.7,3,11.9,5.0,15,48.95,12,23 May 2022
@@ -3899,8 +3899,8 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 554430,Lilly de Hann,Twisters Tawa Gymnastics Club,1,UNDER,Capital Juniors 2022,AA,1,13.55,5.0,2,13.9,5.0,1,14.05,5.0,1,13.7,5.0,1,55.2,1,23 May 2022
 628509,Chloe Rankin,Hutt Valley Gymnastics,1,UNDER,Capital Juniors 2022,AA,1,13.25,5.0,4,13.4,5.0,5,12.7,5.0,6,13.15,4.5,3,52.5,2,23 May 2022
 559841,Harper Smith,Rimutaka Gymsports,1,UNDER,Capital Juniors 2022,AA,1,13.05,5.0,5,13.0,5.0,7,13.75,5.0,2,11.9,5.0,5,51.7,3,23 May 2022
-641599,Olympia Barrington-Prowse,Onslow Gymnastic Club,1,UNDER,Capital Juniors 2022,AA,1,14.05,5.0,1,13.65,5.0,4,10.95,4.0,10,12.7,5.0,4,51.35,4,23 May 2022
-657184,Ellie Brownie,Onslow Gymnastic Club,1,UNDER,Capital Juniors 2022,AA,1,13.5,5.0,3,12.05,5.0,9,12.0,4.5,7,13.35,5.0,2,50.9,5,23 May 2022
+641599,Olympia Barrington-Prowse,Onslow Gymnastics Club,1,UNDER,Capital Juniors 2022,AA,1,14.05,5.0,1,13.65,5.0,4,10.95,4.0,10,12.7,5.0,4,51.35,4,23 May 2022
+657184,Ellie Brownie,Onslow Gymnastics Club,1,UNDER,Capital Juniors 2022,AA,1,13.5,5.0,3,12.05,5.0,9,12.0,4.5,7,13.35,5.0,2,50.9,5,23 May 2022
 557006,Ava Moraes-Schulz,Hutt Valley Gymnastics,1,UNDER,Capital Juniors 2022,AA,1,11.15,5.0,10,13.75,5.0,2,13.5,5.0,3,11.75,4.0,6=,50.15,6,23 May 2022
 642911,Aurora Stupples,Hutt Valley Gymnastics,1,UNDER,Capital Juniors 2022,AA,1,11.75,5.0,9,13.7,5.0,3,12.95,5.0,5,10.7,4.0,10,49.1,7,23 May 2022
 503680,Natalia Zimmerman,Rimutaka Gymsports,1,UNDER,Capital Juniors 2022,AA,1,12.65,5.0,6,11.1,5.0,10,13.05,5.0,4,11.15,4.0,9,47.95,8,23 May 2022
@@ -3912,38 +3912,38 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 590918,Roya Denston,Rimutaka Gymsports,1,OVER,Capital Juniors 2022,AA,1,13.6,5.0,4,13.9,5.0,4,14.15,5.0,2,12.95,4.5,3=,54.6,3,23 May 2022
 591080,Rose Kearney,Kapiti Gymnastics,1,OVER,Capital Juniors 2022,AA,1,13.9,5.0,2,14.35,5.0,1,12.95,4.5,6,12.95,4.5,3=,54.15,4,23 May 2022
 634370,Lucy Sandland,Kapiti Gymnastics,1,OVER,Capital Juniors 2022,AA,1,13.8,5.0,3,13.25,5.0,5,14.25,5.0,1,12.35,4.5,6,53.65,5,23 May 2022
-657131,Emma Hood,Onslow Gymnastic Club,1,OVER,Capital Juniors 2022,AA,1,13.5,5.0,5,10.35,4.5,6,13.45,5.0,5,12.55,4.5,5,49.85,6,23 May 2022
+657131,Emma Hood,Onslow Gymnastics Club,1,OVER,Capital Juniors 2022,AA,1,13.5,5.0,5,10.35,4.5,6,13.45,5.0,5,12.55,4.5,5,49.85,6,23 May 2022
 617636,Tylah Thompson,Kapiti Gymnastics,1,UNDER,Capital Juniors 2022,AA,1,13.8,5.0,2,14.15,5.0,1,13.7,5.0,2,14.15,5.0,1,55.8,1,23 May 2022
 603938,Michelle Jacomb,Rimutaka Gymsports,1,UNDER,Capital Juniors 2022,AA,1,13.45,5.0,4,13.7,5.0,5,13.55,5.0,3,13.3,4.5,4,54.0,2,23 May 2022
 672421,Indigo Horrigan,Twisters Tawa Gymnastics Club,1,UNDER,Capital Juniors 2022,AA,1,13.85,5.0,1,13.9,5.0,3,13.95,5.0,1,12.2,4.0,9,53.9,3,23 May 2022
 623657,Esther-Rose Sarich,Hutt Valley Gymnastics,1,UNDER,Capital Juniors 2022,AA,1,13.5,5.0,3,13.3,5.0,7,13.35,5.0,5,13.65,5.0,2,53.8,4,23 May 2022
 301942,Frankie Bennett,Hutt Valley Gymnastics,1,UNDER,Capital Juniors 2022,AA,1,13.0,5.0,8,13.95,5.0,2,13.1,5.0,7,13.35,5.0,3,53.4,5,23 May 2022
-650678,Riva Fernandez,Onslow Gymnastic Club,1,UNDER,Capital Juniors 2022,AA,1,13.05,5.0,7,13.5,5.0,6,13.45,5.0,4,13.05,4.5,5,53.05,6,23 May 2022
+650678,Riva Fernandez,Onslow Gymnastics Club,1,UNDER,Capital Juniors 2022,AA,1,13.05,5.0,7,13.5,5.0,6,13.45,5.0,4,13.05,4.5,5,53.05,6,23 May 2022
 278758,Indi Glover,Rimutaka Gymsports,1,UNDER,Capital Juniors 2022,AA,1,12.65,5.0,9,13.8,5.0,4,13.2,5.0,6,12.95,4.5,6=,52.6,7,23 May 2022
 629304,Taylor Usher,Hutt Valley Gymnastics,1,UNDER,Capital Juniors 2022,AA,1,13.15,5.0,5,12.45,5.0,8,12.8,5.0,8,12.95,5.0,6=,51.35,8,23 May 2022
-633246,Isabelle Van der Krogt,Onslow Gymnastic Club,1,UNDER,Capital Juniors 2022,AA,1,13.1,5.0,6,12.1,5.0,9,12.55,5.0,9,12.75,5.0,8,50.5,9,23 May 2022
+633246,Isabelle Van der Krogt,Onslow Gymnastics Club,1,UNDER,Capital Juniors 2022,AA,1,13.1,5.0,6,12.1,5.0,9,12.55,5.0,9,12.75,5.0,8,50.5,9,23 May 2022
 228977,Laura Livengood,Harbour City Gymnastics,2,OVER,Capital Juniors 2022,AA,1,13.6,5.0,3,14.1,5.0,1,12.85,5.0,4,13.7,5.0,4,54.25,1,23 May 2022
 295431,Abigail Bell,Harbour City Gymnastics,2,OVER,Capital Juniors 2022,AA,1,13.25,5.0,5=,13.5,5.0,3,13.65,5.0,1,13.8,5.0,2,54.2,2,23 May 2022
-593266,Grace Coulter,Onslow Gymnastic Club,2,OVER,Capital Juniors 2022,AA,1,14.2,5.0,2,12.55,5.0,6,13.05,4.7,3,14.1,5.0,1,53.9,3,23 May 2022
-598418,Eden Lipscombe,Onslow Gymnastic Club,2,OVER,Capital Juniors 2022,AA,1,14.3,5.0,1,13.6,5.0,2,11.75,4.5,5,13.75,5.0,3,53.4,4,23 May 2022
+593266,Grace Coulter,Onslow Gymnastics Club,2,OVER,Capital Juniors 2022,AA,1,14.2,5.0,2,12.55,5.0,6,13.05,4.7,3,14.1,5.0,1,53.9,3,23 May 2022
+598418,Eden Lipscombe,Onslow Gymnastics Club,2,OVER,Capital Juniors 2022,AA,1,14.3,5.0,1,13.6,5.0,2,11.75,4.5,5,13.75,5.0,3,53.4,4,23 May 2022
 560638,Izaleah Collings,Hutt Valley Gymnastics,2,OVER,Capital Juniors 2022,AA,1,13.25,5.0,5=,12.75,5.0,4,13.2,5.0,2,12.95,4.5,6,52.15,5,23 May 2022
 556179,Zara Kong,Harbour City Gymnastics,2,OVER,Capital Juniors 2022,AA,1,13.4,5.0,4,12.6,5.0,5,10.7,3.2,7,13.4,5.0,5,50.1,6,23 May 2022
 661203,Leah Hill,Manawatu Gymsports,2,OVER,Capital Juniors 2022,AA,1,13.15,5.0,7,11.3,5.0,7,11.45,4.7,6,11.55,4.0,7,47.45,7,23 May 2022
 573348,Olivia S,Hutt Valley Gymnastics,2,OVER,Capital Juniors 2022,AA,1,12.85,5.0,8,DNS,DNS,DNS,9.9,4.0,8,11.5,4.5,8,DNF,-,23 May 2022
 560675,Charlie Mundel,Manawatu Gymsports,2,UNDER,Capital Juniors 2022,AA,1,14.05,5.0,1,13.9,5.0,1,14.0,5.0,1,14.0,5.0,1=,55.95,1,23 May 2022
 296408,Sofia Water,Hutt Valley Gymnastics,2,UNDER,Capital Juniors 2022,AA,1,12.95,5.0,14,13.6,5.0,3,13.45,5.0,3,14.0,5.0,1=,54.0,2,23 May 2022
-641598,Sienna Barrington Prowse,Onslow Gymnastic Club,2,UNDER,Capital Juniors 2022,AA,1,13.85,5.0,3,13.35,5.0,4,13.5,5.0,2,12.15,4.0,12,52.85,3,23 May 2022
+641598,Sienna Barrington Prowse,Onslow Gymnastics Club,2,UNDER,Capital Juniors 2022,AA,1,13.85,5.0,3,13.35,5.0,4,13.5,5.0,2,12.15,4.0,12,52.85,3,23 May 2022
 596792,Josephine Prickett,Harbour City Gymnastics,2,UNDER,Capital Juniors 2022,AA,1,13.1,5.0,13,13.65,5.0,2,12.3,4.7,9,13.6,5.0,3,52.65,4,23 May 2022
-542475,Poppy Smith,Onslow Gymnastic Club,2,UNDER,Capital Juniors 2022,AA,1,13.55,5.0,6=,12.8,5.0,7,12.6,4.5,4,13.0,4.5,6=,51.95,5,23 May 2022
+542475,Poppy Smith,Onslow Gymnastics Club,2,UNDER,Capital Juniors 2022,AA,1,13.55,5.0,6=,12.8,5.0,7,12.6,4.5,4,13.0,4.5,6=,51.95,5,23 May 2022
 572053,Jorja Pickering,Manawatu Gymsports,2,UNDER,Capital Juniors 2022,AA,1,13.9,5.0,2,12.6,5.0,10=,12.5,5.0,5=,12.75,4.5,9,51.75,6,23 May 2022
 249298,Emily Broster,Hutt Valley Gymnastics,2,UNDER,Capital Juniors 2022,AA,1,13.55,5.0,6=,13.25,5.0,5,11.5,4.0,14,13.0,5.0,6=,51.3,7,23 May 2022
 653110,Ava Scott,Levin Gymnastics Club,2,UNDER,Capital Juniors 2022,AA,1,13.4,5.0,9=,13.05,5.0,6,11.45,4.0,15,13.1,5.0,5,51.0,8,23 May 2022
 568057,Gemma White,Levin Gymnastics Club,2,UNDER,Capital Juniors 2022,AA,1,13.6,5.0,5,12.6,5.0,10=,11.35,4.5,17,12.95,4.5,8,50.5,9,23 May 2022
-619794,Harper McPheat,Onslow Gymnastic Club,2,UNDER,Capital Juniors 2022,AA,1,13.4,5.0,9=,12.65,5.0,9,11.55,4.7,13,12.65,4.5,10,50.25,10,23 May 2022
-619726,Lucy Eccles,Onslow Gymnastic Club,2,UNDER,Capital Juniors 2022,AA,1,12.7,5.0,18=,11.7,4.5,16,12.45,5.0,7,13.3,5.0,4,50.15,11,23 May 2022
+619794,Harper McPheat,Onslow Gymnastics Club,2,UNDER,Capital Juniors 2022,AA,1,13.4,5.0,9=,12.65,5.0,9,11.55,4.7,13,12.65,4.5,10,50.25,10,23 May 2022
+619726,Lucy Eccles,Onslow Gymnastics Club,2,UNDER,Capital Juniors 2022,AA,1,12.7,5.0,18=,11.7,4.5,16,12.45,5.0,7,13.3,5.0,4,50.15,11,23 May 2022
 301866,Lily Romeril,Harbour City Gymnastics,2,UNDER,Capital Juniors 2022,AA,1,12.7,5.0,18=,12.25,5.0,13,11.95,5.0,10,12.55,4.5,11,49.45,12,23 May 2022
 273300,Sophie Tomlinson,Manawatu Gymsports,2,UNDER,Capital Juniors 2022,AA,1,13.7,5.0,4,11.6,5.0,17=,12.5,5.0,5=,11.6,4.5,16,49.4,13,23 May 2022
-619985,Adalise Hyde,Onslow Gymnastic Club,2,UNDER,Capital Juniors 2022,AA,1,13.5,5.0,8,12.2,5.0,14,11.4,5.0,16,11.75,4.5,15,48.85,14,23 May 2022
+619985,Adalise Hyde,Onslow Gymnastics Club,2,UNDER,Capital Juniors 2022,AA,1,13.5,5.0,8,12.2,5.0,14,11.4,5.0,16,11.75,4.5,15,48.85,14,23 May 2022
 556671,Amelia Allen,Manawatu Gymsports,2,UNDER,Capital Juniors 2022,AA,1,12.8,5.0,16,12.7,5.0,8,12.4,5.0,8,10.65,4.0,19,48.55,15,23 May 2022
 301922,Brielle Laurenson,Hutt Valley Gymnastics,2,UNDER,Capital Juniors 2022,AA,1,12.9,5.0,15,11.9,4.5,15,11.65,4.2,12,12.0,5.0,13,48.45,16,23 May 2022
 578226,Ellie Dorn,Manawatu Gymsports,2,UNDER,Capital Juniors 2022,AA,1,13.2,5.0,12,12.4,5.0,12,10.8,4.5,19,11.8,4.5,14,48.2,17,23 May 2022
@@ -4007,7 +4007,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 617893,Mackenzie Burridge,Hutt Valley Gymnastics,1,UNDER,Capital Juniors 2022,AA,,12.55,5.0,10,5.7,3.0,11,13.4,5.0,5,12.45,4.5,10,44.1,11,23 May 2022
 616085,Zahara Slatter,Manawatu Gymsports,7,OVER,Manawatu Senior Opens,APP,1,11.666,2.4,1,12.766,3.9,1,10.566,3.7,4,11.666,3.7,5=,46.664,,15 May 2022
 182720,Ariria Blackburn,Manawatu Gymsports,7,OVER,Manawatu Senior Opens,APP,1,11.066,2.4,2,10.033,3.1,4,10.366,2.8,5,11.466,3.9,7,42.931,,15 May 2022
-220976,Anna Elliott,Onslow Gymnastic Club,7,OVER,Manawatu Senior Opens,APP,1,10.933,2.4,3,9.5,2.3,9,11.833,3.7,1,12.233,3.9,2,44.499,,15 May 2022
+220976,Anna Elliott,Onslow Gymnastics Club,7,OVER,Manawatu Senior Opens,APP,1,10.933,2.4,3,9.5,2.3,9,11.833,3.7,1,12.233,3.9,2,44.499,,15 May 2022
 198325,Charlee Wood,Manawatu Gymsports,7,OVER,Manawatu Senior Opens,APP,1,10.833,2.4,4,9.833,2.1,6,10.166,3.0,7,12.266,3.3,1,43.098,,15 May 2022
 252901,Penelope Fowler,Omni Gymnastics Centre,7,OVER,Manawatu Senior Opens,APP,1,10.766,2.4,5,9.766,3.1,7,8.566,3.0,10,10.933,3.6,10,40.031,,15 May 2022
 141980,Elise Kibblewhite,Harbour City Gymnastics,7,OVER,Manawatu Senior Opens,APP,1,10.733,1.6,6,11.2,3.0,2,10.2,2.2,6,12.0,3.4,3,44.133,,15 May 2022
@@ -4015,7 +4015,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 267437,Allegra Ruruku-Hunt,Kapiti Gymnastics,7,OVER,Manawatu Senior Opens,APP,1,10.6,2.0,8,8.366,2.1,14,9.1,2.9,9,DNS,DNS,DNS,28.066,,15 May 2022
 158129,Abbey Malin,Rimutaka Gymsports,7,OVER,Manawatu Senior Opens,APP,1,10.533,2.4,9,8.433,2.1,13,7.7,1.9,13,10.166,3.7,12,36.832,,15 May 2022
 260910,Nikita Steffert,Omni Gymnastics Centre,7,OVER,Manawatu Senior Opens,APP,1,10.4,1.6,10,8.6,2.6,12,7.3,3.1,14,11.733,3.4,4,38.033,,15 May 2022
-220967,Natasha Stewart,Onslow Gymnastic Club,7,OVER,Manawatu Senior Opens,APP,1,10.3,2.4,11,10.166,2.4,3,11.6,3.7,2,11.666,3.5,5=,43.732,,15 May 2022
+220967,Natasha Stewart,Onslow Gymnastics Club,7,OVER,Manawatu Senior Opens,APP,1,10.3,2.4,11,10.166,2.4,3,11.6,3.7,2,11.666,3.5,5=,43.732,,15 May 2022
 149626,Sienna Manisty,Omni Gymnastics Centre,7,OVER,Manawatu Senior Opens,APP,1,10.166,2.4,12,8.733,1.6,11,8.3,2.3,12,11.3,4.0,8=,38.499,,15 May 2022
 287928,Ashlee McMillan,Omni Gymnastics Centre,7,OVER,Manawatu Senior Opens,APP,1,9.866,2.0,13,9.966,2.5,5,8.366,2.5,11,10.2,3.2,11,38.398,,15 May 2022
 107862,Kathryn Sofeni,Rimutaka Gymsports,7,OVER,Manawatu Senior Opens,APP,1,9.6,1.6,14,9.533,2.1,8,9.9,2.4,8,9.8,3.0,13,38.833,,15 May 2022
@@ -4031,8 +4031,8 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 218585,Sophie Long,Manawatu Gymsports,5,OVER,Manawatu Senior Opens,APP,1,13.75,5.0,3=,13.55,5.0,1,11.3,5.0,19=,13.0,5.0,4,51.6,,15 May 2022
 255988,Emma Barry,Manawatu Gymsports,5,OVER,Manawatu Senior Opens,APP,1,13.65,5.0,5,11.5,5.0,20,12.15,5.0,12=,9.8,4.0,24,47.1,,15 May 2022
 184268,Zana Manisty,Omni Gymnastics Centre,5,OVER,Manawatu Senior Opens,APP,1,13.45,5.0,6,13.0,5.0,4,13.5,5.0,2,12.7,5.0,7,52.65,,15 May 2022
-249821,Ashleigh Keall,Onslow Gymnastic Club,5,OVER,Manawatu Senior Opens,APP,1,13.3,5.0,7,12.6,5.0,9=,11.3,5.0,19=,10.85,4.5,23,48.05,,15 May 2022
-227748,Zoe Tatham,Onslow Gymnastic Club,5,OVER,Manawatu Senior Opens,APP,1,13.25,5.0,8,12.9,5.0,6,12.4,5.0,10,12.0,5.0,12,50.55,,15 May 2022
+249821,Ashleigh Keall,Onslow Gymnastics Club,5,OVER,Manawatu Senior Opens,APP,1,13.3,5.0,7,12.6,5.0,9=,11.3,5.0,19=,10.85,4.5,23,48.05,,15 May 2022
+227748,Zoe Tatham,Onslow Gymnastics Club,5,OVER,Manawatu Senior Opens,APP,1,13.25,5.0,8,12.9,5.0,6,12.4,5.0,10,12.0,5.0,12,50.55,,15 May 2022
 274558,Jacqui Linklater,Whanganui Boys & Girls Gym Club,5,OVER,Manawatu Senior Opens,APP,1,13.2,5.0,9,12.45,5.0,12=,11.85,5.0,16,11.5,4.5,16,49.0,,15 May 2022
 227085,Alexa Newton,Manawatu Gymsports,5,OVER,Manawatu Senior Opens,APP,1,13.1,5.0,10,12.1,5.0,16,12.6,5.0,9,11.05,5.0,21,48.85,,15 May 2022
 216131,Isla Leith,Kapiti Gymnastics,5,OVER,Manawatu Senior Opens,APP,1,13.0,5.0,11=,11.15,5.0,23,12.9,5.0,7,12.65,5.0,8,49.7,,15 May 2022
@@ -4101,9 +4101,9 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 218585,Sophie Long,Manawatu Gymsports,5,OVER,Manawatu Senior Opens,AA,1,13.7,5.0,2,13.05,5.0,6,12.9,5.0,4,12.75,5.0,5,52.4,2,15 May 2022
 266996,Kaia Mackenzie Erkens,Capital Gymnastics,5,OVER,Manawatu Senior Opens,AA,1,13.0,5.0,14=,13.85,5.0,1,12.45,5.0,8,13.0,5.0,3,52.3,3,15 May 2022
 261076,Rosa McCutcheon,Harbour City Gymnastics,5,OVER,Manawatu Senior Opens,AA,1,12.9,5.0,17=,13.2,5.0,3=,12.85,5.0,5,12.3,5.0,10,51.25,4,15 May 2022
-227748,Zoe Tatham,Onslow Gymnastic Club,5,OVER,Manawatu Senior Opens,AA,1,13.35,5.0,4,12.75,5.0,9,11.55,4.5,9,13.2,5.0,2,50.85,5,15 May 2022
+227748,Zoe Tatham,Onslow Gymnastics Club,5,OVER,Manawatu Senior Opens,AA,1,13.35,5.0,4,12.75,5.0,9,11.55,4.5,9,13.2,5.0,2,50.85,5,15 May 2022
 261788,Shannon Tindle,Manawatu Gymsports,5,OVER,Manawatu Senior Opens,AA,1,13.1,5.0,12=,11.75,5.0,20=,13.05,5.0,3,12.5,5.0,8,50.4,6,15 May 2022
-249821,Ashleigh Keall,Onslow Gymnastic Club,5,OVER,Manawatu Senior Opens,AA,1,13.2,5.0,11,13.0,5.0,7,11.35,4.5,13,12.7,5.0,6,50.25,7,15 May 2022
+249821,Ashleigh Keall,Onslow Gymnastics Club,5,OVER,Manawatu Senior Opens,AA,1,13.2,5.0,11,13.0,5.0,7,11.35,4.5,13,12.7,5.0,6,50.25,7,15 May 2022
 555198,Alex McCutcheon,Central Gymnastics,5,OVER,Manawatu Senior Opens,AA,1,12.65,5.0,22,12.15,5.0,13,13.4,5.0,2,11.85,5.0,12=,50.05,8,15 May 2022
 158025,Kate Livengood,Harbour City Gymnastics,5,OVER,Manawatu Senior Opens,AA,1,13.65,5.0,3,12.1,5.0,14,12.6,5.0,6=,11.5,5.0,17=,49.85,9,15 May 2022
 184268,Zana Manisty,Omni Gymnastics Centre,5,OVER,Manawatu Senior Opens,AA,1,13.25,5.0,7=,12.6,5.0,10,10.9,4.5,15,12.9,5.0,4,49.65,10,15 May 2022
@@ -4133,9 +4133,9 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 212773,Pippi Campbell,Rimutaka Gymsports,6,OVER,Manawatu Senior Opens,AA,1,12.8,5.0,4,11.366,5.0,3,11.8,5.0,4,12.666,5.0,2=,48.632,4,15 May 2022
 584502,Ruby Duncan,Manawatu Gymsports,6,UNDER,Manawatu Senior Opens,AA,1,13.266,5.0,1,11.533,5.0,1,12.5,4.5,1,13.233,5.0,1,50.532,1,15 May 2022
 616085,Zahara Slatter,Manawatu Gymsports,7,OVER,Manawatu Senior Opens,AA,1,11.466,2.4,1,12.7,4.0,1,10.3,2.7,5,12.466,4.0,1,46.932,1,15 May 2022
-220967,Natasha Stewart,Onslow Gymnastic Club,7,OVER,Manawatu Senior Opens,AA,1,10.566,2.4,4=,11.133,3.0,2,12.066,3.7,1,11.266,3.5,6,45.031,2,15 May 2022
+220967,Natasha Stewart,Onslow Gymnastics Club,7,OVER,Manawatu Senior Opens,AA,1,10.566,2.4,4=,11.133,3.0,2,12.066,3.7,1,11.266,3.5,6,45.031,2,15 May 2022
 198325,Charlee Wood,Manawatu Gymsports,7,OVER,Manawatu Senior Opens,AA,1,10.766,2.4,2,8.4,2.1,11,12.0,3.7,2,11.466,3.3,4,42.632,3,15 May 2022
-220976,Anna Elliott,Onslow Gymnastic Club,7,OVER,Manawatu Senior Opens,AA,1,10.433,2.4,9,9.933,1.7,4,10.033,3.7,6,12.166,3.9,2,42.565,4,15 May 2022
+220976,Anna Elliott,Onslow Gymnastics Club,7,OVER,Manawatu Senior Opens,AA,1,10.433,2.4,9,9.933,1.7,4,10.033,3.7,6,12.166,3.9,2,42.565,4,15 May 2022
 141980,Elise Kibblewhite,Harbour City Gymnastics,7,OVER,Manawatu Senior Opens,AA,1,10.566,1.6,4=,10.133,3.0,3,9.8,2.2,7,11.4,3.5,5,41.899,5,15 May 2022
 182720,Ariria Blackburn,Manawatu Gymsports,7,OVER,Manawatu Senior Opens,AA,1,10.7,2.4,3,9.666,3.1,5,10.333,2.7,4,11.166,3.9,7,41.865,6,15 May 2022
 260910,Nikita Steffert,Omni Gymnastics Centre,7,OVER,Manawatu Senior Opens,AA,1,10.1,1.6,10,9.366,2.9,7,10.933,3.0,3,10.3,2.9,10=,40.699,7,15 May 2022
@@ -4158,12 +4158,12 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 601190,Meche Phillips,Turn and Gymnastics Circle,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,10.333,1.6,24,11.9,3.4,2,11.8,3.3,8,10.933,3.0,21=,44.966,5,10 May 2022
 269872,Lulu Miller,Impact Gymsports Academy,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,10.4,1.6,22=,11.666,3.1,4,10.766,3.2,16,12.1,4.0,3,44.932,6,10 May 2022
 208819,Charlie Simmons,Hutt Valley Gymnastics,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,10.233,1.6,27,10.8,3.1,8,11.866,3.6,6,11.766,4.1,8,44.665,7,10 May 2022
-220976,Anna Elliott,Onslow Gymnastic Club,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,10.7,2.4,14=,10.3,2.0,11=,12.0,3.7,5,11.466,3.9,10=,44.466,8,10 May 2022
+220976,Anna Elliott,Onslow Gymnastics Club,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,10.7,2.4,14=,10.3,2.0,11=,12.0,3.7,5,11.466,3.9,10=,44.466,8,10 May 2022
 531987,Gurjeeya Kaur,Counties Manukau Gymnastics,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,11.366,3.2,5=,10.9,2.4,7,10.4,4.2,21,11.733,3.5,9,44.399,9,10 May 2022
 208048,Rachel Scott,Counties Manukau Gymnastics,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,11.7,3.2,1,11.2,3.0,5,11.4,4.3,10,10.066,3.4,25,44.366,10,10 May 2022
 246280,Pippa Cronin,ARGOS Gymnastics Club,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,10.933,2.4,9=,10.233,2.4,14,12.033,3.5,4,10.533,3.2,23,43.732,11,10 May 2022
 117504,Lara Cooper,Hutt Valley Gymnastics,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,10.666,1.6,16=,10.266,2.3,13,10.966,3.6,14=,11.466,3.2,10=,43.364,12,10 May 2022
-220967,Natasha Stewart,Onslow Gymnastic Club,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,9.733,1.6,33,10.3,2.4,11=,12.066,3.7,3,11.1,3.5,19=,43.199,13,10 May 2022
+220967,Natasha Stewart,Onslow Gymnastics Club,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,9.733,1.6,33,10.3,2.4,11=,12.066,3.7,3,11.1,3.5,19=,43.199,13,10 May 2022
 185902,Cailin Ward,Gymnastics Waitara,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,11.466,3.4,3,9.333,2.1,27=,10.266,3.3,22,11.9,4.5,6=,42.965,14,10 May 2022
 194347,Luci Strachan,Gymnastics Waitara,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,11.533,2.4,2,9.566,2.4,21,9.5,3.1,27,11.933,4.0,4=,42.532,15,10 May 2022
 198325,Charlee Wood,Manawatu Gymsports,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,11.066,2.4,7=,9.666,2.1,19,11.166,3.2,12,10.333,3.2,24,42.231,16,10 May 2022
@@ -4304,13 +4304,13 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 531987,Gurjeeya Kaur,Counties Manukau Gymnastics,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,11.6,3.2,3,10.633,3.0,7,10.1,4.2,20,11.366,3.4,12,43.699,6,10 May 2022
 246280,Pippa Cronin,ARGOS Gymnastics Club,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,10.866,2.4,9,10.5,2.4,8,11.733,2.9,6,10.566,3.3,22,43.665,7,10 May 2022
 554693,Rory Jenkins,Hamilton City Gymnastics,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,10.7,1.6,15=,10.466,2.7,9=,11.0,3.6,13,11.466,3.9,11,43.632,8,10 May 2022
-220976,Anna Elliott,Onslow Gymnastic Club,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,10.7,2.4,15=,10.033,2.0,18=,11.3,3.7,8,11.533,3.9,9=,43.566,9,10 May 2022
+220976,Anna Elliott,Onslow Gymnastics Club,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,10.7,2.4,15=,10.033,2.0,18=,11.3,3.7,8,11.533,3.9,9=,43.566,9,10 May 2022
 185902,Cailin Ward,Gymnastics Waitara,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,11.733,3.4,2,9.733,2.1,23,9.9,3.3,22=,11.766,4.5,6,43.132,10,10 May 2022
 117504,Lara Cooper,Hutt Valley Gymnastics,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,10.533,1.6,20,10.333,2.3,14,10.6,3.1,14,11.566,3.2,8,43.032,11,10 May 2022
 267437,Allegra Ruruku-Hunt,Kapiti Gymnastics,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,10.066,2.0,30,10.433,2.4,11,10.466,3.7,16,12.0,4.1,3,42.965,12,10 May 2022
 223744,Pippa Montgomerie,ARGOS Gymnastics Club,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,10.733,2.4,13=,9.766,2.1,22,11.1,2.9,11,10.866,3.2,17,42.465,13,10 May 2022
 208819,Charlie Simmons,Hutt Valley Gymnastics,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,10.3,1.6,27,8.266,2.1,32,12.0,3.6,4,11.7,3.8,7,42.266,14,10 May 2022
-220967,Natasha Stewart,Onslow Gymnastic Club,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,9.833,1.6,31,10.166,2.4,15=,11.2,3.7,9,11.0,3.5,15,42.199,15,10 May 2022
+220967,Natasha Stewart,Onslow Gymnastics Club,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,9.833,1.6,31,10.166,2.4,15=,11.2,3.7,9,11.0,3.5,15,42.199,15,10 May 2022
 208048,Rachel Scott,Counties Manukau Gymnastics,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,11.833,3.2,1,7.6,2.1,33,10.233,3.5,17,11.9,4.1,4,41.566,16,10 May 2022
 141980,Elise Kibblewhite,Harbour City Gymnastics,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,10.633,1.6,19,10.766,3.0,6,8.9,2.0,26=,11.066,3.6,14,41.365,17,10 May 2022
 148720,Riana Moffat,Kapiti Gymnastics,7,OVER,Gymnastics Waitara - Senior Opens 2022,AA,1,10.4,2.4,25,10.1,2.4,17,10.033,3.4,21,10.766,3.0,18=,41.299,18,10 May 2022
@@ -4446,7 +4446,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 296802,Mackenzie Hughes,ARGOS Gymnastics Club,5,UNDER,Gymnastics Waitara - Senior Opens 2022,AA,1,13.0,5.0,7,12.65,5.0,7,12.45,4.7,4,13.15,5.0,5,51.25,5,10 May 2022
 281455,Sienna Chapman,ARGOS Gymnastics Club,5,UNDER,Gymnastics Waitara - Senior Opens 2022,AA,1,13.4,5.0,5,13.55,5.0,1,11.6,4.5,6,12.25,4.5,7,50.8,6,10 May 2022
 546242,Gracie Crowe,Impact Gymsports Academy,5,UNDER,Gymnastics Waitara - Senior Opens 2022,AA,1,13.05,5.0,6,12.8,5.0,6,10.5,4.0,7,12.55,5.0,6,48.9,7,10 May 2022
-220976,Anna Elliott,Onslow Gymnastic Club,7,NONE,HBPB Opens,APP,1,11.25,2.4,1,10.45,2.1,3,12.2,3.7,1,12.05,3.9,1,45.95,,3 May 2022
+220976,Anna Elliott,Onslow Gymnastics Club,7,NONE,HBPB Opens,APP,1,11.25,2.4,1,10.45,2.1,3,12.2,3.7,1,12.05,3.9,1,45.95,,3 May 2022
 269401,Sarah Fenwick,Hastings Gymnastics Club,7,NONE,HBPB Opens,APP,1,11.2,2.4,2,10.25,2.5,4,9.25,2.4,6,11.0,3.7,5,41.7,,3 May 2022
 168329,Michaela McPhee,Harbour City Gymnastics,7,NONE,HBPB Opens,APP,1,10.8,1.6,3,9.8,2.1,5,DNS,DNS,DNS,DNS,DNS,DNS,20.6,,3 May 2022
 252901,Penelope Fowler,Omni Gymnastics Centre,7,NONE,HBPB Opens,APP,1,10.55,1.6,4,9.8,2.8,5,10.35,3.0,4,11.05,3.8,4,41.75,,3 May 2022
@@ -4454,7 +4454,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 149626,Sienna Manisty,Omni Gymnastics Centre,7,NONE,HBPB Opens,APP,1,10.25,2.4,6,9.2,1.7,9,8.95,2.3,7,10.75,3.6,6,39.15,,3 May 2022
 141980,Elise Kibblewhite,Harbour City Gymnastics,7,NONE,HBPB Opens,APP,1,10.2,1.6,7,11.55,3.0,1,10.95,2.6,3,10.4,3.7,8,43.1,,3 May 2022
 260910,Nikita Steffert,Omni Gymnastics Centre,7,NONE,HBPB Opens,APP,1,9.95,1.6,8,DNS,DNS,DNS,DNS,DNS,DNS,DNS,DNS,DNS,9.95,,3 May 2022
-220967,Natasha Stewart,Onslow Gymnastic Club,7,OVER,HBPB Opens,APP,1,9.8,1.6,9,10.8,2.5,2,11.95,3.7,2,11.7,3.9,2,44.25,,3 May 2022
+220967,Natasha Stewart,Onslow Gymnastics Club,7,OVER,HBPB Opens,APP,1,9.8,1.6,9,10.8,2.5,2,11.95,3.7,2,11.7,3.9,2,44.25,,3 May 2022
 287928,Ashlee McMillan,Omni Gymnastics Centre,7,NONE,HBPB Opens,APP,1,9.5,2.0,10,9.75,2.7,7,10.15,3.0,5,11.25,4.0,3,40.65,,3 May 2022
 296689,Naomi Guershom,Rimutaka Gymsports,4,OVER,HBPB Opens,AA,1,13.7,5.0,2,13.15,5.0,6=,12.8,5.0,2,13.2,5.0,6=,52.85,1,30 April 2022
 287944,Aliana Watson,Hastings Gymnastics Club,4,OVER,HBPB Opens,AA,1,13.2,5.0,9,13.65,5.0,2=,12.45,5.0,5,13.35,5.0,4=,52.65,2,30 April 2022
@@ -4464,29 +4464,29 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 555070,Isla Bawden,Hastings Gymnastics Club,4,OVER,HBPB Opens,AA,1,13.65,5.0,3=,13.75,5.0,1,10.8,5.0,13,13.35,5.0,4=,51.55,6,30 April 2022
 201410,Grace McGall,Rimutaka Gymsports,4,OVER,HBPB Opens,AA,1,12.8,5.0,12=,12.95,5.0,8,13.1,5.0,1,12.55,5.0,9=,51.4,7,30 April 2022
 229824,Leah McDowell,Omni Gymnastics Centre,4,OVER,HBPB Opens,AA,1,12.8,5.0,12=,12.75,5.0,9,12.3,5.0,6=,13.2,5.0,6=,51.05,8,30 April 2022
-249317,Madison Lynch,Onslow Gymnastic Club,4,OVER,HBPB Opens,AA,1,13.05,5.0,10,13.15,5.0,6=,12.3,4.5,6=,12.5,5.0,11,51.0,9,30 April 2022
+249317,Madison Lynch,Onslow Gymnastics Club,4,OVER,HBPB Opens,AA,1,13.05,5.0,10,13.15,5.0,6=,12.3,4.5,6=,12.5,5.0,11,51.0,9,30 April 2022
 192731,Emma Cooper,Rimutaka Gymsports,4,OVER,HBPB Opens,AA,1,14.0,5.0,1,12.7,5.0,10=,11.5,4.5,8,12.55,5.0,9=,50.75,10,30 April 2022
 246842,Ava Gleeson,Omni Gymnastics Centre,4,OVER,HBPB Opens,AA,1,11.9,4.0,16,12.65,5.0,12,12.65,5.0,4,13.45,5.0,3,50.65,11,30 April 2022
-261652,Amelia Hogg,Onslow Gymnastic Club,4,OVER,HBPB Opens,AA,1,12.85,5.0,11,12.7,5.0,10=,11.25,4.5,11,12.05,4.5,12,48.85,12,30 April 2022
+261652,Amelia Hogg,Onslow Gymnastics Club,4,OVER,HBPB Opens,AA,1,12.85,5.0,11,12.7,5.0,10=,11.25,4.5,11,12.05,4.5,12,48.85,12,30 April 2022
 254219,Aubane Farcy,Rimutaka Gymsports,4,OVER,HBPB Opens,AA,1,13.5,5.0,5=,11.6,5.0,13,10.95,4.5,12,10.4,3.5,16,46.45,13,30 April 2022
-227729,Devon Cook,Onslow Gymnastic Club,4,OVER,HBPB Opens,AA,1,13.35,5.0,8,11.45,5.0,14,9.45,3.7,14,11.6,5.0,13,45.85,14,30 April 2022
+227729,Devon Cook,Onslow Gymnastics Club,4,OVER,HBPB Opens,AA,1,13.35,5.0,8,11.45,5.0,14,9.45,3.7,14,11.6,5.0,13,45.85,14,30 April 2022
 269421,Hannah Horn,Hastings Gymnastics Club,4,OVER,HBPB Opens,AA,1,12.7,5.0,14,9.0,4.5,16,8.4,4.0,15,11.55,4.5,14,41.65,15,30 April 2022
 295288,Sophie Donovan,Hastings Gymnastics Club,4,OVER,HBPB Opens,AA,1,12.55,5.0,15,9.55,5.0,15,7.15,3.2,16,11.0,4.5,15,40.25,16,30 April 2022
-295631,Jessica Calvert,Onslow Gymnastic Club,4,UNDER,HBPB Opens,AA,1,13.3,5.0,1,13.5,5.0,1=,13.8,5.0,1,13.2,5.0,1=,53.8,1,30 April 2022
+295631,Jessica Calvert,Onslow Gymnastics Club,4,UNDER,HBPB Opens,AA,1,13.3,5.0,1,13.5,5.0,1=,13.8,5.0,1,13.2,5.0,1=,53.8,1,30 April 2022
 271154,Anaya Dunlop,Rimutaka Gymsports,4,UNDER,HBPB Opens,AA,1,12.65,5.0,4,13.5,5.0,1=,12.7,5.0,2,13.2,5.0,1=,52.05,2,30 April 2022
 295524,Kaia Ranston,Omni Gymnastics Centre,4,UNDER,HBPB Opens,AA,1,13.15,5.0,3,12.95,5.0,3,12.3,5.0,3,12.9,5.0,4,51.3,3,30 April 2022
 226768,Tamzyn Valler,Omni Gymnastics Centre,4,UNDER,HBPB Opens,AA,1,13.2,5.0,2,10.55,5.0,6,11.5,5.0,6,13.1,5.0,3,48.35,4,30 April 2022
 302439,Mia Kamphuis,Omni Gymnastics Centre,4,UNDER,HBPB Opens,AA,1,12.5,5.0,5,10.15,5.0,7,12.0,4.5,4,12.65,5.0,5,47.3,5,30 April 2022
 215620,Mia Scott,Hastings Gymnastics Club,4,UNDER,HBPB Opens,AA,1,12.3,5.0,6=,11.7,5.0,4,10.65,4.5,7,12.15,5.0,6,46.8,6,30 April 2022
-290641,Ashley Elliott,Onslow Gymnastic Club,4,UNDER,HBPB Opens,AA,1,12.3,5.0,6=,10.85,5.0,5,11.95,5.0,5,11.6,4.5,7,46.7,7,30 April 2022
+290641,Ashley Elliott,Onslow Gymnastics Club,4,UNDER,HBPB Opens,AA,1,12.3,5.0,6=,10.85,5.0,5,11.95,5.0,5,11.6,4.5,7,46.7,7,30 April 2022
 193219,Lucy Bickers,Omni Gymnastics Centre,5,OVER,HBPB Opens,AA,1,13.2,5.0,8,13.7,5.0,5,13.25,5.0,1=,13.45,5.0,1,53.6,1,30 April 2022
 535406,Capria Tamatea,Gisborne Gymnastics Club,5,OVER,HBPB Opens,AA,1,13.5,5.0,2,13.6,5.0,6=,13.25,5.0,1=,12.8,5.0,5,53.15,2,30 April 2022
-227748,Zoe Tatham,Onslow Gymnastic Club,5,OVER,HBPB Opens,AA,1,13.45,5.0,3,13.2,5.0,13,12.95,5.0,4,12.6,5.0,8,52.2,3,30 April 2022
+227748,Zoe Tatham,Onslow Gymnastics Club,5,OVER,HBPB Opens,AA,1,13.45,5.0,3,13.2,5.0,13,12.95,5.0,4,12.6,5.0,8,52.2,3,30 April 2022
 535626,Miriam Cornfeld,Gisborne Gymnastics Club,5,OVER,HBPB Opens,AA,1,13.25,5.0,6=,13.85,5.0,1=,13.15,5.0,3,11.6,4.5,13,51.85,4,30 April 2022
 218948,Cian Joe,Hastings Gymnastics Club,5,OVER,HBPB Opens,AA,1,12.65,5.0,15,13.8,5.0,3,12.05,4.5,7,13.35,5.0,2,51.85,4,30 April 2022
 158025,Kate Livengood,Harbour City Gymnastics,5,OVER,HBPB Opens,AA,1,14.0,5.0,1,13.85,5.0,1=,12.7,5.0,5,10.8,4.5,16,51.35,6,30 April 2022
 184149,Bella Small,Harbour City Gymnastics,5,OVER,HBPB Opens,AA,1,12.85,5.0,13=,13.25,5.0,11=,12.5,4.7,6,12.1,5.0,10,50.7,7,30 April 2022
-249821,Ashleigh Keall,Onslow Gymnastic Club,5,OVER,HBPB Opens,AA,1,13.15,5.0,9,13.0,5.0,14,11.2,4.5,10,12.65,5.0,6=,50.0,8,30 April 2022
+249821,Ashleigh Keall,Onslow Gymnastics Club,5,OVER,HBPB Opens,AA,1,13.15,5.0,9,13.0,5.0,14,11.2,4.5,10,12.65,5.0,6=,50.0,8,30 April 2022
 295365,Julia Pearson,Hastings Gymnastics Club,5,OVER,HBPB Opens,AA,1,12.95,5.0,11,12.55,5.0,16,11.5,5.0,8,12.85,5.0,4,49.85,9,30 April 2022
 193231,Nylah Burkett,Omni Gymnastics Centre,5,OVER,HBPB Opens,AA,1,12.9,5.0,12,13.75,5.0,4,10.65,4.0,12=,12.4,5.0,9,49.7,10,30 April 2022
 184268,Zana Manisty,Omni Gymnastics Centre,5,OVER,HBPB Opens,AA,1,13.25,5.0,6=,13.6,5.0,6=,10.05,4.5,16,12.65,5.0,6=,49.55,11,30 April 2022
@@ -4505,8 +4505,8 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 212773,Pippi Campbell,Rimutaka Gymsports,6,OVER,HBPB Opens,AA,1,13.35,5.0,5,12.05,5.0,6,10.2,4.2,6,11.4,4.5,6,47.0,6,30 April 2022
 103887,Kate Touhey,Harbour City Gymnastics,8,OVER,HBPB Opens,AA,1,10.75,1.6,1,8.85,2.3,1,10.35,2.0,1,0.0,0.0,1,29.95,1,30 April 2022
 103887,Kate Touhey,Harbour City Gymnastics,8,OVER,HBPB Opens,APP,1,10.65,1.6,1,9.35,2.5,1,10.55,2.5,1,DNS,DNS,DNS,30.55,,1 May 2022
-220976,Anna Elliott,Onslow Gymnastic Club,7,OVER,HBPB Opens,AA,,11.1,2.4,1=,10.1,1.5,3,12.6,3.7,1,12.2,3.9,1,46.0,1,30 April 2022
-220967,Natasha Stewart,Onslow Gymnastic Club,7,OVER,HBPB Opens,AA,,9.9,1.6,7,10.55,2.5,2,12.3,3.7,2,11.75,3.9,2,44.5,2,30 April 2022
+220976,Anna Elliott,Onslow Gymnastics Club,7,OVER,HBPB Opens,AA,,11.1,2.4,1=,10.1,1.5,3,12.6,3.7,1,12.2,3.9,1,46.0,1,30 April 2022
+220967,Natasha Stewart,Onslow Gymnastics Club,7,OVER,HBPB Opens,AA,,9.9,1.6,7,10.55,2.5,2,12.3,3.7,2,11.75,3.9,2,44.5,2,30 April 2022
 141980,Elise Kibblewhite,Harbour City Gymnastics,7,OVER,HBPB Opens,AA,,10.45,1.6,5,11.5,3.3,1,9.2,2.3,6,10.75,3.7,6=,41.9,3,30 April 2022
 287928,Ashlee McMillan,Omni Gymnastics Centre,7,OVER,HBPB Opens,AA,,10.5,2.0,3=,9.75,2.7,6,9.65,3.0,4,11.55,4.1,3,41.45,4,30 April 2022
 269401,Sarah Fenwick,Hastings Gymnastics Club,7,OVER,HBPB Opens,AA,,11.1,2.4,1=,9.85,2.5,4,9.5,2.9,5,10.85,3.7,5,41.3,5,30 April 2022
@@ -5438,8 +5438,8 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 224012,Madison Wannop,ARGOS Gymnastics Club,7,OVER,MIGS Junior-Senior Artistic Competition 2022,APP,1,10.8,2.4,5,8.566,2.1,9,11.0,2.8,3,11.1,3.3,5,41.466,,4 April 2022
 194347,Luci Strachan,Gymnastics Waitara,7,OVER,MIGS Junior-Senior Artistic Competition 2022,APP,1,10.666,2.4,6,10.633,3.5,2,10.0,3.1,6,11.3,3.6,4,42.599,,4 April 2022
 149626,Sienna Manisty,Omni Gymnastics Centre,7,OVER,MIGS Junior-Senior Artistic Competition 2022,APP,1,10.266,2.4,7,8.0,1.7,10,7.666,2.4,9,11.0,3.5,6,36.932,,4 April 2022
-252901,Penelope Fowler,Onslow Gymnastic Club,7,OVER,MIGS Junior-Senior Artistic Competition 2022,APP,1,10.133,1.6,8,8.9,2.5,8,7.866,3.0,8,10.966,3.7,7,37.865,,4 April 2022
-260910,Nikita Steffert,Onslow Gymnastic Club,7,OVER,MIGS Junior-Senior Artistic Competition 2022,APP,1,9.933,1.6,9,8.933,2.9,7,6.6,2.3,10,10.9,3.4,8,36.366,,4 April 2022
+252901,Penelope Fowler,Onslow Gymnastics Club,7,OVER,MIGS Junior-Senior Artistic Competition 2022,APP,1,10.133,1.6,8,8.9,2.5,8,7.866,3.0,8,10.966,3.7,7,37.865,,4 April 2022
+260910,Nikita Steffert,Onslow Gymnastics Club,7,OVER,MIGS Junior-Senior Artistic Competition 2022,APP,1,9.933,1.6,9,8.933,2.9,7,6.6,2.3,10,10.9,3.4,8,36.366,,4 April 2022
 246280,Pippa Cronin,ARGOS Gymnastics Club,7,OVER,MIGS Junior-Senior Artistic Competition 2022,APP,1,DNS,DNS,DNS,10.566,2.4,3,11.266,2.9,2,DNS,DNS,DNS,21.832,,4 April 2022
 192685,Ariana Golding,ARGOS Gymnastics Club,8,OVER,MIGS Junior-Senior Artistic Competition 2022,APP,1,10.733,3.4,1,10.3,3.6,2,12.233,4.4,1,12.1,4.1,1,45.366,,4 April 2022
 141533,Montana Damerell,ARGOS Gymnastics Club,8,OVER,MIGS Junior-Senior Artistic Competition 2022,APP,1,10.3,1.6,2,10.333,2.3,1,10.733,3.6,2,10.8,3.6,3,42.166,,4 April 2022
@@ -5822,7 +5822,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 301885,Hana Tuatoko,Hutt Valley Gymnastics,1,OVER,Hutt Valley Competition 2022,AA,1,14.0,5.0,3E  ,12.55,5.0,9  ,12.6,5.0,8  ,11.0,4.0,9  ,50.15,8  ,20-Mar-22
 672413,Izzy Mordauant,Twisters Tawa Gymnastics Club,1,OVER,Hutt Valley Competition 2022,AA,1,11.3,5.0,9  ,13.15,5.0,5  ,13.25,5.0,4  ,12.4,4.5,5E  ,50.1,9  ,20-Mar-22
 554430,Lilly de Haan,Twisters Tawa Gymnastics Club,1,UNDER,Hutt Valley Competition 2022,AA,1,14.4,5.0,1  ,13.25,5.0,3  ,12.45,5.0,3  ,13.75,5.0,1  ,53.85,1  ,20-Mar-22
-641599,Olympia Barrington-Prowse,Onslow Gymnastic Club,1,UNDER,Hutt Valley Competition 2022,AA,1,13.95,5.0,2  ,13.7,5.0,1  ,12.7,5.0,1E  ,11.5,4.0,6  ,51.85,2  ,20-Mar-22
+641599,Olympia Barrington-Prowse,Onslow Gymnastics Club,1,UNDER,Hutt Valley Competition 2022,AA,1,13.95,5.0,2  ,13.7,5.0,1  ,12.7,5.0,1E  ,11.5,4.0,6  ,51.85,2  ,20-Mar-22
 628509,Chloe Rankin,Hutt Valley Gymnastics,1,UNDER,Hutt Valley Competition 2022,AA,1,13.25,5.0,5  ,13.5,5.0,2  ,12.05,4.5,6  ,12.85,4.5,3  ,51.65,3  ,20-Mar-22
 625271,Bailey Salt,Capital Gymnastics,1,UNDER,Hutt Valley Competition 2022,AA,1,13.0,5.0,8  ,13.1,5.0,4  ,12.7,5.0,1E  ,11.9,4.0,5  ,50.7,4  ,20-Mar-22
 559841,Harper Smith,Rimutaka Gymsports,1,UNDER,Hutt Valley Competition 2022,AA,1,13.2,5.0,6  ,11.75,5.0,6  ,12.15,5.0,5  ,13.0,5.0,2  ,50.1,5  ,20-Mar-22
@@ -5841,7 +5841,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 618031,Tova Grocott,Hutt Valley Gymnastics,1,UNDER,Hutt Valley Competition 2022,AA,1,13.9,5.0,4  ,8.6,3.5,10  ,12.05,5.0,9  ,11.85,4.5,9  ,46.4,10  ,20-Mar-22
 301998,Ellie Cunningham,Hutt Valley Gymnastics,2,OVER,Hutt Valley Competition 2022,AA,1,14.45,5.0,1  ,13.95,5.0,1  ,13.2,5.0,2E  ,13.35,5.0,3  ,54.95,1  ,20-Mar-22
 589361,Nartlada Sribunwongsa,Hutt Valley Gymnastics,2,OVER,Hutt Valley Competition 2022,AA,1,13.65,5.0,10  ,13.6,5.0,2  ,13.2,4.5,2E  ,13.1,5.0,6  ,53.55,2  ,20-Mar-22
-593266,Grace Coulter,Onslow Gymnastic Club,2,OVER,Hutt Valley Competition 2022,AA,1,13.7,5.0,8E  ,13.15,5.0,4E  ,12.5,4.5,7  ,14.15,5.0,1  ,53.5,3  ,20-Mar-22
+593266,Grace Coulter,Onslow Gymnastics Club,2,OVER,Hutt Valley Competition 2022,AA,1,13.7,5.0,8E  ,13.15,5.0,4E  ,12.5,4.5,7  ,14.15,5.0,1  ,53.5,3  ,20-Mar-22
 555496,Ajilen Trincado McDonald,Hutt Valley Gymnastics,2,OVER,Hutt Valley Competition 2022,AA,1,14.1,5.0,3  ,12.85,5.0,8  ,13.0,5.0,4  ,13.2,5.0,4E  ,53.15,4  ,20-Mar-22
 642011,Annabelle Webb,Kapiti Gymnastics,2,OVER,Hutt Valley Competition 2022,AA,1,13.55,5.0,11E  ,12.5,5.0,9  ,12.75,5.0,5  ,14.0,5.0,2  ,52.8,5  ,20-Mar-22
 641807,Hayley Clark,Twisters Tawa Gymnastics Club,2,OVER,Hutt Valley Competition 2022,AA,1,13.95,5.0,5  ,12.9,5.0,6E  ,13.25,4.5,1  ,12.0,4.5,10  ,52.1,6  ,20-Mar-22
@@ -5855,7 +5855,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 287960,Holly McGregor,Kapiti Gymnastics,2,OVER,Hutt Valley Competition 2022,AA,1,14.0,5.0,4  ,12.3,5.0,11  ,10.8,4.2,15  ,11.7,4.5,12  ,48.8,14  ,20-Mar-22
 658016,Lauren Mann,Rimutaka Gymsports,2,OVER,Hutt Valley Competition 2022,AA,1,13.55,5.0,11E  ,11.85,5.0,14  ,11.4,4.5,12  ,11.65,4.5,13  ,48.45,15  ,20-Mar-22
 598365,Lily Isaac,Capital Gymnastics,2,UNDER,Hutt Valley Competition 2022,AA,1,14.15,5.0,4E  ,14.0,5.0,1  ,13.55,5.0,1  ,13.15,5.0,6  ,54.85,1  ,20-Mar-22
-641598,Sienna Barrington Prowse,Onslow Gymnastic Club,2,UNDER,Hutt Valley Competition 2022,AA,1,14.4,5.0,1  ,13.2,5.0,6E  ,13.15,5.0,3  ,13.7,5.0,2E  ,54.45,2  ,20-Mar-22
+641598,Sienna Barrington Prowse,Onslow Gymnastics Club,2,UNDER,Hutt Valley Competition 2022,AA,1,14.4,5.0,1  ,13.2,5.0,6E  ,13.15,5.0,3  ,13.7,5.0,2E  ,54.45,2  ,20-Mar-22
 530239,Madison Grant,Kapiti Gymnastics,2,UNDER,Hutt Valley Competition 2022,AA,1,14.2,5.0,3  ,13.55,5.0,2  ,12.9,4.5,5  ,13.65,5.0,4  ,54.3,3  ,20-Mar-22
 296408,Sofia Water,Hutt Valley Gymnastics,2,UNDER,Hutt Valley Competition 2022,AA,1,13.35,5.0,15  ,13.5,5.0,3E  ,12.6,4.5,10  ,14.05,5.0,1  ,53.5,4  ,20-Mar-22
 574779,Aanya Agnew,Twisters Tawa Gymnastics Club,2,UNDER,Hutt Valley Competition 2022,AA,1,14.25,5.0,2  ,12.85,5.0,10  ,12.65,4.5,8E  ,13.7,5.0,2E  ,53.45,5  ,20-Mar-22
@@ -5912,15 +5912,15 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 236682,Eryn Foster,Hutt Valley Gymnastics,4,OVER,Hutt Valley Competition 2022,AA,1,12.95,5.0,7E  ,13.1,5.0,5E  ,10.5,4.0,8  ,12.85,5.0,5  ,49.4,7  ,20-Mar-22
 201410,Grace McGall,Rimutaka Gymsports,4,OVER,Hutt Valley Competition 2022,AA,1,12.3,5.0,10  ,12.3,5.0,10  ,11.15,4.0,7  ,13.0,5.0,4  ,48.75,8  ,20-Mar-22
 633734,Charlie Edhouse,Hutt Valley Gymnastics,4,OVER,Hutt Valley Competition 2022,AA,1,12.85,5.0,9  ,11.55,4.5,11  ,11.55,4.5,6  ,12.45,5.0,7E  ,48.4,9  ,20-Mar-22
-236735,Eva Catherwood,Onslow Gymnastic Club,4,OVER,Hutt Valley Competition 2022,AA,1,13.1,5.0,6  ,12.5,5.0,9  ,9.6,3.5,10  ,12.45,5.0,7E  ,47.65,10  ,20-Mar-22
+236735,Eva Catherwood,Onslow Gymnastics Club,4,OVER,Hutt Valley Competition 2022,AA,1,13.1,5.0,6  ,12.5,5.0,9  ,9.6,3.5,10  ,12.45,5.0,7E  ,47.65,10  ,20-Mar-22
 230301,Chloe Courtnage,Kapiti Gymnastics,4,OVER,Hutt Valley Competition 2022,AA,1,11.95,5.0,11  ,13.15,5.0,4  ,8.75,3.5,11  ,11.85,5.0,10  ,45.7,11  ,20-Mar-22
 229045,Ema Gatland,Hutt Valley Gymnastics,4,UNDER,Hutt Valley Competition 2022,AA,1,13.05,5.0,4E  ,14.1,5.0,1  ,14.1,5.0,1  ,13.5,5.0,2  ,54.75,1  ,20-Mar-22
 566948,Annabelle Pointon,Twisters Tawa Gymnastics Club,4,UNDER,Hutt Valley Competition 2022,AA,1,13.6,5.0,3  ,13.5,5.0,2  ,10.9,4.0,7  ,13.85,5.0,1  ,51.85,2  ,20-Mar-22
 301962,Elsiana Shearer Orr,Hutt Valley Gymnastics,4,UNDER,Hutt Valley Competition 2022,AA,1,14.35,5.0,1  ,12.35,5.0,6  ,11.8,4.5,3  ,12.1,5.0,6  ,50.6,3  ,20-Mar-22
-295631,Jessica Calvert,Onslow Gymnastic Club,4,UNDER,Hutt Valley Competition 2022,AA,1,12.85,5.0,6  ,12.4,5.0,5  ,13.35,5.0,2  ,11.95,4.5,7  ,50.55,4  ,20-Mar-22
+295631,Jessica Calvert,Onslow Gymnastics Club,4,UNDER,Hutt Valley Competition 2022,AA,1,12.85,5.0,6  ,12.4,5.0,5  ,13.35,5.0,2  ,11.95,4.5,7  ,50.55,4  ,20-Mar-22
 278716,Madeline Joe,Hutt Valley Gymnastics,4,UNDER,Hutt Valley Competition 2022,AA,1,13.05,5.0,4E  ,13.0,5.0,3  ,11.65,4.7,4  ,12.4,5.0,3  ,50.1,5  ,20-Mar-22
 254140,Rose Passmore,Hutt Valley Gymnastics,4,UNDER,Hutt Valley Competition 2022,AA,1,12.55,5.0,9  ,12.55,5.0,4  ,11.3,3.5,6  ,12.2,5.0,4E  ,48.6,6  ,20-Mar-22
-261649,Octavia Burns,Onslow Gymnastic Club,4,UNDER,Hutt Valley Competition 2022,AA,1,12.75,5.0,7E  ,12.25,5.0,7  ,10.45,4.2,8  ,11.85,5.0,8  ,47.3,7  ,20-Mar-22
+261649,Octavia Burns,Onslow Gymnastics Club,4,UNDER,Hutt Valley Competition 2022,AA,1,12.75,5.0,7E  ,12.25,5.0,7  ,10.45,4.2,8  ,11.85,5.0,8  ,47.3,7  ,20-Mar-22
 272524,Erin Worsley,Hutt Valley Gymnastics,4,UNDER,Hutt Valley Competition 2022,AA,1,12.75,5.0,7E  ,10.45,4.5,11  ,11.55,4.5,5  ,11.35,4.5,9  ,46.1,8  ,20-Mar-22
 219201,Eleanor Henry,Hutt Valley Gymnastics,4,UNDER,Hutt Valley Competition 2022,AA,1,13.75,5.0,2  ,12.15,4.5,8  ,8.9,3.5,11  ,11.05,4.0,10  ,45.85,9  ,20-Mar-22
 198065,Mia Grant,Kapiti Gymnastics,4,UNDER,Hutt Valley Competition 2022,AA,1,12.25,5.0,11  ,10.95,4.5,9E  ,10.1,3.5,10  ,12.2,4.5,4E  ,45.5,10  ,20-Mar-22
@@ -5961,7 +5961,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 603938,Michelle Jacomb,Rimutaka Gymsports,1,UNDER,Wellington Champs 2022,AA,1,13.45,5.0,3E  ,12.4,5.0,9  ,13.45,5.0,7  ,13.35,5.0,5E  ,52.65,6  ,10-11 April 2022
 527021,Charlotte Waters,Manawatu Gymsports,1,UNDER,Wellington Champs 2022,AA,1,13.0,5.0,10  ,12.55,5.0,8  ,13.1,5.0,10E  ,12.3,5.0,12  ,50.95,7  ,10-11 April 2022
 633237,Mila Hudson,Manawatu Gymsports,1,UNDER,Wellington Champs 2022,AA,1,12.6,5.0,13  ,12.7,5.0,7  ,13.0,5.0,12  ,12.55,5.0,10  ,50.85,8  ,10-11 April 2022
-650678,Riva Fernandez,Onslow Gymnastic Club,1,UNDER,Wellington Champs 2022,AA,1,13.45,5.0,3E  ,10.5,5.0,12  ,13.35,5.0,8  ,13.4,5.0,4  ,50.7,9  ,10-11 April 2022
+650678,Riva Fernandez,Onslow Gymnastics Club,1,UNDER,Wellington Champs 2022,AA,1,13.45,5.0,3E  ,10.5,5.0,12  ,13.35,5.0,8  ,13.4,5.0,4  ,50.7,9  ,10-11 April 2022
 278758,Indi Glover,Rimutaka Gymsports,1,UNDER,Wellington Champs 2022,AA,1,13.15,5.0,6E  ,12.8,5.0,6  ,11.8,5.0,13  ,12.5,4.5,11  ,50.25,10  ,10-11 April 2022
 570249,Aliyah O'Fee,Manawatu Gymsports,1,UNDER,Wellington Champs 2022,AA,1,12.7,5.0,11  ,10.6,4.5,11  ,13.1,5.0,10E  ,13.6,5.0,3  ,50.0,11  ,10-11 April 2022
 617893,Mackenzie Burridge,Hutt Valley Gymnastics,1,UNDER,Wellington Champs 2022,AA,1,13.1,5.0,8E  ,11.45,4.5,10  ,13.2,5.0,9  ,12.1,4.5,13  ,49.85,12  ,10-11 April 2022
@@ -5974,10 +5974,10 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 229076,Sovann Stewart,Hutt Valley Gymnastics,1,OVER,Wellington Champs 2022,AA,1,13.15,5.0,7  ,12.25,5.0,7  ,13.35,5.0,6  ,13.25,5.0,4E  ,52.0,6E  ,10-11 April 2022
 590918,Roya Denston,Rimutaka Gymsports,1,OVER,Wellington Champs 2022,AA,1,13.75,5.0,4  ,12.6,5.0,6  ,12.35,4.5,7  ,13.3,5.0,3  ,52.0,6E  ,10-11 April 2022
 657169,Laney Short,Manawatu Gymsports,1,UNDER,Wellington Champs 2022,AA,1,13.5,5.0,3  ,13.4,5.0,2  ,14.2,5.0,1  ,13.25,5.0,5  ,54.35,1  ,10-11 April 2022
-657184,Ellie Brownie,Onslow Gymnastic Club,1,UNDER,Wellington Champs 2022,AA,1,13.55,5.0,2  ,13.55,5.0,1  ,12.0,4.0,11  ,13.55,5.0,3  ,52.65,2  ,10-11 April 2022
+657184,Ellie Brownie,Onslow Gymnastics Club,1,UNDER,Wellington Champs 2022,AA,1,13.55,5.0,2  ,13.55,5.0,1  ,12.0,4.0,11  ,13.55,5.0,3  ,52.65,2  ,10-11 April 2022
 633906,Milly Lean,Manawatu Gymsports,1,UNDER,Wellington Champs 2022,AA,1,13.4,5.0,4  ,13.0,5.0,4  ,13.6,5.0,2  ,12.45,5.0,7  ,52.45,3  ,10-11 April 2022
 644298,Kate Quigan,Manawatu Gymsports,1,UNDER,Wellington Champs 2022,AA,1,13.35,5.0,5  ,11.85,5.0,8  ,13.45,5.0,4  ,13.7,5.0,2  ,52.35,4  ,10-11 April 2022
-641599,Olympia Barrington-Prowse,Onslow Gymnastic Club,1,UNDER,Wellington Champs 2022,AA,1,13.8,5.0,1  ,13.35,5.0,3  ,12.3,4.5,8  ,12.4,5.0,8E  ,51.85,5  ,10-11 April 2022
+641599,Olympia Barrington-Prowse,Onslow Gymnastics Club,1,UNDER,Wellington Champs 2022,AA,1,13.8,5.0,1  ,13.35,5.0,3  ,12.3,4.5,8  ,12.4,5.0,8E  ,51.85,5  ,10-11 April 2022
 510660,Aliya Roff,Manawatu Gymsports,1,UNDER,Wellington Champs 2022,AA,1,13.0,5.0,6  ,11.4,4.5,10  ,13.5,5.0,3  ,12.55,5.0,6  ,50.45,6  ,10-11 April 2022
 584287,Emily Sue,Manawatu Gymsports,1,UNDER,Wellington Champs 2022,AA,1,12.8,5.0,8  ,12.05,4.5,5E  ,11.65,5.0,12  ,13.8,5.0,1  ,50.3,7  ,10-11 April 2022
 559841,Harper Smith,Rimutaka Gymsports,1,UNDER,Wellington Champs 2022,AA,1,12.15,5.0,12  ,11.65,5.0,9  ,12.5,5.0,5  ,13.5,5.0,4  ,49.8,8  ,10-11 April 2022
@@ -6018,18 +6018,18 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 600795,Elliana Naylor,Twisters Tawa Gymnastics Club,2,UNDER,Wellington Champs 2022,AA,1,14.45,5.0,1E  ,13.866,5.0,2E  ,13.666,5.0,1E  ,13.3,5.0,2E  ,55.282,2  ,10-11 April 2022
 613238,Dawa Hiddleston-Beedell,Kapiti Gymnastics,2,UNDER,Wellington Champs 2022,AA,1,14.1,5.0,6  ,13.866,5.0,2E  ,13.433,4.5,4  ,12.9,4.5,4E  ,54.299,3  ,10-11 April 2022
 598365,Lily Isaac,Capital Gymnastics,2,UNDER,Wellington Champs 2022,AA,1,13.9,5.0,8  ,13.733,5.0,4E  ,13.666,5.0,1E  ,12.766,4.5,7  ,54.065,4  ,10-11 April 2022
-641598,Sienna Barrington Prowse,Onslow Gymnastic Club,2,UNDER,Wellington Champs 2022,AA,1,14.15,5.0,5  ,13.733,5.0,4E  ,13.633,5.0,3  ,12.3,4.5,9  ,53.816,5  ,10-11 April 2022
+641598,Sienna Barrington Prowse,Onslow Gymnastics Club,2,UNDER,Wellington Champs 2022,AA,1,14.15,5.0,5  ,13.733,5.0,4E  ,13.633,5.0,3  ,12.3,4.5,9  ,53.816,5  ,10-11 April 2022
 566966,Mia Geyer,Twisters Tawa Gymnastics Club,2,UNDER,Wellington Champs 2022,AA,1,14.45,5.0,1E  ,13.433,5.0,7  ,12.766,4.2,8E  ,12.9,4.5,4E  ,53.549,6  ,10-11 April 2022
 617661,Annabelle Rushmere,Kapiti Gymnastics,2,UNDER,Wellington Champs 2022,AA,1,14.0,5.0,7  ,12.9,5.0,11  ,12.766,5.0,8E  ,13.3,4.5,2E  ,52.966,7  ,10-11 April 2022
 560675,Charlie Mundel,Manawatu Gymsports,2,UNDER,Wellington Champs 2022,AA,1,14.35,5.0,3  ,13.333,5.0,8  ,12.666,5.0,10  ,12.5,5.0,8  ,52.849,8  ,10-11 April 2022
 572053,Jorja Pickering,Manawatu Gymsports,2,UNDER,Wellington Champs 2022,AA,1,13.8,5.0,10  ,13.566,5.0,6  ,12.9,5.0,7  ,12.266,4.5,10  ,52.532,9  ,10-11 April 2022
 578226,Ellie Dorn,Manawatu Gymsports,2,UNDER,Wellington Champs 2022,AA,1,13.85,5.0,9  ,13.033,5.0,9  ,11.1,4.5,13  ,12.866,5.0,6  ,50.849,10  ,10-11 April 2022
 556671,Amelia Allen,Manawatu Gymsports,2,UNDER,Wellington Champs 2022,AA,1,13.7,5.0,11  ,12.7,5.0,12  ,13.366,5.0,5  ,10.433,4.5,13  ,50.199,11  ,10-11 April 2022
-619985,Adalise Hyde,Onslow Gymnastic Club,2,UNDER,Wellington Champs 2022,AA,1,13.45,5.0,12  ,12.966,5.0,10  ,12.033,4.5,12  ,11.633,4.5,11E  ,50.082,12  ,10-11 April 2022
+619985,Adalise Hyde,Onslow Gymnastics Club,2,UNDER,Wellington Champs 2022,AA,1,13.45,5.0,12  ,12.966,5.0,10  ,12.033,4.5,12  ,11.633,4.5,11E  ,50.082,12  ,10-11 April 2022
 302418,Ivy Hubbard,Manawatu Gymsports,2,UNDER,Wellington Champs 2022,AA,1,12.9,5.0,13  ,12.566,5.0,13  ,12.4,4.5,11  ,11.633,4.5,11E  ,49.499,13  ,10-11 April 2022
-598418,Eden Lipscombe,Onslow Gymnastic Club,2,OVER,Wellington Champs 2022,AA,1,14.05,5.0,2  ,13.566,5.0,1  ,13.766,5.0,1  ,13.333,5.0,5  ,54.715,1  ,10-11 April 2022
+598418,Eden Lipscombe,Onslow Gymnastics Club,2,OVER,Wellington Champs 2022,AA,1,14.05,5.0,2  ,13.566,5.0,1  ,13.766,5.0,1  ,13.333,5.0,5  ,54.715,1  ,10-11 April 2022
 642011,Annabelle Webb,Kapiti Gymnastics,2,OVER,Wellington Champs 2022,AA,1,13.95,5.0,4  ,13.533,5.0,2  ,13.066,4.5,2  ,13.866,5.0,2  ,54.415,2  ,10-11 April 2022
-593266,Grace Coulter,Onslow Gymnastic Club,2,OVER,Wellington Champs 2022,AA,1,14.0,5.0,3  ,13.5,5.0,3  ,12.766,4.5,5E  ,14.0,5.0,1  ,54.266,3  ,10-11 April 2022
+593266,Grace Coulter,Onslow Gymnastics Club,2,OVER,Wellington Champs 2022,AA,1,14.0,5.0,3  ,13.5,5.0,3  ,12.766,4.5,5E  ,14.0,5.0,1  ,54.266,3  ,10-11 April 2022
 626101,Sophia Donald,Twisters Tawa Gymnastics Club,2,OVER,Wellington Champs 2022,AA,1,14.15,5.0,1  ,13.2,5.0,6  ,12.5,4.5,7  ,13.533,5.0,3  ,53.383,4  ,10-11 April 2022
 587481,Keira Lee,Kapiti Gymnastics,2,OVER,Wellington Champs 2022,AA,1,13.25,5.0,12  ,13.133,5.0,7E  ,12.866,4.5,4  ,13.4,5.0,4  ,52.649,5E  ,10-11 April 2022
 641807,Hayley Clark,Twisters Tawa Gymnastics Club,2,OVER,Wellington Champs 2022,AA,1,13.75,5.0,5E  ,13.466,5.0,4  ,13.0,4.5,3  ,12.433,4.5,9  ,52.649,5E  ,10-11 April 2022
@@ -6046,17 +6046,17 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 549493,Julie Tesarova,Capital Gymnastics,2,UNDER,Wellington Champs 2022,AA,1,13.55,5.0,4E  ,13.4,5.0,4  ,12.766,4.7,7E  ,12.733,4.5,9  ,52.449,5  ,10-11 April 2022
 600793,Georgia Alderson,Twisters Tawa Gymnastics Club,2,UNDER,Wellington Champs 2022,AA,1,13.15,5.0,10E  ,12.466,5.0,10  ,13.3,5.0,4  ,13.266,5.0,5  ,52.182,6  ,10-11 April 2022
 301692,Hazel Miller,Capital Gymnastics,2,UNDER,Wellington Champs 2022,AA,1,13.55,5.0,4E  ,12.3,5.0,11  ,12.8,5.0,6  ,13.433,5.0,4  ,52.083,7  ,10-11 April 2022
-542475,Poppy Smith,Onslow Gymnastic Club,2,UNDER,Wellington Champs 2022,AA,1,13.15,5.0,10E  ,13.366,5.0,5  ,12.566,4.5,9  ,12.866,5.0,8  ,51.948,8  ,10-11 April 2022
+542475,Poppy Smith,Onslow Gymnastics Club,2,UNDER,Wellington Champs 2022,AA,1,13.15,5.0,10E  ,13.366,5.0,5  ,12.566,4.5,9  ,12.866,5.0,8  ,51.948,8  ,10-11 April 2022
 302414,Madison Westwood-Morris,Manawatu Gymsports,2,UNDER,Wellington Champs 2022,AA,1,13.55,5.0,4E  ,13.0,5.0,7  ,12.2,5.0,10  ,13.1,5.0,6  ,51.85,9  ,10-11 April 2022
 273300,Sophie Tomlinson,Manawatu Gymsports,2,UNDER,Wellington Champs 2022,AA,1,14.0,5.0,1  ,11.833,5.0,12  ,13.633,5.0,1  ,12.3,4.5,10  ,51.766,10  ,10-11 April 2022
 604065,Lulu Howard,Capital Gymnastics,2,UNDER,Wellington Champs 2022,AA,1,13.5,5.0,8  ,12.766,5.0,8  ,12.166,5.0,11E  ,12.066,4.5,11  ,50.498,11  ,10-11 April 2022
-619794,Harper McPheat,Onslow Gymnastic Club,2,UNDER,Wellington Champs 2022,AA,1,13.75,5.0,2  ,12.7,5.0,9  ,12.166,5.0,11E  ,10.866,4.0,12  ,49.482,12  ,10-11 April 2022
+619794,Harper McPheat,Onslow Gymnastics Club,2,UNDER,Wellington Champs 2022,AA,1,13.75,5.0,2  ,12.7,5.0,9  ,12.166,5.0,11E  ,10.866,4.0,12  ,49.482,12  ,10-11 April 2022
 272492,Ruby Brown,Hutt Valley Gymnastics,3,UNDER,Wellington Champs 2022,AA,1,14.1,5.0,2  ,13.8,5.0,1  ,13.25,5.0,1  ,13.4,5.0,2E  ,54.55,1  ,10-11 April 2022
 244316,Mackenzie Burwell-Garratt,Harbour City Gymnastics,3,UNDER,Wellington Champs 2022,AA,1,14.45,5.0,1  ,13.633,5.0,2  ,12.3,4.5,13  ,13.533,5.0,1  ,53.916,2  ,10-11 April 2022
 272530,Hana Roberts,Hutt Valley Gymnastics,3,UNDER,Wellington Champs 2022,AA,1,14.05,5.0,3E  ,13.5,5.0,3  ,12.65,4.5,6E  ,13.166,5.0,4  ,53.366,3  ,10-11 April 2022
 633272,Kia Hewitt,Manawatu Gymsports,3,UNDER,Wellington Champs 2022,AA,1,13.8,5.0,6E  ,12.833,5.0,8  ,12.6,4.5,8E  ,13.4,5.0,2E  ,52.633,4  ,10-11 April 2022
 296548,Alexa Ngan,Hutt Valley Gymnastics,3,UNDER,Wellington Champs 2022,AA,1,13.8,5.0,6E  ,12.266,4.5,15  ,13.15,5.0,3  ,12.9,5.0,7  ,52.116,5  ,10-11 April 2022
-570512,Obi Haworth,Onslow Gymnastic Club,3,UNDER,Wellington Champs 2022,AA,1,13.4,5.0,12  ,12.8,5.0,9  ,13.2,5.0,2  ,12.1,5.0,19  ,51.5,6  ,10-11 April 2022
+570512,Obi Haworth,Onslow Gymnastics Club,3,UNDER,Wellington Champs 2022,AA,1,13.4,5.0,12  ,12.8,5.0,9  ,13.2,5.0,2  ,12.1,5.0,19  ,51.5,6  ,10-11 April 2022
 258159,Rome Tavendale,Hutt Valley Gymnastics,3,UNDER,Wellington Champs 2022,AA,1,13.2,5.0,14  ,12.566,5.0,12  ,12.65,4.5,6E  ,12.966,5.0,6  ,51.382,7  ,10-11 April 2022
 557910,Lily Ruscoe,Whanganui Boys & Girls Gym Club,3,UNDER,Wellington Champs 2022,AA,1,13.6,5.0,10  ,12.633,5.0,11  ,12.35,4.5,12  ,12.666,5.0,9E  ,51.249,8  ,10-11 April 2022
 548814,Mila Birch,Harbour City Gymnastics,3,UNDER,Wellington Champs 2022,AA,1,14.05,5.0,3E  ,12.366,4.5,14  ,12.4,5.0,10E  ,12.4,5.0,14  ,51.216,9  ,10-11 April 2022
@@ -6067,12 +6067,12 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 283315,Ruby Fleet,Kapiti Gymnastics,3,UNDER,Wellington Champs 2022,AA,1,13.85,5.0,5  ,11.866,5.0,19  ,11.9,5.0,14E  ,13.1,5.0,5  ,50.716,14  ,10-11 April 2022
 243381,Emily Tomlinson,Manawatu Gymsports,3,UNDER,Wellington Champs 2022,AA,1,12.95,5.0,16  ,12.5,5.0,13  ,12.6,5.0,8E  ,12.333,5.0,17  ,50.383,15E  ,10-11 April 2022
 296134,Eleanor Askin,Manawatu Gymsports,3,UNDER,Wellington Champs 2022,AA,1,13.55,5.0,11  ,13.0,5.0,6  ,11.4,4.7,18  ,12.433,5.0,13  ,50.383,15E  ,10-11 April 2022
-562627,Antonia Gorbushina,Onslow Gymnastic Club,3,UNDER,Wellington Champs 2022,AA,1,12.65,5.0,18  ,12.033,5.0,16  ,12.4,4.5,10E  ,12.6,5.0,11  ,49.683,17  ,10-11 April 2022
+562627,Antonia Gorbushina,Onslow Gymnastics Club,3,UNDER,Wellington Champs 2022,AA,1,12.65,5.0,18  ,12.033,5.0,16  ,12.4,4.5,10E  ,12.6,5.0,11  ,49.683,17  ,10-11 April 2022
 229741,Daisy De Clifford,Omni Gymnastics Centre,3,UNDER,Wellington Champs 2022,AA,1,13.35,5.0,13  ,12.0,5.0,17E  ,11.55,5.0,17  ,12.366,5.0,15E  ,49.266,18  ,10-11 April 2022
 290325,Ameelia Roos,Hutt Valley Gymnastics,3,UNDER,Wellington Champs 2022,AA,1,12.15,5.0,20  ,11.5,5.0,20  ,10.2,4.5,19  ,12.066,5.0,20  ,45.916,19  ,10-11 April 2022
 584093,Kiarah Finlayson,Manawatu Gymsports,3,UNDER,Wellington Champs 2022,AA,1,12.75,5.0,17  ,12.0,5.0,17E  ,8.45,3.5,20  ,12.2,5.0,18  ,45.4,20  ,10-11 April 2022
 617735,Sophie Chisholm,Kapiti Gymnastics,3,OVER,Wellington Champs 2022,AA,1,14.4,5.0,1  ,12.566,5.0,6  ,13.35,5.0,2  ,13.733,5.0,1  ,54.049,1  ,10-11 April 2022
-542219,Ashleigh McPheat,Onslow Gymnastic Club,3,OVER,Wellington Champs 2022,AA,1,13.8,5.0,3  ,13.133,5.0,2  ,12.55,4.5,4  ,13.1,5.0,4E  ,52.583,2  ,10-11 April 2022
+542219,Ashleigh McPheat,Onslow Gymnastics Club,3,OVER,Wellington Champs 2022,AA,1,13.8,5.0,3  ,13.133,5.0,2  ,12.55,4.5,4  ,13.1,5.0,4E  ,52.583,2  ,10-11 April 2022
 587338,Orla Barlow,Whanganui Boys & Girls Gym Club,3,OVER,Wellington Champs 2022,AA,1,13.7,5.0,6E  ,12.766,5.0,5  ,12.7,5.0,3  ,13.3,5.0,3  ,52.466,3  ,10-11 April 2022
 562648,Charlotte McColl,Hutt Valley Gymnastics,3,OVER,Wellington Champs 2022,AA,1,13.25,5.0,8  ,12.8,5.0,4  ,13.6,5.0,1  ,12.366,5.0,8E  ,52.016,4  ,10-11 April 2022
 523525,Te Aroha-Koi Wiremu-Quinn,Hutt Valley Gymnastics,3,OVER,Wellington Champs 2022,AA,1,13.7,5.0,6E  ,13.6,5.0,1  ,12.2,5.0,6  ,12.133,5.0,10  ,51.633,5  ,10-11 April 2022
@@ -6090,7 +6090,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 600797,Emma Marks,Twisters Tawa Gymnastics Club,3,UNDER,Wellington Champs 2022,AA,1,13.1,5.0,12  ,13.633,5.0,2  ,12.5,4.5,6  ,12.866,5.0,8E  ,52.099,6E  ,10-11 April 2022
 286779,Aurora Edwards,Manawatu Gymsports,3,UNDER,Wellington Champs 2022,AA,1,14.05,5.0,2E  ,12.0,5.0,16  ,12.2,5.0,11  ,13.666,5.0,2  ,51.916,8  ,10-11 April 2022
 566964,Lucie Tonkin,Twisters Tawa Gymnastics Club,3,UNDER,Wellington Champs 2022,AA,1,13.05,5.0,13  ,13.333,5.0,4  ,11.45,4.0,16  ,13.533,5.0,4  ,51.366,9  ,10-11 April 2022
-295643,Sofia Creighton,Onslow Gymnastic Club,3,UNDER,Wellington Champs 2022,AA,1,13.7,5.0,6  ,11.833,5.0,17  ,11.9,4.0,13  ,12.866,5.0,8E  ,50.299,10  ,10-11 April 2022
+295643,Sofia Creighton,Onslow Gymnastics Club,3,UNDER,Wellington Champs 2022,AA,1,13.7,5.0,6  ,11.833,5.0,17  ,11.9,4.0,13  ,12.866,5.0,8E  ,50.299,10  ,10-11 April 2022
 600802,Yolandy Russell,Twisters Tawa Gymnastics Club,3,UNDER,Wellington Champs 2022,AA,1,13.25,5.0,10E  ,13.4,5.0,3  ,11.15,4.5,17  ,12.433,5.0,13E  ,50.233,11  ,10-11 April 2022
 296576,Scarlett Harper,Kapiti Gymnastics,3,UNDER,Wellington Champs 2022,AA,1,13.25,5.0,10E  ,12.166,5.0,13  ,12.25,5.0,10  ,12.3,5.0,15  ,49.966,12  ,10-11 April 2022
 229071,Rose Kellett,Hutt Valley Gymnastics,3,UNDER,Wellington Champs 2022,AA,1,12.4,5.0,15E  ,12.933,5.0,8  ,12.15,4.5,12  ,12.2,5.0,16  ,49.683,13  ,10-11 April 2022
@@ -6101,7 +6101,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 246832,Isabella Christodoulou,Omni Gymnastics Centre,3,UNDER,Wellington Champs 2022,AA,1,11.05,5.0,20  ,12.133,5.0,14  ,11.0,5.0,18  ,12.866,5.0,8E  ,47.049,18  ,10-11 April 2022
 555920,Amorette Beukes,Manawatu Gymsports,3,UNDER,Wellington Champs 2022,AA,1,11.95,5.0,17  ,10.2,4.0,20  ,12.45,5.0,7  ,11.9,5.0,19  ,46.5,19  ,10-11 April 2022
 277614,Ruby Hayes,Omni Gymnastics Centre,3,UNDER,Wellington Champs 2022,AA,1,11.6,5.0,18  ,11.8,5.0,18  ,9.55,4.2,20  ,12.033,5.0,17  ,44.983,20  ,10-11 April 2022
-295631,Jessica Calvert,Onslow Gymnastic Club,4,UNDER,Wellington Champs 2022,AA,1,13.2,5.0,6  ,13.65,5.0,1  ,13.75,5.0,1  ,13.65,5.0,1  ,54.25,1  ,10-11 April 2022
+295631,Jessica Calvert,Onslow Gymnastics Club,4,UNDER,Wellington Champs 2022,AA,1,13.2,5.0,6  ,13.65,5.0,1  ,13.75,5.0,1  ,13.65,5.0,1  ,54.25,1  ,10-11 April 2022
 566948,Annabelle Pointon,Twisters Tawa Gymnastics Club,4,UNDER,Wellington Champs 2022,AA,1,13.85,5.0,2  ,13.25,5.0,2  ,13.25,5.0,3  ,13.5,5.0,2  ,53.85,2  ,10-11 April 2022
 278716,Madeline Joe,Hutt Valley Gymnastics,4,UNDER,Wellington Champs 2022,AA,1,13.25,5.0,5  ,12.95,5.0,5E  ,13.05,5.0,5  ,13.3,5.0,3  ,52.55,3  ,10-11 April 2022
 301962,Elsiana Shearer Orr,Hutt Valley Gymnastics,4,UNDER,Wellington Champs 2022,AA,1,14.45,5.0,1  ,13.15,5.0,3E  ,13.0,5.0,6E  ,11.7,5.0,13  ,52.3,4  ,10-11 April 2022
@@ -6109,8 +6109,8 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 550496,Georgia Harvey,Manawatu Gymsports,4,UNDER,Wellington Champs 2022,AA,1,12.35,5.0,10  ,12.95,5.0,5E  ,13.7,5.0,2  ,12.4,5.0,7  ,51.4,6  ,10-11 April 2022
 219201,Eleanor Henry,Hutt Valley Gymnastics,4,UNDER,Wellington Champs 2022,AA,1,12.8,5.0,9  ,12.55,5.0,9  ,12.6,5.0,9  ,13.25,5.0,4  ,51.2,7  ,10-11 April 2022
 566961,Juliet Duff,Twisters Tawa Gymnastics Club,4,UNDER,Wellington Champs 2022,AA,1,13.5,5.0,4  ,13.15,5.0,3E  ,11.95,4.0,12E  ,12.0,5.0,11E  ,50.6,8  ,10-11 April 2022
-261649,Octavia Burns,Onslow Gymnastic Club,4,UNDER,Wellington Champs 2022,AA,1,13.1,5.0,7  ,12.85,5.0,7  ,11.2,5.0,14  ,12.8,5.0,5  ,49.95,9  ,10-11 April 2022
-290641,Ashley Elliott,Onslow Gymnastic Club,4,UNDER,Wellington Champs 2022,AA,1,12.9,5.0,8  ,10.4,5.0,15  ,13.0,5.0,6E  ,12.35,4.5,8  ,48.65,10  ,10-11 April 2022
+261649,Octavia Burns,Onslow Gymnastics Club,4,UNDER,Wellington Champs 2022,AA,1,13.1,5.0,7  ,12.85,5.0,7  ,11.2,5.0,14  ,12.8,5.0,5  ,49.95,9  ,10-11 April 2022
+290641,Ashley Elliott,Onslow Gymnastics Club,4,UNDER,Wellington Champs 2022,AA,1,12.9,5.0,8  ,10.4,5.0,15  ,13.0,5.0,6E  ,12.35,4.5,8  ,48.65,10  ,10-11 April 2022
 295757,Eliza Loh,Twisters Tawa Gymnastics Club,4,UNDER,Wellington Champs 2022,AA,1,12.0,5.0,14  ,11.65,5.0,12E  ,12.05,4.5,11  ,12.2,5.0,9  ,47.9,11  ,10-11 April 2022
 284967,Janice Wu,Hutt Valley Gymnastics,4,UNDER,Wellington Champs 2022,AA,1,10.5,5.0,16  ,12.3,5.0,10  ,12.95,4.5,8  ,12.1,5.0,10  ,47.85,12  ,10-11 April 2022
 273384,Isobel Taylor,Manawatu Gymsports,4,UNDER,Wellington Champs 2022,AA,1,12.2,5.0,11  ,11.1,5.0,14  ,12.35,4.7,10  ,12.0,5.0,11E  ,47.65,13  ,10-11 April 2022
@@ -6119,17 +6119,17 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 302421,Brooke Kendrew,Manawatu Gymsports,4,UNDER,Wellington Champs 2022,AA,1,11.25,5.0,15  ,0.0,0.0,16  ,8.5,4.0,16  ,10.7,3.5,15  ,30.45,16  ,10-11 April 2022
 567967,Sienna Rorason,Twisters Tawa Gymnastics Club,4,OVER,Wellington Champs 2022,AA,1,13.4,5.0,4  ,14.0,5.0,1  ,11.95,4.2,6  ,13.2,5.0,1  ,52.55,1  ,10-11 April 2022
 227746,Sydney Fergus,Twisters Tawa Gymnastics Club,4,OVER,Wellington Champs 2022,AA,1,14.05,5.0,1  ,11.8,5.0,10  ,13.6,5.0,1  ,12.55,5.0,4E  ,52.0,2  ,10-11 April 2022
-249317,Madison Lynch,Onslow Gymnastic Club,4,OVER,Wellington Champs 2022,AA,1,12.85,5.0,6  ,12.35,5.0,8  ,13.0,4.5,2E  ,13.0,5.0,2  ,51.2,3  ,10-11 April 2022
+249317,Madison Lynch,Onslow Gymnastics Club,4,OVER,Wellington Champs 2022,AA,1,12.85,5.0,6  ,12.35,5.0,8  ,13.0,4.5,2E  ,13.0,5.0,2  ,51.2,3  ,10-11 April 2022
 291023,Paige Todd,Manawatu Gymsports,4,OVER,Wellington Champs 2022,AA,1,12.0,5.0,13E  ,12.95,5.0,6  ,13.0,5.0,2E  ,12.55,5.0,4E  ,50.5,4  ,10-11 April 2022
 296472,Vaibhavi Tandon,Hutt Valley Gymnastics,4,OVER,Wellington Champs 2022,AA,1,11.35,5.0,16  ,13.8,5.0,2  ,12.75,4.5,4  ,12.3,5.0,7  ,50.2,5  ,10-11 April 2022
 232220,Libby Johnson,Manawatu Gymsports,4,OVER,Wellington Champs 2022,AA,1,13.45,5.0,3  ,13.1,5.0,5  ,11.7,5.0,8  ,10.95,5.0,15  ,49.2,6  ,10-11 April 2022
-227729,Devon Cook,Onslow Gymnastic Club,4,OVER,Wellington Champs 2022,AA,1,13.05,5.0,5  ,11.75,5.0,11  ,11.05,4.0,10  ,12.55,5.0,4E  ,48.4,7  ,10-11 April 2022
+227729,Devon Cook,Onslow Gymnastics Club,4,OVER,Wellington Champs 2022,AA,1,13.05,5.0,5  ,11.75,5.0,11  ,11.05,4.0,10  ,12.55,5.0,4E  ,48.4,7  ,10-11 April 2022
 286813,Lucia Hodgson,Manawatu Gymsports,4,OVER,Wellington Champs 2022,AA,1,12.7,5.0,7  ,13.4,5.0,4  ,10.75,4.0,13  ,11.45,4.5,12  ,48.3,8  ,10-11 April 2022
-236735,Eva Catherwood,Onslow Gymnastic Club,4,OVER,Wellington Champs 2022,AA,1,13.5,5.0,2  ,12.7,5.0,7  ,9.3,4.5,16  ,12.7,5.0,3  ,48.2,9  ,10-11 April 2022
+236735,Eva Catherwood,Onslow Gymnastics Club,4,OVER,Wellington Champs 2022,AA,1,13.5,5.0,2  ,12.7,5.0,7  ,9.3,4.5,16  ,12.7,5.0,3  ,48.2,9  ,10-11 April 2022
 663020,Ella Maguire,Harbour City Gymnastics,4,OVER,Wellington Champs 2022,AA,1,12.4,5.0,9  ,13.6,5.0,3  ,11.4,4.5,9  ,10.75,4.5,16  ,48.15,10  ,10-11 April 2022
 175160,Aria Swallow,Harbour City Gymnastics,4,OVER,Wellington Champs 2022,AA,1,12.65,5.0,8  ,11.45,5.0,12  ,12.1,5.0,5  ,11.85,5.0,9  ,48.05,11  ,10-11 April 2022
-261652,Amelia Hogg,Onslow Gymnastic Club,4,OVER,Wellington Champs 2022,AA,1,12.0,5.0,13E  ,11.95,5.0,9  ,10.4,4.0,14  ,11.8,5.0,10  ,46.15,12  ,10-11 April 2022
-284779,Lia Vlaar,Onslow Gymnastic Club,4,OVER,Wellington Champs 2022,AA,1,12.25,5.0,12  ,10.8,5.0,13  ,10.8,4.0,12  ,11.6,5.0,11  ,45.45,13  ,10-11 April 2022
+261652,Amelia Hogg,Onslow Gymnastics Club,4,OVER,Wellington Champs 2022,AA,1,12.0,5.0,13E  ,11.95,5.0,9  ,10.4,4.0,14  ,11.8,5.0,10  ,46.15,12  ,10-11 April 2022
+284779,Lia Vlaar,Onslow Gymnastics Club,4,OVER,Wellington Champs 2022,AA,1,12.25,5.0,12  ,10.8,5.0,13  ,10.8,4.0,12  ,11.6,5.0,11  ,45.45,13  ,10-11 April 2022
 634711,Sienna-Jade Stanley,Twisters Tawa Gymnastics Club,4,OVER,Wellington Champs 2022,AA,1,12.35,5.0,10E  ,10.0,5.0,14  ,10.95,3.5,11  ,11.1,4.5,13  ,44.4,14  ,10-11 April 2022
 177843,Emily Carpenter,Manawatu Gymsports,4,OVER,Wellington Champs 2022,AA,1,11.4,5.0,15  ,0.0,0.0,15E  ,11.85,4.5,7  ,11.9,5.0,8  ,35.15,15  ,10-11 April 2022
 273388,Riley Kauika,Manawatu Gymsports,4,OVER,Wellington Champs 2022,AA,1,12.35,5.0,10E  ,0.0,0.0,15E  ,10.15,4.5,15  ,11.0,5.0,14  ,33.5,16  ,10-11 April 2022
@@ -6167,11 +6167,11 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 226366,Sia Vaka,Hutt Valley Gymnastics,5,OVER,Wellington Champs 2022,AA,1,14.05,5.0,2  ,11.766,5.0,18E  ,12.766,5.0,1  ,11.9,4.5,15  ,50.482,2  ,10-11 April 2022
 266996,Kaia Mackenzie Erkens,Capital Gymnastics,5,OVER,Wellington Champs 2022,AA,1,12.85,5.0,14  ,12.966,5.0,2  ,11.433,3.7,6  ,13.2,5.0,1  ,50.449,3  ,10-11 April 2022
 256431,Abby Downes,Kapiti Gymnastics,5,OVER,Wellington Champs 2022,AA,1,14.1,5.0,1  ,11.666,5.0,20E  ,11.4,4.5,7  ,12.833,5.0,2E  ,49.999,4  ,10-11 April 2022
-227748,Zoe Tatham,Onslow Gymnastic Club,5,OVER,Wellington Champs 2022,AA,1,13.25,5.0,9  ,11.633,5.0,22  ,12.233,5.0,3E  ,12.666,5.0,4  ,49.782,5  ,10-11 April 2022
+227748,Zoe Tatham,Onslow Gymnastics Club,5,OVER,Wellington Champs 2022,AA,1,13.25,5.0,9  ,11.633,5.0,22  ,12.233,5.0,3E  ,12.666,5.0,4  ,49.782,5  ,10-11 April 2022
 272548,Lucia Hertanto,Hutt Valley Gymnastics,5,OVER,Wellington Champs 2022,AA,1,13.75,5.0,3E  ,12.533,5.0,8  ,10.7,4.2,14E  ,12.233,5.0,10  ,49.216,6  ,10-11 April 2022
 295759,Jessica Dravitzki,Twisters Tawa Gymnastics Club,5,OVER,Wellington Champs 2022,AA,1,13.4,5.0,6E  ,12.166,5.0,14  ,10.8,4.5,12  ,12.833,5.0,2E  ,49.199,7  ,10-11 April 2022
 158025,Kate Livengood,Harbour City Gymnastics,5,OVER,Wellington Champs 2022,AA,1,13.75,5.0,3E  ,12.666,5.0,5E  ,11.3,5.0,8  ,11.233,5.0,22  ,48.949,8  ,10-11 April 2022
-249821,Ashleigh Keall,Onslow Gymnastic Club,5,OVER,Wellington Champs 2022,AA,1,13.15,5.0,10  ,12.466,5.0,9  ,10.7,4.5,14E  ,12.6,5.0,5  ,48.916,9  ,10-11 April 2022
+249821,Ashleigh Keall,Onslow Gymnastics Club,5,OVER,Wellington Champs 2022,AA,1,13.15,5.0,10  ,12.466,5.0,9  ,10.7,4.5,14E  ,12.6,5.0,5  ,48.916,9  ,10-11 April 2022
 245525,Marieve Wilson-Bray,Hutt Valley Gymnastics,5,OVER,Wellington Champs 2022,AA,1,12.6,5.0,17  ,12.733,5.0,4  ,11.133,4.0,9  ,12.3,5.0,9  ,48.766,10  ,10-11 April 2022
 206213,Mariska Sue,Hutt Valley Gymnastics,5,OVER,Wellington Champs 2022,AA,1,13.35,5.0,8  ,11.666,5.0,20E  ,11.0,4.5,10  ,12.566,5.0,6  ,48.582,11  ,10-11 April 2022
 268212,Chloe Moreton,Twisters Tawa Gymnastics Club,5,OVER,Wellington Champs 2022,AA,1,12.75,5.0,16  ,12.6,5.0,7  ,10.9,3.7,11  ,12.166,5.0,11  ,48.416,12  ,10-11 April 2022
@@ -6202,12 +6202,12 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 240902,Elizabeth Longhurst,Hutt Valley Gymnastics,7,UNDER,Wellington Champs 2022,AA,1,10.75,1.6,4  ,10.633,3.3,2E  ,9.65,3.3,5  ,11.866,3.8,1  ,42.899,5  ,10-11 April 2022
 188490,Makenzie Reddaway,Hutt Valley Gymnastics,7,UNDER,Wellington Champs 2022,AA,1,11.2,2.4,1  ,10.633,2.4,2E  ,9.35,2.7,6  ,10.566,3.3,6  ,41.749,6  ,10-11 April 2022
 641778,Lauren Carr,Hutt Valley Gymnastics,7,OVER,Wellington Champs 2022,AA,1,11.6,3.2,1  ,10.966,3.7,1  ,12.2,4.1,1  ,12.6,4.3,1  ,47.366,1  ,10-11 April 2022
-220976,Anna Elliott,Onslow Gymnastic Club,7,OVER,Wellington Champs 2022,AA,1,11.2,2.4,2  ,9.566,1.5,9  ,11.9,3.7,2  ,12.133,3.9,3  ,44.799,2  ,10-11 April 2022
+220976,Anna Elliott,Onslow Gymnastics Club,7,OVER,Wellington Champs 2022,AA,1,11.2,2.4,2  ,9.566,1.5,9  ,11.9,3.7,2  ,12.133,3.9,3  ,44.799,2  ,10-11 April 2022
 180094,Sophia Paviour-Smith,Capital Gymnastics,7,OVER,Wellington Champs 2022,AA,1,10.7,1.6,7  ,10.166,2.4,5  ,11.65,4.1,4  ,12.233,4.0,2  ,44.749,3  ,10-11 April 2022
 267437,Allegra Ruruku-Hunt,Kapiti Gymnastics,7,OVER,Wellington Champs 2022,AA,1,10.2,2.0,14  ,10.933,3.1,2  ,11.2,4.1,6  ,11.7,3.7,4  ,44.033,4  ,10-11 April 2022
 616085,Zahara Slatter,Manawatu Gymsports,7,OVER,Wellington Champs 2022,AA,1,10.5,1.6,10E  ,10.866,2.8,3  ,11.15,3.1,7  ,11.433,3.8,6  ,43.949,5  ,10-11 April 2022
 208819,Charlie Simmons,Hutt Valley Gymnastics,7,OVER,Wellington Champs 2022,AA,1,10.4,1.6,13  ,10.533,2.7,4  ,10.8,3.1,8  ,11.366,4.1,9  ,43.099,6  ,10-11 April 2022
-220967,Natasha Stewart,Onslow Gymnastic Club,7,OVER,Wellington Champs 2022,AA,1,10.95,2.6,4  ,8.8,2.1,12  ,11.55,3.7,5  ,11.633,3.9,5  ,42.933,7  ,10-11 April 2022
+220967,Natasha Stewart,Onslow Gymnastics Club,7,OVER,Wellington Champs 2022,AA,1,10.95,2.6,4  ,8.8,2.1,12  ,11.55,3.7,5  ,11.633,3.9,5  ,42.933,7  ,10-11 April 2022
 267024,Susannah Charlier,Hutt Valley Gymnastics,7,OVER,Wellington Champs 2022,AA,1,11.1,2.4,3  ,9.366,2.1,11  ,11.75,3.7,3  ,10.6,3.8,12  ,42.816,8  ,10-11 April 2022
 117504,Lara Cooper,Hutt Valley Gymnastics,7,OVER,Wellington Champs 2022,AA,1,10.65,1.6,8E  ,9.766,2.0,6E  ,10.25,3.2,10  ,11.4,3.3,7E  ,42.066,9  ,10-11 April 2022
 148720,Riana Moffatt,Kapiti Gymnastics,7,OVER,Wellington Champs 2022,AA,1,10.75,2.4,6  ,9.633,2.1,8  ,10.15,3.4,12  ,11.4,3.0,7E  ,41.933,10  ,10-11 April 2022
@@ -6390,7 +6390,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 535406,Capria Tamatea,Gisborne Gymnastics Club,5,OVER,Manawatu Junior Opens,AA,1,13.3,5.0,8,12.25,5.0,12,12.55,5.0,5,13.75,5.0,1,51.85,2,3 April 2022
 218585,Sophie Long,Manawatu Gymsports,5,OVER,Manawatu Junior Opens,AA,1,13.75,5.0,3,13.6,5.0,1,11.4,5.0,15,12.3,5.0,7,51.05,3,3 April 2022
 245525,Marieve Wilson - Bray,Hutt Valley Gymnastics,5,OVER,Manawatu Junior Opens,AA,1,12.85,5.0,16,13.1,5.0,2,13.0,5.0,2,11.3,4.5,17,50.25,4,3 April 2022
-249821,Ashleigh Keall,Onslow Gymnastic Club,5,OVER,Manawatu Junior Opens,AA,1,12.75,5.0,20,12.65,5.0,10,11.8,5.0,13,13.0,5.0,2,50.2,5,3 April 2022
+249821,Ashleigh Keall,Onslow Gymnastics Club,5,OVER,Manawatu Junior Opens,AA,1,12.75,5.0,20,12.65,5.0,10,11.8,5.0,13,13.0,5.0,2,50.2,5,3 April 2022
 268212,Chloe Moreton,Twisters Tawa Gymnastics Club,5,OVER,Manawatu Junior Opens,AA,1,12.8,5.0,17,12.7,5.0,8,12.25,5.0,9,12.35,5.0,6,50.1,6,3 April 2022
 226366,Sia Vaka,Hutt Valley Gymnastics,5,OVER,Manawatu Junior Opens,AA,1,14.0,5.0,2,12.1,5.0,14,11.8,5.0,13,12.0,4.5,9,49.9,7,3 April 2022
 638469,Grace Lee,Twisters Tawa Gymnastics Club,5,OVER,Manawatu Junior Opens,AA,1,13.0,5.0,14,12.85,5.0,5,12.95,5.0,3,10.85,4.0,23,49.65,8,3 April 2022
@@ -6402,7 +6402,7 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 261788,Shannon Tindle,Manawatu Gymsports,5,OVER,Manawatu Junior Opens,AA,1,12.75,5.0,20,11.45,5.0,22,11.95,5.0,12,11.5,4.5,15,47.65,14,3 April 2022
 158025,Kate Livengood,Harbour City Gymnastics,5,OVER,Manawatu Junior Opens,AA,1,14.05,5.0,1,12.75,5.0,7,11.2,5.0,16,9.65,4.5,26,47.65,14,3 April 2022
 535626,Miriam Cornfeld,Gisborne Gymnastics Club,5,OVER,Manawatu Junior Opens,AA,1,12.75,5.0,20,12.3,5.0,11,12.35,5.0,7,9.65,4.0,26,47.05,16,3 April 2022
-227748,Zoe Tatham,Onslow Gymnastic Club,5,OVER,Manawatu Junior Opens,AA,1,12.35,5.0,24,13.0,5.0,3,9.15,4.0,22,12.4,5.0,5,46.9,17,3 April 2022
+227748,Zoe Tatham,Onslow Gymnastics Club,5,OVER,Manawatu Junior Opens,AA,1,12.35,5.0,24,13.0,5.0,3,9.15,4.0,22,12.4,5.0,5,46.9,17,3 April 2022
 272548,Lucia Hertanto,Hutt Valley Gymnastics,5,OVER,Manawatu Junior Opens,AA,1,13.15,5.0,11,12.8,5.0,6,8.85,3.5,25,11.95,4.5,10,46.75,18,3 April 2022
 158014,Megan Oldfield,Harbour City Gymnastics,5,OVER,Manawatu Junior Opens,AA,1,13.15,5.0,11,11.25,5.0,24,9.95,4.5,21,11.75,4.5,13,46.1,19,3 April 2022
 555198,Alex McCutcheon,Central Gymnastics,5,OVER,Manawatu Junior Opens,AA,1,11.85,5.0,28,12.1,5.0,14,10.75,4.5,18,11.3,5.0,17,46.0,20,3 April 2022
@@ -6424,3 +6424,158 @@ gnz-id,name,club,level,division,competition,round-type,day,v-total,v-d,v-rank,ub
 229292,Leah Maud,Rimutaka Gymsports,6,OVER,Manawatu Junior Opens,AA,1,13.95,5.0,1,11.05,5.0,4,12.3,4.7,6,13.0,5.0,3,50.3,4,3 April 2022
 259656,Ana Nellas,Twisters Tawa Gymnastics Club,6,OVER,Manawatu Junior Opens,AA,1,13.35,5.0,5,10.05,4.5,5,13.1,4.7,4,13.45,5.0,1,49.95,5,3 April 2022
 212743,Bree Lamont,Rimutaka Gymsports,6,OVER,Manawatu Junior Opens,AA,1,13.25,5.0,6,9.7,5.0,6,13.4,5.0,3,12.15,5.0,6,48.5,6,3 April 2022
+272492,Ruby Brown,Hutt Valley Gymnastics,3,UNDER,Twisters Elementary 2022,AA,1,14.2,5.0,2,14.0,5.0,1,13.3,5.0,4,13.75,5.0,2,55.25,1,44778
+272530,Hana Roberts,Hutt Valley Gymnastics,3,UNDER,Twisters Elementary 2022,AA,1,13.95,5.0,3,12.55,5.0,8,13.55,5.0,2,13.9,5.0,1,53.95,2,44778
+999999,Carita Cokayni,Capital Gymnastics,3,UNDER,Twisters Elementary 2022,AA,1,13.85,5.0,4,13.2,5.0,4,13.4,5.0,3,12.95,5.0,5,53.4,3,44778
+258159,Rome Tavendale,Hutt Valley Gymnastics,3,UNDER,Twisters Elementary 2022,AA,1,13.2,5.0,8,13.35,5.0,2T,11.5,4.5,8T,13.65,5.0,3,51.7,4,44778
+272458,Elise McLaughlin,Hutt Valley Gymnastics,3,UNDER,Twisters Elementary 2022,AA,1,14.5,5.0,1,13.05,5.0,6,11.8,4.5,7,12.3,4.5,6,51.65,5,44778
+570512,Obi Haworth,Onslow Gymnastics Club,3,UNDER,Twisters Elementary 2022,AA,1,13.35,5.0,6,12.6,5.0,7,13.6,5.0,1,11.9,4.5,8,51.45,6,44778
+281369,Grace Wright,Hutt Valley Gymnastics,3,UNDER,Twisters Elementary 2022,AA,1,12.95,5.0,9,13.1,5.0,5,12.85,4.5,6,12.2,5.0,7,51.1,7,44778
+537780,Loula Dewes,Hutt Valley Gymnastics,3,UNDER,Twisters Elementary 2022,AA,1,13.65,5.0,5,13.35,5.0,2T,11.5,4.0,8T,11.8,4.0,9,50.3,8,44778
+562627,Antonia Gorbushina,Onslow Gymnastics Club,3,UNDER,Twisters Elementary 2022,AA,1,12.85,5.0,10,11.05,5.0,11,13.15,5.0,5,11.7,4.5,10,48.75,9,44778
+663576,Jade Milson,Levin Gymnastics Club,3,UNDER,Twisters Elementary 2022,AA,1,12.45,5.0,11,11.25,5.0,10,11.05,4.5,10,13.2,5.0,4,47.95,10,44778
+290325,Ameelia Roos,Hutt Valley Gymnastics,3,UNDER,Twisters Elementary 2022,AA,1,13.25,5.0,7,11.55,5.0,9,10.7,3.5,11,10.55,4.0,11,46.05,11,44778
+254158,Tayla Campbell,Rimutaka Gymsports,3,OVER,Twisters Elementary 2022,AA,1,12.85,5.0,7,13.15,5.0,2,13.35,5.0,1,14.35,5.0,1,53.7,1,44778
+249301,Hannah Broster,Hutt Valley Gymnastics,3,OVER,Twisters Elementary 2022,AA,1,14.0,5.0,1T,12.9,5.0,3,12.6,5.0,4,13.55,5.0,2,53.05,2,44778
+284539,Amelia Harris,Rimutaka Gymsports,3,OVER,Twisters Elementary 2022,AA,1,13.55,5.0,3,13.4,5.0,1,13.0,5.0,2,12.15,4.5,7,52.1,3,44778
+542219,Ashleigh McPheat,Onslow Gymnastics Club,3,OVER,Twisters Elementary 2022,AA,1,13.45,5.0,4,12.8,5.0,4,12.25,4.0,5,13.2,4.5,3,51.7,4,44778
+254217,Elanna Sofeni,Rimutaka Gymsports,3,OVER,Twisters Elementary 2022,AA,1,14.0,5.0,1T,11.0,4.5,7,12.9,5.0,3,13.15,5.0,4,51.05,5,44778
+562648,Charlotte McColl,Hutt Valley Gymnastics,3,OVER,Twisters Elementary 2022,AA,1,13.1,5.0,6,12.75,5.0,5,12.1,4.5,6,12.35,4.5,6,50.3,6,44778
+574666,Ava Jackson,Rimutaka Gymsports,3,OVER,Twisters Elementary 2022,AA,1,13.4,5.0,5,11.05,4.5,6,11.05,4.0,8,12.8,4.5,5,48.3,7,44778
+296680,Isabelle Jennings-Millar,Rimutaka Gymsports,3,OVER,Twisters Elementary 2022,AA,1,12.55,5.0,8,10.15,4.0,8,11.75,4.5,7,10.65,4.5,8,45.1,8,44778
+545409,Hazel Beavis,Hutt Valley Gymnastics,3,UNDER,Twisters Elementary 2022,AA,1,14.4,5.0,1,13.85,5.0,2,13.05,5.0,4,14.45,5.0,1,55.75,1,44778
+566951,Avee Hickey,Twisters Tawa Gymnastics Club,3,UNDER,Twisters Elementary 2022,AA,1,14.15,5.0,2,12.35,4.5,9,13.55,5.0,1,13.55,5.0,4T,53.6,2,44778
+600802,Yolandy Russell,Twisters Tawa Gymnastics Club,3,UNDER,Twisters Elementary 2022,AA,1,13.65,5.0,7,13.75,5.0,3,12.55,4.5,7,13.55,5.0,4T,53.5,3,44778
+600797,Emma Marks,Twisters Tawa Gymnastics Club,3,UNDER,Twisters Elementary 2022,AA,1,13.75,5.0,4,12.95,5.0,4,13.3,5.0,2T,12.8,4.5,8,52.8,4,44778
+600969,Charlotte Kirkwood,Twisters Tawa Gymnastics Club,3,UNDER,Twisters Elementary 2022,AA,1,13.95,5.0,3,12.55,5.0,7T,12.95,5.0,5,13.2,5.0,6,52.65,5,44778
+272474,Libby Hall,Hutt Valley Gymnastics,3,UNDER,Twisters Elementary 2022,AA,1,13.7,5.0,5T,12.55,5.0,7T,13.3,5.0,2T,13.05,5.0,7,52.6,6,44778
+566964,Lucie Tonkin,Twisters Tawa Gymnastics Club,3,UNDER,Twisters Elementary 2022,AA,1,12.65,5.0,11,12.6,5.0,6,12.9,4.5,6,13.75,5.0,3,51.9,7,44778
+302417,Ari Burton,Rimutaka Gymsports,3,UNDER,Twisters Elementary 2022,AA,1,13.45,5.0,8,14.0,5.0,1,10.6,4.0,10,12.55,4.5,9,50.6,8,44778
+229071,Rose Kellett,Hutt Valley Gymnastics,3,UNDER,Twisters Elementary 2022,AA,1,12.95,5.0,9,12.8,5.0,5,12.1,4.5,8,12.5,5.0,10,50.35,9,44778
+295643,Sofia Creighton,Onslow Gymnastics Club,3,UNDER,Twisters Elementary 2022,AA,1,13.7,5.0,5T,11.85,4.5,11,10.5,4.2,11,14.05,5.0,2,50.1,10,44778
+223149,Niamh Stewart,Hutt Valley Gymnastics,3,UNDER,Twisters Elementary 2022,AA,1,12.85,5.0,10,11.95,5.0,10,11.5,4.0,9,12.45,5.0,11,48.75,11,44778
+641598,Sienna Barrington-Prowse,Onslow Gymnastics Club,2,UNDER,Twisters Elementary 2022,AA,1,13.4,5.0,6,13.5,5.0,4,14.2,5.0,1,13.2,5.0,3,54.3,1,44778
+296408,Sofia Water,Hutt Valley Gymnastics,2,UNDER,Twisters Elementary 2022,AA,1,13.6,5.0,3T,13.75,5.0,3,13.3,4.5,4T,13.35,5.0,2,54.0,2,44778
+598365,Lily Isaac,Capital Gymnastics,2,UNDER,Twisters Elementary 2022,AA,1,12.6,5.0,15,13.8,5.0,1T,13.25,5.0,6,14.1,5.0,1,53.75,3,44778
+567515,Phrayze Blake,Rimutaka Gymsports,2,UNDER,Twisters Elementary 2022,AA,1,13.45,5.0,5,12.8,5.0,12,13.35,5.0,3,13.05,5.0,4,52.65,4,44778
+566966,Mia Geyer,Twisters Tawa Gymnastics Club,2,UNDER,Twisters Elementary 2022,AA,1,13.7,5.0,2,13.8,5.0,1T,12.8,4.5,8T,12.0,4.5,8,52.3,5,44778
+600795,Elliana Naylor,Twisters Tawa Gymnastics Club,2,UNDER,Twisters Elementary 2022,AA,1,13.3,5.0,7T,13.1,5.0,7,13.65,5.0,2,11.8,4.5,9,51.85,6,44778
+596792,Josephine Prickett,Harbour City Gymnastics,2,UNDER,Twisters Elementary 2022,AA,1,13.6,5.0,3T,13.45,5.0,5,13.3,5.0,4T,11.3,5.0,11T,51.65,7,44778
+301866,Lily Romeril,Harbour City Gymnastics,2,UNDER,Twisters Elementary 2022,AA,1,13.25,5.0,9T,13.0,5.0,8,12.8,5.0,8T,12.3,4.5,7,51.35,8,44778
+568057,Gemma White,Levin Gymnastics Club,2,UNDER,Twisters Elementary 2022,AA,1,12.95,5.0,13,13.4,5.0,6,12.15,4.5,14,12.7,5.0,5,51.2,9,44778
+586294,Indigo Davis,Rimutaka Gymsports,2,UNDER,Twisters Elementary 2022,AA,1,12.35,5.0,16,12.9,5.0,11,12.65,5.0,11,12.6,5.0,6,50.5,10,44778
+619985,Adalise Hyde,Onslow Gymnastics Club,2,UNDER,Twisters Elementary 2022,AA,1,13.75,5.0,1,12.95,5.0,9T,12.75,5.0,10,10.5,4.0,15,49.95,11,44778
+560188,Amber Dunlop,Rimutaka Gymsports,2,UNDER,Twisters Elementary 2022,AA,1,13.2,5.0,11,12.75,5.0,13,12.55,4.5,12,10.95,4.5,14,49.45,12,44778
+653110,Ava Scott,Levin Gymnastics Club,2,UNDER,Twisters Elementary 2022,AA,1,13.25,5.0,9T,12.7,5.0,14,11.35,4.0,15,11.75,5.0,10,49.05,13,44778
+619726,Lucy Eccles,Onslow Gymnastics Club,2,UNDER,Twisters Elementary 2022,AA,1,12.8,5.0,14,11.5,5.0,16,12.85,5.0,7,11.15,4.5,13,48.3,14,44778
+607328,Evangeline Ting,Rimutaka Gymsports,2,UNDER,Twisters Elementary 2022,AA,1,13.3,5.0,7T,12.15,5.0,15,12.5,4.5,13,10.3,4.5,16,48.25,15,44778
+262678,Bonnie Filer,Rimutaka Gymsports,2,UNDER,Twisters Elementary 2022,AA,1,13.05,5.0,12,12.95,5.0,9T,10.8,3.7,16,11.3,5.0,11T,48.1,16,44778
+589361,Nartlada Sribunwongsa,Hutt Valley Gymnastics,2,OVER,Twisters Elementary 2022,AA,1,14.0,5.0,1T,13.15,5.0,7T,14.35,5.0,1,13.9,5.0,1,55.4,1,44778
+301998,Ellie Cunningham,Hutt Valley Gymnastics,2,OVER,Twisters Elementary 2022,AA,1,13.75,5.0,4,14.0,5.0,1T,14.1,5.0,2T,13.5,5.0,2,55.35,2,44778
+593266,Grace Coulter,Onslow Gymnastics Club,2,OVER,Twisters Elementary 2022,AA,1,13.85,5.0,3,12.75,5.0,12,14.1,5.0,2T,13.4,4.5,4T,54.1,3,44778
+295431,Abigail Bell,Harbour City Gymnastics,2,OVER,Twisters Elementary 2022,AA,1,13.55,5.0,6,13.05,4.5,10,13.75,5.0,4,12.95,4.5,9,53.3,4,44778
+598418,Eden Lipscombe,Onslow Gymnastics Club,2,OVER,Twisters Elementary 2022,AA,1,13.6,5.0,5,13.2,5.0,6,13.4,5.0,6,13.05,5.0,6T,53.25,5,44778
+560638,Izaleah Collings,Hutt Valley Gymnastics,2,OVER,Twisters Elementary 2022,AA,1,13.4,5.0,9T,13.1,5.0,9,13.5,5.0,5,13.05,4.5,6T,53.05,6,44778
+555496,Ajilen Trincado McDonald,Hutt Valley Gymnastics,2,OVER,Twisters Elementary 2022,AA,1,14.0,5.0,1T,13.3,5.0,5,12.6,4.5,10,13.0,5.0,8,52.9,7,44778
+556179,Zara Kong,Harbour City Gymnastics,2,OVER,Twisters Elementary 2022,AA,1,13.3,5.0,12,12.5,5.0,14,12.85,4.7,8,13.45,5.0,3,52.1,8,44778
+228977,Laura Livengood,Harbour City Gymnastics,2,OVER,Twisters Elementary 2022,AA,1,13.0,5.0,13T,14.0,5.0,1T,11.05,4.5,14,13.4,5.0,4T,51.45,9,44778
+606951,Vaidehi Sandhu,Rimutaka Gymsports,2,OVER,Twisters Elementary 2022,AA,1,13.4,5.0,9T,12.9,5.0,11,12.65,5.0,9,12.4,5.0,11,51.35,10,44778
+546422,Mina Spratt,Hutt Valley Gymnastics,2,OVER,Twisters Elementary 2022,AA,1,13.45,5.0,8,13.6,5.0,3,13.0,4.5,7,11.0,4.0,15,51.05,11,44778
+626101,Sophia Donald,Twisters Tawa Gymnastics Club,2,OVER,Twisters Elementary 2022,AA,1,13.5,5.0,7,13.15,5.0,7T,11.2,4.2,13,12.35,5.0,12,50.2,12,44778
+641807,Hayley Clark,Twisters Tawa Gymnastics Club,2,OVER,Twisters Elementary 2022,AA,1,13.4,5.0,9T,13.4,5.0,4,11.85,4.5,12,11.35,5.0,14,50.0,13,44778
+658016,Lauren Mann,Rimutaka Gymsports,2,OVER,Twisters Elementary 2022,AA,1,13.0,5.0,13T,12.55,5.0,13,10.8,4.0,15,12.6,5.0,10,48.95,14,44778
+634705,Lila Bowling,Twisters Tawa Gymnastics Club,2,OVER,Twisters Elementary 2022,AA,1,12.9,5.0,15,12.1,5.0,15,12.1,4.5,11,11.8,5.0,13,48.9,15,44778
+634706,Isabella Zhou,Twisters Tawa Gymnastics Club,2,UNDER,Twisters Elementary 2022,AA,1,13.8,5.0,4,14.2,,1,13.7,,2,13.35,,3,55.05,1,44778
+278564,Vita Ede,Capital Gymnastics,2,UNDER,Twisters Elementary 2022,AA,1,14.0,5.0,2T,14.1,,2,13.65,,3,13.25,,4,55.0,2,44778
+574779,Aanya Agnew,Twisters Tawa Gymnastics Club,2,UNDER,Twisters Elementary 2022,AA,1,13.15,5.0,11,13.75,,4,13.75,,1,13.2,,5,53.85,3,44778
+621666,Amelia Armstrong,Twisters Tawa Gymnastics Club,2,UNDER,Twisters Elementary 2022,AA,1,12.9,5.0,15,14.05,,3,13.05,,5T,13.4,,2,53.4,4,44778
+301928,Summer Tavendale,Hutt Valley Gymnastics,2,UNDER,Twisters Elementary 2022,AA,1,14.0,5.0,2T,13.6,,5,12.55,,9,13.0,,6,53.15,5,44778
+549493,Julie Tesarova,Capital Gymnastics,2,UNDER,Twisters Elementary 2022,AA,1,13.75,5.0,5,13.3,,7,13.05,,5T,12.7,,7,52.8,6,44778
+301692,Hazel Miller,Capital Gymnastics,2,UNDER,Twisters Elementary 2022,AA,1,13.4,5.0,8T,11.8,,14,13.3,,4,13.65,,1,52.15,7,44778
+619794,Harper McPheat,Onslow Gymnastics Club,2,UNDER,Twisters Elementary 2022,AA,1,14.05,5.0,1,13.05,,8,12.35,,10,11.55,,10,51.0,8,44778
+301915,Annabel McColl,Hutt Valley Gymnastics,2,UNDER,Twisters Elementary 2022,AA,1,13.4,5.0,8T,13.5,,6,12.25,,12,11.4,,11T,50.55,9,44778
+604065,Lulu Howard,Capital Gymnastics,2,UNDER,Twisters Elementary 2022,AA,1,13.55,5.0,6,12.3,,11,12.3,,11,12.35,,8,50.5,10,44778
+542475,Poppy Smith,Onslow Gymnastics Club,2,UNDER,Twisters Elementary 2022,AA,1,13.5,5.0,7,12.6,,9,12.65,,8,11.4,,11T,50.15,11,44778
+600793,Georgia Alderson,Twisters Tawa Gymnastics Club,2,UNDER,Twisters Elementary 2022,AA,1,13.1,5.0,12,12.55,,10,12.7,,7,11.75,,9,50.1,12,44778
+301922,Brielle Laurenson,Hutt Valley Gymnastics,2,UNDER,Twisters Elementary 2022,AA,1,13.3,5.0,10,11.85,,13,12.0,,14,11.4,,11T,48.55,13,44778
+249298,Emily Broster,Hutt Valley Gymnastics,2,UNDER,Twisters Elementary 2022,AA,1,13.05,5.0,13T,11.7,,15,12.2,,13,11.25,,14,48.2,14,44778
+576717,Rian Priestley,Rimutaka Gymsports,2,UNDER,Twisters Elementary 2022,AA,1,13.05,5.0,13T,12.05,,12,11.65,,15,10.55,,15,47.3,15,44778
+681188,Lux Makutu,Levin Gymnastics Club,1,UNDER,Twisters Elementary 2022,AA,1,14.0,5.0,5T,13.7,5.0,3T,13.0,4.5,6,14.2,5.0,1,54.9,1,44778
+594943,Aria Tamafuta,Hutt Valley Gymnastics,1,UNDER,Twisters Elementary 2022,AA,1,14.0,5.0,5T,13.95,5.0,2,13.55,5.0,1T,13.2,5.0,7T,54.7,2,44778
+672421,Indigo Horrigan,Twisters Tawa Gymnastics Club,1,UNDER,Twisters Elementary 2022,AA,1,13.95,5.0,7T,13.1,5.0,9,13.55,5.0,1T,13.2,5.0,7T,53.8,3T,44778
+623657,Esther-rose Sarich,Hutt Valley Gymnastics,1,UNDER,Twisters Elementary 2022,AA,1,14.1,5.0,2T,13.7,5.0,3T,12.35,4.5,12,13.65,5.0,2,53.8,3T,44778
+681190,Lylah Huse,Levin Gymnastics Club,1,UNDER,Twisters Elementary 2022,AA,1,13.5,5.0,11,13.5,5.0,8,13.05,5.0,5,13.5,5.0,3T,53.55,5T,44778
+278758,Indi Glover,Rimutaka Gymsports,1,UNDER,Twisters Elementary 2022,AA,1,13.95,5.0,7T,13.55,5.0,6T,12.55,5.0,10,13.5,5.0,3T,53.55,5T,44778
+660456,Peyton Ymker,Hutt Valley Gymnastics,1,UNDER,Twisters Elementary 2022,AA,1,13.1,5.0,13,14.15,5.0,1,13.3,5.0,3,12.9,4.5,11,53.45,7,44778
+650678,Riva Fernandez,Onslow Gymnastics Club,1,UNDER,Twisters Elementary 2022,AA,1,14.1,5.0,2T,12.8,4.5,11,13.15,5.0,4,13.2,5.0,7T,53.25,8T,44778
+301942,Frankie Bennett,Hutt Valley Gymnastics,1,UNDER,Twisters Elementary 2022,AA,1,13.55,5.0,10,13.55,5.0,6T,12.85,5.0,7,13.3,5.0,6,53.25,8T,44778
+603938,Michelle Jacomb,Rimutaka Gymsports,1,UNDER,Twisters Elementary 2022,AA,1,14.05,5.0,4,13.0,5.0,10,12.6,5.0,9,13.45,5.0,5,53.1,10,44778
+663574,Heidee Pratt,Levin Gymnastics Club,1,UNDER,Twisters Elementary 2022,AA,1,13.95,5.0,7T,13.65,5.0,5,12.1,4.5,13,12.8,5.0,13,52.5,11,44778
+618031,Tova Grocott,Hutt Valley Gymnastics,1,UNDER,Twisters Elementary 2022,AA,1,14.15,5.0,1,9.95,3.5,14,12.7,5.0,8,12.85,5.0,12,49.65,12,44778
+633246,Isabelle Van der Krogt,Onslow Gymnastics Club,1,UNDER,Twisters Elementary 2022,AA,1,13.45,5.0,12,10.95,4.5,13,12.5,5.0,11,12.55,5.0,14,49.45,13,44778
+617893,Mackenzie Burridge,Hutt Valley Gymnastics,1,UNDER,Twisters Elementary 2022,AA,1,11.75,5.0,14,12.3,4.5,12,11.6,5.0,14,13.1,5.0,10,48.75,14,44778
+672410,Cielo Zheng,Twisters Tawa Gymnastics Club,1,OVER,Twisters Elementary 2022,AA,1,14.15,5.0,3,14.05,5.0,1,13.45,5.0,2,13.75,5.0,2,55.4,1,44778
+590918,Roya Denston,Rimutaka Gymsports,1,OVER,Twisters Elementary 2022,AA,1,14.2,5.0,2,13.05,5.0,4,13.55,5.0,1,13.6,5.0,3,54.4,2,44778
+634707,Isabelle Chaney,Twisters Tawa Gymnastics Club,1,OVER,Twisters Elementary 2022,AA,1,14.5,5.0,1,13.65,5.0,2,13.4,5.0,3T,12.8,4.5,5T,54.35,3,44778
+681169,Darcie Sanson,Levin Gymnastics Club,1,OVER,Twisters Elementary 2022,AA,1,13.85,5.0,6,13.55,5.0,3,12.25,5.0,7,13.9,5.0,1,53.55,4,44778
+229076,Sovann Stewart,Hutt Valley Gymnastics,1,OVER,Twisters Elementary 2022,AA,1,14.1,5.0,4,12.8,5.0,5,12.8,5.0,6,13.1,5.0,4,52.8,5,44778
+672413,Izzy Morduant,Twisters Tawa Gymnastics Club,1,OVER,Twisters Elementary 2022,AA,1,14.0,5.0,5,12.45,5.0,6,13.0,5.0,5,12.8,4.5,5T,52.25,6,44778
+657131,Emma Hood,Onslow Gymnastics Club,1,OVER,Twisters Elementary 2022,AA,1,12.0,5.0,7,10.7,4.5,7,13.4,5.0,3T,12.8,5.0,5T,48.9,7,44778
+554430,Lilly de Haan,Twisters Tawa Gymnastics Club,1,UNDER,Twisters Elementary 2022,AA,1,13.7,5.0,5,14.0,5.0,1,13.1,5.0,3,13.3,5.0,3T,54.1,1,44778
+557006,Ava Moraes-Schulz,Hutt Valley Gymnastics,1,UNDER,Twisters Elementary 2022,AA,1,14.05,5.0,2,13.6,5.0,3T,12.75,5.0,4,13.35,5.0,2,53.75,2,44778
+641599,Olympia Barrington-Prowse,Onslow Gymnastics Club,1,UNDER,Twisters Elementary 2022,AA,1,13.8,5.0,3,13.75,5.0,2,12.7,5.0,5T,12.65,5.0,9,52.9,3,44778
+672418,Ruby Woodcock,Twisters Tawa Gymnastics Club,1,UNDER,Twisters Elementary 2022,AA,1,13.75,5.0,4,12.55,5.0,11,13.5,5.0,1,13.05,4.5,7T,52.85,4,44778
+628509,Chloe Rankin,Hutt Valley Gymnastics,1,UNDER,Twisters Elementary 2022,AA,1,13.25,5.0,10T,13.6,5.0,3T,12.35,4.5,7T,13.05,5.0,7T,52.25,5,44778
+657184,Ellie Brownie,Onslow Gymnastics Club,1,UNDER,Twisters Elementary 2022,AA,1,13.5,5.0,8T,13.3,5.0,6,13.15,5.0,2,12.1,4.0,15,52.05,6,44778
+642911,Aurora Stupples,Hutt Valley Gymnastics,1,UNDER,Twisters Elementary 2022,AA,1,13.25,5.0,10T,13.1,5.0,7,12.05,5.0,9,13.3,5.0,3T,51.7,7,44778
+528375,Aurian Delgado-Hickman,Twisters Tawa Gymnastics Club,1,UNDER,Twisters Elementary 2022,AA,1,13.6,5.0,6,12.5,5.0,12,11.85,4.5,11,13.4,5.0,1,51.35,8T,44778
+625271,Bailey Salt,Capital Gymnastics,1,UNDER,Twisters Elementary 2022,AA,1,13.55,5.0,7,13.5,5.0,5,12.35,5.0,7T,11.95,4.5,16,51.35,8T,44778
+629304,Taylor Usher,Hutt Valley Gymnastics,1,UNDER,Twisters Elementary 2022,AA,1,13.2,5.0,13,12.95,5.0,8T,11.75,4.5,13T,13.3,5.0,3T,51.2,10,44778
+663578,Alice Monaghan,Levin Gymnastics Club,1,UNDER,Twisters Elementary 2022,AA,1,13.5,5.0,8T,12.45,5.0,13T,12.7,5.0,5T,12.25,4.5,13T,50.9,11,44778
+672414,Peyton Marks,Twisters Tawa Gymnastics Club,1,UNDER,Twisters Elementary 2022,AA,1,14.2,5.0,1,12.15,5.0,16,11.9,4.5,10,12.4,4.5,12,50.65,12,44778
+521694,Capri England,Rimutaka Gymsports,1,UNDER,Twisters Elementary 2022,AA,1,13.15,5.0,14,12.3,5.0,15,11.8,5.0,12,12.55,5.0,10T,49.8,13,44778
+281304,Sienna Richardson,Hutt Valley Gymnastics,1,UNDER,Twisters Elementary 2022,AA,1,11.95,5.0,17,12.95,5.0,8T,11.25,4.5,15,13.1,5.0,6,49.25,14,44778
+670457,Evie Connell,Hutt Valley Gymnastics,1,UNDER,Twisters Elementary 2022,AA,1,12.3,5.0,16,12.95,5.0,8T,10.6,5.0,16,12.55,5.0,10T,48.4,15,44778
+503680,Natalia Zimmermann,Rimutaka Gymsports,1,UNDER,Twisters Elementary 2022,AA,1,12.9,5.0,15,12.45,5.0,13T,11.75,5.0,13T,11.1,4.0,17,48.2,16,44778
+585251,Alani Cripps,Rimutaka Gymsports,1,UNDER,Twisters Elementary 2022,AA,1,13.25,5.0,10T,7.1,3.0,17,10.55,5.0,17,12.25,4.5,13T,43.15,17,44778
+278485,Tallulah Kelly,Capital Gymnastics,4,UNDER,Twisters Elementary 2022,AA,1,13.8,5.0,5,13.5,5.0,2,14.15,5.0,1,13.5,5.0,1,54.95,1,44778
+566948,Annabelle Pointon,Twisters Tawa Gymnastics Club,4,UNDER,Twisters Elementary 2022,AA,1,13.6,5.0,6,13.85,5.0,1,13.85,5.0,4,12.95,5.0,3,54.25,2,44778
+229045,Ema Gatland,Hutt Valley Gymnastics,4,UNDER,Twisters Elementary 2022,AA,1,14.15,5.0,1T,13.35,5.0,3T,13.6,5.0,5,13.05,5.0,2,54.15,3,44778
+301962,Elsiana Shearer Orr,Hutt Valley Gymnastics,4,UNDER,Twisters Elementary 2022,AA,1,14.0,5.0,4,13.35,5.0,3T,12.85,5.0,12,12.0,5.0,10T,52.2,4,44778
+240729,Caitlin Pearman,Capital Gymnastics,4,UNDER,Twisters Elementary 2022,AA,1,12.75,5.0,15T,13.05,5.0,6,13.5,5.0,7T,12.8,5.0,5,52.1,5T,44778
+271154,Anaya Dunlop,Rimutaka Gymsports,4,UNDER,Twisters Elementary 2022,AA,1,13.15,5.0,11T,12.75,5.0,8,13.5,5.0,7T,12.7,5.0,6,52.1,5T,44778
+295479,Chloe Ropata-Martin,Levin Gymnastics Club,4,UNDER,Twisters Elementary 2022,AA,1,13.4,5.0,7,12.9,5.0,7,13.55,5.0,6,11.55,5.0,17,51.4,7,44778
+219201,Eleanor Henry,Hutt Valley Gymnastics,4,UNDER,Twisters Elementary 2022,AA,1,12.9,5.0,14,12.7,5.0,9,12.8,4.5,13,12.85,4.5,4,51.25,8,44778
+278716,Madeline Joe,Hutt Valley Gymnastics,4,UNDER,Twisters Elementary 2022,AA,1,14.15,5.0,1T,11.85,5.0,13T,12.7,5.0,14,12.45,4.5,8,51.15,9,44778
+281437,Savannah Currie,Hutt Valley Gymnastics,4,UNDER,Twisters Elementary 2022,AA,1,12.75,5.0,15T,13.35,5.0,3T,12.95,5.0,11,12.0,5.0,10T,51.05,10,44778
+570097,Mila Sobell,Capital Gymnastics,4,UNDER,Twisters Elementary 2022,AA,1,13.35,5.0,8T,12.55,5.0,10,13.15,5.0,9,11.8,4.5,13T,50.85,11,44778
+295757,Eliza Loh,Twisters Tawa Gymnastics Club,4,UNDER,Twisters Elementary 2022,AA,1,12.95,5.0,13,11.85,5.0,13T,13.1,4.5,10,12.2,5.0,9,50.1,12,44778
+284967,Janice Wu,Hutt Valley Gymnastics,4,UNDER,Twisters Elementary 2022,AA,1,12.5,5.0,18,11.65,5.0,15,14.1,5.0,2,11.65,5.0,16,49.9,13,44778
+261649,Octavia Burns,Onslow Gymnastics Club,4,UNDER,Twisters Elementary 2022,AA,1,13.3,5.0,10,11.9,5.0,12,11.85,5.0,18,12.65,5.0,7,49.7,14,44778
+566961,Juliet Duff,Twisters Tawa Gymnastics Club,4,UNDER,Twisters Elementary 2022,AA,1,13.15,5.0,11T,12.05,5.0,11,12.25,4.0,16,11.8,4.5,13T,49.25,15,44778
+256579,Georgia Hogg,Capital Gymnastics,4,UNDER,Twisters Elementary 2022,AA,1,11.9,5.0,21,11.4,5.0,16T,14.0,5.0,3,11.45,4.5,18,48.75,16,44778
+569849,Sydnee Hallett,Levin Gymnastics Club,4,UNDER,Twisters Elementary 2022,AA,1,14.05,5.0,3,11.35,5.0,18,11.6,5.0,20,11.7,5.0,15,48.7,17,44778
+272524,Erin Worsley,Hutt Valley Gymnastics,4,UNDER,Twisters Elementary 2022,AA,1,13.35,5.0,8T,11.4,5.0,16T,12.5,5.0,15,11.2,4.5,19,48.45,18,44778
+278519,Gabby Pearman,Capital Gymnastics,4,UNDER,Twisters Elementary 2022,AA,1,12.65,5.0,17,10.65,5.0,19,10.5,4.0,21,11.9,4.5,12,45.7,19T,44778
+529064,Ashley Elliot,Onslow Gymnastics Club,4,UNDER,Twisters Elementary 2022,AA,1,12.45,5.0,19,10.3,5.0,20,11.9,4.5,17,11.05,4.5,20,45.7,19T,44778
+567993,Skyla Horan-Walker,Levin Gymnastics Club,4,UNDER,Twisters Elementary 2022,AA,1,12.1,5.0,20,9.5,5.0,21,11.75,4.0,19,10.45,4.5,21,43.8,21,44778
+227746,Sydney Fergus,Twisters Tawa Gymnastics Club,4,OVER,Twisters Elementary 2022,AA,1,13.65,5.0,7,12.95,5.0,7,14.2,5.0,1,13.2,5.0,3T,54.0,1,44778
+192269,Poppy Cowan,Hutt Valley Gymnastics,4,OVER,Twisters Elementary 2022,AA,1,13.4,5.0,11,13.35,5.0,2T,13.6,5.0,4,13.5,5.0,1,53.85,2,44778
+296689,Naomi Guershom,Rimutaka Gymsports,4,OVER,Twisters Elementary 2022,AA,1,13.55,5.0,8,13.15,5.0,5,13.65,5.0,3,13.45,5.0,2,53.8,3,44778
+567989,Kana Komikado,Levin Gymnastics Club,4,OVER,Twisters Elementary 2022,AA,1,13.1,5.0,15,13.35,5.0,2T,14.1,5.0,2,12.65,5.0,10,53.2,4,44778
+281440,Sienna Boyd,Hutt Valley Gymnastics,4,OVER,Twisters Elementary 2022,AA,1,13.5,5.0,9,13.4,5.0,1,12.95,5.0,6T,13.2,5.0,3T,53.05,5,44778
+567991,Ren Comrie,Levin Gymnastics Club,4,OVER,Twisters Elementary 2022,AA,1,13.8,5.0,6,12.9,5.0,8T,12.65,5.0,9,13.15,5.0,5,52.5,6,44778
+633734,Charlie Edhouse,Hutt Valley Gymnastics,4,OVER,Twisters Elementary 2022,AA,1,13.35,5.0,12,12.5,5.0,13T,13.2,5.0,5,12.95,5.0,6T,52.0,7,44778
+608523,Ruby Brewer,Rimutaka Gymsports,4,OVER,Twisters Elementary 2022,AA,1,13.15,5.0,14,13.3,5.0,4,12.95,5.0,6T,12.55,5.0,12T,51.95,8,44778
+296472,Vaibhavi (Vanisha) Tandon,Hutt Valley Gymnastics,4,OVER,Twisters Elementary 2022,AA,1,14.35,5.0,1,12.9,5.0,8T,11.4,4.5,17,12.75,5.0,9,51.4,9,44778
+236735,Eva Catherwood,Onslow Gymnastics Club,4,OVER,Twisters Elementary 2022,AA,1,13.9,5.0,5,12.6,5.0,12,12.35,5.0,10,12.2,5.0,16T,51.05,10,44778
+192731,Emma Cooper,Rimutaka Gymsports,4,OVER,Twisters Elementary 2022,AA,1,14.1,5.0,2,12.75,5.0,10,11.65,4.0,15,12.3,5.0,15,50.8,11,44778
+249818,Rihi Kale,Twisters Tawa Gymnastics Club,4,OVER,Twisters Elementary 2022,AA,1,13.3,5.0,13,12.05,5.0,15,12.8,4.5,8,12.55,5.0,12T,50.7,12,44778
+236682,Eryn Foster,Hutt Valley Gymnastics,4,OVER,Twisters Elementary 2022,AA,1,13.0,5.0,16,12.5,5.0,13T,12.3,4.5,11T,12.85,5.0,8,50.65,13,44778
+261652,Amelia Hogg,Onslow Gymnastics Club,4,OVER,Twisters Elementary 2022,AA,1,12.45,5.0,18,13.1,5.0,6,11.9,5.0,14,12.6,5.0,11,50.05,14,44778
+175160,Aria Swallow,Harbour City Gymnastics,4,OVER,Twisters Elementary 2022,AA,1,12.75,5.0,17,12.0,5.0,16,11.95,4.0,13,12.95,5.0,6T,49.65,15,44778
+663020,Ella Maguire,Harbour City Gymnastics,4,OVER,Twisters Elementary 2022,AA,1,13.45,5.0,10,11.65,5.0,18,12.3,5.0,11T,11.7,5.0,19,49.1,16,44778
+634711,Sienna- Jade Stanley,Twisters Tawa Gymnastics Club,4,OVER,Twisters Elementary 2022,AA,1,13.95,5.0,4,11.35,5.0,19,10.6,3.5,19,12.1,4.5,18,48.0,17,44778
+201410,Grace McGall,Rimutaka Gymsports,4,OVER,Twisters Elementary 2022,AA,1,12.2,5.0,19,12.7,5.0,11,10.75,3.0,18,12.2,5.0,16T,47.85,18,44778
+227729,Devon Cook,Onslow Gymnastics Club,4,OVER,Twisters Elementary 2022,AA,1,14.0,5.0,3,11.75,5.0,17,10.35,4.0,20,11.5,5.0,20,47.6,19,44778
+284779,Lia Vlaar,Onslow Gymnastics Club,4,OVER,Twisters Elementary 2022,AA,1,12.05,5.0,20,11.3,5.0,20,11.55,4.5,16,12.4,5.0,14,47.3,20,44778
