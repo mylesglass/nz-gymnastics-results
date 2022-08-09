@@ -364,7 +364,8 @@
 		'Affinity Gymnastics Academy Junior & Senior Challenge 2022',
 		'Hutt Valley Competition 2022',
 		'Wellington Champs 2022',
-		'Manawatu Junior Opens'
+		'Manawatu Junior Opens',
+		'Twisters Elementary 2022'
 	];
 
 	let levels = ['All', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'JI', 'SI'];
