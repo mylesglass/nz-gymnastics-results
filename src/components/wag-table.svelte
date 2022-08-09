@@ -77,14 +77,15 @@
 				} else {
 					return cell;
 				}
-			}
+			},
+			width: '11%'
 		},
 		{
 			name: 'Vault',
 			columns: [
 				{
 					id: 'v-rank',
-					name: 'Rank'
+					name: 'Rnk'
 				},
 				{
 					id: 'v-d',
@@ -193,6 +194,7 @@
 		if (isNaN(cell) || !cell) {
 			return 'DNS';
 		} else {
+			console.log("cell", cell);
 			return `${Number(cell).toFixed(decimalPlace)}`;
 		}
 	}
@@ -450,18 +452,22 @@
 
 <div class="drawer">
 	<input id="my-drawer" type="checkbox" class="drawer-toggle" bind:checked={drawerToggle} />
-	<div class="drawer-content">
+	<div class="drawer-content p-8">
 		<div class="flex flex-wrap overflow-hidden">
-			<div class="w-1/3 overflow-hidden">
-				<p>Womens Artistic Gymnastics</p>
+			<div class="w-1/12 overflow-hidden">
+				<a href="/" class="btn btn-outline">Back</a>
+				
+			</div>
+			<div class="w-3/12 overflow-hidden">
+				<p class="text-xl font-bold">Womens Artistic Gymnastics</p>
 			</div>
 
-			<div class="w-1/3 overflow-hidden">
-				<label for="my-drawer" class="mt-2 btn btn-primary drawer-button ">Filter results</label>
+			<div class="w-1/3 overflow-hidden px-4">
+				<label for="my-drawer" class="btn btn-primary drawer-button btn-block">Filter results</label>
 			</div>
 
-			<div class="w-1/3 overflow-hidden">
-				<button class="btn btn-secondary mt-4" on:click={downloadCSV}
+			<div class="w-1/3 overflow-hidden pl-8">
+				<button class="btn btn-secondary btn-block" on:click={downloadCSV}
 					>Download CSV of current table</button
 				>
 			</div>
