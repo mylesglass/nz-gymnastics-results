@@ -30,6 +30,8 @@
 		"daisyui": "^2.19.1",
 		"gridjs": "^5.0.2",
 		"gridjs-svelte": "^2.1.1",
-		"svelte-csv": "^1.2.8"
+		"svelte-csv": "^1.2.8",
+		"svelte-table": "^0.5.11",
+		"tabulator-tables": "^5.5.0"
 	}
 }
