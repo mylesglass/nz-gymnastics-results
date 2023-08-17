@@ -1,8 +1,9 @@
 <script>
 	import Grid from 'gridjs-svelte';
 	import { csvGenerator } from '../csvGenerator';
-	import { SvelteWrapper } from "gridjs-svelte/plugins";
+	import { SvelteWrapper } from 'gridjs-svelte/plugins';
 	import { h } from 'gridjs';
+	import flag from '$lib/assets/nz-flag.png';
 
 	let grid;
 
@@ -205,7 +206,6 @@
 		td: {
 			'font-size': '0.8em',
 			padding: '2px 2px'
-
 		}
 	};
 
@@ -220,9 +220,9 @@
 		}
 	};
 
-	let currentViewMode = 'simple';
-	let currentColumns = simpleColumns;
-	let currentStyle = simpleStyle;
+	let currentViewMode = 'detailed';
+	let currentColumns = detailedColumns;
+	let currentStyle = detailedStyle;
 
 	const tableHeader = [
 		'gnz-id',
@@ -454,149 +454,155 @@
 	}
 </script>
 
-<div class="container mx-auto">
-	<div class="flex flex-row flex-wrap">
-		<aside class="w-full sm:w-1/3 md:w-1/4">
-			<div class="sticky top-0 w-full py-4 pr-2">
-				<p class="text-xl font-bold">Womens Artistic Gymnastics</p>
-				<ul class="menu overflow-y-auto bg-base-100 text-base-content">
-					<!-- Sidebar content here -->
-					<form>
-						<!-- Results per page
-						<div>
-							<p class="card-title">Results per page</p>
-							<p>Alter how many results are displayed per page</p>
-							<input
-								type="range"
-								min="20"
-								max="100"
-								bind:value={perPage}
-								class="range range-xs"
-								step="20"
-								on:change={updateResultsPerPage}
-							/>
-							<div class="w-full flex justify-between text-xs px-2">
-								<span>20</span>
-								<span>40</span>
-								<span>60</span>
-								<span>80</span>
-								<span>100</span>
-							</div>
-						</div>-->
-						<!-- View Mode 
-						<div>
-							<p class="card-title">View Mode</p>
-							<div class="form-control">
-								<label class="label cursor-pointer">
-									<span class="label-text">Simple</span>
-									<input
-										type="radio"
-										bind:group={currentViewMode}
-										class="radio checked:bg-blue-500"
-										value={'simple'}
-										on:change={viewModeToggle}
-									/>
-								</label>
-							</div>
-							<div class="form-control">
-								<label class="label cursor-pointer">
-									<span class="label-text">Detailed</span>
-									<input
-										type="radio"
-										bind:group={currentViewMode}
-										class="radio checked:bg-red-500"
-										checked
-										value={'detailed'}
-										on:change={viewModeToggle}
-									/>
-								</label>
-							</div>
-						</div>-->
-
-						<!-- Filters -->
-						<div>
-							<p class="card-title">Filters</p>
-							<p>Club</p>
-							<select
-								name="club-select"
-								class="select select-bordered w-full max-w-xs"
-								bind:value={selectedClub}
-								on:change={updateTableData}
-							>
-								<option selected>All</option>
-								{#each clubs as club}
-									<option>{club}</option>
-								{/each}
-							</select>
-							<p>STEP</p>
-							<select
-								name="level-select"
-								class="select select-bordered w-full max-w-xs"
-								bind:value={selectedLevel}
-								on:change={updateTableData}
-							>
-								{#each levels as level}
-									<option>{level}</option>
-								{/each}
-							</select>
-							<p>Division</p>
-							<select
-								name=""
-								id=""
-								class="select select-bordered w-full max-w-xs"
-								bind:value={selectedDivision}
-								on:change={updateTableData}
-							>
-								<option selected>All</option>
-								<option>OVER</option>
-								<option>UNDER</option>
-								<option>NONE</option>
-							</select>
-							<p>Competition</p>
-							<select
-								name=""
-								id=""
-								class="select select-bordered w-full max-w-xs"
-								bind:value={selectedCompetition}
-								on:change={updateTableData}
-							>
-								{#each competitions as comp}
-									<option>{comp}</option>
-								{/each}
-							</select>
-							<p>Region</p>
-							<select
-								name=""
-								id=""
-								class="select select-bordered w-full max-w-xs"
-								bind:value={selectedRegion}
-								on:change={updateTableData}
-								disabled
-							>
-								<option selected>Unavailable</option>
-							</select>
-						</div>
-
-						<button class="btn btn-secondary btn-block" on:click={downloadCSV}
-							>Download CSV of current table</button
-						>
-
-						<!-- Buttons -->
-						<div>
-							<!-- Apply -->
-
-							<!-- Download -->
-						</div>
-					</form>
+<div class="drawer">
+	<input id="my-drawer" type="checkbox" class="drawer-toggle" />
+	<div class="drawer-content">
+		<div class="navbar bg-base-100">
+			<div class="flex-1">
+				<img alt="🇳🇿" src={flag} class="w-10"/>
+				<p class="normal-case text-xl font-bold pl-4"> Gymnastics WAG Results 2023</p>
+			</div>
+			<div class="flex-none">
+				<ul class="menu menu-horizontal px-1">
+					<label for="my-drawer" class="btn btn-primary drawer-button">Filter Data</label>
 				</ul>
 			</div>
-		</aside>
-		<main role="main" class="w-full sm:w-2/3 md:w-3/4 pt-1 px-2">
-			<Grid {...pkg} bind:instance={grid}/>
+		</div>
+		
+		<main role="main" class="w-full">
+			<Grid {...pkg} bind:instance={grid} />
 		</main>
 	</div>
+	<div class="drawer-side">
+		<label for="my-drawer" class="drawer-overlay" />
+		<ul class="menu p-4 w-80 h-full bg-base-200 text-base-content">
+			<p class="text-2xl font-bold pb-4">Data Filter</p>
+			<ul class="menu overflow-y-auto text-base-content">
+				<!-- Sidebar content here -->
+				<form>
+					<!-- Results per page-->
+					<div>
+						<p class="card-title">Results per page</p>
+						<input
+							type="range"
+							min="20"
+							max="100"
+							bind:value={perPage}
+							class="range range-xs"
+							step="20"
+							on:change={updateResultsPerPage}
+						/>
+						<div class="w-full flex justify-between text-xs px-2">
+							<span>20</span>
+							<span>40</span>
+							<span>60</span>
+							<span>80</span>
+							<span>100</span>
+						</div>
+					</div>
+					<!-- View Mode -->
+					<div>
+						<p class="card-title">View Mode</p>
+						<div class="form-control">
+							<label class="label cursor-pointer">
+								<span class="label-text">Simple</span>
+								<input
+									type="radio"
+									bind:group={currentViewMode}
+									class="radio checked:bg-blue-500"
+									value={'simple'}
+									on:change={viewModeToggle}
+								/>
+							</label>
+						</div>
+						<div class="form-control">
+							<label class="label cursor-pointer">
+								<span class="label-text">Detailed</span>
+								<input
+									type="radio"
+									bind:group={currentViewMode}
+									class="radio checked:bg-red-500"
+									checked
+									value={'detailed'}
+									on:change={viewModeToggle}
+								/>
+							</label>
+						</div>
+					</div>
+
+					<!-- Filters -->
+					<div>
+						<p class="card-title">Filters</p>
+						<p>Club</p>
+						<select
+							name="club-select"
+							class="select select-bordered w-full max-w-xs"
+							bind:value={selectedClub}
+							on:change={updateTableData}
+						>
+							<option selected>All</option>
+							{#each clubs as club}
+								<option>{club}</option>
+							{/each}
+						</select>
+						<p>STEP</p>
+						<select
+							name="level-select"
+							class="select select-bordered w-full max-w-xs"
+							bind:value={selectedLevel}
+							on:change={updateTableData}
+						>
+							{#each levels as level}
+								<option>{level}</option>
+							{/each}
+						</select>
+						<p>Division</p>
+						<select
+							name=""
+							id=""
+							class="select select-bordered w-full max-w-xs"
+							bind:value={selectedDivision}
+							on:change={updateTableData}
+						>
+							<option selected>All</option>
+							<option>OVER</option>
+							<option>UNDER</option>
+							<option>NONE</option>
+						</select>
+						<p>Competition</p>
+						<select
+							name=""
+							id=""
+							class="select select-bordered w-full max-w-xs"
+							bind:value={selectedCompetition}
+							on:change={updateTableData}
+						>
+							{#each competitions as comp}
+								<option>{comp}</option>
+							{/each}
+						</select>
+						<p>Region</p>
+						<select
+							name=""
+							id=""
+							class="select select-bordered w-full max-w-xs"
+							bind:value={selectedRegion}
+							on:change={updateTableData}
+							disabled
+						>
+							<option selected>Unavailable</option>
+						</select>
+					</div>
+
+					<!-- Download -->
+					<button class="btn btn-secondary btn-block" on:click={downloadCSV}
+						>Download CSV of current table</button
+					>
+				</form>
+			</ul>
+		</ul>
+	</div>
 </div>
-<footer class="mt-auto">...</footer>
 
 <style global>
 	@import 'https://cdn.jsdelivr.net/npm/gridjs/dist/theme/mermaid.min.css';
