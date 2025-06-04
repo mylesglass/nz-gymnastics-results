@@ -5,7 +5,7 @@ import pandas as pd
 import os
 
 verbose = 1
-source_dir = "WAG 2023"
+source_dir = "WAG 2025"
 wag_header = ["gnz-id", "name", "club", "step", "division", "competition", "round-type", "day", "v-total", "v-d", "v-e", "v-n", "v-rank", "ub-total", "ub-d",
               "ub-e", "ub-n", "ub-rank", "bb-total", "bb-d", "bb-e", "bb-n", "bb-rank", "fx-total", "fx-d", "fx-e", "fx-n", "fx-rank", "aa-score", "aa-rank", "date-created"]
 mag_header = ["gnz-id", "name", "club", "step", "division", "competition", "round-type", "fx-total", "fx-d", "fx-e", "fx-n", "fx-rank", "ph-total", "ph-d", "ph-e", "ph-n", "ph-rank", "sr-total", "sr-d",
@@ -346,10 +346,10 @@ for file in os.listdir(source_dir):
 
                 df = pd.DataFrame(rows)
 
-                mypath = discipline
+                mypath = discipline + "\\" + competition
                 if not os.path.isdir(mypath):
                     os.makedirs(mypath)
-                filename = (discipline + "\\" + competition + " - " + discipline + \
+                filename = (discipline + "\\" + competition + "\\" + competition + " - " + discipline + \
                     " " + round['category'] + " " + round_name + ".csv").replace(':', '').replace('/', '+')
                 try:
                     if discipline == "WAG":
