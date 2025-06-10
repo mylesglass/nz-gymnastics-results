@@ -18,6 +18,8 @@ from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
 import cloudscraper 
+import argparse
+from gooey import Gooey, GooeyParser # Import Gooey components
 
 verbose = 0
 
@@ -459,14 +461,16 @@ def set_col_width(worksheet, col, width):
     worksheet.column_dimensions[col].width = width
     if(verbose): print(f"   - Applying column with of {width} to column {col}")
 
-def dataframes_to_xlsx (dataframes_dict, output_excel_file):
+def dataframes_to_xlsx (dataframes_dict, output_excel_file, directory):
     try:
         if not isinstance(dataframes_dict, dict) or not dataframes_dict:
             print("Error: Input must be a non-empty dictionary of DataFrames.")
             return
             
+        full_path = os.path.join(directory, output_excel_file)
+
         writer = pd.ExcelWriter(output_excel_file, engine="openpyxl")
-        if(verbose): print(f"Processing DataFrames for Excel output: {output_excel_file}")
+        if(verbose): print(f"Processing DataFrames for Excel output: {full_path}")
         workbook = writer.book
 
         for sheet_key, df in dataframes_dict.items():
@@ -566,19 +570,46 @@ def dataframes_to_xlsx (dataframes_dict, output_excel_file):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
-if __name__ == "__main__":
+@Gooey(program_name="URL Processor GUI",
+       program_description="Enter a URL to process and specify an output file.",
+       default_size=(600, 400)) # Optional: set default window size
+def main():
+    # Use GooeyParser instead of argparse.ArgumentParser
+    parser = GooeyParser(description="Processes a URL and saves its content to a file.")
+
+    # 1. URL (Positional Argument - required)
+    #    'url' is the name of the argument.
+    #    help is the description that Gooey (and --help) will show.
+    parser.add_argument(
+        'url',  # Name of the argument (will be args.url)
+        help="The URL you want to process",
+        widget="TextField"
+    )
+
+    parser.add_argument(
+        'directory', # Changed from --output
+        help="Directory where the output file will be saved",
+        widget="DirChooser", # Gooey specific: provides a directory chooser dialog
+        gooey_options={
+            'message': "Choose the output directory",
+            'default_path': '.' # Start in the current directory or last used
+        }
+    )
+
+    args = parser.parse_args()
+
     print("Scoreholder to XLSX Converter")
     print("----------------------")
     print("This will scrape data from a Scoreholder event page, convert the .json data into tables, and then save each round as a sheet within an .xlsx spreadsheet")
     print("Warning! Scoreholder can change it's backend at any time, and this may render this script useless. There is also a non-zero chance that results aren't accurate, due to numerous factors. Please be careful and do some checks to ensure data is accurate")
 
     # import data from scoreholder
-    scoreholder_url = input("Please enter the Scoreholder url: ")
-    test_url = "https://scoreholder.com/events/68292449e05232619d6967a9"
+    #scoreholder_url = input("Please enter the Scoreholder url: ")
+    #test_url = "https://scoreholder.com/events/68292449e05232619d6967a9"
     # test_url = "https://d2w3vmub0iheo.cloudfront.net/event-archives/68292449e05232619d6967a9-4428.json"
-    if not scoreholder_url:
-        scoreholder_url = test_url
-    data = find_json_from_url(scoreholder_url)
+    #if not scoreholder_url:
+    #    scoreholder_url = test_url
+    data = find_json_from_url(args.url)
 
     # parse information from data and create dataframes
     competition_year = data['event']['startDate'][:4]   # competition year (XXXX)
@@ -596,7 +627,10 @@ if __name__ == "__main__":
 
     # output to excel
     output_name = competition_name + '.xlsx'
-    dataframes_to_xlsx(roundDataframes, output_name)
+    dataframes_to_xlsx(roundDataframes, output_name, args.directory)
 
     print("End")
     
+
+if __name__ == "__main__":
+    main()
