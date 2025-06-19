@@ -570,6 +570,8 @@ def dataframes_to_xlsx (dataframes_dict, output_excel_file, directory):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
+# The Business
+
 @Gooey(program_name="URL Processor GUI",
        program_description="Enter a URL to process and specify an output file.",
        default_size=(600, 400)) # Optional: set default window size
@@ -631,6 +633,5 @@ def main():
 
     print("End")
     
-
 if __name__ == "__main__":
     main()
