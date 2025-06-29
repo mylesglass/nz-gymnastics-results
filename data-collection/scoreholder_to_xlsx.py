@@ -21,7 +21,7 @@ import cloudscraper
 import argparse
 from gooey import Gooey, GooeyParser # Import Gooey components
 
-verbose = 0
+verbose = 1
 
 # Data Import
 # -----------
@@ -600,7 +600,7 @@ def main():
 
     args = parser.parse_args()
 
-    print("Scoreholder to XLSX Converter")
+    print("Scoreholder to XLSX Converter Script")
     print("----------------------")
     print("This will scrape data from a Scoreholder event page, convert the .json data into tables, and then save each round as a sheet within an .xlsx spreadsheet")
     print("Warning! Scoreholder can change it's backend at any time, and this may render this script useless. There is also a non-zero chance that results aren't accurate, due to numerous factors. Please be careful and do some checks to ensure data is accurate")
@@ -611,6 +611,9 @@ def main():
     # test_url = "https://d2w3vmub0iheo.cloudfront.net/event-archives/68292449e05232619d6967a9-4428.json"
     #if not scoreholder_url:
     #    scoreholder_url = test_url
+
+    DRIVE_DIRECTORY = "W:\\My Drive\\Documents\\Programmes\\Competitive\\2025 Season\\Results 2025\\xlsx"
+
     data = find_json_from_url(args.url)
 
     # parse information from data and create dataframes
@@ -629,9 +632,9 @@ def main():
 
     # output to excel
     output_name = competition_name + '.xlsx'
-    dataframes_to_xlsx(roundDataframes, output_name, args.directory)
+    dataframes_to_xlsx(roundDataframes, output_name, DRIVE_DIRECTORY)
 
     print("End")
     
 if __name__ == "__main__":
-    main()
+    main()  
