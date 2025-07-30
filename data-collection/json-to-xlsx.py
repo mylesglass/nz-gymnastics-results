@@ -1,12 +1,6 @@
-# Scoreholder to XLSX
-# Version 3
+# Scoreholder JSON to XLSX
 # Myles Glass - 2025
 
-# This script streamlines getting gymnastics results data from scoreholder.com event pages.
-# It has 3 main steps:
-#   - getting the .json file from scoreholder.com
-#   - parsing the json into pandas tables
-#   - using openpyxls to create an Excel spreadsheet with the correct formatting for distribution
 
 from ast import Name
 import json
@@ -15,74 +9,8 @@ import pandas as pd
 import os
 from openpyxl.utils import get_column_letter, column_index_from_string
 from datetime import datetime
-import requests
-import cloudscraper 
-from gooey import Gooey, GooeyParser # Import Gooey components
 
 verbose = 1
-
-# Data Import
-# -----------
-
-def find_json_from_url(url):
-
-    #create api-call url
-    event_id = url.split('/')[-1] # get event id from url
-    api_url = f"https://scoreholder.com/api/events/{event_id}?scope=PUBLIC"
-    
-    api_url = f"https://scoreholder.com/api/events/{event_id}?scope=PUBLIC"
-    print(f"Calling Scoreholder API with cloudscraper: {api_url}")
-
-    # cloudscraper instance
-    scraper = cloudscraper.create_scraper(
-        browser={ # You can try to mimic your browser
-            'browser': 'chrome',
-            'platform': 'windows', # or 'darwin' for macOS, 'linux'
-            'mobile': False
-        }
-    )
-
-    response_text_for_debugging = ""
-
-    try:
-        # Use scraper.get() instead of requests.get()
-        # cloudscraper handles its own headers for challenges,
-        # but you can still pass additional ones if needed.
-        # For the first attempt, let cloudscraper do its thing.
-        response = scraper.get(api_url, timeout=30) # Increased timeout as challenges can take time
-        response_text_for_debugging = response.text
-
-        print(f"API Response Status Code: {response.status_code}")
-        response.raise_for_status()
-
-        if response.status_code == 204:
-            print("API returned status 204 No Content. Cannot parse JSON.")
-            return None
-        if not response.text.strip():
-            print("API response text is empty or whitespace. Cannot parse JSON.")
-            return None
-
-        api_data = response.json()
-        print("Successfully decoded JSON from Scoreholder API (via cloudscraper).")
-        return api_data
-
-    except requests.exceptions.HTTPError as http_err: # cloudscraper uses requests exceptions
-        print(f"HTTP error occurred with API call: {http_err} from {api_url}")
-        if http_err.response is not None:
-            print(f"    Response Status Code: {http_err.response.status_code}")
-            print(f"    Response Text: {http_err.response.text[:500]}")
-    except requests.exceptions.Timeout:
-        print(f"Request to API {api_url} timed out.")
-    except requests.exceptions.RequestException as req_err:
-        print(f"Error during API request to {api_url}: {req_err}")
-    except json.JSONDecodeError as json_err:
-        print(f"JSON decoding error from API response {api_url}: {json_err}")
-        print(f"    Content that failed to decode (first 500 chars): {response_text_for_debugging[:500]}")
-    except Exception as e: # Catch other potential cloudscraper-specific errors
-        print(f"An unexpected error occurred with cloudscraper: {e}")
-        print(f"    Content that may have caused it (first 500 chars): {response_text_for_debugging[:500]}")
-
-    return None
 
 # Data Parse
 # ----------
@@ -233,7 +161,7 @@ def notGFA(category):
 # Get All Clubs - get each club listed in the event file and return as a list
 def getAllClubs(data):
     clubs = []
-    for club in data['organizations']:
+    for club in data['eventOrganizations']:
         org = {
             "club_id": club['_id'],
             "name": club['name']
@@ -245,10 +173,10 @@ def getAllClubs(data):
 # Return a list of all gymnasts who are listed within the event data
 def getAllGymnasts(data, clubs):
     gymnasts = []
-    for competitor in data['competitors']:
+    for competitor in data['eventParticipants']:
 
         try:
-            gnz_id = fixId(competitor['number'])
+            gnz_id = fixId(competitor['identifier'])
         except KeyError:
             gnz_id = ""
 
@@ -257,7 +185,7 @@ def getAllGymnasts(data, clubs):
                 "sh_id": competitor['_id'],
                 "gnzid": gnz_id,
                 "name": competitor['name'],
-                "club": getClub(clubs, competitor['organization']),
+                "club": getClub(clubs, competitor['organizationId']),
                 "level/step": getLevel(competitor['tags']),
                 "discipline": getDiscipline(competitor['tags']),
                 "division": getDivision(competitor['tags'])
@@ -267,7 +195,7 @@ def getAllGymnasts(data, clubs):
                 "sh_id": competitor['_id'],
                 "gnzid": gnz_id,
                 "name": competitor['name'],
-                "club": getClub(clubs, competitor['organization']),
+                "club": getClub(clubs, competitor['organizationId']),
                 "level/step": 'NONE',
                 "discipline": 'NONE',
                 "division": 'NONE'
@@ -566,73 +494,44 @@ def dataframes_to_xlsx (dataframes_dict, output_excel_file, directory):
             print(f"Error saving Excel file: {e}")
 
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-
-# The Business
-
-@Gooey(program_name="URL Processor GUI",
-       program_description="Enter a URL to process and specify an output file.",
-       default_size=(600, 400)) # Optional: set default window size
-def main():
-    # Use GooeyParser instead of argparse.ArgumentParser
-    parser = GooeyParser(description="Processes a URL and saves its content to a file.")
-
-    # 1. URL (Positional Argument - required)
-    #    'url' is the name of the argument.
-    #    help is the description that Gooey (and --help) will show.
-    parser.add_argument(
-        'url',  # Name of the argument (will be args.url)
-        help="The URL you want to process",
-        widget="TextField"
-    )
-
-    parser.add_argument(
-        'directory', # Changed from --output
-        help="Directory where the output file will be saved",
-        widget="DirChooser", # Gooey specific: provides a directory chooser dialog
-        gooey_options={
-            'message': "Choose the output directory",
-            'default_path': '.' # Start in the current directory or last used
-        }
-    )
-
-    args = parser.parse_args()
-
-    print("Scoreholder to XLSX Converter Script")
-    print("----------------------")
-    print("This will scrape data from a Scoreholder event page, convert the .json data into tables, and then save each round as a sheet within an .xlsx spreadsheet")
-    print("Warning! Scoreholder can change it's backend at any time, and this may render this script useless. There is also a non-zero chance that results aren't accurate, due to numerous factors. Please be careful and do some checks to ensure data is accurate")
-
-    # import data from scoreholder
-    #scoreholder_url = input("Please enter the Scoreholder url: ")
-    #test_url = "https://scoreholder.com/events/68292449e05232619d6967a9"
-    # test_url = "https://d2w3vmub0iheo.cloudfront.net/event-archives/68292449e05232619d6967a9-4428.json"
-    #if not scoreholder_url:
-    #    scoreholder_url = test_url
-
-    DRIVE_DIRECTORY = "W:\\My Drive\\Documents\\Programmes\\Competitive\\2025 Season\\Results 2025\\xlsx"
-
-    data = find_json_from_url(args.url)
-
-    # parse information from data and create dataframes
-    competition_year = data['event']['startDate'][:4]   # competition year (XXXX)
-    competition_name = data['event']['name']            # competition name
-    if(competition_year not in competition_name):       # ensure year is in competition name, to ensure data doesn't get muddled in future years
-        competition_name += " " + competition_year
-    print('Creating results tables for', competition_name, '...')
-    clubs = getAllClubs(data)
-    gymnasts = getAllGymnasts(data, clubs)
-    roundDataframes = {}
-    for round in data['rounds']:
-        newRound = create_round_dataframe(data, round, clubs, gymnasts, competition_name)
-        roundDataframes[newRound[0]] = newRound[1]
-        if(verbose): print(f"Added '{newRound[0]} to rounds.'")
-
-    # output to excel
-    output_name = competition_name + '.xlsx'
-    dataframes_to_xlsx(roundDataframes, output_name, DRIVE_DIRECTORY)
-
-    print("End")
+        print(f"An unexpected error occurred: {e}")    
     
 if __name__ == "__main__":
-    main()  
+    print("ScoreholderJSON to XLSX Converter Script")
+    print("----------------------")
+    print("This will convert a scoreholder json into an xlsx file")
+    print("----------------------")
+
+    DRIVE_DIRECTORY = "2025\\xlsx"
+    JSON_SOURCE_DIRECTORY = "2025\\json"
+
+    for file in os.listdir(JSON_SOURCE_DIRECTORY):
+
+        if(verbose): print(f"Processing file {file}")
+
+        if file.endswith('.json'): # check for JSON
+            file_location = JSON_SOURCE_DIRECTORY + "\\" + file
+            json_file = open(file_location)
+            data = json.load(json_file)
+
+            # parse information from data and create dataframes
+            if(len(data['events']) > 1):
+                print(f"Error: length of events is greater than 1")
+            competition_year = data['events'][0]['startDate'][:4]   # competition year (XXXX)
+            competition_name = data['events'][0]['name']            # competition name
+            if(competition_year not in competition_name):       # ensure year is in competition name, to ensure data doesn't get muddled in future years
+                competition_name += " " + competition_year
+            print('Creating results tables for', competition_name, '...')
+            clubs = getAllClubs(data)
+            gymnasts = getAllGymnasts(data, clubs)
+            roundDataframes = {}
+            for round in data['rounds']:
+                newRound = create_round_dataframe(data, round, clubs, gymnasts, competition_name)
+                roundDataframes[newRound[0]] = newRound[1]
+                if(verbose): print(f"Added '{newRound[0]} to rounds.'")
+
+            # output to excel
+            output_name = competition_name + '.xlsx'
+            dataframes_to_xlsx(roundDataframes, output_name, DRIVE_DIRECTORY)
+
+    print("End")
