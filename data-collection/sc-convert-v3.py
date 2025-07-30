@@ -65,10 +65,11 @@ def getUnitInfo(data, performanceIds):
                 level = 'UNKNOWN'
                 
                 # Discipline
-                if 'wag' in name.lower():
+                if 'wag' in name.lower() or 'step' in name.lower():
                     discipline = 'WAG'
-                elif 'mag' in name.lower():
+                elif 'mag' in name.lower() or 'level' in name.lower():
                     discipline = 'MAG'
+
 
                 # Level
                 if 'step' in name.lower():
@@ -112,10 +113,22 @@ def parseDivision(name, unitInfo):
         for tag in internationalTags:
             if tag in name.lower():
                 return 'INTERNATIONAL'
+        if has_singular_a(name):    
+            return 'UNDER'
+        if has_singular_b(name):
+            return 'OVER'
             
         return "OPEN"
     if unitInfo['discipline'] == 'MAG':
         return 'OPEN'
+
+def has_singular_a(text_to_search):
+  pattern = r'\bA\b'
+  return bool(re.search(pattern, text_to_search))
+
+def has_singular_b(text_to_search):
+  pattern = r'\bB\b'
+  return bool(re.search(pattern, text_to_search))
 
 # Return a list of all gymnasts who are listed as participants within the participant data
 def getAllGymnasts(data, clubs):
@@ -128,8 +141,43 @@ def getAllGymnasts(data, clubs):
             gnz_id = ""
         
         performanceIds = getPerformanceID(data['performanceIndividuals'], participant['_id'])
+        if len(performanceIds) == 0: 
+            continue
+
         unitInfos = getUnitInfo(data, performanceIds)
-        division = parseDivision(getDivision(data, performanceIds), unitInfos[0])
+
+        gfa_terms = ["gfa", "novice", "iron", "bronze", "silver", "gold", "emerald", "diamond", "ruby"]
+
+        for term in gfa_terms:
+            if term in unitInfos[0]['name'].lower():
+                continue
+
+        if "novice" in unitInfos[0]['name'].lower():
+            continue
+        if "gfa" in unitInfos[0]['name'].lower():
+            continue
+        if "iron" in unitInfos[0]['name'].lower():
+            continue
+        if "bronze" in unitInfos[0]['name'].lower():
+            continue
+        if "silver" in unitInfos[0]['name'].lower():
+            continue
+        if "gold" in unitInfos[0]['name'].lower():
+            continue
+        if "emerald" in unitInfos[0]['name'].lower():
+            continue
+        if "diamond" in unitInfos[0]['name'].lower():
+            continue
+        if "ruby" in unitInfos[0]['name'].lower():
+            continue
+
+        try: 
+            division = parseDivision(getDivision(data, performanceIds), unitInfos[0])
+        except IndexError:
+            division = "NONE"
+            print(f"INDEX ERROR on unitInfos: {unitInfos}")
+            print(f"performance ids: {performanceIds}")
+
 
         gymnast = {
             "participant_id": participant['_id'],
@@ -219,7 +267,35 @@ def getScoreItemFromRanking(data, ranking, gymnasts, score_name, unitId):
                 discipline = getDisciplineFromId(data, unitId)
 
                 result = {}
-                if ranking['value'] == "dns":
+                if "value" not in ranking:
+                    result = {
+                        score_name.lower() +"-execution": 0,
+                        score_name.lower() +"-difficuly": 0,
+                        score_name.lower() +"-neutral_deduction": 0,
+                        score_name.lower() +"-rank": "DNS",
+                        score_name.lower() + "-score": 0,
+                        "gymnast_id": gymnast['participant_id'],
+                        "round_name": roundName,
+                        "discipline": discipline,
+                        "level": level
+                    }
+                    performance['scores'].append(result)
+                    return result
+
+                if ranking['value'] == "dns" or ranking['value'] == "dnf":
+                    
+                    if "all-around" in score_name.lower():
+                        result = {
+                            score_name.lower() +"-rank": "DNS",
+                            score_name.lower() + "-score": 0,
+                            "gymnast_id": gymnast['participant_id'],
+                            "round_name": roundName,
+                            "discipline": discipline,
+                            "level": level
+                        }
+                        performance['scores'].append(result)
+                        return result
+                
                     result = {
                         score_name.lower() +"-execution": 0,
                         score_name.lower() +"-difficuly": 0,
@@ -237,9 +313,15 @@ def getScoreItemFromRanking(data, ranking, gymnasts, score_name, unitId):
                 if ranking["sourceItems"][0]['itemType'] == "result-set":
                     if ranking["sourceItems"][0]['status'] == "discarded":
                         continue
+
+                    if "rank" not in ranking:
+                        temp_rank = 0
+                    else:
+                        temp_rank = ranking["rank"]
+
                     result = {
                         "all-around" + "-score": ranking['value'],
-                        "all-around" +"-rank": ranking['rank'],
+                        "all-around" +"-rank": temp_rank,
                         "gymnast_id": gymnast['participant_id'],
                         "round_name": roundName,
                         "discipline": discipline,
@@ -256,7 +338,7 @@ def getScoreItemFromRanking(data, ranking, gymnasts, score_name, unitId):
                     score_name.lower() +"-execution": performanceScoreItem['Execution'],
                     score_name.lower() +"-difficuly": performanceScoreItem['Difficulty'],
                     score_name.lower() +"-neutral_deduction": performanceScoreItem['Neutral Deductions'],
-                    score_name.lower() +"-score": performanceScoreItem['Score'],
+                    score_name.lower() +"-score": checkZeroScore(performanceScoreItem['Score']),
                     score_name.lower() +"-rank": ranking['rank'],
                     "gymnast_id": gymnast['participant_id'],
                     "round_name": roundName,
@@ -267,6 +349,11 @@ def getScoreItemFromRanking(data, ranking, gymnasts, score_name, unitId):
                 performance['scores'].append(result)
                 return result
                             
+def checkZeroScore(score):
+    if score == "zero":
+        return 0
+    return score
+
 def getGymnastNameFromPartId(gymnasts, part_id):
     for gymnast in gymnasts:
         if gymnast['participant_id'] == part_id:
@@ -282,6 +369,14 @@ def getAppScore(scores, app_type):
         for key, value in score.items():
             if app_type in key:
                 return score
+    return {
+        app_type.lower() +"-execution": 0,
+        app_type.lower() +"-difficuly": 0,
+        app_type.lower() +"-neutral_deduction": 0,
+        app_type.lower() +"-rank": "DNS",
+        app_type.lower() + "-score": 0,
+        "round_name": "ERROR"
+    }
             
 def set_col_width(worksheet, col, width):
     worksheet.column_dimensions[col].width = width
@@ -340,7 +435,7 @@ def dataframes_to_xlsx (dataframes_dict, output_excel_file, directory):
                     set_col_decimal_place(df, worksheet, "W", "0.000")
                     set_col_decimal_place(df, worksheet, "Y", "0.000")
                     set_col_decimal_place(df, worksheet, "AB", "0.000")
-                    
+                    set_col_decimal_place(df, worksheet, "AD", "0.000")
 
                     set_col_decimal_place(df, worksheet, "K", "0.0")
                     set_col_decimal_place(df, worksheet, "L", "0.0")
@@ -358,7 +453,6 @@ def dataframes_to_xlsx (dataframes_dict, output_excel_file, directory):
                     set_col_width(worksheet, "I", 18)
 
                     if "MAG" in sheet_name.split(" "):
-                        set_col_decimal_place(df, worksheet, "AD", "0.000")
                         set_col_decimal_place(df, worksheet, "AG", "0.000")
                         set_col_decimal_place(df, worksheet, "AI", "0.000")
                         set_col_decimal_place(df, worksheet, "AL", "0.000")
@@ -381,7 +475,31 @@ def dataframes_to_xlsx (dataframes_dict, output_excel_file, directory):
 
     except Exception as e:
         print(f"An unexpected error occurred: {e}")    
- 
+
+def getScoreNameFromRoundName(roundName):
+    if "vault" in roundName.lower():
+        return "Vault"
+    elif "uneven" in roundName.lower():
+        return "U-Bars"
+    elif "beam" in roundName.lower():
+        return "Beam"
+    elif "floor" in roundName.lower():
+        return "Floor"
+    elif "rings" in roundName.lower():
+        return "Rings"
+    elif "pommel" in roundName.lower():
+        return "Pommel"
+    elif "p-bars" in roundName.lower():
+        return "P-Bars"
+    elif "parallel" in roundName.lower():
+        return "P-Bars"
+    elif "h-bar" in roundName.lower():
+        return "H-Bar"
+    elif "horizontal" in roundName.lower():
+        return "H-Bar"
+    elif "all-around" in roundName.lower():
+        return "All-Around" 
+    return roundName
 
 if __name__ == "__main__":
     print("ScoreholderJSON to XLSX Converter Script")
@@ -389,6 +507,9 @@ if __name__ == "__main__":
 
     # load data
     if VERBOSE_CONSOLE: print("Loading Data...")
+
+    wagResults = []
+    magResults = []
 
     for file in os.listdir(SOURCE_DIR):
         if file.endswith('.json'):
@@ -404,7 +525,9 @@ if __name__ == "__main__":
                 continue
 
             competition_year = data['events'][0]['startDate'][:4]   # competition year (XXXX)
+            
             competition_name = data['events'][0]['name']            # competition name
+            print(f"Parsing data from {competition_name}")
             if(competition_year not in competition_name):       # ensure year is in competition name, to ensure data doesn't get muddled in future years
                 competition_name += " " + competition_year
 
@@ -422,13 +545,15 @@ if __name__ == "__main__":
                         if "nodes" in rule['competition']['nodeTree']:
                             for node in rule['competition']['nodeTree']['nodes']:
                                 if "resultSets" in node:
-                                    roundName = node['name']
+                                    roundName = node['name'].replace('|', ' ')
                                     scores = []
 
                                     if "Group" in roundName: continue
 
                                     for ruleResultSet in node['resultSets']:
                                         score_name = ruleResultSet['name']
+                                        if "total" in score_name.lower(): 
+                                            score_name = getScoreNameFromRoundName(roundName)
                                         
                                         for performanceResultTable in data['performanceResultTables']:
                                             for performanceResultSet in performanceResultTable['resultSets']:
@@ -439,9 +564,6 @@ if __name__ == "__main__":
                                                         score_count += 1
                                                            
             print(f"{score_count} score items created and assigned to gymnasts")
-            
-            wagResults = []
-            magResults = []
 
             for gymnast in gymnasts:
                 for performance in gymnast['performance_ids']:
@@ -473,7 +595,11 @@ if __name__ == "__main__":
                         if aa_scores is not None:
                             row.update(aa_scores)
                         else:
-                            dnf_aa_score = vt_scores["vault-score"] + ub_scores["u-bars-score"] + bb_scores["beam-score"] + fx_scores["floor-score"]
+                            try:
+                                dnf_aa_score = vt_scores["vault-score"] + ub_scores["u-bars-score"] + bb_scores["beam-score"] + fx_scores["floor-score"]
+                            except TypeError:
+                                dnf_aa_score = 0
+
                             dnf_result = {
                                 "all-around-score": dnf_aa_score,
                                 "all-around-rank": "DNF"
@@ -523,15 +649,15 @@ if __name__ == "__main__":
                         magResults.append(row)
 
             
-            wag_df = pd.DataFrame(wagResults)
-            mag_df = pd.DataFrame(magResults)
+    wag_df = pd.DataFrame(wagResults)
+    mag_df = pd.DataFrame(magResults)
 
-            roundDataframes = {
-                "WAG": wag_df,
-                "MAG": mag_df
-            }
+    roundDataframes = {
+        "WAG": wag_df,
+        "MAG": mag_df
+    }
 
-            output_name = competition_name + '.xlsx'
-            dataframes_to_xlsx(roundDataframes, output_name, OUTPUT_DIR)
+    #output_name = competition_name.replace('|', '').replace('/', '') + '.xlsx'
+    dataframes_to_xlsx(roundDataframes, "art-results.xlsx", OUTPUT_DIR)
 
     print("End")
