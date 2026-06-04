@@ -223,6 +223,8 @@ def pivot_to_wide_dict(event_id: int, session) -> dict:
         "level_category": "step",
         "aa_rank": "aa-rank",
         "aa_score": "aa-score",
+        "round_type": "round-type",
+        "division": "division",
     }, inplace=True)
 
     all_rows = combined.to_dict(orient="records")
