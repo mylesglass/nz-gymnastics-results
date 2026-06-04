@@ -40,6 +40,59 @@ def _normalise_apparatus(name: str) -> str:
     return mapping.get(name.strip().lower(), name)
 
 
+def _build_apparatus_and_division_maps(performance_rules: list[dict]) -> tuple[dict[str, str], dict[str, str | None]]:
+    """Build maps from result_set_id -> base_apparatus and result_set_id -> division."""
+    apparatus_map: dict[str, str] = {}
+    division_map: dict[str, str | None] = {}
+    for rule in performance_rules:
+        nodes = rule.get("competition", {}).get("nodeTree", {}).get("nodes", [])
+        for node in nodes:
+            raw_name = node.get("name")
+            if not raw_name:
+                continue
+            base_name = raw_name.split(" >")[0].strip()
+            division = _extract_division(raw_name)
+            for rs in node.get("resultSets", []):
+                rs_id = rs.get("id")
+                if rs_id:
+                    apparatus_map[rs_id] = base_name
+                    division_map[rs_id] = division
+    return apparatus_map, division_map
+
+
+def _extract_division(node_name: str, discipline: str = "WAG") -> str | None:
+    """Determine division from a competition node name.
+
+    Node names encode divisions like "All-around > U" (UNDER), "Floor > O" (OVER).
+    Also checks for "under", "over", "international", standalone A/B marker.
+    """
+    lower = node_name.lower()
+
+    for tag in ["under", "division a"]:
+        if tag in lower:
+            return "UNDER"
+    for tag in ["over", "division b"]:
+        if tag in lower:
+            return "OVER"
+    for tag in ["international", " int"]:
+        if tag in lower:
+            return "INTERNATIONAL"
+
+    # Check for "> U" / "> O" suffix markers
+    if " > u" in lower:
+        return "UNDER"
+    if " > o" in lower:
+        return "OVER"
+
+    import re
+    if re.search(r"\bA\b", node_name):
+        return "UNDER"
+    if re.search(r"\bB\b", node_name):
+        return "OVER"
+
+    return None
+
+
 def _sanitise_float(value: object) -> float | None:
     """Convert a value to float, or None if it's a DNS/DNF string."""
     if value is None:
@@ -70,7 +123,38 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
     individuals = resolve_individuals(data.get("performanceIndividuals", []))
     units = resolve_units(data.get("units", []))
     output_map = build_output_map(data.get("performanceRules", []))
-    apparatus_map = _build_apparatus_map(data.get("performanceRules", []))
+    apparatus_map, division_map = _build_apparatus_and_division_maps(data.get("performanceRules", []))
+
+    # -- Build entity_id -> division from resultTableConfigs --
+    # Division is encoded in competition node names referenced by resultTableConfigs
+    # First map: competition node id -> division
+    node_division: dict[str, str | None] = {}
+    for rule in data.get("performanceRules", []):
+        for node in rule.get("competition", {}).get("nodeTree", {}).get("nodes", []):
+            nid = node.get("id")
+            if nid:
+                node_division[nid] = _extract_division(node.get("name", ""))
+
+    # Second map: entity_id -> division from performanceIndividuals
+    entity_division: dict[str, str | None] = {}
+    for ind in data.get("performanceIndividuals", []):
+        eid = ind.get("_id")
+        if not eid:
+            continue
+        div = None
+        for config in ind.get("resultTableConfigs", []):
+            rtid = config.get("resultTableId")
+            if rtid and rtid in node_division:
+                found = node_division[rtid]
+                if found:
+                    div = found
+                    break
+            # Also try from the old-style resultId via the division map
+            rid = config.get("resultId")
+            if rid and rid in division_map and division_map[rid]:
+                div = division_map[rid]
+                break
+        entity_division[eid] = div
 
     # -- Index performanceScores by _id --
     scores_by_id: dict[str, dict] = {}
@@ -188,6 +272,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                     pass_number = sorted_passes.index(score_data["_unitPassId"]) + 1
 
                 aa = aa_scores.get(entity_id, {})
+                division = entity_division.get(entity_id)
 
                 row = {
                     "event_name": event_info["name"],
@@ -196,7 +281,8 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                     "club_name": club_name,
                     "discipline": discipline,
                     "level_category": level_category,
-                    "division": None,
+                    "division": division,
+                    "apparatus": _normalise_apparatus(rs_name),
                     "apparatus": _normalise_apparatus(rs_name),
                     "pass_number": pass_number,
                     "d_score": _sanitise_float(score_data.get("d_score")),
