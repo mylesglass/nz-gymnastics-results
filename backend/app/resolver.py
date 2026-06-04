@@ -56,6 +56,13 @@ def _infer_discipline(unit_name: str) -> str:
         return "WAG"
     if "mag" in lower or "level" in lower:
         return "MAG"
+    # Non-standard names: try to infer from event context
+    international_terms = ["international", "junior international", "senior international",
+                           "youth", "junior", "senior", "u16", "u18", "u 16", "u 18",
+                           "senior open", "under 16", "under 18"]
+    for term in international_terms:
+        if term in lower:
+            return "UNKNOWN"
     return "UNKNOWN"
 
 
@@ -68,6 +75,25 @@ def resolve_level(unit_name: str) -> str:
     m = re.search(r"level\s+(\d+)", lower)
     if m:
         return f"Level {m.group(1)}"
+
+    # Known level keywords
+    if "junior international" in lower:
+        return "Junior International"
+    if "senior international" in lower:
+        return "Senior International"
+    if "youth" in lower and "international" in lower:
+        return "Youth International"
+    if "senior open" in lower:
+        return "Senior Open"
+    if "under 16" in lower or "u16" in lower:
+        return "U16"
+    if "under 18" in lower or "u18" in lower:
+        return "U18"
+    if "senior" in lower and "open" not in lower:
+        return "Senior"
+    if "junior" in lower and "international" not in lower:
+        return "Junior"
+
     return unit_name
 
 
