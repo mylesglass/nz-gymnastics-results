@@ -15,12 +15,13 @@ services:
     ports:
       - "5173:5173"
     volumes:
-      - ./frontend/src:/app/src
+      - ./frontend:/app
       - frontend_node:/app/node_modules
     depends_on:
       - backend
     environment:
       - PUBLIC_API_URL=http://localhost:8000
+      - PROXY_TARGET=http://backend:8000
     command: npm run dev -- --host 0.0.0.0
 
 volumes:
