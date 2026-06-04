@@ -3,12 +3,14 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from sqlalchemy import func
 
 from app.database import get_session, init_db
 from app.models import Event, LongScore
 from app.parser import parse_json
 from app.schemas import EventListItem, EventResponse, ResultsResponse
+from app.transformer import export_csv, export_xlsx, pivot_to_wide
 
 
 @asynccontextmanager
@@ -173,6 +175,50 @@ def get_results(event_id: int):
             ),
             columns=columns,
             rows=rows,
+        )
+    finally:
+        session.close()
+
+
+# ---------------------------------------------------------------------------
+# Export CSV
+# ---------------------------------------------------------------------------
+
+@app.get("/api/events/{event_id}/export/csv")
+def export_event_csv(event_id: int):
+    session = get_session()
+    try:
+        event = session.query(Event).filter(Event.id == event_id).first()
+        if not event:
+            raise HTTPException(404, "Event not found")
+        df = pivot_to_wide(event_id, session, event.name, event.start_date)
+        data = export_csv(df)
+        return Response(
+            content=data,
+            media_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="{event.name}.csv"'},
+        )
+    finally:
+        session.close()
+
+
+# ---------------------------------------------------------------------------
+# Export XLSX
+# ---------------------------------------------------------------------------
+
+@app.get("/api/events/{event_id}/export/xlsx")
+def export_event_xlsx(event_id: int):
+    session = get_session()
+    try:
+        event = session.query(Event).filter(Event.id == event_id).first()
+        if not event:
+            raise HTTPException(404, "Event not found")
+        df = pivot_to_wide(event_id, session, event.name, event.start_date)
+        data = export_xlsx(df)
+        return Response(
+            content=data,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'attachment; filename="{event.name}.xlsx"'},
         )
     finally:
         session.close()

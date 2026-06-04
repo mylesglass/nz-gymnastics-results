@@ -138,3 +138,30 @@ class TestGetResults:
         # Verify columns
         for col in ["gymnast_name", "apparatus", "pass_final_score"]:
             assert col in data["columns"]
+
+
+class TestExport:
+    def _upload(self):
+        path = DATA_DIR / "hve-2026.json"
+        if not path.exists():
+            pytest.skip("hve-2026.json not found")
+        with open(path, "rb") as f:
+            resp = client.post("/api/upload", files={"file": ("hve-2026.json", f, "application/json")})
+        return resp.json()["id"]
+
+    def test_export_csv(self):
+        event_id = self._upload()
+        resp = client.get(f"/api/events/{event_id}/export/csv")
+        assert resp.status_code == 200
+        assert resp.headers["content-type"].startswith("text/csv")
+        assert resp.text.startswith("gnz-id")
+
+    def test_export_xlsx(self):
+        event_id = self._upload()
+        resp = client.get(f"/api/events/{event_id}/export/xlsx")
+        assert resp.status_code == 200
+        assert resp.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+    def test_export_404(self):
+        resp = client.get("/api/events/999/export/csv")
+        assert resp.status_code == 404

@@ -44,14 +44,14 @@
 - [x] Re-upload: delete existing event data, re-parse
 - [x] **Test:** 51/51 tests (13 parser tests against hve-2026.json and mgi-wag-2026.json)
 
-### Step 6: FastAPI Endpoints
-- [ ] Create `backend/app/main.py`
-- [ ] `POST /api/upload` — JSON file upload -> parse -> store -> return summary
-- [ ] `GET /api/events` — list stored events
-- [ ] `GET /api/events/{id}/results` — wide-format JSON
-- [ ] `GET /api/events/{id}/export/csv`
-- [ ] `GET /api/events/{id}/export/xlsx`
-- [ ] **Test:** httpx integration tests against running FastAPI
+### Step 6: FastAPI Endpoints ✅
+- [x] Create `backend/app/main.py`
+- [x] `POST /api/upload` — JSON file upload -> parse -> store -> return summary
+- [x] `GET /api/events` — list stored events
+- [x] `GET /api/events/{id}/results` — long-format JSON
+- [ ] `GET /api/events/{id}/export/csv` *(requires Step 7)*
+- [ ] `GET /api/events/{id}/export/xlsx` *(requires Step 7)*
+- [x] **Test:** 9/9 httpx integration tests against real data (60/60 total)
 
 ### Step 7: Pandas Transformer
 - [ ] Create `backend/app/transformer.py`
