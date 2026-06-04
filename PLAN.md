@@ -21,11 +21,11 @@
 - [x] Create `backend/app/schemas.py` — Pydantic models for API
 - [x] **Test:** 4/4 `pytest` — DB creates tables, CRUD operations work
 
-### Step 3: Node-Tree Decoder
-- [ ] Create `backend/app/decoder.py` — maps opaque `publicOutputs` keys to field names
-- [ ] Build from `performanceRules[].scores[].nodeTree.interface.outputs[]`
-- [ ] Handle 4-key (normal) and 5-key (DNS) variants
-- [ ] **Test:** Unit tests with sample node-trees from analysis docs
+### Step 3: Node-Tree Decoder ✅
+- [x] Create `backend/app/decoder.py` — maps opaque `publicOutputs` keys to field names
+- [x] Build from `performanceRules[].scores[].nodeTree.interface.outputs[]`
+- [x] Handle 4-key (normal) and 5-key (DNS) variants
+- [x] **Test:** 13/13 unit tests + verified against real hve-2026.json data
 
 ### Step 4: ID Resolver
 - [ ] Create `backend/app/resolver.py` — lookup maps for the flat JSON structure
