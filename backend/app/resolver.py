@@ -35,8 +35,12 @@ def resolve_individuals(performance_individuals: list[dict]) -> dict[str, dict]:
     return mapping
 
 
-def resolve_units(units: list[dict]) -> dict[str, dict]:
-    """Map unit_id -> {name, discipline}."""
+def resolve_units(units: list[dict], event_discipline_hint: str | None = None) -> dict[str, dict]:
+    """Map unit_id -> {name, discipline}.
+
+    When a unit name doesn't clearly indicate WAG or MAG, the
+    event_discipline_hint is used as a fallback.
+    """
     mapping: dict[str, dict] = {}
     for unit in units:
         uid = unit.get("_id")
@@ -45,24 +49,19 @@ def resolve_units(units: list[dict]) -> dict[str, dict]:
         name = unit.get("name", "")
         mapping[uid] = {
             "name": name,
-            "discipline": _infer_discipline(name),
+            "discipline": _infer_discipline(name, event_discipline_hint),
         }
     return mapping
 
 
-def _infer_discipline(unit_name: str) -> str:
+def _infer_discipline(unit_name: str, event_hint: str | None = None) -> str:
     lower = unit_name.lower()
     if "wag" in lower or "step" in lower:
         return "WAG"
     if "mag" in lower or "level" in lower:
         return "MAG"
-    # Non-standard names: try to infer from event context
-    international_terms = ["international", "junior international", "senior international",
-                           "youth", "junior", "senior", "u16", "u18", "u 16", "u 18",
-                           "senior open", "under 16", "under 18"]
-    for term in international_terms:
-        if term in lower:
-            return "UNKNOWN"
+    if event_hint:
+        return event_hint
     return "UNKNOWN"
 
 
@@ -76,15 +75,17 @@ def resolve_level(unit_name: str) -> str:
     if m:
         return f"Level {m.group(1)}"
 
-    # Known level keywords
+    # Known level keywords (check long matches first)
     if "junior international" in lower:
         return "Junior International"
     if "senior international" in lower:
         return "Senior International"
-    if "youth" in lower and "international" in lower:
+    if "youth international" in lower:
         return "Youth International"
     if "senior open" in lower:
         return "Senior Open"
+    if "youth" in lower:
+        return "Youth"
     if "under 16" in lower or "u16" in lower:
         return "U16"
     if "under 18" in lower or "u18" in lower:
