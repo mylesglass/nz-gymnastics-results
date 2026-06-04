@@ -264,9 +264,11 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                 if not entity_id or not source_items:
                     continue
 
-                si = source_items[0]
-                item_type = si.get("itemType")
-                status = si.get("status", "")
+                # Determine item_type from the first source item
+                si_first = source_items[0]
+                item_type = si_first.get("itemType")
+                status = si_first.get("status", "")
+
                 if status == "discarded":
                     continue
 
@@ -286,59 +288,66 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                 if item_type != "score":
                     continue
 
-                item_id = si.get("itemId", "")
-                score_data = scores_by_id.get(item_id)
-                if score_data is None:
-                    continue
-                if item_id in emitted_score_ids:
-                    continue
-                emitted_score_ids.add(item_id)
+                # Process every retained score source item for this ranking
+                for si in source_items:
+                    if si.get("status", "") == "discarded":
+                        continue
+                    if si.get("itemType") != "score":
+                        continue
 
-                # Resolve gymnast
-                ind_info = individuals.get(entity_id, {})
-                participant_id = ind_info.get("participant_id", "")
-                unit_id = ind_info.get("unit_id", "")
-                part_info = participants.get(participant_id, {})
-                unit_info = units.get(unit_id, {})
-                gnz_id = fix_gnz_id(part_info.get("gnz_id", ""))
-                gymnast_name = part_info.get("name", "")
-                club_name = clubs.get(part_info.get("org_id", ""), "")
-                discipline = unit_info.get("discipline", "UNKNOWN")
-                level_category = resolve_level(unit_info.get("name", ""))
+                    item_id = si.get("itemId", "")
+                    score_data = scores_by_id.get(item_id)
+                    if score_data is None:
+                        continue
+                    if item_id in emitted_score_ids:
+                        continue
+                    emitted_score_ids.add(item_id)
 
-                # Pass number
-                pass_number = 1
-                eid = score_data["_entityId"]
-                ueid = score_data["_unitEventId"]
-                event_pass_set = entity_event_passes.get(eid, {}).get(ueid, set())
-                sorted_passes = sorted(event_pass_set)
-                if len(sorted_passes) > 1:
-                    pass_number = sorted_passes.index(score_data["_unitPassId"]) + 1
+                    # Resolve gymnast
+                    ind_info = individuals.get(entity_id, {})
+                    participant_id = ind_info.get("participant_id", "")
+                    unit_id = ind_info.get("unit_id", "")
+                    part_info = participants.get(participant_id, {})
+                    unit_info = units.get(unit_id, {})
+                    gnz_id = fix_gnz_id(part_info.get("gnz_id", ""))
+                    gymnast_name = part_info.get("name", "")
+                    club_name = clubs.get(part_info.get("org_id", ""), "")
+                    discipline = unit_info.get("discipline", "UNKNOWN")
+                    level_category = resolve_level(unit_info.get("name", ""))
 
-                aa = aa_scores.get(entity_id, {})
-                division = entity_division.get(entity_id)
-                round_type = _infer_round_type(unit_info.get("name", ""), node_name_map.get(rs_id, rs_name))
+                    # Pass number
+                    pass_number = 1
+                    eid = score_data["_entityId"]
+                    ueid = score_data["_unitEventId"]
+                    event_pass_set = entity_event_passes.get(eid, {}).get(ueid, set())
+                    sorted_passes = sorted(event_pass_set)
+                    if len(sorted_passes) > 1:
+                        pass_number = sorted_passes.index(score_data["_unitPassId"]) + 1
 
-                row = {
-                    "event_name": event_info["name"],
-                    "gymnast_name": gymnast_name,
-                    "gnz_id": gnz_id,
-                    "club_name": club_name,
-                    "discipline": discipline,
-                    "level_category": level_category,
-                    "division": division,
-                    "apparatus": _normalise_apparatus(rs_name),
-                    "pass_number": pass_number,
-                    "d_score": _sanitise_float(score_data.get("d_score")),
-                    "e_score": _sanitise_float(score_data.get("e_score")),
-                    "neutral_deductions": _sanitise_float(score_data.get("neutral_deductions")),
-                    "pass_final_score": _sanitise_float(score_data.get("pass_final_score")),
-                    "apparatus_rank": _sanitise_rank(rank_value),
-                    "aa_score": _sanitise_float(aa.get("aa_score")),
-                    "aa_rank": _sanitise_rank(aa.get("aa_rank")),
-                    "round_type": round_type,
-                }
-                rows.append(row)
+                    aa = aa_scores.get(entity_id, {})
+                    division = entity_division.get(entity_id)
+                    round_type = _infer_round_type(unit_info.get("name", ""), node_name_map.get(rs_id, rs_name))
+
+                    row = {
+                        "event_name": event_info["name"],
+                        "gymnast_name": gymnast_name,
+                        "gnz_id": gnz_id,
+                        "club_name": club_name,
+                        "discipline": discipline,
+                        "level_category": level_category,
+                        "division": division,
+                        "apparatus": _normalise_apparatus(rs_name),
+                        "pass_number": pass_number,
+                        "d_score": _sanitise_float(score_data.get("d_score")),
+                        "e_score": _sanitise_float(score_data.get("e_score")),
+                        "neutral_deductions": _sanitise_float(score_data.get("neutral_deductions")),
+                        "pass_final_score": _sanitise_float(score_data.get("pass_final_score")),
+                        "apparatus_rank": _sanitise_rank(rank_value),
+                        "aa_score": _sanitise_float(aa.get("aa_score")),
+                        "aa_rank": _sanitise_rank(aa.get("aa_rank")),
+                        "round_type": round_type,
+                    }
+                    rows.append(row)
 
     rows.sort(key=lambda r: (r["gymnast_name"], r["apparatus"], r["pass_number"]))
     return event_info, rows
