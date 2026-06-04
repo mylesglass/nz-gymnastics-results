@@ -40,10 +40,11 @@ def _normalise_apparatus(name: str) -> str:
     return mapping.get(name.strip().lower(), name)
 
 
-def _build_apparatus_and_division_maps(performance_rules: list[dict]) -> tuple[dict[str, str], dict[str, str | None]]:
-    """Build maps from result_set_id -> base_apparatus and result_set_id -> division."""
+def _build_apparatus_and_division_maps(performance_rules: list[dict]) -> tuple[dict[str, str], dict[str, str | None], dict[str, str]]:
+    """Build maps from result_set_id -> base_apparatus, division, and raw_node_name."""
     apparatus_map: dict[str, str] = {}
     division_map: dict[str, str | None] = {}
+    node_name_map: dict[str, str] = {}
     for rule in performance_rules:
         nodes = rule.get("competition", {}).get("nodeTree", {}).get("nodes", [])
         for node in nodes:
@@ -57,7 +58,8 @@ def _build_apparatus_and_division_maps(performance_rules: list[dict]) -> tuple[d
                 if rs_id:
                     apparatus_map[rs_id] = base_name
                     division_map[rs_id] = division
-    return apparatus_map, division_map
+                    node_name_map[rs_id] = raw_name
+    return apparatus_map, division_map, node_name_map
 
 
 def _extract_division(node_name: str, discipline: str = "WAG") -> str | None:
@@ -94,7 +96,19 @@ def _extract_division(node_name: str, discipline: str = "WAG") -> str | None:
 
 
 def _infer_round_type(unit_name: str, node_name: str) -> str:
-    """Determine round type from unit name and competition node name."""
+    """Determine round type from unit name and competition node name.
+    
+    Checks node name for qualification/final markers, then unit name
+    for multi-day patterns like "Day Two Apparatus".
+    """
+    # Check node name for qualification/finals context
+    lower_node = node_name.lower()
+    if "qualification" in lower_node:
+        return "All Around - Qualification"
+    if "final" in lower_node:
+        return "Apparatus Finals"
+
+    # Check unit name patterns
     lower = unit_name.lower()
     if "day two" in lower or "apps day two" in lower:
         return "Apparatus Finals"
@@ -137,7 +151,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
     individuals = resolve_individuals(data.get("performanceIndividuals", []))
     units = resolve_units(data.get("units", []))
     output_map = build_output_map(data.get("performanceRules", []))
-    apparatus_map, division_map = _build_apparatus_and_division_maps(data.get("performanceRules", []))
+    apparatus_map, division_map, node_name_map = _build_apparatus_and_division_maps(data.get("performanceRules", []))
 
     # -- Build entity_id -> division from resultTableConfigs --
     # Division is encoded in competition node names referenced by resultTableConfigs
@@ -287,7 +301,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
 
                 aa = aa_scores.get(entity_id, {})
                 division = entity_division.get(entity_id)
-                round_type = _infer_round_type(unit_info.get("name", ""), rs_name)
+                round_type = _infer_round_type(unit_info.get("name", ""), node_name_map.get(rs_id, rs_name))
 
                 row = {
                     "event_name": event_info["name"],
