@@ -10,7 +10,7 @@ from app.database import get_session, init_db
 from app.models import Event, LongScore
 from app.parser import parse_json
 from app.schemas import EventListItem, EventResponse, ResultsResponse
-from app.transformer import export_csv, export_xlsx, pivot_to_wide
+from app.transformer import export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict
 
 
 @asynccontextmanager
@@ -176,6 +176,24 @@ def get_results(event_id: int):
             columns=columns,
             rows=rows,
         )
+    finally:
+        session.close()
+
+
+# ---------------------------------------------------------------------------
+# Results (wide format per discipline)
+# ---------------------------------------------------------------------------
+
+@app.get("/api/events/{event_id}/results/wide")
+def get_results_wide(event_id: int):
+    session = get_session()
+    try:
+        event = session.query(Event).filter(Event.id == event_id).first()
+        if not event:
+            raise HTTPException(404, "Event not found")
+
+        data = pivot_to_wide_dict(event_id, session)
+        return {"event": {"id": event.id, "name": event.name, "discipline": event.discipline}, **data}
     finally:
         session.close()
 

@@ -12,10 +12,10 @@ export interface EventSummary {
   score_count: number;
 }
 
-export interface ResultsResponse {
-  event: { id: number; name: string; gymnast_count: number };
-  columns: string[];
-  rows: Record<string, unknown>[];
+export interface WideResponse {
+  event: { id: number; name: string; discipline: string };
+  wag: { columns: string[]; rows: Record<string, unknown>[] };
+  mag: { columns: string[]; rows: Record<string, unknown>[] };
 }
 
 export async function uploadFile(file: File): Promise<EventSummary> {
@@ -32,8 +32,8 @@ export async function listEvents(): Promise<EventSummary[]> {
   return res.json();
 }
 
-export async function getResults(eventId: number): Promise<ResultsResponse> {
-  const res = await fetch(`${API_BASE}/api/events/${eventId}/results`);
+export async function getWideResults(eventId: number): Promise<WideResponse> {
+  const res = await fetch(`${API_BASE}/api/events/${eventId}/results/wide`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
