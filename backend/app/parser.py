@@ -40,6 +40,30 @@ def _normalise_apparatus(name: str) -> str:
     return mapping.get(name.strip().lower(), name)
 
 
+def _sanitise_float(value: object) -> float | None:
+    """Convert a value to float, or None if it's a DNS/DNF string."""
+    if value is None:
+        return None
+    if isinstance(value, str) and value.lower() in ("dns", "dnf", "zero"):
+        return None
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return None
+
+
+def _sanitise_rank(value: object) -> int | None:
+    """Convert a rank to int, or None if it's a DNS/DNF string."""
+    if value is None:
+        return None
+    if isinstance(value, str) and value.lower() in ("dns", "dnf"):
+        return None
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return None
+
+
 def parse_json(data: dict) -> tuple[dict, list[dict]]:
     clubs = resolve_clubs(data.get("eventOrganizations", []))
     participants = resolve_participants(data.get("eventParticipants", []))
@@ -175,13 +199,13 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                     "division": None,
                     "apparatus": _normalise_apparatus(rs_name),
                     "pass_number": pass_number,
-                    "d_score": score_data.get("d_score"),
-                    "e_score": score_data.get("e_score"),
-                    "neutral_deductions": score_data.get("neutral_deductions"),
-                    "pass_final_score": score_data.get("pass_final_score"),
-                    "apparatus_rank": rank_value,
-                    "aa_score": aa.get("aa_score"),
-                    "aa_rank": aa.get("aa_rank"),
+                    "d_score": _sanitise_float(score_data.get("d_score")),
+                    "e_score": _sanitise_float(score_data.get("e_score")),
+                    "neutral_deductions": _sanitise_float(score_data.get("neutral_deductions")),
+                    "pass_final_score": _sanitise_float(score_data.get("pass_final_score")),
+                    "apparatus_rank": _sanitise_rank(rank_value),
+                    "aa_score": _sanitise_float(aa.get("aa_score")),
+                    "aa_rank": _sanitise_rank(aa.get("aa_rank")),
                     "round_type": None,
                 }
                 rows.append(row)

@@ -35,14 +35,14 @@
 - [x] `units` -> unit name, discipline
 - [x] **Test:** 21/21 unit tests with mock data
 
-### Step 5: JSON Parser (Long Format)
-- [ ] Create `backend/app/parser.py`
-- [ ] Parse uploaded JSON, resolve all IDs, decode scores, extract rankings
-- [ ] Produce long-format rows: one per gymnast per apparatus pass
-- [ ] Handle DNS, Zero, multi-pass vaults, multi-unit gymnasts
-- [ ] Store in SQLite via SQLAlchemy
-- [ ] Re-upload: delete existing event data, re-parse
-- [ ] **Test:** End-to-end test with real JSON file from `data-collection/2026/`
+### Step 5: JSON Parser (Long Format) ✅
+- [x] Create `backend/app/parser.py`
+- [x] Parse uploaded JSON, resolve all IDs, decode scores, extract rankings
+- [x] Produce long-format rows: one per gymnast per apparatus pass
+- [x] Handle DNS, Zero, multi-pass vaults, multi-unit gymnasts
+- [x] Store in SQLite via SQLAlchemy
+- [x] Re-upload: delete existing event data, re-parse
+- [x] **Test:** 51/51 tests (13 parser tests against hve-2026.json and mgi-wag-2026.json)
 
 ### Step 6: FastAPI Endpoints
 - [ ] Create `backend/app/main.py`
