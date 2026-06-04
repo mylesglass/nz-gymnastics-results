@@ -74,9 +74,9 @@
 - [x] Sortable columns, CSV/XLSX download buttons
 - [x] **Test:** Builds successfully with `npm run build`
 
-### Step 10: Docker & Polish
-- [ ] Backend Dockerfile (python:3.12-slim)
-- [ ] Frontend Dockerfile (node:20-alpine, adapter-node)
-- [ ] docker-compose.yml final configuration
-- [ ] Volume mount for SQLite persistence
-- [ ] **Test:** Full `docker compose up` end-to-end
+### Step 10: Docker & Polish ✅
+- [x] Backend Dockerfile (python:3.12-slim, ~17s build)
+- [x] Frontend Dockerfile (node:20-alpine, ~7min first build with npm install)
+- [x] docker-compose.yml with volume mounts for dev hot-reload
+- [x] Volume mount for SQLite persistence
+- [x] **Test:** Full `docker compose up` end-to-end verified
