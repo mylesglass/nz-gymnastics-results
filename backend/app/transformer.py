@@ -181,14 +181,13 @@ def pivot_to_wide_dict(event_id: int, session) -> dict:
     agg_map["club_name"] = "first"
     agg_map["level_category"] = "first"
     agg_map["division"] = "first"
-    agg_map["round_type"] = "first"
 
     grouped = df.groupby(
-        ["gymnast_name", "aa_score", "apparatus"], sort=False, dropna=False
+        ["gymnast_name", "round_type", "aa_score", "apparatus"], sort=False, dropna=False
     ).agg(agg_map).reset_index()
 
     pivot = grouped.pivot_table(
-        index=["gymnast_name", "aa_score"],
+        index=["gymnast_name", "round_type"],
         columns="apparatus",
         values=score_cols + ["apparatus_rank"],
         aggfunc="first",
@@ -205,12 +204,12 @@ def pivot_to_wide_dict(event_id: int, session) -> dict:
     pivot.columns = flat_cols
     pivot = pivot.reset_index()
 
-    meta = df.drop_duplicates(subset=["gymnast_name", "aa_score"], keep="first")[
-        ["gymnast_name", "aa_score", "gnz_id", "club_name", "level_category",
-         "division", "round_type", "aa_rank"]
+    meta = df.drop_duplicates(subset=["gymnast_name", "round_type"], keep="first")[
+        ["gymnast_name", "round_type", "aa_score", "gnz_id", "club_name", "level_category",
+         "division", "aa_rank"]
     ].copy()
 
-    combined = pivot.merge(meta, on=["gymnast_name", "aa_score"], how="left", suffixes=("", "_y"))
+    combined = pivot.merge(meta, on=["gymnast_name", "round_type"], how="left", suffixes=("", "_y"))
     for col in list(combined.columns):
         if col.endswith("_y"):
             del combined[col]
@@ -244,15 +243,88 @@ def pivot_to_wide_dict(event_id: int, session) -> dict:
         out_rows = []
         for row in all_rows:
             if any(row.get(f"{p}-total") is not None for p in prefixes):
-                key = (row.get("name"), row.get("aa-score"), row.get("round-type"))
+                key = (row.get("name"), row.get("round-type"))
                 if key not in seen:
                     seen.add(key)
-                    out_row = {col: row.get(col) for col in columns}
+                    out_row = _build_wide_row(row, prefixes, columns)
                     out_rows.append(out_row)
 
         result[disc_key] = {"columns": columns, "rows": out_rows}
 
     return result
+
+
+def _build_wide_row(row: dict, prefixes: list[str], columns: list[str]) -> dict:
+    """Build a wide row, filling missing apparatus with DNS and handling AA DNF."""
+    out = {}
+
+    completed_total = 0.0
+    completed_count = 0
+    expected_count = len(prefixes)
+
+    for p in prefixes:
+        total = row.get(f"{p}-total")
+        rank = row.get(f"{p}-rank")
+        d = row.get(f"{p}-d")
+        e = row.get(f"{p}-e")
+        n = row.get(f"{p}-n")
+
+        if total is not None:
+            completed_total += float(total)
+            completed_count += 1
+            out[f"{p}-total"] = _fmt3(total)
+            out[f"{p}-d"] = _fmt1(d) if d is not None else None
+            out[f"{p}-e"] = _fmt3(e) if e is not None else None
+            out[f"{p}-n"] = _fmt1(n) if n is not None else 0.0
+            out[f"{p}-rank"] = rank
+        else:
+            out[f"{p}-total"] = "DNS"
+            out[f"{p}-d"] = None
+            out[f"{p}-e"] = None
+            out[f"{p}-n"] = None
+            out[f"{p}-rank"] = "DNS"
+
+    # AA handling
+    aa_score = row.get("aa-score")
+    aa_rank = row.get("aa-rank")
+
+    if aa_score is not None:
+        out["aa-score"] = _fmt3(aa_score)
+        out["aa-rank"] = aa_rank
+    elif completed_count < expected_count and completed_count > 0:
+        out["aa-score"] = _fmt3(completed_total)
+        out["aa-rank"] = "DNF"
+    else:
+        out["aa-score"] = None
+        out["aa-rank"] = None
+
+    # Copy metadata columns
+    for col in columns:
+        if col not in out:
+            if col == "round-type":
+                out[col] = row.get("round-type", "")
+            else:
+                out[col] = row.get(col)
+
+    return out
+
+
+def _fmt1(val: object) -> str | None:
+    if val is None:
+        return None
+    try:
+        return f"{float(val):.1f}"
+    except (ValueError, TypeError):
+        return str(val)
+
+
+def _fmt3(val: object) -> str | None:
+    if val is None:
+        return None
+    try:
+        return f"{float(val):.3f}"
+    except (ValueError, TypeError):
+        return str(val)
 
 
 def _wide_column_list_for_prefixes(prefixes: list[str], present_apps: set[str]) -> list[str]:
