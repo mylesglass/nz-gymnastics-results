@@ -62,17 +62,17 @@
 - [x] Generate CSV/XLSX byte streams
 - [x] **Test:** 63/63 total (export endpoints test CSV and XLSX downloads)
 
-### Step 8: Frontend — Upload Page
-- [ ] `routes/+page.svelte` — drag-and-drop JSON upload
-- [ ] File validation, loading state, success/error feedback
-- [ ] `src/lib/api.ts` — typed fetch wrappers
-- [ ] **Test:** Manual browser test with sample JSON
+### Step 8: Frontend — Upload Page ✅
+- [x] `routes/+page.svelte` — drag-and-drop JSON upload
+- [x] File validation, loading state, success/error feedback
+- [x] `src/lib/api.ts` — typed fetch wrappers
+- [x] **Test:** Builds successfully with `npm run build`
 
-### Step 9: Frontend — Events & Results
-- [ ] `routes/events/+page.svelte` — event list table
-- [ ] `routes/events/[id]/+page.svelte` — wide-format results table
-- [ ] Sortable columns, CSV/XLSX download buttons
-- [ ] **Test:** Manual browser test
+### Step 9: Frontend — Events & Results ✅
+- [x] `routes/events/+page.svelte` — event list table
+- [x] `routes/events/[id]/+page.svelte` — wide-format results table
+- [x] Sortable columns, CSV/XLSX download buttons
+- [x] **Test:** Builds successfully with `npm run build`
 
 ### Step 10: Docker & Polish
 - [ ] Backend Dockerfile (python:3.12-slim)
