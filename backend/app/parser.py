@@ -155,8 +155,12 @@ def _sanitise_rank(value: object) -> int | None:
 def parse_json(data: dict) -> tuple[dict, list[dict]]:
     clubs = resolve_clubs(data.get("eventOrganizations", []))
     participants = resolve_participants(data.get("eventParticipants", []))
+
+    # Compute event discipline early so it can be used as hint for units
+    event_discipline_hint = _infer_event_discipline(data)
+
     individuals = resolve_individuals(data.get("performanceIndividuals", []))
-    units = resolve_units(data.get("units", []))
+    units = resolve_units(data.get("units", []), event_discipline_hint)
     output_map = build_output_map(data.get("performanceRules", []))
     apparatus_map, division_map, node_name_map = _build_apparatus_and_division_maps(data.get("performanceRules", []))
 
