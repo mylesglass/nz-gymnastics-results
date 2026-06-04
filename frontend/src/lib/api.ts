@@ -1,6 +1,6 @@
 import { dev } from "$app/environment";
 
-const API_BASE = dev ? "http://localhost:8000" : "http://backend:8000";
+const API_BASE = dev ? "" : "http://backend:8000";
 
 export interface EventSummary {
   id: number;
@@ -12,19 +12,10 @@ export interface EventSummary {
   score_count: number;
 }
 
-export interface ResultRow {
-  gnz_id: string;
-  name: string;
-  club: string;
-  level: string;
-  division: string;
-  [key: string]: unknown;
-}
-
 export interface ResultsResponse {
-  event: EventSummary;
+  event: { id: number; name: string; gymnast_count: number };
   columns: string[];
-  rows: ResultRow[];
+  rows: Record<string, unknown>[];
 }
 
 export async function uploadFile(file: File): Promise<EventSummary> {
