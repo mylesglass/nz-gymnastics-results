@@ -1,10 +1,15 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getResults, getExportUrl } from "$lib/api";
+  import { getWideResults, getExportUrl } from "$lib/api";
   import { page } from "$app/stores";
 
   let loading = $state(true);
-  let data = $state<{ columns: string[]; rows: Record<string, unknown>[]; event: { name: string } } | null>(null);
+  let eventName = $state("");
+  let eventDisc = $state("");
+  let activeTab = $state("wag");
+  let columns = $state<string[]>([]);
+  let rows = $state<Record<string, unknown>[]>([]);
+  let allData = $state<Record<string, { columns: string[]; rows: Record<string, unknown>[] }>>({});
   let sortCol = $state<string | null>(null);
   let sortAsc = $state(true);
 
@@ -12,27 +17,49 @@
     const id = $page.params.id;
     if (!id) return;
     loading = true;
-    getResults(Number(id)).then((r) => {
-      data = r;
+    getWideResults(Number(id)).then((r) => {
+      eventName = r.event.name;
+      eventDisc = r.event.discipline;
+      allData = {};
+      if (r.wag) allData.wag = r.wag;
+      if (r.mag) allData.mag = r.mag;
+      const keys = Object.keys(allData);
+      if (keys.length > 0) {
+        activeTab = keys[0];
+        applyTab(keys[0]);
+      }
     }).catch(() => {
-      data = null;
+      allData = {};
     }).finally(() => {
       loading = false;
     });
   });
 
+  function applyTab(tab: string) {
+    activeTab = tab;
+    const d = allData[tab];
+    if (d) {
+      columns = d.columns;
+      rows = d.rows;
+    } else {
+      columns = [];
+      rows = [];
+    }
+    sortCol = null;
+  }
+
   function sortedRows() {
-    if (!data) return [];
-    let rows = [...data.rows];
+    if (!rows) return [];
+    let result = [...rows];
     if (sortCol) {
-      rows.sort((a, b) => {
+      result.sort((a, b) => {
         const va = a[sortCol] ?? "";
         const vb = b[sortCol] ?? "";
-        const cmp = String(va).localeCompare(String(vb), undefined, { numeric: true });
+        const cmp = String(va).localeCompare(String(vb), undefined, { numeric: true, sensitivity: "base" });
         return sortAsc ? cmp : -cmp;
       });
     }
-    return rows;
+    return result;
   }
 
   function toggleSort(col: string) {
@@ -49,7 +76,7 @@
   <title>Results — NZ Gymnastics Results</title>
 </svelte:head>
 
-<h1>{data?.event?.name ?? "Results"}</h1>
+<h1>{eventName || "Results"}</h1>
 
 <a href="/events">← All events</a>
 
@@ -60,14 +87,26 @@
 
 {#if loading}
   <p>Loading...</p>
-{:else if !data}
+{:else if Object.keys(allData).length === 0}
   <p class="error">Event not found</p>
 {:else}
+  <div class="tabs">
+    {#each Object.keys(allData) as tab}
+      <button
+        class="tab"
+        class:active={activeTab === tab}
+        onclick={() => applyTab(tab)}
+      >
+        {tab.toUpperCase()}
+      </button>
+    {/each}
+  </div>
+
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
-          {#each data.columns as col}
+          {#each columns as col}
             <th onclick={() => toggleSort(col)}>
               {col}
               {#if sortCol === col}
@@ -80,7 +119,7 @@
       <tbody>
         {#each sortedRows() as row}
           <tr>
-            {#each data.columns as col}
+            {#each columns as col}
               <td>{row[col] ?? ""}</td>
             {/each}
           </tr>
@@ -91,6 +130,30 @@
 {/if}
 
 <style>
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin: 1rem 0;
+  }
+  .tab {
+    padding: 0.5rem 1.25rem;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+  }
+  .tab:first-child {
+    border-radius: 6px 0 0 6px;
+  }
+  .tab:last-child {
+    border-radius: 0 6px 6px 0;
+  }
+  .tab.active {
+    background: #3b82f6;
+    color: #fff;
+    border-color: #3b82f6;
+  }
   .exports {
     margin: 1rem 0;
     display: flex;

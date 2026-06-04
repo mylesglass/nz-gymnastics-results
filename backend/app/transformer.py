@@ -11,20 +11,8 @@ MAG_ORDER = ["FX", "PH", "SR", "VT", "PB", "HB"]
 _SCORE_SHORT = {"d_score": "d", "e_score": "e", "n_score": "n", "total_score": "total"}
 
 
-def _determine_apparatus_order(present_apps: set[str]) -> list[str]:
-    has_mag = any(a in present_apps for a in ["PH", "SR", "PB", "HB"])
-    has_wag = any(a in present_apps for a in ["UB", "BB"])
-    result = []
-    if has_wag:
-        result.extend(WAG_ORDER)
-    if has_mag:
-        for a in MAG_ORDER:
-            if a not in result:
-                result.append(a)
-    return [a for a in result if a in present_apps]
-
-
 def pivot_to_wide(event_id: int, session, event_name: str, event_date: str) -> pd.DataFrame:
+    """Pivot to wide format (used for CSV/XLSX exports)."""
     scores = (
         session.query(LongScore)
         .filter(LongScore.event_id == event_id)
@@ -78,15 +66,15 @@ def pivot_to_wide(event_id: int, session, event_name: str, event_date: str) -> p
 
     flat_cols = []
     for col in pivot.columns:
-        app, metric = col
+        metric, app = col
         if metric == "apparatus_rank":
             flat_cols.append(f"{app.lower()}-rank")
         else:
-            flat_cols.append(f"{app.lower()}-{_SCORE_SHORT.get(metric, metric)}")
+            short = _SCORE_SHORT.get(metric, metric)
+            flat_cols.append(f"{app.lower()}-{short}")
     pivot.columns = flat_cols
     pivot = pivot.reset_index()
 
-    # Merge metadata
     meta = df.drop_duplicates(subset=["gymnast_name", "aa_score"], keep="first")[
         ["gymnast_name", "aa_score", "gnz_id", "club_name", "level_category", "aa_rank"]
     ].copy()
@@ -120,6 +108,146 @@ def pivot_to_wide(event_id: int, session, event_name: str, event_date: str) -> p
             result[col] = None
 
     return result[[c for c in expected if c in result.columns]]
+
+
+def _determine_apparatus_order(present_apps: set[str]) -> list[str]:
+    has_mag = any(a in present_apps for a in ["PH", "SR", "PB", "HB"])
+    has_wag = any(a in present_apps for a in ["UB", "BB"])
+    result = []
+    if has_wag:
+        result.extend(WAG_ORDER)
+    if has_mag:
+        for a in MAG_ORDER:
+            if a not in result:
+                result.append(a)
+    return [a for a in result if a in present_apps]
+
+
+def pivot_to_wide_dict(event_id: int, session) -> dict:
+    """Pivot long-format scores into wide-format rows per discipline.
+
+    Returns dict: {wag: {columns, rows}, mag: {columns, rows}}
+    """
+    scores = (
+        session.query(LongScore)
+        .filter(LongScore.event_id == event_id)
+        .all()
+    )
+    if not scores:
+        return {}
+
+    long_rows = []
+    for s in scores:
+        long_rows.append({
+            "gymnast_name": s.gymnast_name,
+            "gnz_id": s.gnz_id or "",
+            "club_name": s.club_name or "",
+            "discipline": s.discipline,
+            "level_category": s.level_category or "",
+            "division": s.division or "",
+            "round_type": s.round_type or "",
+            "apparatus": s.apparatus,
+            "d_score": s.d_score,
+            "e_score": s.e_score,
+            "n_score": s.neutral_deductions,
+            "total_score": s.pass_final_score,
+            "apparatus_rank": s.apparatus_rank,
+            "aa_score": s.aa_score,
+            "aa_rank": s.aa_rank,
+        })
+
+    df = pd.DataFrame(long_rows)
+    present_apps = set(df["apparatus"].unique())
+
+    has_wag = any(a in present_apps for a in ["UB", "BB"])
+    has_mag = any(a in present_apps for a in ["PH", "SR", "PB", "HB"])
+
+    result: dict[str, dict] = {}
+
+    # Build wide data once then split by discipline
+    sentinel = -999999.0
+    df["aa_score"] = df["aa_score"].fillna(sentinel)
+
+    score_cols = ["d_score", "e_score", "n_score", "total_score"]
+    agg_map = {c: "mean" for c in score_cols}
+    agg_map["apparatus_rank"] = "first"
+    agg_map["gnz_id"] = "first"
+    agg_map["club_name"] = "first"
+    agg_map["level_category"] = "first"
+    agg_map["division"] = "first"
+    agg_map["round_type"] = "first"
+
+    grouped = df.groupby(
+        ["gymnast_name", "aa_score", "apparatus"], sort=False, dropna=False
+    ).agg(agg_map).reset_index()
+
+    pivot = grouped.pivot_table(
+        index=["gymnast_name", "aa_score"],
+        columns="apparatus",
+        values=score_cols + ["apparatus_rank"],
+        aggfunc="first",
+    )
+
+    flat_cols = []
+    for col in pivot.columns:
+        metric, app = col
+        if metric == "apparatus_rank":
+            flat_cols.append(f"{app.lower()}-rank")
+        else:
+            short = _SCORE_SHORT.get(metric, metric)
+            flat_cols.append(f"{app.lower()}-{short}")
+    pivot.columns = flat_cols
+    pivot = pivot.reset_index()
+
+    meta = df.drop_duplicates(subset=["gymnast_name", "aa_score"], keep="first")[
+        ["gymnast_name", "aa_score", "gnz_id", "club_name", "level_category",
+         "division", "round_type", "aa_rank"]
+    ].copy()
+
+    combined = pivot.merge(meta, on=["gymnast_name", "aa_score"], how="left", suffixes=("", "_y"))
+    for col in list(combined.columns):
+        if col.endswith("_y"):
+            del combined[col]
+
+    combined["aa_score"] = combined["aa_score"].replace(sentinel, None)
+    combined.rename(columns={
+        "gymnast_name": "name",
+        "gnz_id": "gnz-id",
+        "club_name": "club",
+        "level_category": "step",
+        "aa_rank": "aa-rank",
+        "aa_score": "aa-score",
+    }, inplace=True)
+
+    all_rows = combined.to_dict(orient="records")
+
+    for disc_key, prefixes in [("wag", ["vt", "ub", "bb", "fx"]), ("mag", ["fx", "ph", "sr", "vt", "pb", "hb"])]:
+        if (disc_key == "wag" and not has_wag) or (disc_key == "mag" and not has_mag):
+            continue
+
+        columns = _wide_column_list_for_prefixes(prefixes, present_apps)
+        seen = set()
+        out_rows = []
+        for row in all_rows:
+            if any(row.get(f"{p}-total") is not None for p in prefixes):
+                key = (row.get("name"), row.get("aa-score"), row.get("round-type"))
+                if key not in seen:
+                    seen.add(key)
+                    out_row = {col: row.get(col) for col in columns}
+                    out_rows.append(out_row)
+
+        result[disc_key] = {"columns": columns, "rows": out_rows}
+
+    return result
+
+
+def _wide_column_list_for_prefixes(prefixes: list[str], present_apps: set[str]) -> list[str]:
+    cols = ["gnz-id", "name", "club", "step", "division", "round-type"]
+    for prefix in prefixes:
+        for suffix in ["total", "d", "e", "n", "rank"]:
+            cols.append(f"{prefix}-{suffix}")
+    cols.extend(["aa-score", "aa-rank"])
+    return cols
 
 
 def export_csv(df: pd.DataFrame) -> bytes:
