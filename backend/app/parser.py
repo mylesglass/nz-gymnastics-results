@@ -93,6 +93,20 @@ def _extract_division(node_name: str, discipline: str = "WAG") -> str | None:
     return None
 
 
+def _infer_round_type(unit_name: str, node_name: str) -> str:
+    """Determine round type from unit name and competition node name."""
+    lower = unit_name.lower()
+    if "day two" in lower or "apps day two" in lower:
+        return "Apparatus Finals"
+    if "aa" in lower and "team" in lower:
+        return "All Around, Teams"
+    if "aa" in lower or "all around" in lower or "apps" in lower:
+        return "All Around"
+    if "team" in lower:
+        return "Team"
+    return "All Around"
+
+
 def _sanitise_float(value: object) -> float | None:
     """Convert a value to float, or None if it's a DNS/DNF string."""
     if value is None:
@@ -273,6 +287,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
 
                 aa = aa_scores.get(entity_id, {})
                 division = entity_division.get(entity_id)
+                round_type = _infer_round_type(unit_info.get("name", ""), rs_name)
 
                 row = {
                     "event_name": event_info["name"],
@@ -283,7 +298,6 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                     "level_category": level_category,
                     "division": division,
                     "apparatus": _normalise_apparatus(rs_name),
-                    "apparatus": _normalise_apparatus(rs_name),
                     "pass_number": pass_number,
                     "d_score": _sanitise_float(score_data.get("d_score")),
                     "e_score": _sanitise_float(score_data.get("e_score")),
@@ -292,7 +306,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                     "apparatus_rank": _sanitise_rank(rank_value),
                     "aa_score": _sanitise_float(aa.get("aa_score")),
                     "aa_rank": _sanitise_rank(aa.get("aa_rank")),
-                    "round_type": None,
+                    "round_type": round_type,
                 }
                 rows.append(row)
 
