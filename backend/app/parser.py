@@ -29,6 +29,19 @@ def _build_apparatus_map(performance_rules: list[dict]) -> dict[str, str]:
 
 
 def _normalise_apparatus(name: str) -> str:
+    """Normalise apparatus name to standard short form.
+
+    Strips division/group/final suffixes before matching:
+      "Balance Beam | Over"      -> "Balance Beam" -> "BB"
+      "Vault - Final"            -> "Vault"        -> "VT"
+      "Floor | Group 3"          -> "Floor"        -> "FX"
+      "Uneven Bars | DIVISION A" -> "Uneven Bars"  -> "UB"
+    """
+    clean = name.strip().lower()
+    # Strip everything after " |", " -", trailing " final", " qualification", " finale"
+    for sep in [" |", " -", " final", " qualification", " finale"]:
+        if sep in clean:
+            clean = clean.split(sep)[0].strip()
     mapping = {
         "floor": "FX", "vault": "VT", "beam": "BB",
         "balance beam": "BB", "uneven bars": "UB", "u-bars": "UB",
@@ -37,7 +50,7 @@ def _normalise_apparatus(name: str) -> str:
         "p-bars": "PB", "parallel bars": "PB",
         "h-bar": "HB", "horizontal bar": "HB",
     }
-    return mapping.get(name.strip().lower(), name)
+    return mapping.get(clean, name)
 
 
 def _build_apparatus_and_division_maps(performance_rules: list[dict]) -> tuple[dict[str, str], dict[str, str | None], dict[str, str]]:
@@ -63,24 +76,18 @@ def _build_apparatus_and_division_maps(performance_rules: list[dict]) -> tuple[d
 
 
 def _extract_division(node_name: str, discipline: str = "WAG") -> str | None:
-    """Determine division from a competition node name.
-
-    Node names encode divisions like "All-around > U" (UNDER), "Floor > O" (OVER).
-    Also checks for "under", "over", "international", standalone A/B marker.
-    """
     lower = node_name.lower()
 
-    for tag in ["under", "division a"]:
+    for tag in ["under", "unders", "division a"]:
         if tag in lower:
             return "UNDER"
-    for tag in ["over", "division b"]:
+    for tag in ["over", "overs", "division b"]:
         if tag in lower:
             return "OVER"
     for tag in ["international", " int"]:
         if tag in lower:
             return "INTERNATIONAL"
 
-    # Check for "> U" / "> O" suffix markers
     if " > u" in lower:
         return "UNDER"
     if " > o" in lower:
@@ -230,8 +237,10 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
     # Strategy:
     #   1-set tables -> individual apparatus rankings (emit rows with score + rank)
     #   Multi-set tables -> capture AA aggregate scores only
+    #   Deduplicate by score _id (same physical score may appear in multiple result sets)
     aa_scores: dict[str, dict] = {}
     rows: list[dict] = []
+    emitted_score_ids: set[str] = set()
 
     for prt in data.get("performanceResultTables", []):
         result_sets = prt.get("resultSets", [])
@@ -277,6 +286,9 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                 score_data = scores_by_id.get(item_id)
                 if score_data is None:
                     continue
+                if item_id in emitted_score_ids:
+                    continue
+                emitted_score_ids.add(item_id)
 
                 # Resolve gymnast
                 ind_info = individuals.get(entity_id, {})
