@@ -2,6 +2,7 @@
 
 import io
 
+import math
 import pandas as pd
 
 from app.models import LongScore
@@ -106,6 +107,11 @@ def pivot_to_wide(event_id: int, session, event_name: str, event_date: str) -> p
     for col in expected:
         if col not in result.columns:
             result[col] = None
+
+    # Convert NaN to None
+    for col in result.columns:
+        if result[col].dtype == "float64":
+            result[col] = result[col].where(result[col].notna(), None)
 
     return result[[c for c in expected if c in result.columns]]
 
@@ -220,6 +226,12 @@ def pivot_to_wide_dict(event_id: int, session) -> dict:
     }, inplace=True)
 
     all_rows = combined.to_dict(orient="records")
+
+    # Convert NaN to None for JSON compliance
+    for row in all_rows:
+        for k, v in row.items():
+            if isinstance(v, float) and math.isnan(v):
+                row[k] = None
 
     for disc_key, prefixes in [("wag", ["vt", "ub", "bb", "fx"]), ("mag", ["fx", "ph", "sr", "vt", "pb", "hb"])]:
         if (disc_key == "wag" and not has_wag) or (disc_key == "mag" and not has_mag):
