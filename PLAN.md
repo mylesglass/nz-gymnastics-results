@@ -53,14 +53,14 @@
 - [ ] `GET /api/events/{id}/export/xlsx` *(requires Step 7)*
 - [x] **Test:** 9/9 httpx integration tests against real data (60/60 total)
 
-### Step 7: Pandas Transformer
-- [ ] Create `backend/app/transformer.py`
-- [ ] Query long-format from SQLite
-- [ ] Pivot to wide format: apparatus columns per gymnast per round
-- [ ] WAG: VT, UB, BB, FX + AA
-- [ ] MAG: FX, PH, SR, VT, PB, HB + AA
-- [ ] Generate CSV/XLSX byte streams
-- [ ] **Test:** Verify wide-format output matches expected schema
+### Step 7: Pandas Transformer ✅
+- [x] Create `backend/app/transformer.py`
+- [x] Query long-format from SQLite
+- [x] Pivot to wide format: apparatus columns per gymnast per round
+- [x] WAG: VT, UB, BB, FX + AA
+- [x] MAG: FX, PH, SR, VT, PB, HB + AA
+- [x] Generate CSV/XLSX byte streams
+- [x] **Test:** 63/63 total (export endpoints test CSV and XLSX downloads)
 
 ### Step 8: Frontend — Upload Page
 - [ ] `routes/+page.svelte` — drag-and-drop JSON upload
