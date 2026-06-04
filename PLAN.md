@@ -27,13 +27,13 @@
 - [x] Handle 4-key (normal) and 5-key (DNS) variants
 - [x] **Test:** 13/13 unit tests + verified against real hve-2026.json data
 
-### Step 4: ID Resolver
-- [ ] Create `backend/app/resolver.py` — lookup maps for the flat JSON structure
-- [ ] `eventParticipants` -> name, GNZ ID, club
-- [ ] `performanceIndividuals` -> link entity IDs to participants and units
-- [ ] `eventOrganizations` -> club name
-- [ ] `units` -> unit name, discipline
-- [ ] **Test:** Unit tests with mock data
+### Step 4: ID Resolver ✅
+- [x] Create `backend/app/resolver.py` — lookup maps for the flat JSON structure
+- [x] `eventParticipants` -> name, GNZ ID, club
+- [x] `performanceIndividuals` -> link entity IDs to participants and units
+- [x] `eventOrganizations` -> club name
+- [x] `units` -> unit name, discipline
+- [x] **Test:** 21/21 unit tests with mock data
 
 ### Step 5: JSON Parser (Long Format)
 - [ ] Create `backend/app/parser.py`
