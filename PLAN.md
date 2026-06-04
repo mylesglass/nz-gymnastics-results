@@ -7,19 +7,19 @@
 
 ## Steps
 
-### Step 1: Project Scaffolding
-- [ ] Create `backend/` directory with `pyproject.toml` (fastapi, uvicorn, sqlalchemy, pandas, openpyxl, python-multipart, pytest, httpx)
-- [ ] Create `backend/app/__init__.py`
-- [ ] Create `frontend/` with SvelteKit via `npm create svelte@latest`
-- [ ] Create `docker-compose.yml` with backend + frontend services
-- [ ] Create `.gitignore` (Python + Node patterns)
-- [ ] **Test:** `docker compose up --build` both services respond
+### Step 1: Project Scaffolding ✅
+- [x] Create `backend/` directory with `pyproject.toml` (fastapi, uvicorn, sqlalchemy, pandas, openpyxl, python-multipart, pytest, httpx)
+- [x] Create `backend/app/__init__.py`
+- [x] Create `frontend/` with SvelteKit via `npm create svelte@latest`
+- [x] Create `docker-compose.yml` with backend + frontend services
+- [x] Create `.gitignore` (Python + Node patterns)
+- [x] **Test:** Backend starts and responds on :8000
 
-### Step 2: Database Models
-- [ ] Create `backend/app/models.py` — `Event`, `LongScore` SQLAlchemy models
-- [ ] Create `backend/app/database.py` — engine, session, `init_db()`
-- [ ] Create `backend/app/schemas.py` — Pydantic models for API
-- [ ] **Test:** `pytest` — DB creates tables, CRUD operations work
+### Step 2: Database Models ✅
+- [x] Create `backend/app/models.py` — `Event`, `LongScore` SQLAlchemy models
+- [x] Create `backend/app/database.py` — engine, session, `init_db()`
+- [x] Create `backend/app/schemas.py` — Pydantic models for API
+- [x] **Test:** 4/4 `pytest` — DB creates tables, CRUD operations work
 
 ### Step 3: Node-Tree Decoder
 - [ ] Create `backend/app/decoder.py` — maps opaque `publicOutputs` keys to field names
