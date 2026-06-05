@@ -64,9 +64,15 @@
       class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs min-w-48"
       tabindex="0"
     >
-      <div class="text-[0.65rem] opacity-70 mb-1 text-left">
-        {row.name} — {appLabel}
+      <div class="flex justify-between">
+        <div class="text-[0.65rem] opacity-70 mb-1">
+          {row.name}
+        </div>
+        <div class="text-[0.65rem] opacity-70 mb-1">
+          {appLabel}
+        </div>
       </div>
+
       <div class="divider my-1"></div>
       <div class="flex flex-col gap-0.5">
         <div class="flex justify-between gap-4">

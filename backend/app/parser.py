@@ -1,5 +1,8 @@
 """Parse Scoreholder JSON into long-format rows for SQLite storage."""
 
+import json
+from pathlib import Path
+
 from app.decoder import build_output_map, decode_public_outputs
 from app.resolver import (
     fix_gnz_id,
@@ -9,6 +12,30 @@ from app.resolver import (
     resolve_level,
     resolve_units,
 )
+
+# Load club name normalisation data
+_CLUB_DATA_PATH = Path(__file__).resolve().parent.parent / "clubs_and_regions.json"
+_NAME_TO_CANONICAL: dict[str, str] = {}
+_NAME_TO_REGION: dict[str, str] = {}
+try:
+    with open(_CLUB_DATA_PATH) as _f:
+        _club_data = json.load(_f)
+    _NAME_TO_CANONICAL = {k: v["name"] for k, v in _club_data["lookup"].items()}
+    _NAME_TO_REGION = {k: v["region"] for k, v in _club_data["lookup"].items()}
+except (FileNotFoundError, json.JSONDecodeError):
+    pass
+
+
+def _normalise_club(club_name: str, is_nationals: bool) -> str:
+    """Resolve a club name to its canonical form, or to region for Nationals."""
+    lower = club_name.lower().strip()
+    canonical = _NAME_TO_CANONICAL.get(lower)
+    if canonical is None:
+        return club_name
+    if is_nationals:
+        region = _NAME_TO_REGION.get(lower)
+        return region if region else club_name
+    return canonical
 
 
 def _build_apparatus_map(performance_rules: list[dict]) -> dict[str, str]:
@@ -244,11 +271,14 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
 
     # -- Event metadata --
     event_raw = data.get("events", [{}])[0]
+    event_name = event_raw.get("name", "")
+    is_nationals = "national" in event_name.lower()
     event_info = {
-        "name": event_raw.get("name", ""),
+        "name": event_name,
         "start_date": event_raw.get("startDate", ""),
         "end_date": event_raw.get("endDate", ""),
         "discipline": _infer_event_discipline(data),
+        "year": _extract_year(event_raw.get("startDate", "")),
     }
 
     # -- Build a lookup from result-set id -> (unitId, result table) --
@@ -337,7 +367,10 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                     unit_info = units.get(unit_id, {})
                     gnz_id = fix_gnz_id(part_info.get("gnz_id", ""))
                     gymnast_name = part_info.get("name", "")
-                    club_name = clubs.get(part_info.get("org_id", ""), "")
+                    club_name = _normalise_club(
+                        clubs.get(part_info.get("org_id", ""), ""),
+                        is_nationals,
+                    )
                     discipline = unit_info.get("discipline", "UNKNOWN")
                     level_category = resolve_level(unit_info.get("name", ""))
 
@@ -393,3 +426,9 @@ def _infer_event_discipline(data: dict) -> str:
     if "WAG" in disciplines and "MAG" in disciplines:
         return "WAG+MAG"
     return "UNKNOWN"
+
+
+def _extract_year(start_date: str) -> int | None:
+    if len(start_date) >= 4 and start_date[:4].isdigit():
+        return int(start_date[:4])
+    return None

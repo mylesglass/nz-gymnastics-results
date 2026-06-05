@@ -115,19 +115,33 @@ Run: `cd backend && source .venv/bin/activate && pytest`
 - Robust parsing improvements + bulk test suite
 
 ## Recent Session (this session)
-- Tailwind CSS v4 + DaisyUI v5 integration (dark theme, nav bar)
-- Restyled all frontend pages with DaisyUI components (upload, events list, results)
-- Grouped apparatus cells with rich hover tooltips (`ScoreTooltip` component)
-- Filter bar: search by name/ID, dropdowns for STEP/Level, Club, Division, Round
-- Dynamic STEP/Level column header switching between WAG/MAG tabs
-- Full-width results page layout AA/Rank last
-- Decoded `Bonus` field from publicOutputs, propagated across vault passes
-- Added `bonus` column to `LongScore` model
-- Bonus displayed in tooltips (green "+0.200" text)
-- Updated vault aggregation rules with proper level/round-type distinctions
-- Changed `_fmt3` from round → truncate (floor) with floating-point noise cleanup
-- Fixed WAG/MAG tab split: switched from apparatus-based heuristic (VT/FX matched both) to using the actual `discipline` field
-- Rewrote `pivot_to_wide()` to include all columns in CSV/XLSX exports (per-pass vault details, bonus, division, round_type)
+
+### All Results page (`/results`)
+- New `GET /api/results/wide-all` backend endpoint that queries all events, pivots each to wide format, stamps `event_name`/`event_id` on rows, and merges WAG/MAG tabs across all events
+- New `frontend/src/routes/results/+page.svelte` with same table/tooltip/filter/sort patterns as per-event page, plus Event column and Event filter
+- Client-side CSV export button
+- Added `/results` nav link
+
+### Multi-select filters
+- New `MultiSelect.svelte` component: DaisyUI dropdown with checkboxes, Clear button, shows `Label (N)` when active
+- Changed all filter state from single strings to arrays (`filterStep = $state<string[]>([])`)
+- Filter logic uses `Set.has()` (empty array = show all)
+- Applied to both per-event and all-results pages
+
+### Light/dark theme toggle
+- Inline script in `app.html` reads `localStorage.getItem("theme")` before render (prevents flash)
+- Toggle button in nav bar (sun/moon icon), updates `document.documentElement.dataset.theme` + localStorage
+- Initialized from DOM on mount
+
+### Sticky condensed header
+- Nav bar: `sticky top-0 z-50`, logo shrinks `text-xl` → `text-lg` on scroll
+- Page headers (heading + tabs + filters): `sticky top-16 z-40 bg-base-100`, condense on scroll past 60px
+- Condensed: heading `text-3xl mb-2` → `text-lg mb-0 py-1`, gaps reduced, `shadow-sm` appears
+- Loading/error states show heading normally (not sticky)
+- Applied to both per-event and all-results pages
+
+### Fixes
+- Fixed `MultiSelect` filter not updating table: changed `selected` prop from `$props()` to `$bindable()` so child-to-parent state propagates via `bind:`
 
 ## Known Edges & Gotchas
 - **WAG/MAG discipline split**: Tab assignment now uses the `discipline` field from data. Previously used apparatus presence (VT/FX appeared in both lists, causing all gymnasts to show in both tabs).
