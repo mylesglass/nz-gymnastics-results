@@ -1,10 +1,13 @@
 <script lang="ts">
+  import { page } from "$app/stores";
   import { getAllWideResults } from "$lib/api";
   import WideResultsTable from "$lib/WideResultsTable.svelte";
 
   function loadData() {
-    return getAllWideResults().then((r) => ({
-      title: "All Results",
+    const club = $page.params.club;
+    if (!club) return Promise.resolve({ title: "Club", tabs: {} });
+    return getAllWideResults({ club }).then((r) => ({
+      title: club,
       tabs: {
         ...(r.wag ? { wag: r.wag } : {}),
         ...(r.mag ? { mag: r.mag } : {}),
@@ -32,14 +35,14 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "all-results.csv";
+    a.download = `${$page.params.club || "club"}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
 </script>
 
 <svelte:head>
-  <title>All Results — NZ Gymnastics Results</title>
+  <title>Club — NZ Gymnastics Results</title>
 </svelte:head>
 
 {#snippet download({columns, rows, headerLabels})}
@@ -49,11 +52,8 @@
 {/snippet}
 
 {#snippet empty()}
-  <div class="card bg-base-200 mt-4">
-    <div class="card-body items-center text-center py-12">
-      <p class="text-base-content/70">No results yet.</p>
-      <a href="/" class="btn btn-primary btn-sm mt-2">Upload an event</a>
-    </div>
+  <div role="alert" class="alert alert-error mt-4">
+    <span>Club not found</span>
   </div>
 {/snippet}
 

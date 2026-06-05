@@ -43,11 +43,20 @@ export function getExportUrl(eventId: number, format: "csv" | "xlsx"): string {
   return `${API_BASE}/api/events/${eventId}/export/${format}`;
 }
 
-export async function getAllWideResults(): Promise<{
+export async function getAllWideResults(params?: {
+  gnz_id?: string;
+  club?: string;
+}): Promise<{
   wag?: { columns: string[]; rows: Record<string, unknown>[] };
   mag?: { columns: string[]; rows: Record<string, unknown>[] };
 }> {
-  const res = await fetch(`${API_BASE}/api/results/wide-all`);
+  let url = `${API_BASE}/api/results/wide-all`;
+  const qp = new URLSearchParams();
+  if (params?.gnz_id) qp.set("gnz_id", params.gnz_id);
+  if (params?.club) qp.set("club", params.club);
+  const qs = qp.toString();
+  if (qs) url += `?${qs}`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }

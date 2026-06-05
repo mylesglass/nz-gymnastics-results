@@ -98,3 +98,12 @@
 - [x] Clarify vault aggregation rules (STEP 6/7 avg, high-level AA best, high-level Apps avg)
 - [x] Change `_fmt3` from round to truncate (floor), with floating-point noise cleanup
 - [x] **Test:** 191/191 pytest passing
+
+### Step 13: Parser Robustness 🔲
+- [ ] Fix `"equal-discarded"` status not being filtered — causes duplicate rows from tied-then-discarded scores (31/40 files affected)
+- [ ] Add `validate_upload_structure(data)` to check for required top-level keys before parsing, returning clear error messages instead of silent empty results
+- [ ] Wrap `parse_json()` in try/except in the upload endpoint with user-friendly error responses
+- [ ] Map `"Start Value"` output in decoder.py (vault-specific field in kaitaia_2025.json)
+- [ ] Add batch validation CLI: `python -m app.validate_json path/to/file.json`
+- [ ] Add regression tests for all known edge cases (equal-discarded, Start Value, Open division, unit name patterns, known structural variations)
+- [ ] **Test:** All 40+ real JSON files parse without regression
