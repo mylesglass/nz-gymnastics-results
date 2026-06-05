@@ -44,8 +44,8 @@ Core logic:
 8. Sanitise floats/ranks (DNS/DNF → None)
 
 ### 4. transformer.py — `pivot_to_wide()` / `pivot_to_wide_dict()`
-- `pivot_to_wide()`: For CSV/XLSX — groups by gymnast+aa_score, averages per-app scores, produces flat column list
-- `pivot_to_wide_dict()`: For `/results/wide` endpoint — per-pass columns, level-aware vault aggregation, WAG/MAG split tabs
+- `pivot_to_wide()`: For CSV/XLSX — reuses `pivot_to_wide_dict()` to build rich wide rows, then flattens WAG+MAG into a single DataFrame. Includes all columns: meta, apparatus display scores, per-pass vault details (vt-1-*, vt-2-*), bonus, division, round_type.
+- `pivot_to_wide_dict()`: For `/results/wide` endpoint — per-pass columns, level-aware vault aggregation, WAG/MAG split tabs using the actual `discipline` field from data (not apparatus heuristic — fixes VT/FX appearing in both tabs).
 - **Vault aggregation rules** (`_use_vault_average()`):
   - STEP 6 & STEP 7 → always average both vaults
   - STEP 10, Senior International, Junior International, Youth on Apparatus Finals day → average both vaults
@@ -75,7 +75,7 @@ Core logic:
 | event_name, gymnast_name, gnz_id, club_name, discipline, level_category, division | STRING |
 | apparatus | STRING (VT/UB/BB/FX/PH/SR/PB/HB) |
 | pass_number | INTEGER |
-| d_score, e_score, neutral_deductions, pass_final_score | FLOAT |
+| d_score, e_score, neutral_deductions, pass_final_score, bonus | FLOAT |
 | apparatus_rank, aa_rank | INTEGER |
 | aa_score | FLOAT |
 | round_type | STRING |
@@ -83,18 +83,19 @@ Core logic:
 
 ## Frontend
 
-**Tech:** SvelteKit 5 (runes: `$state`, `$effect`, `$page`), Tailwind CSS v4 (Vite plugin), DaisyUI v5 (dark theme).
+**Tech:** SvelteKit 5 (runes: `$state`, `$effect`, `$derived`), Tailwind CSS v4 (Vite plugin), DaisyUI v5 (dark theme).
 
 **Routes:**
 - `/` — Upload page: drag-and-drop JSON file, DaisyUI card drop-zone, loading spinner, alert for errors, success card with links
 - `/events` — Event list: `table table-zebra table-pin-rows`, loading spinner, empty-state card with upload link
 - `/events/[id]` — Results page:
-  - DaisyUI `tabs tabs-bordered` for WAG/MAG switching
-  - Columns dynamically split: meta (gnz-id, name, club, etc.) display normally; apparatus columns grouped into single cells showing `D-score / Total`
-  - Hover tooltip (DaisyUI `tooltip`) reveals full breakdown: D, E, N, Total, Rank (per-pass details for multi-pass vaults)
-  - Sortable by any meta column or apparatus total; CSV/XLSX download buttons
-
-**API client:** `src/lib/api.ts` — typed wrappers, dev mode proxies `/api/*` to `:8000`.
+  - DaisyUI `tabs tabs-boxed` for WAG/MAG switching
+  - Columns dynamically split: front meta (ID, Name, Club, STEP/Level, Division, Round), apparatus (single cells showing `D / Total`), back meta (AA, Rank)
+  - APPARATUS headers are dynamic: shows "STEP" for WAG, "Level" for MAG
+  - Rich hover tooltip (`ScoreTooltip` component using DaisyUI dropdown): full breakdown with D, E, N, Total, Bonus (green), Rank. Multi-pass vaults show per-pass details + display aggregate.
+  - Filter bar: search by name/ID, filter by STEP/Level, Club, Division, Round. Filters and search reset on tab switch.
+  - Sortable by any column; CSV/XLSX export buttons
+- **API client:** `src/lib/api.ts` — typed wrappers, dev mode proxies `/api/*` to `:8000`.
 
 ## Test Suite (191 tests)
 - `test_decoder.py`: 13 tests — output map building, decoding, DNS detection
@@ -115,13 +116,21 @@ Run: `cd backend && source .venv/bin/activate && pytest`
 
 ## Recent Session (this session)
 - Tailwind CSS v4 + DaisyUI v5 integration (dark theme, nav bar)
-- Restyled all frontend pages with DaisyUI components
-- Grouped apparatus cells with hover tooltips in results table
+- Restyled all frontend pages with DaisyUI components (upload, events list, results)
+- Grouped apparatus cells with rich hover tooltips (`ScoreTooltip` component)
+- Filter bar: search by name/ID, dropdowns for STEP/Level, Club, Division, Round
+- Dynamic STEP/Level column header switching between WAG/MAG tabs
+- Full-width results page layout AA/Rank last
 - Decoded `Bonus` field from publicOutputs, propagated across vault passes
+- Added `bonus` column to `LongScore` model
+- Bonus displayed in tooltips (green "+0.200" text)
 - Updated vault aggregation rules with proper level/round-type distinctions
 - Changed `_fmt3` from round → truncate (floor) with floating-point noise cleanup
+- Fixed WAG/MAG tab split: switched from apparatus-based heuristic (VT/FX matched both) to using the actual `discipline` field
+- Rewrote `pivot_to_wide()` to include all columns in CSV/XLSX exports (per-pass vault details, bonus, division, round_type)
 
 ## Known Edges & Gotchas
+- **WAG/MAG discipline split**: Tab assignment now uses the `discipline` field from data. Previously used apparatus presence (VT/FX appeared in both lists, causing all gymnasts to show in both tabs).
 - **Vault aggregation**: Different levels use different rules (average vs best-of-2). See `_use_vault_average()` in transformer.py for complete NZ-specific rule table.
 - **Bonus**: Bonus is an apparatus-level modifier stored on only one pass's score definition. Propagated at parse time across all passes in the same `(entityId, unitEventId)` group.
 - **Floating point**: `11.35 + 0.2` = `11.549999999999999` in IEEE 754. `_fmt3` rounds to 6 decimals before flooring to compensate.
