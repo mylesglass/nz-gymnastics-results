@@ -4,8 +4,11 @@ A web application for parsing, storing, and viewing gymnastics competition resul
 
 ## Features
 - Upload Scoreholder JSON files and parse into a normalized database
-- View results in a wide-format "All Around" table
-- Export to CSV and XLSX
+- View results in a wide-format table with WAG/MAG tabs
+- Hover tooltips on apparatus scores showing full breakdown (D, E, N, Bonus, Rank)
+- Filter and search results by name/ID, STEP/Level, Club, Division, Round
+- Sortable columns
+- Export to CSV and XLSX (all columns including per-pass vault data)
 - Supports both WAG (Women's Artistic Gymnastics) and MAG (Men's Artistic Gymnastics)
 
 ## Tech Stack
@@ -93,14 +96,15 @@ backend/                  # Python FastAPI backend
 
 frontend/                 # SvelteKit + Tailwind CSS v4 + DaisyUI v5
 ├── src/
-│   ├── lib/api.ts        # API client
-│   ├── app.css           # Tailwind + DaisyUI imports
-│   ├── app.html          # data-theme="dark"
+│   ├── lib/api.ts           # API client
+│   ├── lib/ScoreTooltip.svelte  # Apparatus score tooltip component
+│   ├── app.css              # Tailwind + DaisyUI imports
+│   ├── app.html             # data-theme="dark"
 │   └── routes/
 │       ├── +layout.svelte    # Nav bar wrapper
 │       ├── +page.svelte      # Upload (DaisyUI card/drop-zone)
 │       ├── events/+page.svelte       # Event list table
-│       └── events/[id]/+page.svelte  # Results (grouped apparatus cells, tooltips)
+│       └── events/[id]/+page.svelte  # Results (tooltips, filters, tabs)
 ├── svelte.config.js
 ├── vite.config.ts        # tailwindcss() + sveltekit() plugins
 ├── package.json
