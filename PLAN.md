@@ -49,8 +49,8 @@
 - [x] `POST /api/upload` — JSON file upload -> parse -> store -> return summary
 - [x] `GET /api/events` — list stored events
 - [x] `GET /api/events/{id}/results` — long-format JSON
-- [ ] `GET /api/events/{id}/export/csv` *(requires Step 7)*
-- [ ] `GET /api/events/{id}/export/xlsx` *(requires Step 7)*
+- [x] `GET /api/events/{id}/export/csv`
+- [x] `GET /api/events/{id}/export/xlsx`
 - [x] **Test:** 9/9 httpx integration tests against real data (60/60 total)
 
 ### Step 7: Pandas Transformer ✅
@@ -80,3 +80,21 @@
 - [x] docker-compose.yml with volume mounts for dev hot-reload
 - [x] Volume mount for SQLite persistence
 - [x] **Test:** Full `docker compose up` end-to-end verified
+
+### Step 11: Frontend Styling — Tailwind + DaisyUI ✅
+- [x] Install tailwindcss v4, @tailwindcss/vite, daisyui v5
+- [x] Configure Vite plugin, remove postcss config
+- [x] Dark theme via `data-theme="dark"`
+- [x] Global nav bar in layout (Upload / Events)
+- [x] Restyle upload page (DaisyUI card, alert, loading spinner)
+- [x] Restyle events list (zebra table, loading, empty state)
+- [x] Restyle results page (DaisyUI tabs, zebra table, sort indicators)
+- [x] Apparatus columns grouped into single cells with hover tooltips
+- [x] **Test:** Builds successfully with `npm run build`
+
+### Step 12: Backend Polish ✅
+- [x] Decode `Bonus` field from publicOutputs
+- [x] Propagate bonus across all passes in same (entityId, unitEventId) group
+- [x] Clarify vault aggregation rules (STEP 6/7 avg, high-level AA best, high-level Apps avg)
+- [x] Change `_fmt3` from round to truncate (floor), with floating-point noise cleanup
+- [x] **Test:** 191/191 pytest passing
