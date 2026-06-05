@@ -3,6 +3,7 @@
 import io
 
 import math
+import numpy as np
 import pandas as pd
 
 from app.models import LongScore
@@ -55,16 +56,17 @@ def pivot_to_wide(event_id: int, session, event_name: str, event_date: str) -> p
     return df[[c for c in ordered if c in df.columns]]
 
 
-def pivot_to_wide_dict(event_id: int, session) -> dict:
+def pivot_to_wide_dict(event_id: int, session, gnz_id: str = None, club: str = None) -> dict:
     """Pivot long-format scores into wide-format rows per discipline.
 
     Returns dict: {wag: {columns, rows}, mag: {columns, rows}}
     """
-    scores = (
-        session.query(LongScore)
-        .filter(LongScore.event_id == event_id)
-        .all()
-    )
+    query = session.query(LongScore).filter(LongScore.event_id == event_id)
+    if gnz_id:
+        query = query.filter(LongScore.gnz_id == gnz_id)
+    if club:
+        query = query.filter(LongScore.club_name == club)
+    scores = query.all()
     if not scores:
         return {}
 
@@ -169,6 +171,10 @@ def pivot_to_wide_dict(event_id: int, session) -> dict:
         for k, v in row.items():
             if isinstance(v, float) and math.isnan(v):
                 row[k] = None
+            elif isinstance(v, np.integer):
+                row[k] = int(v)
+            elif isinstance(v, np.floating):
+                row[k] = float(v)
         # Rename columns for _build_wide_row compatibility
         row["name"] = row.pop("gymnast_name")
         row["aa-score"] = row.pop("aa_score", sentinel)

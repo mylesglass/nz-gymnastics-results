@@ -85,17 +85,24 @@ Core logic:
 
 **Tech:** SvelteKit 5 (runes: `$state`, `$effect`, `$derived`), Tailwind CSS v4 (Vite plugin), DaisyUI v5 (dark theme).
 
+**Shared component:** `WideResultsTable.svelte` — encapsulates all table rendering, filtering, sorting, sticky headers, scroll sync, and duplicate header column width alignment. Used by all result pages.
+
 **Routes:**
 - `/` — Upload page: drag-and-drop JSON file, DaisyUI card drop-zone, loading spinner, alert for errors, success card with links
 - `/events` — Event list: `table table-zebra table-pin-rows`, loading spinner, empty-state card with upload link
-- `/events/[id]` — Results page:
-  - DaisyUI `tabs tabs-boxed` for WAG/MAG switching
-  - Columns dynamically split: front meta (ID, Name, Club, STEP/Level, Division, Round), apparatus (single cells showing `D / Total`), back meta (AA, Rank)
-  - APPARATUS headers are dynamic: shows "STEP" for WAG, "Level" for MAG
-  - Rich hover tooltip (`ScoreTooltip` component using DaisyUI dropdown): full breakdown with D, E, N, Total, Bonus (green), Rank. Multi-pass vaults show per-pass details + display aggregate.
-  - Filter bar: search by name/ID, filter by STEP/Level, Club, Division, Round. Filters and search reset on tab switch.
-  - Sortable by any column; CSV/XLSX export buttons
+- `/events/[id]` — Per-event results page (thin wrapper around `WideResultsTable`)
+- `/results` — All events results page (thin wrapper around `WideResultsTable`, adds Event filter + column)
+- `/gymnast/[gnz_id]` — Individual gymnast results (thin wrapper, shows matches across all events)
+- `/club/[club]` — Club results (thin wrapper, shows all gymnasts from that club across all events)
 - **API client:** `src/lib/api.ts` — typed wrappers, dev mode proxies `/api/*` to `:8000`.
+- **MultiSelect:** `src/lib/MultiSelect.svelte` — DaisyUI dropdown with checkboxes, Clear button, `min-w-48` buttons
+- **ScoreTooltip:** `src/lib/ScoreTooltip.svelte` — DaisyUI dropdown hover card showing D, E, N, Bonus, Rank for each apparatus
+
+### Table Features
+- Column widths synced between duplicate sticky headers and main table via JS measurement + explicit `width`/`min-width` styles
+- Name cells link to `/gymnast/[gnz_id]`, club cells link to `/club/[club]` (only when value is present)
+- Horizontal scroll synced between duplicate headers and main table
+- Client-side CSV export via download snippet
 
 ## Test Suite (191 tests)
 - `test_decoder.py`: 13 tests — output map building, decoding, DNS detection
@@ -116,32 +123,38 @@ Run: `cd backend && source .venv/bin/activate && pytest`
 
 ## Recent Session (this session)
 
-### All Results page (`/results`)
-- New `GET /api/results/wide-all` backend endpoint that queries all events, pivots each to wide format, stamps `event_name`/`event_id` on rows, and merges WAG/MAG tabs across all events
-- New `frontend/src/routes/results/+page.svelte` with same table/tooltip/filter/sort patterns as per-event page, plus Event column and Event filter
-- Client-side CSV export button
-- Added `/results` nav link
+### Refactor: shared WideResultsTable component
+- Extracted ~90% duplicated logic from `events/[id]/+page.svelte` and `results/+page.svelte` into `$lib/WideResultsTable.svelte`
+- Component props: `loadData`, `showEventFilter`, `extraHeadLabels`, `download` snippet, `empty` snippet
+- Both pages are now thin wrappers (~30 lines each)
 
-### Multi-select filters
-- New `MultiSelect.svelte` component: DaisyUI dropdown with checkboxes, Clear button, shows `Label (N)` when active
-- Changed all filter state from single strings to arrays (`filterStep = $state<string[]>([])`)
-- Filter logic uses `Set.has()` (empty array = show all)
-- Applied to both per-event and all-results pages
+### Duplicate header column width alignment
+- Added `columnWidths` state + measurement `$effect` that queries `<th>` widths from the main `<thead>`
+- ResizeObserver catches window resize and re-measures
+- Applied explicit `width` + `min-width` to duplicate header `<th>` elements
+- Applied `min-width` to main table `<th>` elements for column stability
 
-### Light/dark theme toggle
-- Inline script in `app.html` reads `localStorage.getItem("theme")` before render (prevents flash)
-- Toggle button in nav bar (sun/moon icon), updates `document.documentElement.dataset.theme` + localStorage
-- Initialized from DOM on mount
+### Gymnast & Club filter routes
+- New `GET /api/results/wide-all?gnz_id=...&club=...` query params (backend `pivot_to_wide_dict` + `main.py`)
+- New `/gymnast/[gnz_id]` route — shows all results for a gymnast across events
+- New `/club/[club]` route — shows all results for a club across events
+- Name and club cells are clickable links in the table (conditional on value being present)
+- Client-side CSV download on both pages
 
-### Sticky condensed header
-- Nav bar: `sticky top-0 z-50`, logo shrinks `text-xl` → `text-lg` on scroll
-- Page headers (heading + tabs + filters): `sticky top-16 z-40 bg-base-100`, condense on scroll past 60px
-- Condensed: heading `text-3xl mb-2` → `text-lg mb-0 py-1`, gaps reduced, `shadow-sm` appears
-- Loading/error states show heading normally (not sticky)
-- Applied to both per-event and all-results pages
+### Bug fixes
+- `api.ts`: replaced `new URL()` with string concat + `URLSearchParams` — `new URL` throws on relative paths in dev mode
+- `transformer.py`: added `numpy.int64` → `int` / `numpy.floating` → `float` conversion in NaN cleanup loop to fix JSON serialization 500 error on filtered queries
 
-### Fixes
-- Fixed `MultiSelect` filter not updating table: changed `selected` prop from `$props()` to `$bindable()` so child-to-parent state propagates via `bind:`
+### UX tweaks
+- `MultiSelect` buttons: `max-w-52` → `min-w-48` (wider filter buttons)
+- Column widths synced between duplicate headers and main table
+
+### Parser robustness analysis
+- Scanned all 40 real JSON files in `data-collection/2025/json/` for structural variations
+- Found 1 real data bug: `"equal-discarded"` status not filtered (31 files affected)
+- Found 1 missing field: `"Start Value"` output not mapped (kaitaia_2025.json)
+- Found 44 unit name patterns that fall through `resolve_level` (cosmetic, not breaking)
+- Old format files (`quar/`, `Archive/json`) use a completely different JSON structure (`{event, sessions, rounds, scores, competitors, organizations}`) — not relevant, won't be used going forward
 
 ## Known Edges & Gotchas
 - **WAG/MAG discipline split**: Tab assignment now uses the `discipline` field from data. Previously used apparatus presence (VT/FX appeared in both lists, causing all gymnasts to show in both tabs).
@@ -155,6 +168,13 @@ Run: `cd backend && source .venv/bin/activate && pytest`
 - **GNZ ID**: Stored without "GS" prefix after `fix_gnz_id()` cleanup.
 - **5-key DNS variants**: Some files encode DNS via 5-key node-tree instead of 4-key normal. `has_dns()` handles both string and boolean forms.
 - **Frontend builds take ~7 min on first Docker run** (npm install). Subsequent builds are cached.
+- **Parser: `"equal-discarded"` status** — appears in 31/40 files from tied scores; not filtered out. Could produce duplicate rows.
+- **Parser: `"Start Value"` output** — vault-specific field in `kaitaia_2025.json`; not mapped in `_OUTPUT_NAMES_TO_COLUMNS`, silently dropped.
+- **Parser: 44 unit name patterns** fall through `resolve_level()` returning raw name (e.g. "Bronze All Around & Apparatus", "WAG Step1 C1", "MAG Grade 1"). Cosmetic only — no data loss.
+- **Parser: `"Open"` division** — competitions like affinity, dga-invitational, tristar have open-section competitors with no division tag; returns `None`, still correct.
+- **Two JSON formats exist** — `data-collection/2025/json/` uses the new format (`eventOrganizations`, `performanceRules`, etc); `data-collection/JSON 2025/quar/` and `Archive/json/` use an old format (`event`, `sessions`, `rounds`). Old format is not supported and won't be used going forward.
+- **`new URL()` breaks with relative URLs** — `api.ts`: `new URL("/api/results/wide-all")` throws when `API_BASE = ""` in dev mode. All API functions must use string concatenation for relative URLs.
+- **Numpy types in JSON responses** — pandas/numpy produce `numpy.int64` and `numpy.float64` values that FastAPI's `jsonable_encoder` can't serialize. Must convert to native Python types in transformer.py.
 
 ## Docker
 - `docker compose up --build` starts both services
@@ -163,7 +183,7 @@ Run: `cd backend && source .venv/bin/activate && pytest`
 - Vite proxies `/api/*` to backend in dev mode
 
 ## Open Questions / Next Potential Areas
-- [ ] Mixed WAG+MAG events: should the frontend show all tabs or auto-detect?
+- [ ] Parser robustness: fix `"equal-discarded"` filter, add input validation, add batch validation CLI (see PLAN.md Step 13)
 - [ ] Caching: repeated `pivot_to_wide_dict()` calls for same event_id hit SQLite each time
 - [ ] Mobile-responsive table: wide tables don't scroll well on mobile
 - [ ] Pagination: large events (3000+ gymnasts) may need server-side pagination

@@ -208,14 +208,14 @@ def get_results_wide(event_id: int):
 
 
 @app.get("/api/results/wide-all")
-def get_all_results_wide():
+def get_all_results_wide(gnz_id: str = None, club: str = None):
     session = get_session()
     try:
         events = session.query(Event).order_by(Event.created_at.desc()).all()
         combined: dict[str, dict] = {}
 
         for ev in events:
-            data = pivot_to_wide_dict(ev.id, session)
+            data = pivot_to_wide_dict(ev.id, session, gnz_id, club)
             if not data:
                 continue
             for disc_key in ("wag", "mag"):

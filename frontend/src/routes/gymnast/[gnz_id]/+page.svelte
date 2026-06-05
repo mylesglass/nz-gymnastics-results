@@ -1,15 +1,21 @@
 <script lang="ts">
+  import { page } from "$app/stores";
   import { getAllWideResults } from "$lib/api";
   import WideResultsTable from "$lib/WideResultsTable.svelte";
 
   function loadData() {
-    return getAllWideResults().then((r) => ({
-      title: "All Results",
-      tabs: {
-        ...(r.wag ? { wag: r.wag } : {}),
-        ...(r.mag ? { mag: r.mag } : {}),
-      },
-    }));
+    const gnzId = $page.params.gnz_id;
+    if (!gnzId) return Promise.resolve({ title: "Gymnast", tabs: {} });
+    return getAllWideResults({ gnz_id: gnzId }).then((r) => {
+      const name = r.wag?.rows[0]?.name || r.mag?.rows[0]?.name || gnzId;
+      return {
+        title: name,
+        tabs: {
+          ...(r.wag ? { wag: r.wag } : {}),
+          ...(r.mag ? { mag: r.mag } : {}),
+        },
+      };
+    });
   }
 
   function exportCSV(columns: string[], rows: Record<string, unknown>[], headerLabels: Record<string, string>) {
@@ -32,14 +38,14 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "all-results.csv";
+    a.download = `${$page.params.gnz_id || "gymnast"}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
 </script>
 
 <svelte:head>
-  <title>All Results — NZ Gymnastics Results</title>
+  <title>Gymnast — NZ Gymnastics Results</title>
 </svelte:head>
 
 {#snippet download({columns, rows, headerLabels})}
@@ -49,11 +55,8 @@
 {/snippet}
 
 {#snippet empty()}
-  <div class="card bg-base-200 mt-4">
-    <div class="card-body items-center text-center py-12">
-      <p class="text-base-content/70">No results yet.</p>
-      <a href="/" class="btn btn-primary btn-sm mt-2">Upload an event</a>
-    </div>
+  <div role="alert" class="alert alert-error mt-4">
+    <span>Gymnast not found</span>
   </div>
 {/snippet}
 

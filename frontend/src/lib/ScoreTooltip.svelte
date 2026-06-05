@@ -27,7 +27,7 @@
       tabindex="0"
     >
       <div class="text-[0.65rem] opacity-70 mb-1 text-left">
-        {row.name} — {appLabel}
+        {row.name} - {appLabel}
       </div>
       <div class="divider my-1"></div>
       {#each [1, 2] as i}
@@ -61,16 +61,11 @@
       {row[`${prefix}-d`] ?? ""} / {row[`${prefix}-total`] ?? "DNS"}
     </div>
     <div
-      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs min-w-48"
+      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs min-w-36"
       tabindex="0"
     >
-      <div class="flex justify-between">
-        <div class="text-[0.65rem] opacity-70 mb-1">
-          {row.name}
-        </div>
-        <div class="text-[0.65rem] opacity-70 mb-1">
-          {appLabel}
-        </div>
+      <div class="text-[0.65rem] opacity-70 mb-1 text-left">
+        {row.name} - {appLabel}
       </div>
 
       <div class="divider my-1"></div>
@@ -92,11 +87,7 @@
             >
           </div>
         {/if}
-        <div class="flex justify-between gap-4">
-          <span class="font-semibold">Total</span><span
-            >{row[`${prefix}-total`] ?? "DNS"}</span
-          >
-        </div>
+
         {#if row[`${prefix}-bonus`] != null}
           <div class="flex justify-between gap-4 text-success">
             <span class="font-semibold">Bonus</span><span
@@ -111,6 +102,12 @@
             >
           </div>
         {/if}
+        <div class="divider my-1"></div>
+        <div class="flex justify-between gap-4">
+          <span class="font-bold">Total</span><span
+            >{row[`${prefix}-total`] ?? "DNS"}</span
+          >
+        </div>
       </div>
     </div>
   </div>

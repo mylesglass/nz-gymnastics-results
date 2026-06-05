@@ -6,9 +6,10 @@ A web application for parsing, storing, and viewing gymnastics competition resul
 - Upload Scoreholder JSON files and parse into a normalized database
 - View results in a wide-format table with WAG/MAG tabs
 - Hover tooltips on apparatus scores showing full breakdown (D, E, N, Bonus, Rank)
-- Filter and search results by name/ID, STEP/Level, Club, Division, Round
-- Sortable columns
+- Filter, sort, and search results by name/ID, STEP/Level, Club, Division, Round
+- View results for a single gymnast or club across all events (clickable table cells)
 - Export to CSV and XLSX (all columns including per-pass vault data)
+- Light/dark theme toggle
 - Supports both WAG (Women's Artistic Gymnastics) and MAG (Men's Artistic Gymnastics)
 
 ## Tech Stack
@@ -76,6 +77,7 @@ Runs 191 tests covering the decoder, resolver, parser, database models, and API 
 | GET | `/api/events` | List all uploaded events |
 | GET | `/api/events/{id}/results` | Get results (long format) |
 | GET | `/api/events/{id}/results/wide` | Get results (wide format, WAG/MAG split) |
+| GET | `/api/results/wide-all` | Get results across all events (with optional `?gnz_id=` and `?club=` filters) |
 | GET | `/api/events/{id}/export/csv` | Download results as CSV |
 | GET | `/api/events/{id}/export/xlsx` | Download results as XLSX |
 
@@ -96,15 +98,21 @@ backend/                  # Python FastAPI backend
 
 frontend/                 # SvelteKit + Tailwind CSS v4 + DaisyUI v5
 ├── src/
-│   ├── lib/api.ts           # API client
-│   ├── lib/ScoreTooltip.svelte  # Apparatus score tooltip component
+│   ├── lib/
+│   │   ├── api.ts              # API client
+│   │   ├── ScoreTooltip.svelte  # Apparatus score tooltip component
+│   │   ├── MultiSelect.svelte   # Multi-select filter dropdown
+│   │   └── WideResultsTable.svelte # Shared results table component
 │   ├── app.css              # Tailwind + DaisyUI imports
-│   ├── app.html             # data-theme="dark"
+│   ├── app.html             # Inline theme script (flash prevention)
 │   └── routes/
-│       ├── +layout.svelte    # Nav bar wrapper
+│       ├── +layout.svelte    # Nav bar + theme toggle
 │       ├── +page.svelte      # Upload (DaisyUI card/drop-zone)
 │       ├── events/+page.svelte       # Event list table
-│       └── events/[id]/+page.svelte  # Results (tooltips, filters, tabs)
+│       ├── events/[id]/+page.svelte  # Per-event results (thin wrapper)
+│       ├── results/+page.svelte      # All-events results (thin wrapper)
+│       ├── gymnast/[gnz_id]/+page.svelte # Gymnast results (thin wrapper)
+│       └── club/[club]/+page.svelte  # Club results (thin wrapper)
 ├── svelte.config.js
 ├── vite.config.ts        # tailwindcss() + sveltekit() plugins
 ├── package.json
