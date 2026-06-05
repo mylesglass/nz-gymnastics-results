@@ -2,7 +2,14 @@
   import { onMount } from "svelte";
   import { listEvents } from "$lib/api";
 
-  let events = $state<Array<{ id: number; name: string; start_date: string; gymnast_count: number }>>([]);
+  let events = $state<
+    Array<{
+      id: number;
+      name: string;
+      start_date: string;
+      gymnast_count: number;
+    }>
+  >([]);
   let loading = $state(true);
 
   onMount(async () => {
@@ -20,55 +27,47 @@
   <title>Events — NZ Gymnastics Results</title>
 </svelte:head>
 
-<h1>Events</h1>
+<div class="max-w-6xl mx-auto">
+  <h1 class="text-3xl font-bold mb-2">Events</h1>
 
-<a href="/">← Upload another</a>
-
-{#if loading}
-  <p>Loading...</p>
-{:else if events.length === 0}
-  <p>No events uploaded yet.</p>
-{:else}
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Date</th>
-        <th>Discipline</th>
-        <th>Gymnasts</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {#each events as ev}
-        <tr>
-          <td>{ev.name}</td>
-          <td>{ev.start_date}</td>
-          <td>{ev.discipline}</td>
-          <td>{ev.gymnast_count}</td>
-          <td><a href="/events/{ev.id}">View</a></td>
-        </tr>
-      {/each}
-    </tbody>
-  </table>
-{/if}
-
-<style>
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    margin-top: 1rem;
-  }
-  th, td {
-    border: 1px solid #d1d5db;
-    padding: 8px 12px;
-    text-align: left;
-  }
-  th {
-    background: #f3f4f6;
-    font-weight: 600;
-  }
-  tr:hover {
-    background: #f9fafb;
-  }
-</style>
+  {#if loading}
+    <div class="flex justify-center py-12">
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+  {:else if events.length === 0}
+    <div class="card bg-base-200 mt-4">
+      <div class="card-body items-center text-center py-12">
+        <p class="text-base-content/70">No events uploaded yet.</p>
+        <a href="/" class="btn btn-primary btn-sm mt-2">Upload an event</a>
+      </div>
+    </div>
+  {:else}
+    <div class="overflow-x-auto mt-4">
+      <table class="table table-zebra table-pin-rows">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Discipline</th>
+            <th class="text-right">Gymnasts</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each events as ev}
+            <tr>
+              <td class="font-medium">{ev.name}</td>
+              <td>{ev.start_date}</td>
+              <td>{ev.discipline}</td>
+              <td class="text-right">{ev.gymnast_count}</td>
+              <td
+                ><a href="/events/{ev.id}" class="btn btn-ghost btn-xs">View</a
+                ></td
+              >
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
+  {/if}
+</div>

@@ -209,6 +209,32 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
         decoded["_entityId"] = score.get("entityId", "")
         scores_by_id[sid] = decoded
 
+    # -- Propagate bonus across passes in the same (entityId, unitEventId) group --
+    # Bonus is an apparatus-level modifier that applies to all passes for that
+    # gymnast on that apparatus (e.g. both vaults), even if only one score
+    # definition carries the Bonus output field.
+    entity_unit_bonus: dict[tuple[str, str], float] = {}
+    for sdata in scores_by_id.values():
+        bonus = sdata.get("bonus")
+        if bonus is not None:
+            try:
+                bv = float(bonus)
+            except (ValueError, TypeError):
+                continue
+            key = (sdata["_entityId"], sdata["_unitEventId"])
+            entity_unit_bonus[key] = bv
+    for sdata in scores_by_id.values():
+        key = (sdata["_entityId"], sdata["_unitEventId"])
+        bonus = entity_unit_bonus.get(key)
+        if bonus is not None:
+            sdata["bonus"] = bonus
+            raw = sdata.get("pass_final_score")
+            if raw is not None:
+                try:
+                    sdata["pass_final_score"] = float(raw) + bonus
+                except (ValueError, TypeError):
+                    pass
+
     # -- Track per-entity per-event pass IDs for correct pass numbering --
     entity_event_passes: dict[str, dict[str, set[str]]] = {}
     for sdata in scores_by_id.values():
@@ -346,6 +372,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                         "aa_score": _sanitise_float(aa.get("aa_score")),
                         "aa_rank": _sanitise_rank(aa.get("aa_rank")),
                         "round_type": round_type,
+                        "bonus": _sanitise_float(score_data.get("bonus")),
                     }
                     rows.append(row)
 

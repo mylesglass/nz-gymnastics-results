@@ -15,5 +15,10 @@
     "svelte": "^5.25.0",
     "typescript": "^5.8.0",
     "vite": "^6.3.0"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.3.0",
+    "daisyui": "^5.5.20",
+    "tailwindcss": "^4.3.0"
   }
 }

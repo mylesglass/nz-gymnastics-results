@@ -9,124 +9,50 @@ from app.models import LongScore
 
 WAG_ORDER = ["VT", "UB", "BB", "FX"]
 MAG_ORDER = ["FX", "PH", "SR", "VT", "PB", "HB"]
-_SCORE_SHORT = {"d_score": "d", "e_score": "e", "n_score": "n", "total_score": "total"}
 
 
 def pivot_to_wide(event_id: int, session, event_name: str, event_date: str) -> pd.DataFrame:
-    """Pivot to wide format (used for CSV/XLSX exports)."""
-    scores = (
-        session.query(LongScore)
-        .filter(LongScore.event_id == event_id)
-        .all()
-    )
-    if not scores:
+    """Pivot to wide format (used for CSV/XLSX exports).
+
+    Includes all available columns: meta, apparatus display scores,
+    per-pass vault details, bonus, division, round_type.
+    """
+    wide = pivot_to_wide_dict(event_id, session)
+    if not wide:
         return pd.DataFrame()
 
-    rows = []
-    for s in scores:
-        rows.append({
-            "gymnast_name": s.gymnast_name,
-            "gnz_id": s.gnz_id or "",
-            "club_name": s.club_name or "",
-            "discipline": s.discipline,
-            "level_category": s.level_category or "",
-            "apparatus": s.apparatus,
-            "d_score": s.d_score,
-            "e_score": s.e_score,
-            "n_score": s.neutral_deductions,
-            "total_score": s.pass_final_score,
-            "apparatus_rank": s.apparatus_rank,
-            "aa_score": s.aa_score,
-            "aa_rank": s.aa_rank,
-        })
+    all_rows: list[dict] = []
+    for disc_key in ["wag", "mag"]:
+        if disc_key not in wide:
+            continue
+        for row in wide[disc_key]["rows"]:
+            row["competition"] = event_name
+            row["date-created"] = event_date
+            all_rows.append(row)
 
-    df = pd.DataFrame(rows)
-    present_apps = sorted(set(df["apparatus"].unique()))
-    apparatus_order = _determine_apparatus_order(set(present_apps))
+    if not all_rows:
+        return pd.DataFrame()
 
-    sentinel = -999999.0
-    df["aa_score"] = df["aa_score"].fillna(sentinel)
+    df = pd.DataFrame(all_rows)
 
-    score_cols = ["d_score", "e_score", "n_score", "total_score"]
-    agg_map = {c: "mean" for c in score_cols}
-    agg_map["apparatus_rank"] = "first"
-    agg_map["gnz_id"] = "first"
-    agg_map["club_name"] = "first"
-    agg_map["level_category"] = "first"
+    # Build column order: meta, apparatus, aa
+    meta_cols = [
+        "gnz-id", "name", "club", "step", "division", "round-type",
+        "competition", "date-created",
+    ]
+    app_cols = [c for c in df.columns if c not in meta_cols and c not in ("aa-score", "aa-rank")]
+    ordered = meta_cols + sorted(app_cols) + ["aa-score", "aa-rank"]
 
-    grouped = df.groupby(
-        ["gymnast_name", "aa_score", "apparatus"], sort=False, dropna=False
-    ).agg(agg_map).reset_index()
-
-    pivot = grouped.pivot_table(
-        index=["gymnast_name", "aa_score"],
-        columns="apparatus",
-        values=score_cols + ["apparatus_rank"],
-        aggfunc="first",
-    )
-
-    flat_cols = []
-    for col in pivot.columns:
-        metric, app = col
-        if metric == "apparatus_rank":
-            flat_cols.append(f"{app.lower()}-rank")
-        else:
-            short = _SCORE_SHORT.get(metric, metric)
-            flat_cols.append(f"{app.lower()}-{short}")
-    pivot.columns = flat_cols
-    pivot = pivot.reset_index()
-
-    meta = df.drop_duplicates(subset=["gymnast_name", "aa_score"], keep="first")[
-        ["gymnast_name", "aa_score", "gnz_id", "club_name", "level_category", "aa_rank"]
-    ].copy()
-
-    result = pivot.merge(meta, on=["gymnast_name", "aa_score"], how="left", suffixes=("", "_y"))
-    for col in list(result.columns):
-        if col.endswith("_y"):
-            del result[col]
-
-    result["aa_score"] = result["aa_score"].replace(sentinel, None)
-    result.rename(columns={
-        "gymnast_name": "name",
-        "gnz_id": "gnz-id",
-        "club_name": "club",
-        "level_category": "step",
-        "aa_rank": "aa-rank",
-        "aa_score": "aa-score",
-    }, inplace=True)
-
-    result["competition"] = event_name
-    result["date-created"] = event_date
-
-    expected = ["gnz-id", "name", "club", "step", "competition", "date-created"]
-    for app in apparatus_order:
-        for suffix in ["total", "d", "e", "n", "rank"]:
-            expected.append(f"{app.lower()}-{suffix}")
-    expected.extend(["aa-score", "aa-rank"])
-
-    for col in expected:
-        if col not in result.columns:
-            result[col] = None
+    for col in ordered:
+        if col not in df.columns:
+            df[col] = None
 
     # Convert NaN to None
-    for col in result.columns:
-        if result[col].dtype == "float64":
-            result[col] = result[col].where(result[col].notna(), None)
+    for col in df.columns:
+        if df[col].dtype == "float64":
+            df[col] = df[col].where(df[col].notna(), None)
 
-    return result[[c for c in expected if c in result.columns]]
-
-
-def _determine_apparatus_order(present_apps: set[str]) -> list[str]:
-    has_mag = any(a in present_apps for a in ["PH", "SR", "PB", "HB"])
-    has_wag = any(a in present_apps for a in ["UB", "BB"])
-    result = []
-    if has_wag:
-        result.extend(WAG_ORDER)
-    if has_mag:
-        for a in MAG_ORDER:
-            if a not in result:
-                result.append(a)
-    return [a for a in result if a in present_apps]
+    return df[[c for c in ordered if c in df.columns]]
 
 
 def pivot_to_wide_dict(event_id: int, session) -> dict:
@@ -160,6 +86,7 @@ def pivot_to_wide_dict(event_id: int, session) -> dict:
             "apparatus_rank": s.apparatus_rank,
             "aa_score": s.aa_score,
             "aa_rank": s.aa_rank,
+            "bonus": s.bonus,
         })
 
     df = pd.DataFrame(long_rows)
@@ -185,7 +112,7 @@ def pivot_to_wide_dict(event_id: int, session) -> dict:
     # Build wide rows manually
     meta = df.drop_duplicates(subset=["gymnast_name", "round_type"], keep="first")[
         ["gymnast_name", "round_type", "aa_score", "gnz_id", "club_name", "level_category",
-         "division", "aa_rank"]
+         "division", "aa_rank", "discipline"]
     ].copy()
     sentinel = -999999.0
     meta["aa_score"] = meta["aa_score"].fillna(sentinel)
@@ -211,6 +138,7 @@ def pivot_to_wide_dict(event_id: int, session) -> dict:
             wide_row["division"] = mr.get("division", "")
             wide_row["aa_score"] = mr.get("aa_score", sentinel)
             wide_row["aa_rank"] = mr.get("aa_rank")
+            wide_row["discipline"] = mr.get("discipline", "")
 
         for app, passes in scores.items():
             pfx = app.lower()
@@ -221,6 +149,7 @@ def pivot_to_wide_dict(event_id: int, session) -> dict:
                 wide_row[f"{pfx}-e"] = p.get("e_score")
                 wide_row[f"{pfx}-n"] = p.get("n_score")
                 wide_row[f"{pfx}-rank"] = p.get("apparatus_rank")
+                wide_row[f"{pfx}-bonus"] = p.get("bonus")
             else:
                 for i, p in enumerate(passes, 1):
                     wide_row[f"{pfx}-{i}-total"] = p.get("total_score")
@@ -228,7 +157,8 @@ def pivot_to_wide_dict(event_id: int, session) -> dict:
                     wide_row[f"{pfx}-{i}-e"] = p.get("e_score")
                     wide_row[f"{pfx}-{i}-n"] = p.get("n_score")
                     wide_row[f"{pfx}-{i}-rank"] = p.get("apparatus_rank")
-                # leave display columns as None — _build_wide_row fills them
+                # Grab bonus from any pass (it's the same across the group)
+                wide_row[f"{pfx}-bonus"] = passes[0].get("bonus")
 
         wide_rows.append(wide_row)
 
@@ -258,16 +188,18 @@ def pivot_to_wide_dict(event_id: int, session) -> dict:
         seen = set()
         out_rows = []
         for row in all_rows:
-            has_data = any(
-                row.get(f"{p}-total") is not None or row.get(f"{p}-1-total") is not None
-                for p in prefixes
-            )
-            if has_data:
-                key = (row.get("name"), row.get("round-type"))
-                if key not in seen:
-                    seen.add(key)
-                    out_row = _build_wide_row(row, prefixes, columns)
-                    out_rows.append(out_row)
+            row_disc = str(row.get("discipline", "")).upper()
+            if disc_key == "wag":
+                if row_disc not in ("WAG", "WAG+MAG"):
+                    continue
+            else:
+                if row_disc not in ("MAG", "WAG+MAG"):
+                    continue
+            key = (row.get("name"), row.get("round-type"))
+            if key not in seen:
+                seen.add(key)
+                out_row = _build_wide_row(row, prefixes, columns)
+                out_rows.append(out_row)
 
         result[disc_key] = {"columns": columns, "rows": out_rows}
 
@@ -293,6 +225,7 @@ def _build_wide_row(row: dict, prefixes: list[str], columns: list[str]) -> dict:
             completed_total += float(total)
             completed_count += 1
             _write_app(out, p, total, row.get(f"{p}-d"), row.get(f"{p}-e"), row.get(f"{p}-n"), row.get(f"{p}-rank"))
+            out[f"{p}-bonus"] = row.get(f"{p}-bonus")
         elif pass1_total is not None:
             # Multi-pass — collect raw values
             p1_total = pass1_total
@@ -332,6 +265,7 @@ def _build_wide_row(row: dict, prefixes: list[str], columns: list[str]) -> dict:
             completed_total += best_total
             completed_count += 1
             _write_app(out, p, best_total, best_d, best_e, best_n, best_rank)
+            out[f"{p}-bonus"] = row.get(f"{p}-bonus")
 
             # Write per-pass columns
             for prefix_val, p_total, p_d, p_e, p_n, p_r in [
@@ -382,11 +316,36 @@ def _build_wide_row(row: dict, prefixes: list[str], columns: list[str]) -> dict:
 
 
 def _use_vault_average(step: str, round_type: str) -> bool:
-    """Determine if multi-pass vault should average (True) or take higher (False)."""
-    if "step 6" in step or "step 7" in step:
+    """Determine if multi-pass vault should average (True) or take higher (False).
+
+    Rules:
+      STEP 6 & 7:                always average both vaults
+      STEP 10, Senior Int,
+      Junior Int, Youth
+      on Apparatus Finals day:   average both vaults
+      STEP 10, Senior Int,
+      Junior Int
+      on All Around day:         best mark (take the higher)
+      Youth
+      on All Around day:         best mark (take the higher)
+      Everything else:           best mark
+    """
+    lower_step = step.lower()
+    lower_rt = round_type.lower()
+
+    if "step 6" in lower_step or "step 7" in lower_step:
         return True
-    if "step 10" in step and "apparatus" in round_type:
+
+    is_high_level = any(x in lower_step for x in [
+        "step 10", "senior international", "junior international", "youth",
+    ])
+    if not is_high_level:
+        return False
+
+    is_apparatus_day = "apparatus" in lower_rt or "final" in lower_rt
+    if is_apparatus_day:
         return True
+
     return False
 
 
@@ -420,7 +379,8 @@ def _fmt3(val: object) -> str | None:
     if val is None:
         return None
     try:
-        return f"{float(val):.3f}"
+        v = round(float(val), 6)
+        return f"{math.floor(v * 1000) / 1000:.3f}"
     except (ValueError, TypeError):
         return str(val)
 

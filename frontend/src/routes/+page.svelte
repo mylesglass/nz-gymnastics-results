@@ -45,92 +45,55 @@
   <title>NZ Gymnastics Results</title>
 </svelte:head>
 
-<h1>NZ Gymnastics Results</h1>
+<div class="max-w-6xl mx-auto">
+  <h1 class="text-3xl font-bold mb-2">Upload Event</h1>
 
-<p>Upload a Scoreholder JSON export to view, export, and analyse results.</p>
+<p class="text-base-content/70 mb-6">
+  Upload a Scoreholder JSON export to view, export, and analyse results.
+</p>
 
 <div
-  class="drop-zone"
+  class="card border-2 border-dashed border-base-content/30 hover:border-primary bg-base-200/50 hover:bg-base-200 cursor-pointer transition-all p-12 text-center"
   role="button"
   tabindex="0"
   ondrop={ondrop}
   ondragover={ondragover}
 >
   {#if uploading}
-    <p>Uploading and parsing...</p>
+    <div class="flex flex-col items-center gap-3">
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+      <p class="text-base-content/70">Uploading and parsing...</p>
+    </div>
   {:else}
-    <p>Drop a Scoreholder JSON file here, or click to browse</p>
-    <input type="file" accept=".json" onchange={onfileinput} hidden />
+    <div class="flex flex-col items-center gap-3">
+      <span class="text-4xl">📄</span>
+      <p class="text-base-content/70">Drop a Scoreholder JSON file here, or click to browse</p>
+      <input type="file" accept=".json" onchange={onfileinput} hidden />
+    </div>
   {/if}
 </div>
 
 {#if error}
-  <p class="error">{error}</p>
+  <div role="alert" class="alert alert-error mt-4">
+    <span>{error}</span>
+  </div>
 {/if}
 
 {#if result}
-  <div class="result-card">
-    <h2>{result.name}</h2>
-    <p>{result.gymnast_count} gymnasts parsed</p>
-    <div class="actions">
-      <a href="/events/{result.id}">View Results</a>
-      <a href="/events">All Events</a>
+  <div class="card bg-base-200 border border-success/30 mt-6">
+    <div class="card-body">
+      <h2 class="card-title text-lg">{result.name}</h2>
+      <p>{result.gymnast_count} gymnasts parsed</p>
+      <div class="card-actions mt-2">
+        <a href="/events/{result.id}" class="btn btn-primary btn-sm">View Results</a>
+        <a href="/events" class="btn btn-ghost btn-sm">All Events</a>
+      </div>
     </div>
   </div>
 {/if}
 
 {#if !uploading && !result}
-  <div class="info">
-    <p>Already uploaded an event? <a href="/events">Browse events</a></p>
-  </div>
-{/if}
-
-<style>
-  .drop-zone {
-    border: 2px dashed #aaa;
-    border-radius: 8px;
-    padding: 3rem;
-    text-align: center;
-    cursor: pointer;
-    margin: 2rem 0;
-    transition: border-color 0.2s, background 0.2s;
-  }
-  .drop-zone:hover {
-    border-color: #3b82f6;
-    background: #f8faff;
-  }
-  .error {
-    color: #dc2626;
-  }
-  .result-card {
-    background: #f0fdf4;
-    border: 1px solid #86efac;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin: 1rem 0;
-  }
-  .result-card h2 {
-    margin: 0 0 0.5rem;
-  }
-  .actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-  }
-  .actions a {
-    padding: 0.5rem 1rem;
-    background: #3b82f6;
-    color: #fff;
-    border-radius: 6px;
-    text-decoration: none;
-    font-weight: 500;
-  }
-  .actions a:hover {
-    background: #2563eb;
-  }
-  .info {
-    text-align: center;
-    margin-top: 2rem;
-    color: #666;
-  }
-</style>
+  <p class="text-center text-base-content/50 mt-8">
+    Already uploaded an event? <a href="/events" class="link link-primary">Browse events</a>
+  </p>
+{/if}</div>

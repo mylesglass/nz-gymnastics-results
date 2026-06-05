@@ -10,7 +10,7 @@ A web application for parsing, storing, and viewing gymnastics competition resul
 
 ## Tech Stack
 - **Backend:** Python, FastAPI, SQLAlchemy, SQLite, Pandas
-- **Frontend:** SvelteKit
+- **Frontend:** SvelteKit 5, Tailwind CSS v4, DaisyUI v5 (dark theme)
 - **Infrastructure:** Docker Compose
 
 ## Quick Start (no dependencies needed)
@@ -62,7 +62,7 @@ source .venv/bin/activate
 pytest
 ```
 
-Runs 63 tests covering the decoder, resolver, parser, database models, and API endpoints.
+Runs 191 tests covering the decoder, resolver, parser, database models, and API endpoints.
 
 ## API Endpoints
 
@@ -72,6 +72,7 @@ Runs 63 tests covering the decoder, resolver, parser, database models, and API e
 | POST | `/api/upload` | Upload a Scoreholder JSON file |
 | GET | `/api/events` | List all uploaded events |
 | GET | `/api/events/{id}/results` | Get results (long format) |
+| GET | `/api/events/{id}/results/wide` | Get results (wide format, WAG/MAG split) |
 | GET | `/api/events/{id}/export/csv` | Download results as CSV |
 | GET | `/api/events/{id}/export/xlsx` | Download results as XLSX |
 
@@ -88,11 +89,20 @@ backend/                  # Python FastAPI backend
 │   ├── decoder.py        # Node-tree score field decoder
 │   ├── resolver.py       # ID chain resolver
 │   └── transformer.py    # Pandas long→wide pivot + export
-└── tests/                # pytest suite (63 tests)
+└── tests/                # pytest suite (191 tests)
 
-frontend/                 # SvelteKit frontend
+frontend/                 # SvelteKit + Tailwind CSS v4 + DaisyUI v5
 ├── src/
 │   ├── lib/api.ts        # API client
-│   └── routes/           # Pages: upload, events list, results
+│   ├── app.css           # Tailwind + DaisyUI imports
+│   ├── app.html          # data-theme="dark"
+│   └── routes/
+│       ├── +layout.svelte    # Nav bar wrapper
+│       ├── +page.svelte      # Upload (DaisyUI card/drop-zone)
+│       ├── events/+page.svelte       # Event list table
+│       └── events/[id]/+page.svelte  # Results (grouped apparatus cells, tooltips)
+├── svelte.config.js
+├── vite.config.ts        # tailwindcss() + sveltekit() plugins
+├── package.json
 └── Dockerfile
 ```
