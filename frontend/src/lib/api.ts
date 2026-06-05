@@ -8,6 +8,7 @@ export interface EventSummary {
   start_date: string;
   end_date: string;
   discipline: string;
+  year: number | null;
   gymnast_count: number;
   score_count: number;
 }
@@ -40,4 +41,13 @@ export async function getWideResults(eventId: number): Promise<WideResponse> {
 
 export function getExportUrl(eventId: number, format: "csv" | "xlsx"): string {
   return `${API_BASE}/api/events/${eventId}/export/${format}`;
+}
+
+export async function getAllWideResults(): Promise<{
+  wag?: { columns: string[]; rows: Record<string, unknown>[] };
+  mag?: { columns: string[]; rows: Record<string, unknown>[] };
+}> {
+  const res = await fetch(`${API_BASE}/api/results/wide-all`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
 }

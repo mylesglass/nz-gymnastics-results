@@ -2,19 +2,23 @@
   import { onMount } from "svelte";
   import { listEvents } from "$lib/api";
 
-  let events = $state<
-    Array<{
-      id: number;
-      name: string;
-      start_date: string;
-      gymnast_count: number;
-    }>
-  >([]);
+  let events = $state<Array<{ id: number; name: string; start_date: string; gymnast_count: number; year: number | null }>>([]);
   let loading = $state(true);
+  let filterYear = $state("");
+
+  let yearOptions = $state<string[]>([]);
+  let filteredEvents = $derived(
+    filterYear ? events.filter((e) => String(e.year ?? "") === filterYear) : events
+  );
 
   onMount(async () => {
     try {
       events = await listEvents();
+      const years = new Set<string>();
+      for (const e of events) {
+        if (e.year) years.add(String(e.year));
+      }
+      yearOptions = [...years].sort().reverse();
     } catch {
       // ignore
     } finally {
@@ -42,11 +46,26 @@
       </div>
     </div>
   {:else}
+    {#if yearOptions.length > 1}
+      <div class="flex flex-wrap items-center gap-2 mb-3">
+        <select class="select select-bordered select-sm" bind:value={filterYear}>
+          <option value="">All years</option>
+          {#each yearOptions as y}
+            <option value={y}>{y}</option>
+          {/each}
+        </select>
+        <span class="text-xs text-base-content/50">
+          {filteredEvents.length} of {events.length}
+        </span>
+      </div>
+    {/if}
+
     <div class="overflow-x-auto mt-4">
       <table class="table table-zebra table-pin-rows">
         <thead>
           <tr>
             <th>Name</th>
+            <th>Year</th>
             <th>Date</th>
             <th>Discipline</th>
             <th class="text-right">Gymnasts</th>
@@ -54,16 +73,14 @@
           </tr>
         </thead>
         <tbody>
-          {#each events as ev}
+          {#each filteredEvents as ev}
             <tr>
               <td class="font-medium">{ev.name}</td>
+              <td>{ev.year ?? ""}</td>
               <td>{ev.start_date}</td>
               <td>{ev.discipline}</td>
               <td class="text-right">{ev.gymnast_count}</td>
-              <td
-                ><a href="/events/{ev.id}" class="btn btn-ghost btn-xs">View</a
-                ></td
-              >
+              <td><a href="/events/{ev.id}" class="btn btn-ghost btn-xs">View</a></td>
             </tr>
           {/each}
         </tbody>

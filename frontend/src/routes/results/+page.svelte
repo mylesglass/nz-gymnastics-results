@@ -1,12 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getWideResults, getExportUrl } from "$lib/api";
-  import { page } from "$app/stores";
+  import { getAllWideResults } from "$lib/api";
   import ScoreTooltip from "$lib/ScoreTooltip.svelte";
   import MultiSelect from "$lib/MultiSelect.svelte";
 
   let loading = $state(true);
-  let eventName = $state("");
   let isScrolled = $state(false);
   let activeTab = $state("wag");
   let columns = $state<string[]>([]);
@@ -23,11 +21,13 @@
   let appCols = $state<Record<string, string[]>>({});
 
   let searchText = $state("");
+  let filterEvent = $state<string[]>([]);
   let filterStep = $state<string[]>([]);
   let filterClub = $state<string[]>([]);
   let filterDivision = $state<string[]>([]);
   let filterRound = $state<string[]>([]);
 
+  let eventOptions = $state<string[]>([]);
   let stepOptions = $state<string[]>([]);
   let clubOptions = $state<string[]>([]);
   let divisionOptions = $state<string[]>([]);
@@ -42,6 +42,7 @@
     "round-type": "Round",
     "aa-score": "AA",
     "aa-rank": "Rank",
+    event_name: "Event",
   };
 
   let stepLabel = $derived(activeTab === "mag" ? "Level" : "STEP");
@@ -76,11 +77,14 @@
   }
 
   function buildFilterOptions(rs: Record<string, unknown>[]) {
+    const events = new Set<string>();
     const steps = new Set<string>();
     const clubs = new Set<string>();
     const divs = new Set<string>();
     const rounds = new Set<string>();
     for (const r of rs) {
+      const ev = r.event_name;
+      if (ev) events.add(String(ev));
       const s = r.step;
       if (s) steps.add(String(s));
       const c = r.club;
@@ -90,6 +94,7 @@
       const rt = r["round-type"];
       if (rt) rounds.add(String(rt));
     }
+    eventOptions = [...events].sort();
     stepOptions = [...steps].sort();
     clubOptions = [...clubs].sort();
     divisionOptions = [...divs].sort();
@@ -104,18 +109,11 @@
     return labels[prefix] ?? prefix.toUpperCase();
   }
 
-    onMount(() => {
+  onMount(() => {
     const onScroll = () => { isScrolled = window.scrollY > 60; };
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  });
 
-  $effect(() => {
-    const id = $page.params.id;
-    if (!id) return;
-    loading = true;
-    getWideResults(Number(id)).then((r) => {
-      eventName = r.event.name;
+    getAllWideResults().then((r) => {
       allData = {};
       if (r.wag) allData.wag = r.wag;
       if (r.mag) allData.mag = r.mag;
@@ -129,11 +127,14 @@
     }).finally(() => {
       loading = false;
     });
+
+    return () => window.removeEventListener("scroll", onScroll);
   });
 
   function applyTab(tab: string) {
     activeTab = tab;
     searchText = "";
+    filterEvent = [];
     filterStep = [];
     filterClub = [];
     filterDivision = [];
@@ -152,6 +153,7 @@
       backMeta = [];
       apparatusPrefixes = [];
       appCols = {};
+      eventOptions = [];
       stepOptions = [];
       clubOptions = [];
       divisionOptions = [];
@@ -171,6 +173,10 @@
         const gnz = String(r["gnz-id"] ?? "");
         return name.includes(q) || gnz.includes(qn);
       });
+    }
+    if (filterEvent.length) {
+      const sel = new Set(filterEvent);
+      result = result.filter((r) => sel.has(String(r.event_name ?? "")));
     }
     if (filterStep.length) {
       const sel = new Set(filterStep);
@@ -210,25 +216,55 @@
       sortAsc = true;
     }
   }
+
+  function exportCSV() {
+    const colKeys = columns;
+    const csvRows = filteredRows();
+    const header = colKeys.map((c) => HEADER_LABELS[c] ?? c);
+    const lines = [
+      header.join(","),
+      ...csvRows.map((r) =>
+        colKeys
+          .map((c) => {
+            const v = r[c];
+            const s = v == null ? "" : String(v);
+            return s.includes(",") || s.includes('"') || s.includes("\n")
+              ? `"${s.replace(/"/g, '""')}"`
+              : s;
+          })
+          .join(",")
+      ),
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "all-results.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 </script>
 
 <svelte:head>
-  <title>Results — NZ Gymnastics Results</title>
+  <title>All Results — NZ Gymnastics Results</title>
 </svelte:head>
 
 {#if loading}
-  <h1 class="text-3xl font-bold mb-2">{eventName || "Results"}</h1>
+  <h1 class="text-3xl font-bold mb-2">All Results</h1>
   <div class="flex justify-center py-12">
     <span class="loading loading-spinner loading-lg text-primary"></span>
   </div>
 {:else if Object.keys(allData).length === 0}
-  <h1 class="text-3xl font-bold mb-2">{eventName || "Results"}</h1>
-  <div role="alert" class="alert alert-error mt-4">
-    <span>Event not found</span>
+  <h1 class="text-3xl font-bold mb-2">All Results</h1>
+  <div class="card bg-base-200 mt-4">
+    <div class="card-body items-center text-center py-12">
+      <p class="text-base-content/70">No results yet.</p>
+      <a href="/" class="btn btn-primary btn-sm mt-2">Upload an event</a>
+    </div>
   </div>
 {:else}
   <div class="sticky top-16 z-40 bg-base-100 transition-shadow duration-200 {isScrolled ? 'shadow-sm' : ''}">
-    <h1 class="font-bold transition-all duration-200 {isScrolled ? 'text-lg mb-0 py-1' : 'text-3xl mb-2'}">{eventName || "Results"}</h1>
+    <h1 class="font-bold transition-all duration-200 {isScrolled ? 'text-lg mb-0 py-1' : 'text-3xl mb-2'}">All Results</h1>
     <div class="flex flex-wrap items-center {isScrolled ? 'gap-1 mb-2' : 'gap-3 mb-4'}">
     <div role="tablist" class="tabs tabs-boxed">
       {#each Object.keys(allData) as tab}
@@ -243,12 +279,9 @@
     </div>
 
     <div class="flex gap-2 ml-auto">
-      <a href={getExportUrl(Number($page.params.id), "csv")} class="btn btn-outline btn-sm">
+      <button onclick={exportCSV} class="btn btn-outline btn-sm">
         Download CSV
-      </a>
-      <a href={getExportUrl(Number($page.params.id), "xlsx")} class="btn btn-outline btn-sm">
-        Download XLSX
-      </a>
+      </button>
     </div>
   </div>
 
@@ -262,6 +295,10 @@
         bind:value={searchText}
       />
     </label>
+
+    {#if eventOptions.length > 1}
+      <MultiSelect options={eventOptions} bind:selected={filterEvent} label="Event" placeholder="Event (all)" />
+    {/if}
 
     <MultiSelect options={stepOptions} bind:selected={filterStep} label={stepLabel} placeholder="{stepLabel} (all)" />
 

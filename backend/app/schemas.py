@@ -9,6 +9,7 @@ class EventResponse(BaseModel):
     start_date: str
     end_date: str
     discipline: str
+    year: int | None = None
     gymnast_count: int
     score_count: int
     created_at: datetime | None = None
@@ -20,6 +21,7 @@ class EventListItem(BaseModel):
     start_date: str
     end_date: str
     discipline: str
+    year: int | None = None
     gymnast_count: int
 
 

@@ -64,6 +64,7 @@ def upload_file(file: UploadFile = File(...)):
             start_date=event_info["start_date"],
             end_date=event_info["end_date"],
             discipline=event_info["discipline"],
+            year=event_info.get("year"),
         )
         session.add(event)
         session.flush()
@@ -90,6 +91,7 @@ def upload_file(file: UploadFile = File(...)):
             start_date=event.start_date,
             end_date=event.end_date,
             discipline=event.discipline,
+            year=event.year,
             gymnast_count=gymnast_count,
             score_count=score_count,
         )
@@ -120,6 +122,7 @@ def list_events():
                     start_date=ev.start_date,
                     end_date=ev.end_date,
                     discipline=ev.discipline,
+                    year=ev.year,
                     gymnast_count=gymnast_count or 0,
                 )
             )
@@ -171,6 +174,7 @@ def get_results(event_id: int):
                 start_date=event.start_date,
                 end_date=event.end_date,
                 discipline=event.discipline,
+                year=event.year,
                 gymnast_count=gymnast_count or 0,
             ),
             columns=columns,
@@ -194,6 +198,49 @@ def get_results_wide(event_id: int):
 
         data = pivot_to_wide_dict(event_id, session)
         return {"event": {"id": event.id, "name": event.name, "discipline": event.discipline}, **data}
+    finally:
+        session.close()
+
+
+# ---------------------------------------------------------------------------
+# All results (across all events, wide format)
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/results/wide-all")
+def get_all_results_wide():
+    session = get_session()
+    try:
+        events = session.query(Event).order_by(Event.created_at.desc()).all()
+        combined: dict[str, dict] = {}
+
+        for ev in events:
+            data = pivot_to_wide_dict(ev.id, session)
+            if not data:
+                continue
+            for disc_key in ("wag", "mag"):
+                if disc_key not in data:
+                    continue
+                if disc_key not in combined:
+                    combined[disc_key] = {"columns": [], "rows": []}
+                disc = data[disc_key]
+                for row in disc["rows"]:
+                    row["event_name"] = ev.name
+                    row["event_id"] = ev.id
+                combined[disc_key]["rows"].extend(disc["rows"])
+                if not combined[disc_key]["columns"]:
+                    combined[disc_key]["columns"] = list(disc["columns"])
+                else:
+                    for c in disc["columns"]:
+                        if c not in combined[disc_key]["columns"]:
+                            combined[disc_key]["columns"].append(c)
+
+        for disc_key in combined:
+            if "event_name" in combined[disc_key]["columns"]:
+                combined[disc_key]["columns"].remove("event_name")
+            combined[disc_key]["columns"].insert(0, "event_name")
+
+        return combined
     finally:
         session.close()
 
