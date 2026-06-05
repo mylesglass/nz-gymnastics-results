@@ -1,0 +1,1076 @@
+{
+  "regions": {
+    "Aorangi": [
+      {
+        "name": "South Canterbury Gymsports",
+        "aliases": [
+          "South Canterbury GymSports",
+          "South Canterbury Gymsports",
+          "South Canterbury Gymsports",
+          "South Canterbury"
+        ]
+      },
+      {
+        "name": "Timaru Gymnastics Club",
+        "aliases": [
+          "Timaru Gymnastics Club",
+          "Timaru Gymnastic Club"
+        ]
+      },
+      {
+        "name": "Waimate Gymnastics",
+        "aliases": [
+          "Waimate Gymnastics Club",
+          "Waimate Gymnastics"
+        ]
+      }
+    ],
+    "Auckland": [
+      {
+        "name": "Eastern Suburbs Gymnastics Club",
+        "aliases": [
+          "Eastern Suburbs Gymnastics Club",
+          "Eastern Suburbs",
+          "Eastern Suburbs Gymanstics Club"
+        ]
+      },
+      {
+        "name": "Tri Star Gymnastics",
+        "aliases": [
+          "Tri Star",
+          "Tri Star Gymnastics"
+        ]
+      },
+      {
+        "name": "Waitakere Gymnastics Club",
+        "aliases": [
+          "Waitakere Gymnastics Club",
+          "Waitakere Gymnastics",
+          "Waitakere",
+          "Franklin"
+        ]
+      }
+    ],
+    "Bay of Plenty": [
+      {
+        "name": "ARGOS Gymnastics Club",
+        "aliases": [
+          "ARGOS Gymnastics Club",
+          "ARGOS",
+          "Argos Gymnastics",
+          "Argos Gymnastic Club"
+        ]
+      },
+      {
+        "name": "Impact Gymsport Academy",
+        "aliases": [
+          "Impact Gymsport Academy",
+          "Impact",
+          "Impact Gymsports",
+          "Impact Gymsport",
+          "Impact Gymnastics"
+        ]
+      },
+      {
+        "name": "Mid Island Gym Sports",
+        "aliases": [
+          "Mid Island Gymsport",
+          "MIGS",
+          "Mid Island Gym Sports",
+          "Mid Island Gymsports Club",
+          "Mid-Island Gym Sports"
+        ]
+      },
+      {
+        "name": "Te Puke Gymsport",
+        "aliases": [
+          "Te Puke Gymsports",
+          "Te Puke",
+          "Te Puke Gymsport",
+          "Te Puke Gymnastics Club",
+          "Te Puke Gym Sports"
+        ]
+      }
+    ],
+    "Canterbury": [
+      {
+        "name": "Affinity Gymnastics Academy",
+        "aliases": [
+          "Affinity Gymnastics Academy"
+        ]
+      },
+      {
+        "name": "Christchurch School of Gymnastics",
+        "aliases": [
+          "Christchurch School of Gymnastics"
+        ]
+      },
+      {
+        "name": "ICE Gymsports South Canterbury",
+        "aliases": [
+          "ICE Gymsports South Canterbury",
+          "ICE Gymnastics"
+        ]
+      },
+      {
+        "name": "Te Wero Gymnastics",
+        "aliases": [
+          "Te Wero",
+          "Te Wero Gymnastics"
+        ]
+      },
+      {
+        "name": "West Melton Gymnastics Club",
+        "aliases": [
+          "West Melton Gymnastics Club",
+          "West Melton Gymnastics"
+        ]
+      },
+      {
+        "name": "Olympia Gymnastic Sports",
+        "aliases": [
+          "Olympia Gymnastics Sports",
+          "Olympia Gymnastic Sports",
+          "Olympia Gymnastics Academy",
+          "Olympia Gymnastics"
+        ]
+      }
+    ],
+    "Counties - Manukau": [
+      {
+        "name": "Counties Manukau Gymnastics",
+        "aliases": [
+          "Counties Manukau Gymnastics",
+          "Counties Manukau Club",
+          "Counties",
+          "Counties Manukau",
+          "Counties Gymnastics Club"
+        ]
+      },
+      {
+        "name": "Franklin Gymsports",
+        "aliases": [
+          "Franklin Gymsports",
+          "Franklin Gymnastics Club",
+          "Franklin Gymsport",
+          "Franklin Gymsports Club"
+        ]
+      },
+      {
+        "name": "Howick Gymnastics Club",
+        "aliases": [
+          "Howick Gymnastics Club",
+          "Howick",
+          "Howick Gymnastic Club"
+        ]
+      }
+    ],
+    "Hawkes Bay / Poverty Bay": [
+      {
+        "name": "Central Gymnastics Club",
+        "aliases": [
+          "Central Gym Club",
+          "Central Gymnastics Club",
+          "Central  Gymnastics"
+        ]
+      },
+      {
+        "name": "Gisborne Gymnastics Club",
+        "aliases": [
+          "Gisborne Gymnastics Club",
+          "Gisborne Gymnastics",
+          "Gisborne",
+          "Gisborne Gymastics Club"
+        ]
+      },
+      {
+        "name": "Hastings Gymnastics Club",
+        "aliases": [
+          "Hastings Gymnastics",
+          "Hastings",
+          "Hastings Gymnastics Club"
+        ]
+      },
+      {
+        "name": "OMNI Gymnastic Centre",
+        "aliases": [
+          "Omni Gymnastics Club",
+          "Omni Gymnastic Centre",
+          "OMNI Gymnastic Centre",
+          "Omni Gymnastics Centre",
+          "Omni Gymnastics"
+        ]
+      }
+    ],
+    "Manawatu - Whanganui": [
+      {
+        "name": "Levin Gymnastics Club",
+        "aliases": [
+          "Levin Gymnastics",
+          "Levin",
+          "Levin Gymnastics Club"
+        ]
+      },
+      {
+        "name": "Manawatu Gymsports",
+        "aliases": [
+          "Manawatu Gymnastics",
+          "Manawatu Gymsports",
+          "Manawatu GymSports"
+        ]
+      },
+      {
+        "name": "Whanganui Boys and Girls Gym Club",
+        "aliases": [
+          "Whanganui Boys & Girls Gym",
+          "Whanganui Boys and Girls Gym Club",
+          "Whanganui Boys & Girls Gym Club",
+          "Whanganui Gymnastics"
+        ]
+      }
+    ],
+    "North Harbour": [
+      {
+        "name": "NHG Gymnastics",
+        "aliases": [
+          "NHG Gymnastics",
+          "North Harbour Gymnastics",
+          "NHG",
+          "NHG Gymnastics Club"
+        ]
+      }
+    ],
+    "Northland": [
+      {
+        "name": "Bay of Island Gymnastics Club",
+        "aliases": [
+          "Bay of Island Gymnastics Club",
+          "Bay of Islands Gymnastics Club",
+          "Bay of Islands Gymnastics"
+        ]
+      },
+      {
+        "name": "Kaipara Gymnastics Club",
+        "aliases": [
+          "Kaipara Gymnastics",
+          "Kaipara Gymnastics Club"
+        ]
+      },
+      {
+        "name": "Kaitaia Gymnastics Club",
+        "aliases": []
+      },
+      {
+        "name": "Kerikeri Gymnastics Club",
+        "aliases": [
+          "Kerikeri Gymnastics",
+          "Kerikeri Gymnastics Club",
+          "Keri Keri Gymnastics Club"
+        ]
+      },
+      {
+        "name": "Whangarei Academy of Gymnastics",
+        "aliases": [
+          "Whangarei Academy of Gymnastics"
+        ]
+      }
+    ],
+    "Otago": [
+      {
+        "name": "Aspiring Gymsports",
+        "aliases": [
+          "Aspiring Gymnastics Club",
+          "Aspiring Gymsports"
+        ]
+      },
+      {
+        "name": "Balcutha Gymnastics Club",
+        "aliases": [
+          "Balcutha Gymnastics Club"
+        ]
+      },
+      {
+        "name": "Dunedin Gymnastics Academy",
+        "aliases": [
+          "Dunedin Gymnastics Academy",
+          "Dunedin Gymnastic Academy"
+        ]
+      },
+      {
+        "name": "Pathfinders Gymnastics",
+        "aliases": [
+          "Pathfinders Gymnastics",
+          "Pathfinders Gymnastic Club",
+          "Pathfinders Gymnastics Club"
+        ]
+      },
+      {
+        "name": "St Berndaette's Gymnastics Club",
+        "aliases": [
+          "St Bernadettes",
+          "St Bernadette's Gymnastic Club",
+          "St Berndaette's Gymnastics Club"
+        ]
+      }
+    ],
+    "Southland": [
+      {
+        "name": "Invercargill Gymnastics Club",
+        "aliases": [
+          "Invercargill Gymnastic Club",
+          "Invercargill Gymnastics Club"
+        ]
+      },
+      {
+        "name": "Queenstown Gymnastics Club",
+        "aliases": [
+          "Queenstown Gymnastics Club"
+        ]
+      }
+    ],
+    "Taranaki": [
+      {
+        "name": "Gymnastics Waitara",
+        "aliases": [
+          "Gymnastics Waitara",
+          "Waitara",
+          "Gymnastics Waitara Club",
+          "Waitara Gymnastics"
+        ]
+      }
+    ],
+    "Top of the South": [
+      {
+        "name": "Blenheim Gymnastics Club",
+        "aliases": [
+          "Blenheim Gymnastics Club",
+          "Blenheim Gymnastics"
+        ]
+      },
+      {
+        "name": "Buller Gymnastics Club",
+        "aliases": [
+          "Buller Gymnastics Club"
+        ]
+      },
+      {
+        "name": "Gymnastics Nelson",
+        "aliases": [
+          "Gymnastics Nelson",
+          "Gymnastics Nelson Inc",
+          "Nelson Gymnastics"
+        ]
+      }
+    ],
+    "Waikato": [
+      {
+        "name": "Hamilton City Gymnastics",
+        "aliases": [
+          "Hamilton City Gymnastics",
+          "Hamilton City Gymnastics Club",
+          "Hamilton City"
+        ]
+      },
+      {
+        "name": "Huntly Gymnastics Club",
+        "aliases": [
+          "Huntly Gymnastics Club",
+          "Huntly",
+          "Huntly Gymnastics"
+        ]
+      },
+      {
+        "name": "Mt Tauhara Gymnastics Club",
+        "aliases": [
+          "Mt Tauhara Gymnastics Club",
+          "Mt Tauhara",
+          "Mt Tauhara Gymnastics",
+          "Mount Tauhara Gymnastics Club"
+        ]
+      },
+      {
+        "name": "Piako Gymnastics Club",
+        "aliases": [
+          "Piako",
+          "Piako Gymnastics Club",
+          "Piako Gymnastics"
+        ]
+      },
+      {
+        "name": "Turn and Gymnastic Circle",
+        "aliases": [
+          "Turn & Gymnastics Circle",
+          "Turn & Gymnastic Circle",
+          "Turn and Gymnastics Circle",
+          "Turn and Gymnastic Circle",
+          "T&GC"
+        ]
+      }
+    ],
+    "Wellington": [
+      {
+        "name": "Capital Gymnastics",
+        "aliases": [
+          "Capital Gymnastics",
+          "Capital Gymnastics Club"
+        ]
+      },
+      {
+        "name": "Harbour City Gymnastics",
+        "aliases": [
+          "Harbour City Gymnastics",
+          "Harbour City"
+        ]
+      },
+      {
+        "name": "Hutt Valley Gymnastics",
+        "aliases": [
+          "Hutt Valley Gymnastics",
+          "Hutt Valley"
+        ]
+      },
+      {
+        "name": "Kapiti Gymnastics",
+        "aliases": [
+          "Kapiti Gymnastics",
+          "Kapiti Gymnastics Club"
+        ]
+      },
+      {
+        "name": "Onslow Gymnastics",
+        "aliases": []
+      },
+      {
+        "name": "Rimutaka Gymsports",
+        "aliases": [
+          "Rimutaka Gymnastics Club",
+          "Rimutaka Gymnastics",
+          "Rimutaka Gymsports"
+        ]
+      },
+      {
+        "name": "Twisters Tawa Gymnastics Club",
+        "aliases": [
+          "Twisters Tawa Gymnastics Club",
+          "Twisters Tawa Gymnastics",
+          "Twisters Gymnastics",
+          "Twisters Gymnastics Club"
+        ]
+      }
+    ]
+  },
+  "lookup": {
+    "south canterbury gymsports": {
+      "name": "South Canterbury Gymsports",
+      "region": "Aorangi"
+    },
+    "south canterbury": {
+      "name": "South Canterbury Gymsports",
+      "region": "Aorangi"
+    },
+    "timaru gymnastics club": {
+      "name": "Timaru Gymnastics Club",
+      "region": "Aorangi"
+    },
+    "timaru gymnastic club": {
+      "name": "Timaru Gymnastics Club",
+      "region": "Aorangi"
+    },
+    "waimate gymnastics": {
+      "name": "Waimate Gymnastics",
+      "region": "Aorangi"
+    },
+    "waimate gymnastics club": {
+      "name": "Waimate Gymnastics",
+      "region": "Aorangi"
+    },
+    "eastern suburbs gymnastics club": {
+      "name": "Eastern Suburbs Gymnastics Club",
+      "region": "Auckland"
+    },
+    "eastern suburbs": {
+      "name": "Eastern Suburbs Gymnastics Club",
+      "region": "Auckland"
+    },
+    "eastern suburbs gymanstics club": {
+      "name": "Eastern Suburbs Gymnastics Club",
+      "region": "Auckland"
+    },
+    "tri star gymnastics": {
+      "name": "Tri Star Gymnastics",
+      "region": "Auckland"
+    },
+    "tri star": {
+      "name": "Tri Star Gymnastics",
+      "region": "Auckland"
+    },
+    "waitakere gymnastics club": {
+      "name": "Waitakere Gymnastics Club",
+      "region": "Auckland"
+    },
+    "waitakere gymnastics": {
+      "name": "Waitakere Gymnastics Club",
+      "region": "Auckland"
+    },
+    "waitakere": {
+      "name": "Waitakere Gymnastics Club",
+      "region": "Auckland"
+    },
+    "franklin": {
+      "name": "Waitakere Gymnastics Club",
+      "region": "Auckland"
+    },
+    "argos gymnastics club": {
+      "name": "ARGOS Gymnastics Club",
+      "region": "Bay of Plenty"
+    },
+    "argos": {
+      "name": "ARGOS Gymnastics Club",
+      "region": "Bay of Plenty"
+    },
+    "argos gymnastics": {
+      "name": "ARGOS Gymnastics Club",
+      "region": "Bay of Plenty"
+    },
+    "argos gymnastic club": {
+      "name": "ARGOS Gymnastics Club",
+      "region": "Bay of Plenty"
+    },
+    "impact gymsport academy": {
+      "name": "Impact Gymsport Academy",
+      "region": "Bay of Plenty"
+    },
+    "impact": {
+      "name": "Impact Gymsport Academy",
+      "region": "Bay of Plenty"
+    },
+    "impact gymsports": {
+      "name": "Impact Gymsport Academy",
+      "region": "Bay of Plenty"
+    },
+    "impact gymsport": {
+      "name": "Impact Gymsport Academy",
+      "region": "Bay of Plenty"
+    },
+    "impact gymnastics": {
+      "name": "Impact Gymsport Academy",
+      "region": "Bay of Plenty"
+    },
+    "mid island gym sports": {
+      "name": "Mid Island Gym Sports",
+      "region": "Bay of Plenty"
+    },
+    "mid island gymsport": {
+      "name": "Mid Island Gym Sports",
+      "region": "Bay of Plenty"
+    },
+    "migs": {
+      "name": "Mid Island Gym Sports",
+      "region": "Bay of Plenty"
+    },
+    "mid island gymsports club": {
+      "name": "Mid Island Gym Sports",
+      "region": "Bay of Plenty"
+    },
+    "mid-island gym sports": {
+      "name": "Mid Island Gym Sports",
+      "region": "Bay of Plenty"
+    },
+    "te puke gymsport": {
+      "name": "Te Puke Gymsport",
+      "region": "Bay of Plenty"
+    },
+    "te puke gymsports": {
+      "name": "Te Puke Gymsport",
+      "region": "Bay of Plenty"
+    },
+    "te puke": {
+      "name": "Te Puke Gymsport",
+      "region": "Bay of Plenty"
+    },
+    "te puke gymnastics club": {
+      "name": "Te Puke Gymsport",
+      "region": "Bay of Plenty"
+    },
+    "te puke gym sports": {
+      "name": "Te Puke Gymsport",
+      "region": "Bay of Plenty"
+    },
+    "affinity gymnastics academy": {
+      "name": "Affinity Gymnastics Academy",
+      "region": "Canterbury"
+    },
+    "christchurch school of gymnastics": {
+      "name": "Christchurch School of Gymnastics",
+      "region": "Canterbury"
+    },
+    "ice gymsports south canterbury": {
+      "name": "ICE Gymsports South Canterbury",
+      "region": "Canterbury"
+    },
+    "ice gymnastics": {
+      "name": "ICE Gymsports South Canterbury",
+      "region": "Canterbury"
+    },
+    "te wero gymnastics": {
+      "name": "Te Wero Gymnastics",
+      "region": "Canterbury"
+    },
+    "te wero": {
+      "name": "Te Wero Gymnastics",
+      "region": "Canterbury"
+    },
+    "west melton gymnastics club": {
+      "name": "West Melton Gymnastics Club",
+      "region": "Canterbury"
+    },
+    "west melton gymnastics": {
+      "name": "West Melton Gymnastics Club",
+      "region": "Canterbury"
+    },
+    "counties manukau gymnastics": {
+      "name": "Counties Manukau Gymnastics",
+      "region": "Counties - Manukau"
+    },
+    "counties manukau club": {
+      "name": "Counties Manukau Gymnastics",
+      "region": "Counties - Manukau"
+    },
+    "counties": {
+      "name": "Counties Manukau Gymnastics",
+      "region": "Counties - Manukau"
+    },
+    "counties manukau": {
+      "name": "Counties Manukau Gymnastics",
+      "region": "Counties - Manukau"
+    },
+    "counties gymnastics club": {
+      "name": "Counties Manukau Gymnastics",
+      "region": "Counties - Manukau"
+    },
+    "franklin gymsports": {
+      "name": "Franklin Gymsports",
+      "region": "Counties - Manukau"
+    },
+    "franklin gymnastics club": {
+      "name": "Franklin Gymsports",
+      "region": "Counties - Manukau"
+    },
+    "franklin gymsport": {
+      "name": "Franklin Gymsports",
+      "region": "Counties - Manukau"
+    },
+    "franklin gymsports club": {
+      "name": "Franklin Gymsports",
+      "region": "Counties - Manukau"
+    },
+    "howick gymnastics club": {
+      "name": "Howick Gymnastics Club",
+      "region": "Counties - Manukau"
+    },
+    "howick": {
+      "name": "Howick Gymnastics Club",
+      "region": "Counties - Manukau"
+    },
+    "howick gymnastic club": {
+      "name": "Howick Gymnastics Club",
+      "region": "Counties - Manukau"
+    },
+    "central gymnastics club": {
+      "name": "Central Gymnastics Club",
+      "region": "Hawkes Bay / Poverty Bay"
+    },
+    "central gym club": {
+      "name": "Central Gymnastics Club",
+      "region": "Hawkes Bay / Poverty Bay"
+    },
+    "central  gymnastics": {
+      "name": "Central Gymnastics Club",
+      "region": "Hawkes Bay / Poverty Bay"
+    },
+    "gisborne gymnastics club": {
+      "name": "Gisborne Gymnastics Club",
+      "region": "Hawkes Bay / Poverty Bay"
+    },
+    "gisborne gymnastics": {
+      "name": "Gisborne Gymnastics Club",
+      "region": "Hawkes Bay / Poverty Bay"
+    },
+    "gisborne": {
+      "name": "Gisborne Gymnastics Club",
+      "region": "Hawkes Bay / Poverty Bay"
+    },
+    "gisborne gymastics club": {
+      "name": "Gisborne Gymnastics Club",
+      "region": "Hawkes Bay / Poverty Bay"
+    },
+    "hastings gymnastics club": {
+      "name": "Hastings Gymnastics Club",
+      "region": "Hawkes Bay / Poverty Bay"
+    },
+    "hastings gymnastics": {
+      "name": "Hastings Gymnastics Club",
+      "region": "Hawkes Bay / Poverty Bay"
+    },
+    "hastings": {
+      "name": "Hastings Gymnastics Club",
+      "region": "Hawkes Bay / Poverty Bay"
+    },
+    "omni gymnastic centre": {
+      "name": "OMNI Gymnastic Centre",
+      "region": "Hawkes Bay / Poverty Bay"
+    },
+    "omni gymnastics club": {
+      "name": "OMNI Gymnastic Centre",
+      "region": "Hawkes Bay / Poverty Bay"
+    },
+    "omni gymnastics centre": {
+      "name": "OMNI Gymnastic Centre",
+      "region": "Hawkes Bay / Poverty Bay"
+    },
+    "omni gymnastics": {
+      "name": "OMNI Gymnastic Centre",
+      "region": "Hawkes Bay / Poverty Bay"
+    },
+    "levin gymnastics club": {
+      "name": "Levin Gymnastics Club",
+      "region": "Manawatu - Whanganui"
+    },
+    "levin gymnastics": {
+      "name": "Levin Gymnastics Club",
+      "region": "Manawatu - Whanganui"
+    },
+    "levin": {
+      "name": "Levin Gymnastics Club",
+      "region": "Manawatu - Whanganui"
+    },
+    "manawatu gymsports": {
+      "name": "Manawatu Gymsports",
+      "region": "Manawatu - Whanganui"
+    },
+    "manawatu gymnastics": {
+      "name": "Manawatu Gymsports",
+      "region": "Manawatu - Whanganui"
+    },
+    "whanganui boys and girls gym club": {
+      "name": "Whanganui Boys and Girls Gym Club",
+      "region": "Manawatu - Whanganui"
+    },
+    "whanganui boys & girls gym": {
+      "name": "Whanganui Boys and Girls Gym Club",
+      "region": "Manawatu - Whanganui"
+    },
+    "whanganui boys & girls gym club": {
+      "name": "Whanganui Boys and Girls Gym Club",
+      "region": "Manawatu - Whanganui"
+    },
+    "whanganui gymnastics": {
+      "name": "Whanganui Boys and Girls Gym Club",
+      "region": "Manawatu - Whanganui"
+    },
+    "nhg gymnastics": {
+      "name": "NHG Gymnastics",
+      "region": "North Harbour"
+    },
+    "north harbour gymnastics": {
+      "name": "NHG Gymnastics",
+      "region": "North Harbour"
+    },
+    "nhg": {
+      "name": "NHG Gymnastics",
+      "region": "North Harbour"
+    },
+    "nhg gymnastics club": {
+      "name": "NHG Gymnastics",
+      "region": "North Harbour"
+    },
+    "bay of island gymnastics club": {
+      "name": "Bay of Island Gymnastics Club",
+      "region": "Northland"
+    },
+    "bay of islands gymnastics club": {
+      "name": "Bay of Island Gymnastics Club",
+      "region": "Northland"
+    },
+    "bay of islands gymnastics": {
+      "name": "Bay of Island Gymnastics Club",
+      "region": "Northland"
+    },
+    "kaipara gymnastics club": {
+      "name": "Kaipara Gymnastics Club",
+      "region": "Northland"
+    },
+    "kaipara gymnastics": {
+      "name": "Kaipara Gymnastics Club",
+      "region": "Northland"
+    },
+    "kaitaia gymnastics club": {
+      "name": "Kaitaia Gymnastics Club",
+      "region": "Northland"
+    },
+    "kerikeri gymnastics club": {
+      "name": "Kerikeri Gymnastics Club",
+      "region": "Northland"
+    },
+    "kerikeri gymnastics": {
+      "name": "Kerikeri Gymnastics Club",
+      "region": "Northland"
+    },
+    "keri keri gymnastics club": {
+      "name": "Kerikeri Gymnastics Club",
+      "region": "Northland"
+    },
+    "whangarei academy of gymnastics": {
+      "name": "Whangarei Academy of Gymnastics",
+      "region": "Northland"
+    },
+    "aspiring gymsports": {
+      "name": "Aspiring Gymsports",
+      "region": "Otago"
+    },
+    "aspiring gymnastics club": {
+      "name": "Aspiring Gymsports",
+      "region": "Otago"
+    },
+    "balcutha gymnastics club": {
+      "name": "Balcutha Gymnastics Club",
+      "region": "Otago"
+    },
+    "dunedin gymnastics academy": {
+      "name": "Dunedin Gymnastics Academy",
+      "region": "Otago"
+    },
+    "dunedin gymnastic academy": {
+      "name": "Dunedin Gymnastics Academy",
+      "region": "Otago"
+    },
+    "olympia gymnastic sports": {
+      "name": "Olympia Gymnastic Sports",
+      "region": "Canterbury"
+    },
+    "olympia gymnastics sports": {
+      "name": "Olympia Gymnastic Sports",
+      "region": "Canterbury"
+    },
+    "olympia gymnastics academy": {
+      "name": "Olympia Gymnastic Sports",
+      "region": "Canterbury"
+    },
+    "olympia gymnastics": {
+      "name": "Olympia Gymnastic Sports",
+      "region": "Canterbury"
+    },
+    "pathfinders gymnastics": {
+      "name": "Pathfinders Gymnastics",
+      "region": "Otago"
+    },
+    "pathfinders gymnastic club": {
+      "name": "Pathfinders Gymnastics",
+      "region": "Otago"
+    },
+    "pathfinders gymnastics club": {
+      "name": "Pathfinders Gymnastics",
+      "region": "Otago"
+    },
+    "st berndaette's gymnastics club": {
+      "name": "St Berndaette's Gymnastics Club",
+      "region": "Otago"
+    },
+    "st bernadettes": {
+      "name": "St Berndaette's Gymnastics Club",
+      "region": "Otago"
+    },
+    "st bernadette's gymnastic club": {
+      "name": "St Berndaette's Gymnastics Club",
+      "region": "Otago"
+    },
+    "invercargill gymnastics club": {
+      "name": "Invercargill Gymnastics Club",
+      "region": "Southland"
+    },
+    "invercargill gymnastic club": {
+      "name": "Invercargill Gymnastics Club",
+      "region": "Southland"
+    },
+    "queenstown gymnastics club": {
+      "name": "Queenstown Gymnastics Club",
+      "region": "Southland"
+    },
+    "gymnastics waitara": {
+      "name": "Gymnastics Waitara",
+      "region": "Taranaki"
+    },
+    "waitara": {
+      "name": "Gymnastics Waitara",
+      "region": "Taranaki"
+    },
+    "gymnastics waitara club": {
+      "name": "Gymnastics Waitara",
+      "region": "Taranaki"
+    },
+    "waitara gymnastics": {
+      "name": "Gymnastics Waitara",
+      "region": "Taranaki"
+    },
+    "blenheim gymnastics club": {
+      "name": "Blenheim Gymnastics Club",
+      "region": "Top of the South"
+    },
+    "blenheim gymnastics": {
+      "name": "Blenheim Gymnastics Club",
+      "region": "Top of the South"
+    },
+    "buller gymnastics club": {
+      "name": "Buller Gymnastics Club",
+      "region": "Top of the South"
+    },
+    "gymnastics nelson": {
+      "name": "Gymnastics Nelson",
+      "region": "Top of the South"
+    },
+    "gymnastics nelson inc": {
+      "name": "Gymnastics Nelson",
+      "region": "Top of the South"
+    },
+    "nelson gymnastics": {
+      "name": "Gymnastics Nelson",
+      "region": "Top of the South"
+    },
+    "hamilton city gymnastics": {
+      "name": "Hamilton City Gymnastics",
+      "region": "Waikato"
+    },
+    "hamilton city gymnastics club": {
+      "name": "Hamilton City Gymnastics",
+      "region": "Waikato"
+    },
+    "hamilton city": {
+      "name": "Hamilton City Gymnastics",
+      "region": "Waikato"
+    },
+    "huntly gymnastics club": {
+      "name": "Huntly Gymnastics Club",
+      "region": "Waikato"
+    },
+    "huntly": {
+      "name": "Huntly Gymnastics Club",
+      "region": "Waikato"
+    },
+    "huntly gymnastics": {
+      "name": "Huntly Gymnastics Club",
+      "region": "Waikato"
+    },
+    "mt tauhara gymnastics club": {
+      "name": "Mt Tauhara Gymnastics Club",
+      "region": "Waikato"
+    },
+    "mt tauhara": {
+      "name": "Mt Tauhara Gymnastics Club",
+      "region": "Waikato"
+    },
+    "mt tauhara gymnastics": {
+      "name": "Mt Tauhara Gymnastics Club",
+      "region": "Waikato"
+    },
+    "mount tauhara gymnastics club": {
+      "name": "Mt Tauhara Gymnastics Club",
+      "region": "Waikato"
+    },
+    "piako gymnastics club": {
+      "name": "Piako Gymnastics Club",
+      "region": "Waikato"
+    },
+    "piako": {
+      "name": "Piako Gymnastics Club",
+      "region": "Waikato"
+    },
+    "piako gymnastics": {
+      "name": "Piako Gymnastics Club",
+      "region": "Waikato"
+    },
+    "turn and gymnastic circle": {
+      "name": "Turn and Gymnastic Circle",
+      "region": "Waikato"
+    },
+    "turn & gymnastics circle": {
+      "name": "Turn and Gymnastic Circle",
+      "region": "Waikato"
+    },
+    "turn & gymnastic circle": {
+      "name": "Turn and Gymnastic Circle",
+      "region": "Waikato"
+    },
+    "turn and gymnastics circle": {
+      "name": "Turn and Gymnastic Circle",
+      "region": "Waikato"
+    },
+    "t&gc": {
+      "name": "Turn and Gymnastic Circle",
+      "region": "Waikato"
+    },
+    "capital gymnastics": {
+      "name": "Capital Gymnastics",
+      "region": "Wellington"
+    },
+    "capital gymnastics club": {
+      "name": "Capital Gymnastics",
+      "region": "Wellington"
+    },
+    "harbour city gymnastics": {
+      "name": "Harbour City Gymnastics",
+      "region": "Wellington"
+    },
+    "harbour city": {
+      "name": "Harbour City Gymnastics",
+      "region": "Wellington"
+    },
+    "hutt valley gymnastics": {
+      "name": "Hutt Valley Gymnastics",
+      "region": "Wellington"
+    },
+    "hutt valley": {
+      "name": "Hutt Valley Gymnastics",
+      "region": "Wellington"
+    },
+    "kapiti gymnastics": {
+      "name": "Kapiti Gymnastics",
+      "region": "Wellington"
+    },
+    "kapiti gymnastics club": {
+      "name": "Kapiti Gymnastics",
+      "region": "Wellington"
+    },
+    "onslow gymnastics": {
+      "name": "Onslow Gymnastics",
+      "region": "Wellington"
+    },
+    "rimutaka gymsports": {
+      "name": "Rimutaka Gymsports",
+      "region": "Wellington"
+    },
+    "rimutaka gymnastics club": {
+      "name": "Rimutaka Gymsports",
+      "region": "Wellington"
+    },
+    "rimutaka gymnastics": {
+      "name": "Rimutaka Gymsports",
+      "region": "Wellington"
+    },
+    "twisters tawa gymnastics club": {
+      "name": "Twisters Tawa Gymnastics Club",
+      "region": "Wellington"
+    },
+    "twisters tawa gymnastics": {
+      "name": "Twisters Tawa Gymnastics Club",
+      "region": "Wellington"
+    },
+    "twisters gymnastics": {
+      "name": "Twisters Tawa Gymnastics Club",
+      "region": "Wellington"
+    },
+    "twisters gymnastics club": {
+      "name": "Twisters Tawa Gymnastics Club",
+      "region": "Wellington"
+    }
+  }
+}
