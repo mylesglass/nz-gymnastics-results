@@ -9,17 +9,49 @@
   let searchQuery = $state("");
 
   let yearOptions = $state<string[]>([]);
+  let sortCol = $state("start_date");
+  let sortAsc = $state(false);
+
+  function sorted<T>(items: T[], col: string, asc: boolean): T[] {
+    return [...items].sort((a, b) => {
+      const va = (a as Record<string, unknown>)[col];
+      const vb = (b as Record<string, unknown>)[col];
+      const aStr = String(va ?? "");
+      const bStr = String(vb ?? "");
+      let cmp: number;
+      if (typeof va === "number" && typeof vb === "number") {
+        cmp = va - vb;
+      } else {
+        cmp = aStr.localeCompare(bStr, undefined, { numeric: true });
+      }
+      return asc ? cmp : -cmp;
+    });
+  }
+
   let filteredEvents = $derived(
-    events.filter((e) => {
-      if (filterYear && String(e.year ?? "") !== filterYear) return false;
-      if (
-        searchQuery &&
-        !e.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-        return false;
-      return true;
-    })
+    sorted(
+      events.filter((e) => {
+        if (filterYear && String(e.year ?? "") !== filterYear) return false;
+        if (
+          searchQuery &&
+          !e.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+          return false;
+        return true;
+      }),
+      sortCol,
+      sortAsc
+    )
   );
+
+  function toggleSort(col: string) {
+    if (sortCol === col) {
+      sortAsc = !sortAsc;
+    } else {
+      sortCol = col;
+      sortAsc = false;
+    }
+  }
 
   let renameTarget = $state<{ id: number; name: string } | null>(null);
   let renameName = $state("");
@@ -31,7 +63,6 @@
   onMount(async () => {
     try {
       events = await listEvents();
-      events.sort((a, b) => b.start_date.localeCompare(a.start_date));
       const years = new Set<string>();
       for (const e of events) {
         if (e.year) years.add(String(e.year));
@@ -145,11 +176,26 @@
       <table class="table table-zebra table-pin-rows">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Year</th>
-            <th>Date</th>
-            <th>Discipline</th>
-            <th class="text-right">Gymnasts</th>
+            <th class="cursor-pointer hover:text-primary" onclick={() => toggleSort("name")}>
+              Name
+              {#if sortCol === "name"}<span class="ml-1 text-xs">{sortAsc ? "▲" : "▼"}</span>{/if}
+            </th>
+            <th class="cursor-pointer hover:text-primary" onclick={() => toggleSort("year")}>
+              Year
+              {#if sortCol === "year"}<span class="ml-1 text-xs">{sortAsc ? "▲" : "▼"}</span>{/if}
+            </th>
+            <th class="cursor-pointer hover:text-primary" onclick={() => toggleSort("start_date")}>
+              Date
+              {#if sortCol === "start_date"}<span class="ml-1 text-xs">{sortAsc ? "▲" : "▼"}</span>{/if}
+            </th>
+            <th class="cursor-pointer hover:text-primary" onclick={() => toggleSort("discipline")}>
+              Discipline
+              {#if sortCol === "discipline"}<span class="ml-1 text-xs">{sortAsc ? "▲" : "▼"}</span>{/if}
+            </th>
+            <th class="text-right cursor-pointer hover:text-primary" onclick={() => toggleSort("gymnast_count")}>
+              Gymnasts
+              {#if sortCol === "gymnast_count"}<span class="ml-1 text-xs">{sortAsc ? "▲" : "▼"}</span>{/if}
+            </th>
             <th class="w-20"></th>
           </tr>
         </thead>
