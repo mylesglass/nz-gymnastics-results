@@ -31,6 +31,7 @@
   onMount(async () => {
     try {
       events = await listEvents();
+      events.sort((a, b) => b.start_date.localeCompare(a.start_date));
       const years = new Set<string>();
       for (const e of events) {
         if (e.year) years.add(String(e.year));

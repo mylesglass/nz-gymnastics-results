@@ -120,7 +120,7 @@ def upload_file(file: UploadFile = File(...)):
 def list_events():
     session = get_session()
     try:
-        events = session.query(Event).order_by(Event.created_at.desc()).all()
+        events = session.query(Event).order_by(Event.start_date.desc()).all()
         result = []
         for ev in events:
             gymnast_count = (
