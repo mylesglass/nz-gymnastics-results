@@ -411,6 +411,29 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                     rows.append(row)
 
     rows.sort(key=lambda r: (r["gymnast_name"], r["apparatus"], r["pass_number"]))
+
+    # Backfill AA scores for rows emitted before their AA result set was processed
+    # (AA result set may appear after apparatus result sets in the same table)
+    entity_to_name: dict[str, str] = {}
+    for eid, ind_info in individuals.items():
+        pid = ind_info.get("participant_id", "")
+        part_info = participants.get(pid, {})
+        name = part_info.get("name", "")
+        if name:
+            entity_to_name[eid] = name
+    for eid, aa_data in aa_scores.items():
+        name = entity_to_name.get(eid)
+        if not name:
+            continue
+        aa_score = aa_data.get("aa_score")
+        aa_rank = aa_data.get("aa_rank")
+        if aa_score is None:
+            continue
+        for row in rows:
+            if row["gymnast_name"] == name and row["aa_score"] is None:
+                row["aa_score"] = _sanitise_float(aa_score)
+                row["aa_rank"] = _sanitise_rank(aa_rank)
+
     return event_info, rows
 
 
