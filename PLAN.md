@@ -128,7 +128,8 @@
 - [ ] Re-implement equals in rankings with correct tie detection logic
 - [x] Event page: add year filter/search bar (year dropdown + text search by name)
 - [x] Improve error detection when loading JSONs / expandable error details / upload stats
+- [x] Allow user to DELETE an event from the event page (no auth)
+- [x] Allow user to RENAME a competition (no auth)
 - [ ] Mobile-responsive table improvements
 - [ ] Very simple email & password authentication to keep upload page hidden from regular users
-- [ ] Allow user to DELETE an event from the event page (if logged in)
 - [ ] Allow CSV export of JUST the current information displayed on the filtered table

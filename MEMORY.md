@@ -193,6 +193,14 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
 - **WideResultsTable**: `.catch()` now captures error message + raw text instead of silently swallowing
 - **WideResultsTable**: Empty state shows error panel with expandable details when an error occurred, before falling back to the `empty` snippet
 
+### Delete + Rename event
+- **Backend**: Added `DELETE /api/events/{event_id}` endpoint (cascade deletes scores via model)
+- **Backend**: Added `PATCH /api/events/{event_id}` + `EventUpdate(name)` schema — updates `Event.name` + syncs denormalized `LongScore.event_name`
+- **Frontend**: Added `deleteEvent()` and `renameEvent()` to API client
+- **Events page**: Action column with pencil (rename) and trash (delete) icon buttons
+- **Rename**: Opens a modal with pre-filled name input, calls PATCH, updates local list on success
+- **Delete**: Opens a confirmation modal, calls DELETE, removes from local list
+
 ## Known Edges & Gotchas
 - **WAG/MAG discipline split**: Tab assignment now uses the `discipline` field from data. Previously used apparatus presence (VT/FX appeared in both lists, causing all gymnasts to show in both tabs).
 - **Vault aggregation**: Different levels use different rules (average vs best-of-2). See `_use_vault_average()` in transformer.py for complete NZ-specific rule table.

@@ -61,3 +61,23 @@ export async function getAllWideResults(params?: {
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+export async function deleteEvent(eventId: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/events/${eventId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(await res.text());
+}
+
+export async function renameEvent(
+  eventId: number,
+  name: string
+): Promise<EventSummary> {
+  const res = await fetch(`${API_BASE}/api/events/${eventId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}

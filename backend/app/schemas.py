@@ -30,3 +30,7 @@ class ResultsResponse(BaseModel):
     event: EventListItem
     columns: list[str]
     rows: list[dict]
+
+
+class EventUpdate(BaseModel):
+    name: str
