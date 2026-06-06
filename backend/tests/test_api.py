@@ -58,6 +58,13 @@ class TestUpload:
         resp = client.post("/api/upload", files={"file": ("test.json", b"not json", "application/json")})
         assert resp.status_code == 400
 
+    def test_upload_rejects_missing_top_level_key(self):
+        data = json.dumps({"events": [{"name": "Test"}]})
+        resp = client.post("/api/upload", files={"file": ("test.json", data.encode(), "application/json")})
+        assert resp.status_code == 422
+        body = resp.json()
+        assert "errors" in body["detail"]
+
     def test_upload_hve_success(self):
         path = DATA_DIR / "hve-2026.json"
         if not path.exists():

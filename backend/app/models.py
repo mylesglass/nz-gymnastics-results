@@ -42,6 +42,7 @@ class LongScore(Base):
     neutral_deductions = Column(Float, nullable=True)
     pass_final_score = Column(Float, nullable=True)
     bonus = Column(Float, nullable=True)
+    start_value = Column(Float, nullable=True)
     apparatus_rank = Column(Integer, nullable=True)
     aa_score = Column(Float, nullable=True)
     aa_rank = Column(Integer, nullable=True)

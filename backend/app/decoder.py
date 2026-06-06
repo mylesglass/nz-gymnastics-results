@@ -7,6 +7,7 @@ _OUTPUT_NAMES_TO_COLUMNS = {
     "Neutral Deductions": "neutral_deductions",
     "Execution Deductions": "_execution_deductions",
     "Bonus": "bonus",
+    "Start Value": "start_value",
 }
 
 _STANDARD_FIELDS = {"pass_final_score", "d_score", "e_score", "neutral_deductions"}
@@ -63,6 +64,7 @@ def decode_public_outputs(
         "e_score": None,
         "neutral_deductions": None,
         "bonus": None,
+        "start_value": None,
     }
 
     for opaque_id, raw_value in public_outputs.items():
