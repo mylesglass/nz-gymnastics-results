@@ -1,5 +1,9 @@
 <script lang="ts">
-  let { row, prefix }: { row: Record<string, unknown>; prefix: string } =
+  let {
+    row,
+    prefix,
+    isLast = false,
+  }: { row: Record<string, unknown>; prefix: string; isLast?: boolean } =
     $props();
 
   let hasMulti = $derived(row[`${prefix}-1-total`] != null);
@@ -18,7 +22,7 @@
 </script>
 
 {#if hasMulti}
-  <div class="dropdown dropdown-hover dropdown-right">
+  <div class="dropdown dropdown-hover {isLast ? 'dropdown-left' : 'dropdown-right'}">
     <div class="cursor-pointer" tabindex="0">
       {row[`${prefix}-d`] ?? ""} / {row[`${prefix}-total`] ?? "DNS"}
     </div>
@@ -56,7 +60,7 @@
     </div>
   </div>
 {:else}
-  <div class="dropdown dropdown-hover dropdown-right">
+  <div class="dropdown dropdown-hover {isLast ? 'dropdown-left' : 'dropdown-right'}">
     <div class="cursor-pointer" tabindex="0">
       {row[`${prefix}-d`] ?? ""} / {row[`${prefix}-total`] ?? "DNS"}
     </div>
@@ -68,7 +72,6 @@
         {row.name} - {appLabel}
       </div>
 
-      <div class="divider my-1"></div>
       <div class="flex flex-col gap-0.5">
         <div class="flex justify-between gap-4">
           <span class="font-semibold">D</span><span
@@ -102,8 +105,7 @@
             >
           </div>
         {/if}
-        <div class="divider my-1"></div>
-        <div class="flex justify-between gap-4">
+        <div class="flex justify-between pt-2 gap-4">
           <span class="font-bold">Total</span><span
             >{row[`${prefix}-total`] ?? "DNS"}</span
           >

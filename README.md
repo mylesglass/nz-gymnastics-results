@@ -6,11 +6,14 @@ A web application for parsing, storing, and viewing gymnastics competition resul
 - Upload Scoreholder JSON files and parse into a normalized database
 - View results in a wide-format table with WAG/MAG tabs
 - Hover tooltips on apparatus scores showing full breakdown (D, E, N, Bonus, Rank)
-- Filter, sort, and search results by name/ID, STEP/Level, Club, Division, Round
+- Filter, sort, and search results by name/ID, STEP/Level, Club, Division, Round — filters integrated into column headers
 - View results for a single gymnast or club across all events (clickable table cells)
 - Export to CSV and XLSX (all columns including per-pass vault data)
 - Light/dark theme toggle
+- Responsive column sizing with configurable per-column min-widths
+- Sticky duplicate header with scroll-sync for long tables
 - Supports both WAG (Women's Artistic Gymnastics) and MAG (Men's Artistic Gymnastics)
+- Footer with GitHub link and Ko-fi donation support
 
 ## Tech Stack
 - **Backend:** Python, FastAPI, SQLAlchemy, SQLite, Pandas
@@ -101,12 +104,12 @@ frontend/                 # SvelteKit + Tailwind CSS v4 + DaisyUI v5
 │   ├── lib/
 │   │   ├── api.ts              # API client
 │   │   ├── ScoreTooltip.svelte  # Apparatus score tooltip component
-│   │   ├── MultiSelect.svelte   # Multi-select filter dropdown
-│   │   └── WideResultsTable.svelte # Shared results table component
+│   │   ├── MultiSelect.svelte   # Standalone multi-select dropdown (used in event list)
+│   │   └── WideResultsTable.svelte # Shared results table with sticky header, column filters, sort, export
 │   ├── app.css              # Tailwind + DaisyUI imports
 │   ├── app.html             # Inline theme script (flash prevention)
 │   └── routes/
-│       ├── +layout.svelte    # Nav bar + theme toggle
+│       ├── +layout.svelte    # Nav bar, footer, theme toggle, sticky footer layout
 │       ├── +page.svelte      # Upload (DaisyUI card/drop-zone)
 │       ├── events/+page.svelte       # Event list table
 │       ├── events/[id]/+page.svelte  # Per-event results (thin wrapper)
