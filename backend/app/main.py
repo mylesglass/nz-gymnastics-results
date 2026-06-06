@@ -9,7 +9,7 @@ from sqlalchemy import func
 from app.database import get_session, init_db
 from app.models import Event, LongScore
 from app.parser import ParseError, parse_json, validate_upload_structure
-from app.schemas import EventListItem, EventResponse, ResultsResponse
+from app.schemas import EventListItem, EventResponse, EventUpdate, ResultsResponse
 from app.transformer import export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict
 
 
@@ -297,6 +297,58 @@ def export_event_xlsx(event_id: int):
             content=data,
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={"Content-Disposition": f'attachment; filename="{event.name}.xlsx"'},
+        )
+    finally:
+        session.close()
+
+
+# ---------------------------------------------------------------------------
+# Delete event
+# ---------------------------------------------------------------------------
+
+@app.delete("/api/events/{event_id}")
+def delete_event(event_id: int):
+    session = get_session()
+    try:
+        event = session.query(Event).filter(Event.id == event_id).first()
+        if not event:
+            raise HTTPException(404, "Event not found")
+        session.delete(event)
+        session.commit()
+        return {"ok": True}
+    finally:
+        session.close()
+
+
+# ---------------------------------------------------------------------------
+# Rename event
+# ---------------------------------------------------------------------------
+
+@app.patch("/api/events/{event_id}", response_model=EventListItem)
+def rename_event(event_id: int, body: EventUpdate):
+    session = get_session()
+    try:
+        event = session.query(Event).filter(Event.id == event_id).first()
+        if not event:
+            raise HTTPException(404, "Event not found")
+        event.name = body.name
+        session.query(LongScore).filter(LongScore.event_id == event_id).update(
+            {"event_name": body.name}
+        )
+        session.commit()
+        gymnast_count = (
+            session.query(func.count(func.distinct(LongScore.gymnast_name)))
+            .filter(LongScore.event_id == event.id)
+            .scalar()
+        )
+        return EventListItem(
+            id=event.id,
+            name=event.name,
+            start_date=event.start_date,
+            end_date=event.end_date,
+            discipline=event.discipline,
+            year=event.year,
+            gymnast_count=gymnast_count,
         )
     finally:
         session.close()
