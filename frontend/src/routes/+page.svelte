@@ -3,22 +3,50 @@
   import { goto } from "$app/navigation";
 
   let uploading = $state(false);
-  let result = $state<{ id: number; name: string; gymnast_count: number } | null>(null);
-  let error = $state<string | null>(null);
+  let result = $state<{
+    id: number;
+    name: string;
+    gymnast_count: number;
+    score_count?: number;
+    club_count?: number;
+  } | null>(null);
+  let errorMessage = $state<string | null>(null);
+  let errorDetails = $state<string[]>([]);
+  let errorRaw = $state<string | null>(null);
+  let showErrorDetail = $state(false);
 
   async function handleFile(file: File) {
     if (!file.name.endsWith(".json")) {
-      error = "Please select a .json file";
+      errorMessage = "Please select a .json file";
+      errorDetails = [];
+      errorRaw = null;
       return;
     }
     uploading = true;
-    error = null;
+    errorMessage = null;
+    errorDetails = [];
+    errorRaw = null;
     result = null;
     try {
       const ev = await uploadFile(file);
       result = ev;
     } catch (err) {
-      error = String(err);
+      const text = String(err);
+      errorRaw = text;
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed.errors && Array.isArray(parsed.errors)) {
+          errorDetails = parsed.errors;
+          errorMessage = parsed.message || "Upload failed";
+        } else if (parsed.detail) {
+          errorMessage = parsed.detail;
+        } else {
+          errorMessage = text;
+        }
+      } catch {
+        const msg = err instanceof Error ? err.message : text;
+        errorMessage = msg || text;
+      }
     } finally {
       uploading = false;
     }
@@ -73,9 +101,29 @@
   {/if}
 </div>
 
-{#if error}
-  <div role="alert" class="alert alert-error mt-4">
-    <span>{error}</span>
+{#if errorMessage}
+  <div class="alert alert-error mt-4">
+    <div class="flex flex-col gap-2 w-full">
+      <span>{errorMessage}</span>
+      {#if errorDetails.length > 0}
+        <ul class="list-disc list-inside text-sm opacity-80">
+          {#each errorDetails as detail}
+            <li>{detail}</li>
+          {/each}
+        </ul>
+      {/if}
+      {#if errorRaw}
+        <button
+          class="btn btn-ghost btn-xs self-start"
+          onclick={() => (showErrorDetail = !showErrorDetail)}
+        >
+          {showErrorDetail ? "Hide details" : "Show details"}
+        </button>
+        {#if showErrorDetail}
+          <pre class="text-xs opacity-60 whitespace-pre-wrap max-h-48 overflow-y-auto bg-base-300 p-2 rounded">{errorRaw}</pre>
+        {/if}
+      {/if}
+    </div>
   </div>
 {/if}
 
@@ -83,7 +131,15 @@
   <div class="card bg-base-200 border border-success/30 mt-6">
     <div class="card-body">
       <h2 class="card-title text-lg">{result.name}</h2>
-      <p>{result.gymnast_count} gymnasts parsed</p>
+      <div class="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+        <span><strong>{result.gymnast_count}</strong> gymnasts</span>
+        {#if result.score_count != null}
+          <span><strong>{result.score_count}</strong> scores</span>
+        {/if}
+        {#if result.club_count != null}
+          <span><strong>{result.club_count}</strong> clubs</span>
+        {/if}
+      </div>
       <div class="card-actions mt-2">
         <a href="/events/{result.id}" class="btn btn-primary btn-sm">View Results</a>
         <a href="/events" class="btn btn-ghost btn-sm">All Events</a>

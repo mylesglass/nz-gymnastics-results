@@ -11,6 +11,7 @@ export interface EventSummary {
   year: number | null;
   gymnast_count: number;
   score_count: number;
+  club_count?: number;
 }
 
 export interface WideResponse {
