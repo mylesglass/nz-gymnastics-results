@@ -107,3 +107,14 @@
 - [x] Add batch validation CLI: `python -m app.validate_json path/to/file.json`
 - [x] Add regression tests for all known edge cases (equal-discarded, Start Value, Open division, unit name patterns, known structural variations)
 - [x] **Test:** 201/201 pytest passing; batch CLI validates all 40 files cleanly
+
+### STEP 14: Frontend UI Improvements ✅
+- [x] Integrate filter dropdowns into column headers (remove separate MultiSelect buttons)
+- [x] Add per-column min-width system via `COL_MIN_CLASS` (Tailwind classes)
+- [x] Hide Division column in MAG view
+- [x] Left-align apparatus columns
+- [x] Responsive column sizing (columns shrink/grow with viewport)
+- [x] Add footer with GitHub link and Ko-fi donation support
+- [x] Sticky footer layout (min-height flex, footer at bottom on short pages)
+- [x] Last apparatus column tooltip opens left to avoid clipping
+- [x] Additional bottom padding for table tooltip clearance
