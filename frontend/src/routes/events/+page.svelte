@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { goto } from "$app/navigation";
   import { listEvents } from "$lib/api";
 
   let events = $state<Array<{ id: number; name: string; start_date: string; gymnast_count: number; year: number | null }>>([]);
@@ -69,18 +70,30 @@
             <th>Date</th>
             <th>Discipline</th>
             <th class="text-right">Gymnasts</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
           {#each filteredEvents as ev}
-            <tr>
+            <tr
+              class="cursor-pointer hover:bg-base-300"
+              onclick={() => goto(`/events/${ev.id}`)}
+            >
               <td class="font-medium">{ev.name}</td>
               <td>{ev.year ?? ""}</td>
               <td>{ev.start_date}</td>
-              <td>{ev.discipline}</td>
+              <td>
+                {#if ev.discipline === "WAG"}
+                  <span class="badge badge-primary badge-sm">WAG</span>
+                {:else if ev.discipline === "MAG"}
+                  <span class="badge badge-secondary badge-sm">MAG</span>
+                {:else}
+                  <div class="flex gap-1">
+                    <span class="badge badge-primary badge-sm">WAG</span>
+                    <span class="badge badge-secondary badge-sm">MAG</span>
+                  </div>
+                {/if}
+              </td>
               <td class="text-right">{ev.gymnast_count}</td>
-              <td><a href="/events/{ev.id}" class="btn btn-ghost btn-xs">View</a></td>
             </tr>
           {/each}
         </tbody>

@@ -205,7 +205,7 @@ def pivot_to_wide_dict(event_id: int, session, gnz_id: str = None, club: str = N
             if key not in seen:
                 seen.add(key)
                 out_row = _build_wide_row(row, prefixes, columns)
-                out_rows.append(out_row)
+            out_rows.append(out_row)
 
         result[disc_key] = {"columns": columns, "rows": out_rows}
 
