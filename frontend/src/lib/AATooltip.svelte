@@ -11,12 +11,21 @@
     }, 0);
   }
 
+  function competedCount(col: string): number {
+    return prefixes.reduce((acc, p) => {
+      const val = row[`${p}-${col}`];
+      return acc + (val != null && val !== "" && !Number.isNaN(Number(val)) ? 1 : 0);
+    }, 0);
+  }
+
   let totalD = $derived(sum("d"));
   let totalE = $derived(sum("e"));
   let totalN = $derived(sum("n"));
+  let appCount = $derived(competedCount("e"));
+  let eDeductions = $derived(appCount * 10 - totalE);
 </script>
 
-<div class="dropdown dropdown-hover dropdown-right">
+<div class="dropdown dropdown-hover dropdown-left">
   <div class="cursor-pointer" role="button" tabindex="0">
     {row["aa-score"] ?? ""}
   </div>
@@ -42,13 +51,13 @@
       {/if}
       <div class="divider my-1"></div>
       <div class="flex justify-between gap-4">
-        <span>Total D</span><span>{totalD.toFixed(1)}</span>
+        <span>Total D Score</span><span>{totalD.toFixed(1)}</span>
       </div>
       <div class="flex justify-between gap-4">
-        <span>Total E</span><span>{totalE.toFixed(3)}</span>
+        <span>Total E Deductions</span><span>{eDeductions.toFixed(3)}</span>
       </div>
       <div class="flex justify-between gap-4">
-        <span>Total N</span><span>{totalN.toFixed(1)}</span>
+        <span>Total ND</span><span>{totalN.toFixed(1)}</span>
       </div>
     </div>
   </div>
