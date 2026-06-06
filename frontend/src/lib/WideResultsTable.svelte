@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import type { Snippet } from "svelte";
   import ScoreTooltip from "./ScoreTooltip.svelte";
-  import MultiSelect from "./MultiSelect.svelte";
 
   interface TabData {
     columns: string[];
@@ -35,8 +34,6 @@
   } = $props();
 
   let loading = $state(true);
-  let isScrolled = $state(false);
-  let showDuplicateHeaders = $state(false);
   let activeTab = $state("wag");
   let columns = $state<string[]>([]);
   let rows = $state<Record<string, unknown>[]>([]);
@@ -64,10 +61,21 @@
   let divisionOptions = $state<string[]>([]);
   let roundOptions = $state<string[]>([]);
 
-  let theadEl: HTMLElement | undefined = $state();
-  let mainScrollEl: HTMLElement | undefined = $state();
-  let dupScrollEl: HTMLElement | undefined = $state();
-  let columnWidths = $state<number[]>([]);
+  let openDropdown = $state<string | null>(null);
+  let openDropdownX = $state(0);
+  let openDropdownY = $state(0);
+
+  function toggleDropdown(col: string, event: MouseEvent) {
+    if (openDropdown === col) {
+      openDropdown = null;
+      return;
+    }
+    const btn = event.currentTarget as HTMLElement;
+    const rect = btn.getBoundingClientRect();
+    openDropdownX = rect.left;
+    openDropdownY = rect.bottom + 2;
+    openDropdown = col;
+  }
 
   const BASE_LABELS: Record<string, string> = {
     "gnz-id": "ID",
@@ -82,6 +90,38 @@
   let HEADER_LABELS = $derived({ ...BASE_LABELS, ...extraHeadLabels });
 
   let stepLabel = $derived(activeTab === "mag" ? "Level" : "STEP");
+
+  const FILTERABLE_COLS = new Set(["step", "club", "division", "round-type", "event_name"]);
+
+  function filterStateFor(col: string): { selected: string[]; options: string[]; label: string } {
+    if (col === "event_name" && !showEventFilter) {
+      return { selected: [], options: [], label: "Event" };
+    }
+    const map: Record<string, { selected: string[]; options: string[]; label: string }> = {
+      step: { selected: filterStep, options: stepOptions, label: stepLabel },
+      club: { selected: filterClub, options: clubOptions, label: "Club" },
+      division: { selected: filterDivision, options: divisionOptions, label: "Division" },
+      "round-type": { selected: filterRound, options: roundOptions, label: "Round" },
+      event_name: { selected: filterEvent, options: eventOptions, label: "Event" },
+    };
+    return map[col] ?? { selected: [], options: [], label: col };
+  }
+
+  function toggleFilterOption(col: string, value: string) {
+    const state = filterStateFor(col);
+    const arr = state.selected;
+    const idx = arr.indexOf(value);
+    if (idx >= 0) {
+      arr.splice(idx, 1);
+    } else {
+      arr.push(value);
+    }
+  }
+
+  function clearFilter(col: string) {
+    const state = filterStateFor(col);
+    state.selected.length = 0;
+  }
 
   const TAIL_META = new Set(["aa-score", "aa-rank"]);
 
@@ -155,17 +195,7 @@
     return labels[prefix] ?? prefix.toUpperCase();
   }
 
-  function thStyle(i: number): string {
-    const w = columnWidths[i];
-    return w ? `width:${w}px;min-width:${w}px` : "";
-  }
-
   onMount(() => {
-    const onScroll = () => {
-      isScrolled = window.scrollY > 60;
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-
     loadData()
       .then((r) => {
         title = r.title;
@@ -182,48 +212,6 @@
       .finally(() => {
         loading = false;
       });
-
-    return () => window.removeEventListener("scroll", onScroll);
-  });
-
-  $effect(() => {
-    const el = theadEl;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        showDuplicateHeaders = !entry.isIntersecting;
-      },
-      { threshold: 0, rootMargin: "-64px 0px 0px 0px" },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  });
-
-  $effect(() => {
-    const main = mainScrollEl;
-    const dup = dupScrollEl;
-    if (!main || !dup) return;
-    function onScroll() {
-      dup.scrollLeft = main.scrollLeft;
-    }
-    main.addEventListener("scroll", onScroll, { passive: true });
-    return () => main.removeEventListener("scroll", onScroll);
-  });
-
-  $effect(() => {
-    columns;
-    const el = theadEl;
-    if (!el) return;
-    const measure = () => {
-      const ths = el.querySelectorAll("th");
-      columnWidths = Array.from(ths).map(
-        (th) => (th as HTMLElement).offsetWidth,
-      );
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
   });
 
   function applyTab(tab: string) {
@@ -331,181 +319,94 @@
     </div>
   {/if}
 {:else}
-  <div
-    class="sticky px-2 top-0 z-40 bg-base-100 transition-shadow duration-50 {isScrolled
-      ? 'shadow-sm'
-      : ''}"
-  >
-    <h1
-      class="font-bold transition-all duration-50 ml-2 {isScrolled
-        ? 'text-lg mb-0 py-1'
-        : 'text-3xl mb-2 mt-2'}"
-    >
-      {title}
-    </h1>
-
-    <div class="flex flex-wrap items-center gap-1 pb-1">
-      <div role="tablist" class="tabs tabs-boxed">
-        {#each Object.keys(allData) as tab}
-          <button
-            role="tab"
-            class="tab {activeTab === tab ? 'tab-active font-bold' : ''}"
-            onclick={() => applyTab(tab)}
-          >
-            {tab.toUpperCase()}
-          </button>
-        {/each}
-      </div>
-
-      <label class="input input-bordered input-xs flex items-center gap-1 w-64">
-        <span class="text-base-content/50 text-xs">🔍</span>
-        <input
-          type="text"
-          class="grow text-xs w-12"
-          placeholder="Search name or ID"
-          bind:value={searchText}
-        />
-      </label>
-
-      {#if showEventFilter && eventOptions.length > 1}
-        <MultiSelect
-          options={eventOptions}
-          bind:selected={filterEvent}
-          label="Event"
-          placeholder="Event"
-        />
-      {/if}
-
-      <MultiSelect
-        options={stepOptions}
-        bind:selected={filterStep}
-        label={stepLabel}
-        placeholder={stepLabel}
-      />
-      <MultiSelect
-        options={clubOptions}
-        bind:selected={filterClub}
-        label="Club"
-        placeholder="Club"
-      />
-      <MultiSelect
-        options={divisionOptions}
-        bind:selected={filterDivision}
-        label="Div"
-        placeholder="Div"
-      />
-      <MultiSelect
-        options={roundOptions}
-        bind:selected={filterRound}
-        label="Round"
-        placeholder="Round"
-      />
-
-      <span class="text-xs text-base-content/50 ml-1">
-        Showing {filteredCount}{filteredCount < totalCount
-          ? ` of ${totalCount}`
-          : ""} results
-      </span>
-
-      {#if download}
-        {@render download({
-          columns,
-          rows: filteredRows(),
-          headerLabels: HEADER_LABELS,
-        })}
-      {/if}
+  <div class="flex flex-wrap items-center gap-1 px-2 py-1 border-b border-base-300">
+    <h1 class="font-bold text-lg">{title}</h1>
+    <div role="tablist" class="tabs tabs-boxed ml-2">
+      {#each Object.keys(allData) as tab}
+        <button
+          role="tab"
+          class="tab {activeTab === tab ? 'tab-active font-bold' : ''}"
+          onclick={() => applyTab(tab)}
+        >
+          {tab.toUpperCase()}
+        </button>
+      {/each}
     </div>
-
-    {#if showDuplicateHeaders}
-      <div
-        class="border-t border-base-300 overflow-x-auto"
-        bind:this={dupScrollEl}
-      >
-        <table class="table table-xs">
-          <thead>
-            <tr>
-              {#each frontMeta as col, i}
-                <th
-                  onclick={() => toggleSort(col)}
-                  class="cursor-pointer select-none hover:text-primary"
-                  style={thStyle(i)}
-                >
-                  {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
-                  {#if sortCol === col}{sortAsc ? " ▲" : " ▼"}{/if}
-                </th>
-              {/each}
-              {#each apparatusPrefixes as prefix, i}
-                <th
-                  onclick={() => toggleSort(`${prefix}-total`)}
-                  class="cursor-pointer select-none hover:text-primary text-center"
-                  style={thStyle(frontMeta.length + i)}
-                >
-                  {appDisplayLabel(prefix)}
-                  {#if sortCol === `${prefix}-total`}{sortAsc
-                      ? " ▲"
-                      : " ▼"}{/if}
-                </th>
-              {/each}
-              {#each backMeta as col, i}
-                <th
-                  onclick={() => toggleSort(col)}
-                  class="cursor-pointer select-none hover:text-primary"
-                  style={thStyle(
-                    frontMeta.length + apparatusPrefixes.length + i,
-                  )}
-                >
-                  {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
-                  {#if sortCol === col}{sortAsc ? " ▲" : " ▼"}{/if}
-                </th>
-              {/each}
-            </tr>
-          </thead>
-        </table>
-      </div>
+    <label class="input input-bordered input-xs flex items-center gap-1 w-56">
+      <span class="text-base-content/50 text-xs">🔍</span>
+      <input
+        type="text"
+        class="grow text-xs w-12"
+        placeholder="Search name or ID"
+        bind:value={searchText}
+      />
+    </label>
+    <span class="text-xs text-base-content/50 ml-auto">
+      {filteredCount}{filteredCount < totalCount ? ` / ${totalCount}` : ""}
+    </span>
+    {#if download}
+      {@render download({
+        columns,
+        rows: filteredRows(),
+        headerLabels: HEADER_LABELS,
+      })}
     {/if}
   </div>
 
-  <div class="overflow-x-auto" bind:this={mainScrollEl}>
+  <div class="overflow-x-auto" style="overflow-y: clip">
     <table class="table table-zebra table-xs px-2">
-      <thead bind:this={theadEl}>
+      <thead class="sticky top-0 z-30 bg-base-100">
         <tr>
-          {#each frontMeta as col, i}
-            <th
-              onclick={() => toggleSort(col)}
-              class="cursor-pointer select-none hover:text-primary"
-              style="min-width:{columnWidths[i] || ''}px"
-            >
-              {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
-              {#if sortCol === col}
-                {sortAsc ? " ▲" : " ▼"}
-              {/if}
+          {#each frontMeta as col}
+            <th class="relative whitespace-nowrap">
+              <div class="flex items-center gap-0.5">
+                <button
+                  onclick={() => toggleSort(col)}
+                  class="hover:text-primary text-xs font-bold"
+                >
+                  {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
+                  {#if sortCol === col}
+                    {sortAsc ? " ▲" : " ▼"}
+                  {/if}
+                </button>
+                {#if FILTERABLE_COLS.has(col)}
+                  <button
+                    onclick={(e) => toggleDropdown(col, e)}
+                    class="btn btn-ghost btn-xs px-0.5 min-h-0 h-4"
+                  >
+                    <span class="text-xs {filterStateFor(col).selected.length ? 'text-primary' : 'opacity-40'}">▾</span>
+                    {#if filterStateFor(col).selected.length}
+                      <span class="badge badge-xs badge-primary">{filterStateFor(col).selected.length}</span>
+                    {/if}
+                  </button>
+                {/if}
+              </div>
             </th>
           {/each}
-          {#each apparatusPrefixes as prefix, i}
-            <th
-              onclick={() => toggleSort(`${prefix}-total`)}
-              class="cursor-pointer select-none hover:text-primary text-center"
-              colspan="1"
-              style="min-width:{columnWidths[frontMeta.length + i] || ''}px"
-            >
-              {appDisplayLabel(prefix)}
-              {#if sortCol === `${prefix}-total`}
-                {sortAsc ? " ▲" : " ▼"}
-              {/if}
+          {#each apparatusPrefixes as prefix}
+            <th class="text-center whitespace-nowrap">
+              <button
+                onclick={() => toggleSort(`${prefix}-total`)}
+                class="hover:text-primary text-xs font-bold"
+              >
+                {appDisplayLabel(prefix)}
+                {#if sortCol === `${prefix}-total`}
+                  {sortAsc ? " ▲" : " ▼"}
+                {/if}
+              </button>
             </th>
           {/each}
-          {#each backMeta as col, i}
-            <th
-              onclick={() => toggleSort(col)}
-              class="cursor-pointer select-none hover:text-primary"
-              style="min-width:{columnWidths[
-                frontMeta.length + apparatusPrefixes.length + i
-              ] || ''}px"
-            >
-              {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
-              {#if sortCol === col}
-                {sortAsc ? " ▲" : " ▼"}
-              {/if}
+          {#each backMeta as col}
+            <th class="whitespace-nowrap">
+              <button
+                onclick={() => toggleSort(col)}
+                class="hover:text-primary text-xs font-bold"
+              >
+                {HEADER_LABELS[col] ?? col}
+                {#if sortCol === col}
+                  {sortAsc ? " ▲" : " ▼"}
+                {/if}
+              </button>
             </th>
           {/each}
         </tr>
@@ -537,4 +438,39 @@
       </tbody>
     </table>
   </div>
+
+  {#if openDropdown}
+    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+    <div
+      class="fixed inset-0 z-40"
+      onclick={() => (openDropdown = null)}
+    ></div>
+    <div
+      class="fixed z-50 bg-base-100 border border-base-300 rounded-box shadow-xl p-2 min-w-44 max-h-60 overflow-y-auto"
+      style="top:{openDropdownY}px; left:{openDropdownX}px"
+    >
+      <div class="flex justify-between px-1 pb-1 border-b border-base-200 mb-1">
+        <span class="font-bold text-xs">{filterStateFor(openDropdown).label}</span>
+        {#if filterStateFor(openDropdown).selected.length}
+          <button
+            onclick={() => { clearFilter(openDropdown); openDropdown = null; }}
+            class="text-xs link link-hover"
+          >
+            Clear
+          </button>
+        {/if}
+      </div>
+      {#each filterStateFor(openDropdown).options as opt}
+        <label class="flex items-center gap-1.5 px-1 py-0.5 text-xs cursor-pointer hover:bg-base-200 rounded">
+          <input
+            type="checkbox"
+            checked={filterStateFor(openDropdown).selected.includes(opt)}
+            onchange={() => toggleFilterOption(openDropdown, opt)}
+            class="checkbox checkbox-xs"
+          />
+          {opt}
+        </label>
+      {/each}
+    </div>
+  {/if}
 {/if}
