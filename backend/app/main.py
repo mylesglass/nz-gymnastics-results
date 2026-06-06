@@ -91,6 +91,11 @@ def upload_file(file: UploadFile = File(...)):
             .filter(LongScore.event_id == event.id)
             .scalar()
         )
+        club_count = (
+            session.query(func.count(func.distinct(LongScore.club_name)))
+            .filter(LongScore.event_id == event.id)
+            .scalar()
+        )
 
         return EventResponse(
             id=event.id,
@@ -101,6 +106,7 @@ def upload_file(file: UploadFile = File(...)):
             year=event.year,
             gymnast_count=gymnast_count,
             score_count=score_count,
+            club_count=club_count,
         )
     finally:
         session.close()

@@ -186,6 +186,13 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
 - Changed E deductions calculation from `prefixes.length * 10 - totalE` to `appCount * 10 - totalE`
 - `appCount` counts only apparatus with a valid E score (handles gymnasts who competed <4/6 apparatus)
 
+### Improved error handling & upload stats
+- **Backend**: Added `club_count` to `EventResponse` schema + upload handler query (distinct `LongScore.club_name`)
+- **Upload page**: Richer success card now shows score count + club count alongside gymnast count
+- **Upload page**: Structured error display — validation errors render as bullet list; expandable "Show details" reveals full raw error text
+- **WideResultsTable**: `.catch()` now captures error message + raw text instead of silently swallowing
+- **WideResultsTable**: Empty state shows error panel with expandable details when an error occurred, before falling back to the `empty` snippet
+
 ## Known Edges & Gotchas
 - **WAG/MAG discipline split**: Tab assignment now uses the `discipline` field from data. Previously used apparatus presence (VT/FX appeared in both lists, causing all gymnasts to show in both tabs).
 - **Vault aggregation**: Different levels use different rules (average vs best-of-2). See `_use_vault_average()` in transformer.py for complete NZ-specific rule table.

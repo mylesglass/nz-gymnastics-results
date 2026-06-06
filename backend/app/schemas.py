@@ -12,6 +12,7 @@ class EventResponse(BaseModel):
     year: int | None = None
     gymnast_count: int
     score_count: int
+    club_count: int
     created_at: datetime | None = None
 
 

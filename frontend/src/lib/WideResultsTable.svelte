@@ -44,6 +44,9 @@
   let title = $state("");
   let sortCol = $state<string | null>(null);
   let sortAsc = $state(true);
+  let errorMessage = $state<string | null>(null);
+  let errorRaw = $state<string | null>(null);
+  let showErrorDetail = $state(false);
 
   let metaColumns = $state<string[]>([]);
   let frontMeta = $state<string[]>([]);
@@ -257,8 +260,20 @@
           applyTab(keys[0]);
         }
       })
-      .catch(() => {
+      .catch((err) => {
         allData = {};
+        const text = String(err);
+        errorRaw = text;
+        try {
+          const parsed = JSON.parse(err instanceof Error ? err.message : text);
+          if (parsed.detail) {
+            errorMessage = parsed.detail;
+          } else {
+            errorMessage = text;
+          }
+        } catch {
+          errorMessage = err instanceof Error ? err.message : text;
+        }
       })
       .finally(() => {
         loading = false;
@@ -407,7 +422,24 @@
   </div>
 {:else if Object.keys(allData).length === 0}
   <h1 class="text-3xl font-bold mb-2">{title || "Results"}</h1>
-  {#if empty}
+  {#if errorMessage}
+    <div class="alert alert-error mt-4">
+      <div class="flex flex-col gap-2 w-full">
+        <span>{errorMessage}</span>
+        {#if errorRaw}
+          <button
+            class="btn btn-ghost btn-xs self-start"
+            onclick={() => (showErrorDetail = !showErrorDetail)}
+          >
+            {showErrorDetail ? "Hide details" : "Show details"}
+          </button>
+          {#if showErrorDetail}
+            <pre class="text-xs opacity-60 whitespace-pre-wrap max-h-48 overflow-y-auto bg-base-300 p-2 rounded">{errorRaw}</pre>
+          {/if}
+        {/if}
+      </div>
+    </div>
+  {:else if empty}
     {@render empty()}
   {:else}
     <div role="alert" class="alert alert-error mt-4">
