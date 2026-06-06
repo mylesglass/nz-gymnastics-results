@@ -118,3 +118,13 @@
 - [x] Sticky footer layout (min-height flex, footer at bottom on short pages)
 - [x] Last apparatus column tooltip opens left to avoid clipping
 - [x] Additional bottom padding for table tooltip clearance
+
+### STEP 15: Feature Polishing ✅
+- [x] Event page — discipline badges (daisyUI `badge-primary`/`badge-secondary`), clickable rows with `goto()`, remove View button column
+- [x] AA Tooltip — new `AATooltip.svelte` component with summed D/E/N across apparatus; integrated into `aa-score` column
+- [ ] Show equals in rankings — backend: append "T" to tied rank values (attempted, reverted — needs correct approach)
+
+### Next Steps
+- [ ] Re-implement equals in rankings with correct tie detection logic
+- [ ] Event page: add year filter/search bar
+- [ ] Mobile-responsive table improvements

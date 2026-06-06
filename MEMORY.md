@@ -164,13 +164,18 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
 
 ## Recent Session (this session)
 
-### Parser robustness (Step 13)
-- **`equal-discarded` fix**: Changed status check in `parser.py` from `== "discarded"` to `in ("discarded", "equal-discarded")` in two locations (ranking-level and source-item-level). Prevents duplicate rows from tied-then-discarded scores affecting 31/40 files.
-- **`Start Value` mapping**: Added `"Start Value": "start_value"` to `_OUTPUT_NAMES_TO_COLUMNS` in decoder.py; added `start_value` to default result dict; added `start_value` column to `LongScore` model + row construction in parser. Vault-specific field from kaitaia_2025.json now decoded and stored.
-- **Input validation**: Added `validate_upload_structure(data)` that checks for all 7 required top-level keys + non-empty `events` list + event name. Returns list of error messages. Upload endpoint returns 422 with structured errors.
-- **Parse error handling**: `parse_json()` now raises `ParseError` for internal errors; upload endpoint catches it and returns 422.
-- **Batch validation CLI**: `python -m app.validate_json path/to/file.json [path/...]`. Accepts files and directories. Runs structural validation + full parse on each, prints PASS/FAIL per file. Exits non-zero if any fail.
-- **Regression tests**: 10 new tests: `validate_upload_structure` (6), `equal-discarded` filtering (2), `Start Value` decode (1), API validation error (1). Total: 201 tests, all pass.
+### Event page improvements
+- Replaced discipline text with daisyUI badges (`badge-primary` for WAG, `badge-secondary` for MAG, both for WAG+MAG)
+- Made rows clickable via `goto()` with `cursor-pointer hover:bg-base-300`
+- Removed separate "View" button column
+
+### AA Tooltip
+- Created `frontend/src/lib/AATooltip.svelte` — daisyUI dropdown-hover tooltip showing AA score, rank, and summed D/E/N across all apparatus
+- Integrated into `WideResultsTable.svelte` `backMeta` loop — `aa-score` column gets tooltip, `aa-rank` remains plain text
+
+### Equals in rankings (reverted)
+- Experimented with `_mark_tied_ranks()` in transformer.py but the approach had issues — reverted
+- Still pending: correct tie-detection logic
 
 ## Known Edges & Gotchas
 - **WAG/MAG discipline split**: Tab assignment now uses the `discipline` field from data. Previously used apparatus presence (VT/FX appeared in both lists, causing all gymnasts to show in both tabs).

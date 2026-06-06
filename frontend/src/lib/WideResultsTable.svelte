@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import type { Snippet } from "svelte";
   import ScoreTooltip from "./ScoreTooltip.svelte";
+  import AATooltip from "./AATooltip.svelte";
 
   interface TabData {
     columns: string[];
@@ -677,9 +678,15 @@
               </td>
             {/each}
             {#each backMeta as col}
-              <td class="whitespace-nowrap {COL_MIN_CLASS[col] ?? ''}"
-                >{row[col] ?? ""}</td
-              >
+              {#if col === "aa-score"}
+                <td class="whitespace-nowrap {COL_MIN_CLASS[col] ?? ''}">
+                  <AATooltip {row} prefixes={apparatusPrefixes} />
+                </td>
+              {:else}
+                <td class="whitespace-nowrap {COL_MIN_CLASS[col] ?? ''}"
+                  >{row[col] ?? ""}</td
+                >
+              {/if}
             {/each}
           </tr>
         {/each}
