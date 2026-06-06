@@ -85,6 +85,15 @@
 
   const TAIL_META = new Set(["aa-score", "aa-rank"]);
 
+  const COL_MIN_CLASS: Record<string, string> = {
+    "gnz-id": "min-w-2",
+    step: "min-w-18",
+    name: "min-w-36",
+    club: "min-w-36",
+    division: "min-w-18",
+    "round-type": "min-w-18",
+  };
+
   function deriveColumnGroups(cols: string[]) {
     const appPrefixes: string[] = [];
     const appMap: Record<string, string[]> = {};
@@ -155,7 +164,8 @@
     return labels[prefix] ?? prefix.toUpperCase();
   }
 
-  function thStyle(i: number): string {
+  function thStyle(i: number, col?: string): string {
+    if (col && COL_MIN_CLASS[col]) return "";
     const w = columnWidths[i];
     return w ? `width:${w}px;min-width:${w}px` : "";
   }
@@ -239,6 +249,9 @@
       columns = d.columns;
       rows = d.rows;
       deriveColumnGroups(d.columns);
+      if (tab === "mag") {
+        frontMeta = frontMeta.filter((c) => c !== "division");
+      }
       buildFilterOptions(d.rows);
     } else {
       columns = [];
@@ -427,8 +440,10 @@
               {#each frontMeta as col, i}
                 <th
                   onclick={() => toggleSort(col)}
-                  class="cursor-pointer select-none hover:text-primary"
-                  style={thStyle(i)}
+                  class="cursor-pointer select-none hover:text-primary {COL_MIN_CLASS[
+                    col
+                  ] ?? ''}"
+                  style={thStyle(i, col)}
                 >
                   {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
                   {#if sortCol === col}{sortAsc ? " ▲" : " ▼"}{/if}
@@ -437,8 +452,10 @@
               {#each apparatusPrefixes as prefix, i}
                 <th
                   onclick={() => toggleSort(`${prefix}-total`)}
-                  class="cursor-pointer select-none hover:text-primary text-center"
-                  style={thStyle(frontMeta.length + i)}
+                  class="cursor-pointer select-none hover:text-primary text-left min-w-12 {COL_MIN_CLASS[
+                    prefix
+                  ] ?? ''}"
+                  style={thStyle(frontMeta.length + i, prefix)}
                 >
                   {appDisplayLabel(prefix)}
                   {#if sortCol === `${prefix}-total`}{sortAsc
@@ -449,9 +466,12 @@
               {#each backMeta as col, i}
                 <th
                   onclick={() => toggleSort(col)}
-                  class="cursor-pointer select-none hover:text-primary"
+                  class="cursor-pointer select-none hover:text-primary {COL_MIN_CLASS[
+                    col
+                  ] ?? ''}"
                   style={thStyle(
                     frontMeta.length + apparatusPrefixes.length + i,
+                    col,
                   )}
                 >
                   {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
@@ -472,8 +492,7 @@
           {#each frontMeta as col, i}
             <th
               onclick={() => toggleSort(col)}
-              class="cursor-pointer select-none hover:text-primary"
-              style="min-width:{columnWidths[i] || ''}px"
+              class="cursor-pointer select-none hover:text-primary {COL_MIN_CLASS[col] ?? ''}"
             >
               {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
               {#if sortCol === col}
@@ -484,9 +503,8 @@
           {#each apparatusPrefixes as prefix, i}
             <th
               onclick={() => toggleSort(`${prefix}-total`)}
-              class="cursor-pointer select-none hover:text-primary text-center"
+              class="cursor-pointer select-none hover:text-primary text-left min-w-12 {COL_MIN_CLASS[prefix] ?? ''}"
               colspan="1"
-              style="min-width:{columnWidths[frontMeta.length + i] || ''}px"
             >
               {appDisplayLabel(prefix)}
               {#if sortCol === `${prefix}-total`}
@@ -497,10 +515,7 @@
           {#each backMeta as col, i}
             <th
               onclick={() => toggleSort(col)}
-              class="cursor-pointer select-none hover:text-primary"
-              style="min-width:{columnWidths[
-                frontMeta.length + apparatusPrefixes.length + i
-              ] || ''}px"
+              class="cursor-pointer select-none hover:text-primary {COL_MIN_CLASS[col] ?? ''}"
             >
               {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
               {#if sortCol === col}
@@ -514,23 +529,30 @@
         {#each filteredRows() as row}
           <tr>
             {#each frontMeta as col}
-              <td class="whitespace-nowrap">
+              <td class="whitespace-nowrap {COL_MIN_CLASS[col] ?? ''}">
                 {#if col === "name" && row["gnz-id"]}
-                  <a href={`/gymnast/${row["gnz-id"]}`} class="link link-hover">{row[col] ?? ""}</a>
+                  <a href={`/gymnast/${row["gnz-id"]}`} class="link link-hover"
+                    >{row[col] ?? ""}</a
+                  >
                 {:else if col === "club" && row["club"]}
-                  <a href={`/club/${encodeURIComponent(String(row["club"]))}`} class="link link-hover">{row[col] ?? ""}</a>
+                  <a
+                    href={`/club/${encodeURIComponent(String(row["club"]))}`}
+                    class="link link-hover">{row[col] ?? ""}</a
+                  >
                 {:else}
                   {row[col] ?? ""}
                 {/if}
               </td>
             {/each}
             {#each apparatusPrefixes as prefix}
-              <td class="text-center">
+              <td class="text-left min-w-12 {COL_MIN_CLASS[prefix] ?? ''}">
                 <ScoreTooltip {row} {prefix} />
               </td>
             {/each}
             {#each backMeta as col}
-              <td class="whitespace-nowrap">{row[col] ?? ""}</td>
+              <td class="whitespace-nowrap {COL_MIN_CLASS[col] ?? ''}"
+                >{row[col] ?? ""}</td
+              >
             {/each}
           </tr>
         {/each}
