@@ -8,7 +8,7 @@ from sqlalchemy import func
 
 from app.database import get_session, init_db
 from app.models import Event, LongScore
-from app.parser import parse_json
+from app.parser import ParseError, parse_json, validate_upload_structure
 from app.schemas import EventListItem, EventResponse, ResultsResponse
 from app.transformer import export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict
 
@@ -49,7 +49,14 @@ def upload_file(file: UploadFile = File(...)):
     except json.JSONDecodeError as e:
         raise HTTPException(400, f"Invalid JSON: {e}")
 
-    event_info, rows = parse_json(data)
+    errors = validate_upload_structure(data)
+    if errors:
+        raise HTTPException(422, {"message": "Invalid upload structure", "errors": errors})
+
+    try:
+        event_info, rows = parse_json(data)
+    except ParseError as e:
+        raise HTTPException(422, f"Parse error: {e}")
 
     session = get_session()
     try:

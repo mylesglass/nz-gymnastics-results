@@ -121,6 +121,12 @@ class TestDecodePublicOutputs:
         assert "pass_final_score" in result
         assert result["pass_final_score"] == 12.0
 
+    def test_start_value_decoded(self):
+        output_map = {"sv": "Start Value"}
+        public = {"sv": 10.0}
+        result = decode_public_outputs(public, output_map)
+        assert result["start_value"] == 10.0
+
 
 class TestHasDns:
     def test_dns_true_when_dns_string_present(self):

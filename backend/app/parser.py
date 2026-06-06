@@ -325,7 +325,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                 item_type = si_first.get("itemType")
                 status = si_first.get("status", "")
 
-                if status == "discarded":
+                if status in ("discarded", "equal-discarded"):
                     continue
 
                 # --- Aggregate (AA / Team) results ---
@@ -346,7 +346,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
 
                 # Process every retained score source item for this ranking
                 for si in source_items:
-                    if si.get("status", "") == "discarded":
+                    if si.get("status", "") in ("discarded", "equal-discarded"):
                         continue
                     if si.get("itemType") != "score":
                         continue
@@ -401,6 +401,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                         "e_score": _sanitise_float(score_data.get("e_score")),
                         "neutral_deductions": _sanitise_float(score_data.get("neutral_deductions")),
                         "pass_final_score": _sanitise_float(score_data.get("pass_final_score")),
+                        "start_value": _sanitise_float(score_data.get("start_value")),
                         "apparatus_rank": _sanitise_rank(rank_value),
                         "aa_score": _sanitise_float(aa.get("aa_score")),
                         "aa_rank": _sanitise_rank(aa.get("aa_rank")),
@@ -411,6 +412,55 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
 
     rows.sort(key=lambda r: (r["gymnast_name"], r["apparatus"], r["pass_number"]))
     return event_info, rows
+
+
+class ParseError(Exception):
+    """Raised when uploaded JSON is structurally invalid for parsing."""
+
+
+_REQUIRED_TOP_KEYS = [
+    "eventOrganizations",
+    "eventParticipants",
+    "performanceIndividuals",
+    "performanceRules",
+    "performanceScores",
+    "performanceResultTables",
+    "units",
+]
+
+_REQUIRED_EVENT_KEYS = [
+    "events",
+]
+
+
+def validate_upload_structure(data: dict) -> list[str]:
+    """Check uploaded data has all required top-level keys.
+
+    Returns a list of error messages (empty means valid).
+    """
+    errors: list[str] = []
+
+    for key in _REQUIRED_TOP_KEYS:
+        if key not in data:
+            errors.append(f"Missing required top-level key: {key!r}")
+        elif not isinstance(data[key], list):
+            errors.append(f"Key {key!r} must be a list, got {type(data[key]).__name__}")
+
+    for key in _REQUIRED_EVENT_KEYS:
+        if key not in data:
+            errors.append(f"Missing required top-level key: {key!r}")
+        elif not isinstance(data[key], list) or len(data[key]) == 0:
+            errors.append(f"Key {key!r} must be a non-empty list")
+
+    if "events" in data and isinstance(data.get("events"), list) and len(data["events"]) > 0:
+        event = data["events"][0]
+        if not isinstance(event, dict):
+            errors.append("First element of 'events' must be an object")
+        else:
+            if "name" not in event or not event["name"]:
+                errors.append("Event must have a non-empty 'name' field")
+
+    return errors
 
 
 def _infer_event_discipline(data: dict) -> str:

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from app.parser import _infer_event_discipline, _normalise_apparatus, parse_json
+from app.parser import _infer_event_discipline, _normalise_apparatus, parse_json, validate_upload_structure
 
 HERE = Path(__file__).resolve().parent
 DATA_DIR_2025 = HERE.parent.parent / "data-collection" / "2025" / "json"
@@ -193,3 +193,242 @@ class TestParseRealData:
         assert len(rows) >= 1000
         wags = set(r["gymnast_name"] for r in rows if r["discipline"] == "WAG")
         assert len(wags) > 0
+
+
+class TestValidateUploadStructure:
+    def test_valid_structure(self):
+        data = {
+            "eventOrganizations": [],
+            "eventParticipants": [],
+            "performanceIndividuals": [],
+            "performanceRules": [],
+            "performanceScores": [],
+            "performanceResultTables": [],
+            "units": [],
+            "events": [{"name": "Test Event"}],
+        }
+        assert validate_upload_structure(data) == []
+
+    def test_missing_key(self):
+        data = {"events": [{"name": "Test"}]}
+        errors = validate_upload_structure(data)
+        assert len(errors) > 0
+        assert any("eventOrganizations" in e for e in errors)
+
+    def test_missing_events(self):
+        data = {
+            "eventOrganizations": [],
+            "eventParticipants": [],
+            "performanceIndividuals": [],
+            "performanceRules": [],
+            "performanceScores": [],
+            "performanceResultTables": [],
+            "units": [],
+        }
+        errors = validate_upload_structure(data)
+        assert any("events" in e for e in errors)
+
+    def test_empty_events(self):
+        data = {
+            "eventOrganizations": [],
+            "eventParticipants": [],
+            "performanceIndividuals": [],
+            "performanceRules": [],
+            "performanceScores": [],
+            "performanceResultTables": [],
+            "units": [],
+            "events": [],
+        }
+        errors = validate_upload_structure(data)
+        assert any("non-empty" in e for e in errors)
+
+    def test_event_missing_name(self):
+        data = {
+            "eventOrganizations": [],
+            "eventParticipants": [],
+            "performanceIndividuals": [],
+            "performanceRules": [],
+            "performanceScores": [],
+            "performanceResultTables": [],
+            "units": [],
+            "events": [{}],
+        }
+        errors = validate_upload_structure(data)
+        assert any("name" in e for e in errors)
+
+    def test_wrong_type(self):
+        data = {
+            "eventOrganizations": "not a list",
+            "eventParticipants": [],
+            "performanceIndividuals": [],
+            "performanceRules": [],
+            "performanceScores": [],
+            "performanceResultTables": [],
+            "units": [],
+            "events": [{"name": "Test"}],
+        }
+        errors = validate_upload_structure(data)
+        assert any("list" in e for e in errors)
+
+
+class TestEqualDiscardedFiltering:
+    def test_equal_discarded_rankings_skipped(self):
+        """Rankings with equal-discarded status should be filtered out."""
+        data = {
+            "eventOrganizations": [{"_id": "org1", "name": "Club A"}],
+            "eventParticipants": [{"_id": "p1", "name": "Gymnast A", "gnzId": "12345", "orgId": "org1"}],
+            "performanceIndividuals": [{"_id": "ind1", "participantId": "p1", "unitId": "u1"}],
+            "units": [{"_id": "u1", "name": "WAG STEP 5"}],
+            "events": [{"name": "Test Event", "startDate": "2025-01-01", "endDate": "2025-01-02"}],
+            "performanceRules": [
+                {
+                    "_id": "pr1",
+                    "unitId": "u1",
+                    "scores": [
+                        {
+                            "id": "sd1",
+                            "nodeTree": {
+                                "interface": {
+                                    "outputs": [
+                                        {"id": "score_val", "name": "Score"},
+                                        {"id": "d_val", "name": "Difficulty"},
+                                        {"id": "e_val", "name": "Execution"},
+                                        {"id": "n_val", "name": "Neutral Deductions"},
+                                    ],
+                                },
+                            },
+                        },
+                    ],
+                    "competition": {
+                        "nodeTree": {
+                            "nodes": [
+                                {
+                                    "id": "node1",
+                                    "name": "Vault",
+                                    "resultSets": [{"id": "rs1"}],
+                                },
+                            ],
+                        },
+                    },
+                },
+            ],
+            "performanceScores": [
+                {
+                    "_id": "s1",
+                    "unitScoreId": "sd1",
+                    "unitEventId": "ue1",
+                    "unitPassId": "up1",
+                    "entityId": "ind1",
+                    "publicOutputs": {
+                        "score_val": 12.0,
+                        "d_val": 5.0,
+                        "e_val": 7.0,
+                        "n_val": 0.0,
+                    },
+                },
+            ],
+            "performanceResultTables": [
+                {
+                    "unitId": "u1",
+                    "resultTableId": "rt1",
+                    "resultSets": [
+                        {
+                            "id": "rs1",
+                            "primaryRanking": [
+                                {
+                                    "entityId": "ind1",
+                                    "rank": 1,
+                                    "value": 12.0,
+                                    "sourceItems": [
+                                        {"itemId": "s1", "itemType": "score", "status": "equal-discarded"},
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        }
+        event_info, rows = parse_json(data)
+        # The equal-discarded ranking should be filtered, so no rows emitted
+        assert len(rows) == 0, f"Expected 0 rows for equal-discarded, got {len(rows)}"
+
+    def test_normal_ranking_still_emitted(self):
+        """Same structure but with normal (non-discarded) status should produce rows."""
+        data = {
+            "eventOrganizations": [{"_id": "org1", "name": "Club A"}],
+            "eventParticipants": [{"_id": "p1", "name": "Gymnast A", "gnzId": "12345", "orgId": "org1"}],
+            "performanceIndividuals": [{"_id": "ind1", "participantId": "p1", "unitId": "u1"}],
+            "units": [{"_id": "u1", "name": "WAG STEP 5"}],
+            "events": [{"name": "Test Event", "startDate": "2025-01-01", "endDate": "2025-01-02"}],
+            "performanceRules": [
+                {
+                    "_id": "pr1",
+                    "unitId": "u1",
+                    "scores": [
+                        {
+                            "id": "sd1",
+                            "nodeTree": {
+                                "interface": {
+                                    "outputs": [
+                                        {"id": "score_val", "name": "Score"},
+                                        {"id": "d_val", "name": "Difficulty"},
+                                        {"id": "e_val", "name": "Execution"},
+                                        {"id": "n_val", "name": "Neutral Deductions"},
+                                    ],
+                                },
+                            },
+                        },
+                    ],
+                    "competition": {
+                        "nodeTree": {
+                            "nodes": [
+                                {
+                                    "id": "node1",
+                                    "name": "Vault",
+                                    "resultSets": [{"id": "rs1"}],
+                                },
+                            ],
+                        },
+                    },
+                },
+            ],
+            "performanceScores": [
+                {
+                    "_id": "s1",
+                    "unitScoreId": "sd1",
+                    "unitEventId": "ue1",
+                    "unitPassId": "up1",
+                    "entityId": "ind1",
+                    "publicOutputs": {
+                        "score_val": 12.0,
+                        "d_val": 5.0,
+                        "e_val": 7.0,
+                        "n_val": 0.0,
+                    },
+                },
+            ],
+            "performanceResultTables": [
+                {
+                    "unitId": "u1",
+                    "resultTableId": "rt1",
+                    "resultSets": [
+                        {
+                            "id": "rs1",
+                            "primaryRanking": [
+                                {
+                                    "entityId": "ind1",
+                                    "rank": 1,
+                                    "value": 12.0,
+                                    "sourceItems": [
+                                        {"itemId": "s1", "itemType": "score"},
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        }
+        event_info, rows = parse_json(data)
+        assert len(rows) == 1, f"Expected 1 row for normal ranking, got {len(rows)}"
