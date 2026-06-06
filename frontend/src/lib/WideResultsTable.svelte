@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import type { Snippet } from "svelte";
   import ScoreTooltip from "./ScoreTooltip.svelte";
-  import MultiSelect from "./MultiSelect.svelte";
 
   interface TabData {
     columns: string[];
@@ -69,6 +68,10 @@
   let dupScrollEl: HTMLElement | undefined = $state();
   let columnWidths = $state<number[]>([]);
 
+  let openDropdown = $state<string | null>(null);
+  let openDropdownX = $state(0);
+  let openDropdownY = $state(0);
+
   const BASE_LABELS: Record<string, string> = {
     "gnz-id": "ID",
     name: "Name",
@@ -93,6 +96,49 @@
     division: "min-w-18",
     "round-type": "min-w-18",
   };
+
+  const FILTERABLE_COLS = new Set(["step", "club", "division", "round-type", "event_name"]);
+
+  function filterStateFor(col: string): { selected: string[]; options: string[]; label: string } {
+    if (col === "event_name" && !showEventFilter) {
+      return { selected: [], options: [], label: "Event" };
+    }
+    const map: Record<string, { selected: string[]; options: string[]; label: string }> = {
+      step: { selected: filterStep, options: stepOptions, label: stepLabel },
+      club: { selected: filterClub, options: clubOptions, label: "Club" },
+      division: { selected: filterDivision, options: divisionOptions, label: "Division" },
+      "round-type": { selected: filterRound, options: roundOptions, label: "Round" },
+      event_name: { selected: filterEvent, options: eventOptions, label: "Event" },
+    };
+    return map[col] ?? { selected: [], options: [], label: col };
+  }
+
+  function toggleFilterOption(col: string, value: string) {
+    const state = filterStateFor(col);
+    const arr = state.selected;
+    const idx = arr.indexOf(value);
+    if (idx >= 0) {
+      arr.splice(idx, 1);
+    } else {
+      arr.push(value);
+    }
+  }
+
+  function clearFilter(col: string) {
+    filterStateFor(col).selected.length = 0;
+  }
+
+  function toggleDropdown(col: string, event: MouseEvent) {
+    if (openDropdown === col) {
+      openDropdown = null;
+      return;
+    }
+    const btn = event.currentTarget as HTMLElement;
+    const rect = btn.getBoundingClientRect();
+    openDropdownX = rect.left;
+    openDropdownY = rect.bottom + 2;
+    openDropdown = col;
+  }
 
   function deriveColumnGroups(cols: string[]) {
     const appPrefixes: string[] = [];
@@ -164,8 +210,7 @@
     return labels[prefix] ?? prefix.toUpperCase();
   }
 
-  function thStyle(i: number, col?: string): string {
-    if (col && COL_MIN_CLASS[col]) return "";
+  function thStyle(i: number, _col?: string): string {
     const w = columnWidths[i];
     return w ? `width:${w}px;min-width:${w}px` : "";
   }
@@ -380,40 +425,6 @@
         />
       </label>
 
-      {#if showEventFilter && eventOptions.length > 1}
-        <MultiSelect
-          options={eventOptions}
-          bind:selected={filterEvent}
-          label="Event"
-          placeholder="Event"
-        />
-      {/if}
-
-      <MultiSelect
-        options={stepOptions}
-        bind:selected={filterStep}
-        label={stepLabel}
-        placeholder={stepLabel}
-      />
-      <MultiSelect
-        options={clubOptions}
-        bind:selected={filterClub}
-        label="Club"
-        placeholder="Club"
-      />
-      <MultiSelect
-        options={divisionOptions}
-        bind:selected={filterDivision}
-        label="Div"
-        placeholder="Div"
-      />
-      <MultiSelect
-        options={roundOptions}
-        bind:selected={filterRound}
-        label="Round"
-        placeholder="Round"
-      />
-
       <span class="text-xs text-base-content/50 ml-1">
         Showing {filteredCount}{filteredCount < totalCount
           ? ` of ${totalCount}`
@@ -439,14 +450,29 @@
             <tr>
               {#each frontMeta as col, i}
                 <th
-                  onclick={() => toggleSort(col)}
-                  class="cursor-pointer select-none hover:text-primary {COL_MIN_CLASS[
-                    col
-                  ] ?? ''}"
+                  class="{COL_MIN_CLASS[col] ?? ''}"
                   style={thStyle(i, col)}
                 >
-                  {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
-                  {#if sortCol === col}{sortAsc ? " ▲" : " ▼"}{/if}
+                  <div class="flex items-center gap-0.5">
+                    <button
+                      onclick={() => toggleSort(col)}
+                      class="hover:text-primary text-xs font-bold"
+                    >
+                      {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
+                      {#if sortCol === col}{sortAsc ? " ▲" : " ▼"}{/if}
+                    </button>
+                    {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
+                      <button
+                        onclick={(e) => toggleDropdown(col, e)}
+                        class="btn btn-ghost btn-xs px-0.5 min-h-0 h-4"
+                      >
+                        <span class="text-xs {filterStateFor(col).selected.length ? 'text-primary' : 'opacity-40'}">▾</span>
+                        {#if filterStateFor(col).selected.length}
+                          <span class="badge badge-xs badge-primary">{filterStateFor(col).selected.length}</span>
+                        {/if}
+                      </button>
+                    {/if}
+                  </div>
                 </th>
               {/each}
               {#each apparatusPrefixes as prefix, i}
@@ -465,17 +491,32 @@
               {/each}
               {#each backMeta as col, i}
                 <th
-                  onclick={() => toggleSort(col)}
-                  class="cursor-pointer select-none hover:text-primary {COL_MIN_CLASS[
-                    col
-                  ] ?? ''}"
+                  class="{COL_MIN_CLASS[col] ?? ''}"
                   style={thStyle(
                     frontMeta.length + apparatusPrefixes.length + i,
                     col,
                   )}
                 >
-                  {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
-                  {#if sortCol === col}{sortAsc ? " ▲" : " ▼"}{/if}
+                  <div class="flex items-center gap-0.5">
+                    <button
+                      onclick={() => toggleSort(col)}
+                      class="hover:text-primary text-xs font-bold"
+                    >
+                      {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
+                      {#if sortCol === col}{sortAsc ? " ▲" : " ▼"}{/if}
+                    </button>
+                    {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
+                      <button
+                        onclick={(e) => toggleDropdown(col, e)}
+                        class="btn btn-ghost btn-xs px-0.5 min-h-0 h-4"
+                      >
+                        <span class="text-xs {filterStateFor(col).selected.length ? 'text-primary' : 'opacity-40'}">▾</span>
+                        {#if filterStateFor(col).selected.length}
+                          <span class="badge badge-xs badge-primary">{filterStateFor(col).selected.length}</span>
+                        {/if}
+                      </button>
+                    {/if}
+                  </div>
                 </th>
               {/each}
             </tr>
@@ -490,14 +531,29 @@
       <thead bind:this={theadEl}>
         <tr>
           {#each frontMeta as col, i}
-            <th
-              onclick={() => toggleSort(col)}
-              class="cursor-pointer select-none hover:text-primary {COL_MIN_CLASS[col] ?? ''}"
-            >
-              {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
-              {#if sortCol === col}
-                {sortAsc ? " ▲" : " ▼"}
-              {/if}
+            <th class="cursor-pointer select-none hover:text-primary {COL_MIN_CLASS[col] ?? ''}">
+              <div class="flex items-center gap-0.5">
+                <button
+                  onclick={() => toggleSort(col)}
+                  class="hover:text-primary text-xs font-bold"
+                >
+                  {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
+                  {#if sortCol === col}
+                    {sortAsc ? " ▲" : " ▼"}
+                  {/if}
+                </button>
+                {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
+                  <button
+                    onclick={(e) => toggleDropdown(col, e)}
+                    class="btn btn-ghost btn-xs px-0.5 min-h-0 h-4"
+                  >
+                    <span class="text-xs {filterStateFor(col).selected.length ? 'text-primary' : 'opacity-40'}">▾</span>
+                    {#if filterStateFor(col).selected.length}
+                      <span class="badge badge-xs badge-primary">{filterStateFor(col).selected.length}</span>
+                    {/if}
+                  </button>
+                {/if}
+              </div>
             </th>
           {/each}
           {#each apparatusPrefixes as prefix, i}
@@ -513,14 +569,29 @@
             </th>
           {/each}
           {#each backMeta as col, i}
-            <th
-              onclick={() => toggleSort(col)}
-              class="cursor-pointer select-none hover:text-primary {COL_MIN_CLASS[col] ?? ''}"
-            >
-              {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
-              {#if sortCol === col}
-                {sortAsc ? " ▲" : " ▼"}
-              {/if}
+            <th class="cursor-pointer select-none hover:text-primary {COL_MIN_CLASS[col] ?? ''}">
+              <div class="flex items-center gap-0.5">
+                <button
+                  onclick={() => toggleSort(col)}
+                  class="hover:text-primary text-xs font-bold"
+                >
+                  {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
+                  {#if sortCol === col}
+                    {sortAsc ? " ▲" : " ▼"}
+                  {/if}
+                </button>
+                {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
+                  <button
+                    onclick={(e) => toggleDropdown(col, e)}
+                    class="btn btn-ghost btn-xs px-0.5 min-h-0 h-4"
+                  >
+                    <span class="text-xs {filterStateFor(col).selected.length ? 'text-primary' : 'opacity-40'}">▾</span>
+                    {#if filterStateFor(col).selected.length}
+                      <span class="badge badge-xs badge-primary">{filterStateFor(col).selected.length}</span>
+                    {/if}
+                  </button>
+                {/if}
+              </div>
             </th>
           {/each}
         </tr>
@@ -559,4 +630,39 @@
       </tbody>
     </table>
   </div>
+
+  {#if openDropdown}
+    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+    <div
+      class="fixed inset-0 z-40"
+      onclick={() => (openDropdown = null)}
+    ></div>
+    <div
+      class="fixed z-50 bg-base-100 border border-base-300 rounded-box shadow-xl p-2 min-w-44 max-h-60 overflow-y-auto"
+      style="top:{openDropdownY}px; left:{openDropdownX}px"
+    >
+      <div class="flex justify-between px-1 pb-1 border-b border-base-200 mb-1">
+        <span class="font-bold text-xs">{filterStateFor(openDropdown).label}</span>
+        {#if filterStateFor(openDropdown).selected.length}
+          <button
+            onclick={() => { clearFilter(openDropdown); openDropdown = null; }}
+            class="text-xs link link-hover"
+          >
+            Clear
+          </button>
+        {/if}
+      </div>
+      {#each filterStateFor(openDropdown).options as opt}
+        <label class="flex items-center gap-1.5 px-1 py-0.5 text-xs cursor-pointer hover:bg-base-200 rounded">
+          <input
+            type="checkbox"
+            checked={filterStateFor(openDropdown).selected.includes(opt)}
+            onchange={() => toggleFilterOption(openDropdown, opt)}
+            class="checkbox checkbox-xs"
+          />
+          {opt}
+        </label>
+      {/each}
+    </div>
+  {/if}
 {/if}
