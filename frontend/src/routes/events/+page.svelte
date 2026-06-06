@@ -6,10 +6,19 @@
   let events = $state<Array<{ id: number; name: string; start_date: string; gymnast_count: number; year: number | null }>>([]);
   let loading = $state(true);
   let filterYear = $state("");
+  let searchQuery = $state("");
 
   let yearOptions = $state<string[]>([]);
   let filteredEvents = $derived(
-    filterYear ? events.filter((e) => String(e.year ?? "") === filterYear) : events
+    events.filter((e) => {
+      if (filterYear && String(e.year ?? "") !== filterYear) return false;
+      if (
+        searchQuery &&
+        !e.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+        return false;
+      return true;
+    })
   );
 
   onMount(async () => {
@@ -55,6 +64,24 @@
             <option value={y}>{y}</option>
           {/each}
         </select>
+        <input
+          type="search"
+          placeholder="Search events..."
+          class="input input-bordered input-sm"
+          bind:value={searchQuery}
+        />
+        <span class="text-xs text-base-content/50">
+          {filteredEvents.length} of {events.length}
+        </span>
+      </div>
+    {:else if searchQuery || yearOptions.length > 0}
+      <div class="flex flex-wrap items-center gap-2 mb-3">
+        <input
+          type="search"
+          placeholder="Search events..."
+          class="input input-bordered input-sm"
+          bind:value={searchQuery}
+        />
         <span class="text-xs text-base-content/50">
           {filteredEvents.length} of {events.length}
         </span>

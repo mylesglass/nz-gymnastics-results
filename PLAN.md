@@ -126,7 +126,7 @@
 
 ### Next Steps
 - [ ] Re-implement equals in rankings with correct tie detection logic
-- [x] Event page: add year filter/search bar
+- [x] Event page: add year filter/search bar (year dropdown + text search by name)
 - [ ] Mobile-responsive table improvements
 - [ ] Very simple email & password authentication to keep upload page hidden from regular users
 - [ ] Allow user to DELETE an event from the event page (if logged in)

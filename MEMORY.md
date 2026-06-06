@@ -177,6 +177,15 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
 - Experimented with `_mark_tied_ranks()` in transformer.py but the approach had issues — reverted
 - Still pending: correct tie-detection logic
 
+### Event page search
+- Added text search input filtering events by name (`searchQuery`, case-insensitive `includes`)
+- Search bar shows alongside year dropdown (or alone when only 1 year present)
+- Filter count updates reactively with both filters
+
+### AA Tooltip E Deductions fix
+- Changed E deductions calculation from `prefixes.length * 10 - totalE` to `appCount * 10 - totalE`
+- `appCount` counts only apparatus with a valid E score (handles gymnasts who competed <4/6 apparatus)
+
 ## Known Edges & Gotchas
 - **WAG/MAG discipline split**: Tab assignment now uses the `discipline` field from data. Previously used apparatus presence (VT/FX appeared in both lists, causing all gymnasts to show in both tabs).
 - **Vault aggregation**: Different levels use different rules (average vs best-of-2). See `_use_vault_average()` in transformer.py for complete NZ-specific rule table.
