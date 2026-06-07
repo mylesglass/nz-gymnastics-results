@@ -73,10 +73,10 @@
 
   {#if stats}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-      <div class="stat bg-base-200 rounded-box">
+      <a href="/events" class="stat bg-base-200 rounded-box hover:bg-base-300 transition-all cursor-pointer">
         <div class="stat-title text-base-content/60 text-xs">Events</div>
         <div class="stat-value text-2xl">{stats.total_events}</div>
-      </div>
+      </a>
       <div class="stat bg-base-200 rounded-box">
         <div class="stat-title text-base-content/60 text-xs">Gymnasts</div>
         <div class="stat-value text-2xl">{stats.total_gymnasts.toLocaleString()}</div>
