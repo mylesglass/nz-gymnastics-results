@@ -73,6 +73,7 @@ export function getExportUrl(eventId: number, format: "csv" | "xlsx"): string {
 export async function getAllWideResults(params?: {
   gnz_id?: string;
   club?: string;
+  year?: number;
 }): Promise<{
   wag?: { columns: string[]; rows: Record<string, unknown>[] };
   mag?: { columns: string[]; rows: Record<string, unknown>[] };
@@ -81,6 +82,7 @@ export async function getAllWideResults(params?: {
   const qp = new URLSearchParams();
   if (params?.gnz_id) qp.set("gnz_id", params.gnz_id);
   if (params?.club) qp.set("club", params.club);
+  if (params?.year) qp.set("year", String(params.year));
   const qs = qp.toString();
   if (qs) url += `?${qs}`;
   const res = await fetch(url);
