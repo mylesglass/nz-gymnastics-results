@@ -194,6 +194,23 @@ class TestParseRealData:
         assert levels.get("Alisa Wada") == "Senior International"
         assert levels.get("Sarah Kennard") == "Junior International"
 
+    def test_csg_classic_apparatus_finals_no_aa(self):
+        data = load("csg-classic_2025.json")
+        _, rows = parse_json(data)
+        finals = [r for r in rows if r["round_type"] == "Apparatus Finals"]
+        assert len(finals) > 0, "expected some apparatus finals rows"
+        for row in finals:
+            assert row["aa_score"] is None, (
+                f"{row['gymnast_name']} finals {row['apparatus']} has aa_score={row['aa_score']}"
+            )
+            assert row["aa_rank"] is None, (
+                f"{row['gymnast_name']} finals {row['apparatus']} has aa_rank={row['aa_rank']}"
+            )
+        # Qualification rows should still have AA
+        quals = [r for r in rows if r["round_type"] == "All Around - Qualification"]
+        assert len(quals) > 0
+        assert any(r["aa_score"] is not None for r in quals), "no qualification rows have an aa_score"
+
     def test_affinity_large_wag(self):
         data = load("affinity_2025.json")
         _, rows = parse_json(data)

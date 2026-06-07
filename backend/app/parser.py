@@ -414,8 +414,8 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                         "pass_final_score": _sanitise_float(score_data.get("pass_final_score")),
                         "start_value": _sanitise_float(score_data.get("start_value")),
                         "apparatus_rank": _sanitise_rank(rank_value),
-                        "aa_score": _sanitise_float(aa.get("aa_score")),
-                        "aa_rank": _sanitise_rank(aa.get("aa_rank")),
+                        "aa_score": None if round_type == "Apparatus Finals" else _sanitise_float(aa.get("aa_score")),
+                        "aa_rank": None if round_type == "Apparatus Finals" else _sanitise_rank(aa.get("aa_rank")),
                         "round_type": round_type,
                         "bonus": _sanitise_float(score_data.get("bonus")),
                     }
@@ -441,7 +441,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
         if aa_score is None:
             continue
         for row in rows:
-            if row["gymnast_name"] == name and row["aa_score"] is None:
+            if row["gymnast_name"] == name and row["aa_score"] is None and row["round_type"] != "Apparatus Finals":
                 row["aa_score"] = _sanitise_float(aa_score)
                 row["aa_rank"] = _sanitise_rank(aa_rank)
 
