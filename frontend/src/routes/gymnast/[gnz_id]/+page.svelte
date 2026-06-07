@@ -16,9 +16,6 @@
         if (e.year) years.add(String(e.year));
       }
       yearOptions = [...years].sort().reverse();
-      if (yearOptions.length > 0) {
-        filterYear = yearOptions[0];
-      }
     } catch {
       // ignore
     }
