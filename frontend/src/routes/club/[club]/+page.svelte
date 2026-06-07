@@ -1,12 +1,36 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { page } from "$app/stores";
-  import { getAllWideResults } from "$lib/api";
+  import { getAllWideResults, listEvents } from "$lib/api";
   import WideResultsTable from "$lib/WideResultsTable.svelte";
 
-  function loadData() {
+  let yearOptions = $state<string[]>([]);
+  let filterYear = $state("");
+  let ready = $state(false);
+
+  onMount(async () => {
+    try {
+      const events = await listEvents();
+      const years = new Set<string>();
+      for (const e of events) {
+        if (e.year) years.add(String(e.year));
+      }
+      yearOptions = [...years].sort().reverse();
+      if (yearOptions.length > 0) {
+        filterYear = yearOptions[0];
+      }
+    } catch {
+      // ignore
+    }
+    ready = true;
+  });
+
+  function loadDataImpl() {
     const club = $page.params.club;
     if (!club) return Promise.resolve({ title: "Club", tabs: {} });
-    return getAllWideResults({ club }).then((r) => ({
+    const params: { club: string; year?: number } = { club };
+    if (filterYear) params.year = parseInt(filterYear);
+    return getAllWideResults(params).then((r) => ({
       title: club,
       tabs: {
         ...(r.wag ? { wag: r.wag } : {}),
@@ -51,16 +75,32 @@
   </button>
 {/snippet}
 
+{#snippet extraControls()}
+  {#if yearOptions.length > 1}
+    <select class="select select-bordered select-xs w-24" bind:value={filterYear}>
+      <option value="">All years</option>
+      {#each yearOptions as y}
+        <option value={y}>{y}</option>
+      {/each}
+    </select>
+  {/if}
+{/snippet}
+
 {#snippet empty()}
   <div role="alert" class="alert alert-error mt-4">
     <span>Club not found</span>
   </div>
 {/snippet}
 
-<WideResultsTable
-  {loadData}
-  showEventFilter={true}
-  extraHeadLabels={{ event_name: "Event" }}
-  {download}
-  {empty}
-/>
+{#if ready}
+  {#key filterYear}
+    <WideResultsTable
+      loadData={loadDataImpl}
+      {extraControls}
+      showEventFilter={true}
+      extraHeadLabels={{ event_name: "Event" }}
+      {download}
+      {empty}
+    />
+  {/key}
+{/if}
