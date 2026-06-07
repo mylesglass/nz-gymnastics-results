@@ -80,21 +80,22 @@
   </div>
 {/snippet}
 
-{#if ready}
+{#snippet controls()}
   {#if yearOptions.length > 1}
-    <div class="flex items-center gap-2 mb-3">
-      <select class="select select-bordered select-sm" bind:value={filterYear}>
-        <option value="">All years</option>
-        {#each yearOptions as y}
-          <option value={y}>{y}</option>
-        {/each}
-      </select>
-    </div>
+    <select class="select select-bordered select-xs" bind:value={filterYear}>
+      <option value="">All years</option>
+      {#each yearOptions as y}
+        <option value={y}>{y}</option>
+      {/each}
+    </select>
   {/if}
+{/snippet}
 
+{#if ready}
   {#key filterYear}
     <WideResultsTable
       loadData={loadDataImpl}
+      {extraControls}
       showEventFilter={true}
       extraHeadLabels={{ event_name: "Event" }}
       {download}

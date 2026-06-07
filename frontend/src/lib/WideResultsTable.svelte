@@ -26,12 +26,14 @@
     extraHeadLabels = {} as Record<string, string>,
     download,
     empty,
+    extraControls,
   }: {
     loadData: () => Promise<LoadDataResult>;
     showEventFilter?: boolean;
     extraHeadLabels?: Record<string, string>;
     download?: Snippet<[DownloadArgs]>;
     empty?: Snippet;
+    extraControls?: Snippet;
   } = $props();
 
   let loading = $state(true);
@@ -461,6 +463,9 @@
     </h1>
 
     <div class="flex flex-wrap items-center gap-1 pb-1">
+      {#if extraControls}
+        {@render extraControls()}
+      {/if}
       <div role="tablist" class="tabs tabs-boxed">
         {#each Object.keys(allData) as tab}
           <button
