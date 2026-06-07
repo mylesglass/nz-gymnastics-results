@@ -117,3 +117,11 @@ export async function renameEvent(
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+export async function listClubs(): Promise<
+  { name: string; gymnast_count: number; region: string | null }[]
+> {
+  const res = await fetch(`${API_BASE}/api/clubs`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}

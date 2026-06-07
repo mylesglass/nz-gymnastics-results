@@ -41,3 +41,9 @@ class StatsResponse(BaseModel):
     total_gymnasts: int
     total_scores: int
     total_clubs: int
+
+
+class ClubItem(BaseModel):
+    name: str
+    gymnast_count: int
+    region: str | None

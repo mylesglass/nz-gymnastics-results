@@ -85,10 +85,10 @@
         <div class="stat-title text-base-content/60 text-xs">Scores</div>
         <div class="stat-value text-2xl">{stats.total_scores.toLocaleString()}</div>
       </div>
-      <div class="stat bg-base-200 rounded-box">
+      <a href="/clubs" class="stat bg-base-200 rounded-box hover:bg-base-300 transition-all cursor-pointer">
         <div class="stat-title text-base-content/60 text-xs">Clubs</div>
         <div class="stat-value text-2xl">{stats.total_clubs}</div>
-      </div>
+      </a>
     </div>
   {:else}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">

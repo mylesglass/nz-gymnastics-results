@@ -1,5 +1,6 @@
 import json
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, File, Header, HTTPException, UploadFile, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,7 +12,7 @@ from app.auth import is_auth_configured, check_password
 from app.database import get_session, init_db
 from app.models import Event, LongScore
 from app.parser import ParseError, parse_json, validate_upload_structure
-from app.schemas import EventListItem, EventResponse, EventUpdate, ResultsResponse, StatsResponse
+from app.schemas import ClubItem, EventListItem, EventResponse, EventUpdate, ResultsResponse, StatsResponse
 from app.transformer import export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict
 
 
@@ -54,6 +55,38 @@ def get_stats():
             total_scores=total_scores,
             total_clubs=total_clubs,
         )
+    finally:
+        session.close()
+
+
+@app.get("/api/clubs", response_model=list[ClubItem])
+def list_clubs():
+    session = get_session()
+    try:
+        rows = (
+            session.query(
+                LongScore.club_name,
+                func.count(func.distinct(LongScore.gymnast_name)).label("gymnast_count"),
+            )
+            .filter(LongScore.club_name.isnot(None), LongScore.club_name != "")
+            .group_by(LongScore.club_name)
+            .order_by(LongScore.club_name)
+            .all()
+        )
+        club_data_path = Path(__file__).resolve().parent.parent / "clubs_and_regions.json"
+        region_map: dict[str, str] = {}
+        if club_data_path.exists():
+            with open(club_data_path) as f:
+                club_data = json.load(f)
+            for region_name, clubs in club_data.get("regions", {}).items():
+                for c in clubs:
+                    region_map[c["name"].lower()] = region_name
+            for v in club_data.get("lookup", {}).values():
+                region_map[v["name"].lower()] = v["region"]
+        return [
+            ClubItem(name=name, gymnast_count=count, region=region_map.get(name.lower()))
+            for name, count in rows
+        ]
     finally:
         session.close()
 
