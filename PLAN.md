@@ -130,6 +130,6 @@
 - [x] Improve error detection when loading JSONs / expandable error details / upload stats
 - [x] Allow user to DELETE an event from the event page (no auth)
 - [x] Allow user to RENAME a competition (no auth)
+- [x] Simple email & password authentication to protect upload/delete/rename (password-only, env var)
 - [ ] Mobile-responsive table improvements
-- [ ] Very simple email & password authentication to keep upload page hidden from regular users
 - [ ] Allow CSV export of JUST the current information displayed on the filtered table

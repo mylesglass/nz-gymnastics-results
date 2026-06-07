@@ -2,11 +2,13 @@
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { listEvents, deleteEvent, renameEvent } from "$lib/api";
+  import { isLoggedIn } from "$lib/auth";
 
   let events = $state<Array<{ id: number; name: string; start_date: string; gymnast_count: number; year: number | null }>>([]);
   let loading = $state(true);
   let filterYear = $state("");
   let searchQuery = $state("");
+  let loggedIn = $state(false);
 
   let yearOptions = $state<string[]>([]);
   let sortCol = $state("start_date");
@@ -73,6 +75,8 @@
     } finally {
       loading = false;
     }
+    const unsub = isLoggedIn.subscribe((v) => (loggedIn = v));
+    return unsub;
   });
 
   function startRename(ev: { id: number; name: string }) {
@@ -196,7 +200,9 @@
               Gymnasts
               {#if sortCol === "gymnast_count"}<span class="ml-1 text-xs">{sortAsc ? "▲" : "▼"}</span>{/if}
             </th>
-            <th class="w-20"></th>
+            {#if loggedIn}
+              <th class="w-20"></th>
+            {/if}
           </tr>
         </thead>
         <tbody>
@@ -223,6 +229,7 @@
                 {/if}
               </td>
               <td class="text-right">{ev.gymnast_count}</td>
+              {#if loggedIn}
               <td>
                 <div class="flex gap-1">
                   <button
@@ -260,6 +267,7 @@
                   </button>
                 </div>
               </td>
+              {/if}
             </tr>
           {/each}
         </tbody>

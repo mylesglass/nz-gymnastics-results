@@ -201,6 +201,19 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
 - **Rename**: Opens a modal with pre-filled name input, calls PATCH, updates local list on success
 - **Delete**: Opens a confirmation modal, calls DELETE, removes from local list
 
+### Password-only auth
+- **Backend**: Added `backend/app/auth.py` — reads `ADMIN_PASSWORD` env var, exposes `is_auth_configured()` / `check_password()`
+- **Backend**: Added `GET /api/auth/status` (returns `{ configured: bool }`) and `POST /api/auth` (password check)
+- **Backend**: Protected `POST /api/upload`, `DELETE`, `PATCH` via `Depends(require_auth)` checking `X-Admin-Password` header
+- When `ADMIN_PASSWORD` env var is unset, all endpoints are public (dev-friendly)
+- **Frontend**: Created `frontend/src/lib/auth.ts` — Svelte writable stores for `isLoggedIn` / `authConfigured`, in-memory password
+- **Frontend**: Added `checkAuthStatus()` and `authLogin()` to API client; write calls send `X-Admin-Password` header
+- **Landing page**: When not logged in, shows three option cards (Events / Results / Login) instead of upload drop zone
+- **Navbar**: "Upload" link hidden when not logged in; Login/Logout links shown when auth is configured
+- **Events page**: Rename/delete action buttons hidden when not logged in
+- **Login page**: Simple centered password card, redirects to `/` on success
+- **Docker**: Added commented-out `ADMIN_PASSWORD` env var example to `docker-compose.yml`
+
 ## Known Edges & Gotchas
 - **WAG/MAG discipline split**: Tab assignment now uses the `discipline` field from data. Previously used apparatus presence (VT/FX appeared in both lists, causing all gymnasts to show in both tabs).
 - **Vault aggregation**: Different levels use different rules (average vs best-of-2). See `_use_vault_average()` in transformer.py for complete NZ-specific rule table.

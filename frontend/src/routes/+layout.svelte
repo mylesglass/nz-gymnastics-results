@@ -1,11 +1,21 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { isLoggedIn, authConfigured, logout } from "$lib/auth";
+  import { goto } from "$app/navigation";
   import "../app.css";
 
   let theme = $state("dark");
+  let loggedIn = $state(false);
+  let authCfg = $state(false);
 
   onMount(() => {
     theme = document.documentElement.dataset.theme || "dark";
+    const unsub1 = isLoggedIn.subscribe((v) => (loggedIn = v));
+    const unsub2 = authConfigured.subscribe((v) => (authCfg = v));
+    return () => {
+      unsub1();
+      unsub2();
+    };
   });
 
   function toggleTheme() {
@@ -21,9 +31,26 @@
       <a href="/" class="btn btn-ghost text-xl">🤸 NZ Gymnastics Results</a>
     </div>
     <div class="flex-none gap-2 items-center">
-      <a href="/" class="btn btn-outline btn-sm">Upload</a>
+      {#if loggedIn || !authCfg}
+        <a href="/" class="btn btn-outline btn-sm">Upload</a>
+      {/if}
       <a href="/events" class="btn btn-outline btn-sm">Events</a>
       <a href="/results" class="btn btn-outline btn-sm">Results</a>
+      {#if authCfg}
+        {#if loggedIn}
+          <button
+            class="btn btn-ghost btn-sm"
+            onclick={() => {
+              logout();
+              goto("/");
+            }}
+          >
+            Logout
+          </button>
+        {:else}
+          <a href="/login" class="btn btn-ghost btn-sm">Login</a>
+        {/if}
+      {/if}
       <button onclick={toggleTheme} class="btn btn-ghost btn-sm btn-square">
         {#if theme === "dark"}☀️{:else}🌙{/if}
       </button>
