@@ -32,7 +32,7 @@
     </div>
     <div class="flex-none gap-2 items-center">
       {#if loggedIn || !authCfg}
-        <a href="/" class="btn btn-outline btn-sm">Upload</a>
+        <a href="/upload" class="btn btn-outline btn-sm">Upload</a>
       {/if}
       <a href="/events" class="btn btn-outline btn-sm">Events</a>
       <a href="/results" class="btn btn-outline btn-sm">Results</a>
