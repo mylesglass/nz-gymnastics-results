@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import { getWideResults, getExportUrl } from "$lib/api";
+  import { getWideResults } from "$lib/api";
   import WideResultsTable from "$lib/WideResultsTable.svelte";
 
   function loadData() {
@@ -13,20 +13,42 @@
       },
     }));
   }
+
+  function exportCSV(columns: string[], rows: Record<string, unknown>[], headerLabels: Record<string, string>) {
+    const header = columns.map((c) => headerLabels[c] ?? c);
+    const lines = [
+      header.join(","),
+      ...rows.map((r) =>
+        columns
+          .map((c) => {
+            const v = r[c];
+            const s = v == null ? "" : String(v);
+            return s.includes(",") || s.includes('"') || s.includes("\n")
+              ? `"${s.replace(/"/g, '""')}"`
+              : s;
+          })
+          .join(","),
+      ),
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const id = Number($page.params.id);
+    a.href = url;
+    a.download = `event-${id}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 </script>
 
 <svelte:head>
   <title>Results — NZ Gymnastics Results</title>
 </svelte:head>
 
-{#snippet download()}
-  <div class="dropdown dropdown-end ml-auto">
-    <button class="btn btn-outline btn-sm">Download ▼</button>
-    <ul class="dropdown-content menu bg-base-200 rounded-box z-50 p-2 shadow-md min-w-28">
-      <li><a href={getExportUrl(Number($page.params.id), "csv")}>CSV</a></li>
-      <li><a href={getExportUrl(Number($page.params.id), "xlsx")}>XLSX</a></li>
-    </ul>
-  </div>
+{#snippet download({columns, rows, headerLabels})}
+  <button onclick={() => exportCSV(columns, rows, headerLabels)} class="btn btn-outline btn-sm ml-auto">
+    Download CSV
+  </button>
 {/snippet}
 
 {#snippet empty()}
