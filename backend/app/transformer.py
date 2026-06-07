@@ -205,6 +205,16 @@ def pivot_to_wide_dict(event_id: int, session, gnz_id: str = None, club: str = N
             if key not in seen:
                 seen.add(key)
                 out_row = _build_wide_row(row, prefixes, columns)
+
+                # Apparatus finals: AA = sum of apparatus scored in this round
+                if str(row.get("round-type", "")).lower() == "apparatus finals":
+                    aa_sum = 0.0
+                    for p in prefixes:
+                        total = out_row.get(f"{p}-total")
+                        if total is not None and total != "DNS":
+                            aa_sum += float(total)
+                    out_row["aa-score"] = _fmt3(aa_sum) if aa_sum > 0 else None
+                    out_row["aa-rank"] = None
             out_rows.append(out_row)
 
         result[disc_key] = {"columns": columns, "rows": out_rows}
