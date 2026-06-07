@@ -52,7 +52,7 @@
   <div class="card bg-base-200 mt-4">
     <div class="card-body items-center text-center py-12">
       <p class="text-base-content/70">No results yet.</p>
-      <a href="/" class="btn btn-primary btn-sm mt-2">Upload an event</a>
+      <a href="/upload" class="btn btn-primary btn-sm mt-2">Upload an event</a>
     </div>
   </div>
 {/snippet}
