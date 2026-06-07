@@ -1,4 +1,9 @@
 import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
 
 ADMIN_PASSWORD: str | None = os.environ.get("ADMIN_PASSWORD")
 
