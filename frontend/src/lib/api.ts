@@ -125,3 +125,11 @@ export async function listClubs(): Promise<
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+export async function listGymnasts(): Promise<
+  { gnz_id: string; name: string; club: string | null }[]
+> {
+  const res = await fetch(`${API_BASE}/api/gymnasts`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}

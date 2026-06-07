@@ -12,7 +12,7 @@ from app.auth import is_auth_configured, check_password
 from app.database import get_session, init_db
 from app.models import Event, LongScore
 from app.parser import ParseError, parse_json, validate_upload_structure
-from app.schemas import ClubItem, EventListItem, EventResponse, EventUpdate, ResultsResponse, StatsResponse
+from app.schemas import ClubItem, EventListItem, EventResponse, EventUpdate, GymnastItem, ResultsResponse, StatsResponse
 from app.transformer import export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict
 
 
@@ -87,6 +87,22 @@ def list_clubs():
             ClubItem(name=name, gymnast_count=count, region=region_map.get(name.lower()))
             for name, count in rows
         ]
+    finally:
+        session.close()
+
+
+@app.get("/api/gymnasts", response_model=list[GymnastItem])
+def list_gymnasts():
+    session = get_session()
+    try:
+        rows = (
+            session.query(LongScore.gnz_id, LongScore.gymnast_name, LongScore.club_name)
+            .filter(LongScore.gnz_id.isnot(None), LongScore.gnz_id != "")
+            .group_by(LongScore.gnz_id, LongScore.gymnast_name)
+            .order_by(LongScore.gymnast_name)
+            .all()
+        )
+        return [GymnastItem(gnz_id=g, name=n, club=c) for g, n, c in rows]
     finally:
         session.close()
 

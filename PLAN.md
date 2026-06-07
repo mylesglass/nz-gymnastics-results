@@ -133,5 +133,5 @@
 - [x] Simple email & password authentication to protect upload/delete/rename (password-only, env var)
 - [ ] Mobile-responsive table improvements
 - [ ] Performance: caching, query optimisation, application speed
-- [ ] Stats dashboard on landing page (total results, events, gymnasts, etc.)
+- [x] Stats dashboard on landing page (total results, events, gymnasts, etc.)
 - [x] Allow CSV export of JUST the current information displayed on the filtered table
