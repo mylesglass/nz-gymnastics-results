@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from app.parser import _infer_event_discipline, _normalise_apparatus, parse_json, validate_upload_structure
+from app.parser import _infer_event_discipline, _normalise_apparatus, _extract_division, parse_json, validate_upload_structure
 
 HERE = Path(__file__).resolve().parent
 DATA_DIR_2025 = HERE.parent.parent / "data-collection" / "2025" / "json"
@@ -72,6 +72,21 @@ class TestNormaliseApparatus:
 
     def test_unknown_passthrough(self):
         assert _normalise_apparatus("Something") == "Something"
+
+
+class TestExtractDivision:
+    def test_international_takes_priority_over_division_b(self):
+        assert _extract_division("Junior International | DIVISION B") == "INTERNATIONAL"
+        assert _extract_division("Senior International | DIVISION B") == "INTERNATIONAL"
+
+    def test_over_for_division_b(self):
+        assert _extract_division("DIVISION B") == "OVER"
+
+    def test_under_for_division_a(self):
+        assert _extract_division("DIVISION A") == "UNDER"
+
+    def test_none_for_plain_name(self):
+        assert _extract_division("All-Around") is None
 
 
 class TestInferEventDiscipline:
@@ -193,6 +208,12 @@ class TestParseRealData:
         levels = {r["gymnast_name"]: r["level_category"] for r in rows}
         assert levels.get("Alisa Wada") == "Senior International"
         assert levels.get("Sarah Kennard") == "Junior International"
+        # Division should be null for International gymnasts
+        for r in rows:
+            if r["level_category"] and "International" in r["level_category"]:
+                assert r["division"] is None, (
+                    f"{r['gymnast_name']} International has division={r['division']}"
+                )
 
     def test_csg_classic_apparatus_finals_no_aa(self):
         data = load("csg-classic_2025.json")
