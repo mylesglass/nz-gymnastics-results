@@ -36,6 +36,7 @@
       {/if}
       <a href="/events" class="btn btn-outline btn-sm">Events</a>
       <a href="/results" class="btn btn-outline btn-sm">Results</a>
+      <a href="/clubs" class="btn btn-outline btn-sm">Clubs</a>
       {#if authCfg}
         {#if loggedIn}
           <button
