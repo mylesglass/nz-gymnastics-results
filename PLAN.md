@@ -134,4 +134,7 @@
 - [ ] Mobile-responsive table improvements
 - [ ] Performance: caching, query optimisation, application speed
 - [x] Stats dashboard on landing page (total results, events, gymnasts, etc.)
+- [x] Clubs list page (region-grouped from clubs_and_regions.json)
+- [x] Gymnasts list page (alphabetically grouped A-Z)
+- [x] Year filter on results, gymnast, and club pages (defaults to latest year, gymnast defaults to all)
 - [x] Allow CSV export of JUST the current information displayed on the filtered table
