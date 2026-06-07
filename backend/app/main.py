@@ -252,10 +252,13 @@ def get_results_wide(event_id: int):
 
 
 @app.get("/api/results/wide-all")
-def get_all_results_wide(gnz_id: str = None, club: str = None):
+def get_all_results_wide(gnz_id: str = None, club: str = None, year: int = None):
     session = get_session()
     try:
-        events = session.query(Event).order_by(Event.created_at.desc()).all()
+        query = session.query(Event).order_by(Event.created_at.desc())
+        if year:
+            query = query.filter(Event.year == year)
+        events = query.all()
         combined: dict[str, dict] = {}
 
         for ev in events:
