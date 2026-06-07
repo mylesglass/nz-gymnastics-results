@@ -1,11 +1,13 @@
 import json
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Header, HTTPException, UploadFile, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
+from pydantic import BaseModel
 from sqlalchemy import func
 
+from app.auth import is_auth_configured, check_password
 from app.database import get_session, init_db
 from app.models import Event, LongScore
 from app.parser import ParseError, parse_json, validate_upload_structure
@@ -35,11 +37,40 @@ def health():
 
 
 # ---------------------------------------------------------------------------
+# Auth
+# ---------------------------------------------------------------------------
+
+class LoginRequest(BaseModel):
+    password: str
+
+
+async def require_auth(x_admin_password: str | None = Header(None)):
+    if not is_auth_configured():
+        return
+    if not x_admin_password or not check_password(x_admin_password):
+        raise HTTPException(401, "Unauthorized")
+
+
+@app.get("/api/auth/status")
+def auth_status():
+    return {"configured": is_auth_configured()}
+
+
+@app.post("/api/auth")
+def auth_login(body: LoginRequest):
+    if not is_auth_configured():
+        return {"ok": True}
+    if not check_password(body.password):
+        raise HTTPException(401, "Unauthorized")
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
 # Upload
 # ---------------------------------------------------------------------------
 
 @app.post("/api/upload", response_model=EventResponse)
-def upload_file(file: UploadFile = File(...)):
+def upload_file(file: UploadFile = File(...), _auth=Depends(require_auth)):
     if not file.filename or not file.filename.endswith(".json"):
         raise HTTPException(400, "Only .json files are accepted")
 
@@ -307,7 +338,7 @@ def export_event_xlsx(event_id: int):
 # ---------------------------------------------------------------------------
 
 @app.delete("/api/events/{event_id}")
-def delete_event(event_id: int):
+def delete_event(event_id: int, _auth=Depends(require_auth)):
     session = get_session()
     try:
         event = session.query(Event).filter(Event.id == event_id).first()
@@ -325,7 +356,7 @@ def delete_event(event_id: int):
 # ---------------------------------------------------------------------------
 
 @app.patch("/api/events/{event_id}", response_model=EventListItem)
-def rename_event(event_id: int, body: EventUpdate):
+def rename_event(event_id: int, body: EventUpdate, _auth=Depends(require_auth)):
     session = get_session()
     try:
         event = session.query(Event).filter(Event.id == event_id).first()

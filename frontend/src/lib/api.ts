@@ -1,6 +1,13 @@
 import { dev } from "$app/environment";
+import { getPassword } from "./auth";
 
 const API_BASE = dev ? "" : "http://backend:8000";
+
+function authHeaders(): Record<string, string> {
+  const pw = getPassword();
+  if (pw) return { "X-Admin-Password": pw };
+  return {};
+}
 
 export interface EventSummary {
   id: number;
@@ -20,10 +27,29 @@ export interface WideResponse {
   mag: { columns: string[]; rows: Record<string, unknown>[] };
 }
 
+export async function checkAuthStatus(): Promise<{ configured: boolean }> {
+  const res = await fetch(`${API_BASE}/api/auth/status`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function authLogin(password: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/auth`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+}
+
 export async function uploadFile(file: File): Promise<EventSummary> {
   const form = new FormData();
   form.append("file", file);
-  const res = await fetch(`${API_BASE}/api/upload`, { method: "POST", body: form });
+  const res = await fetch(`${API_BASE}/api/upload`, {
+    method: "POST",
+    body: form,
+    headers: authHeaders(),
+  });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
@@ -65,6 +91,7 @@ export async function getAllWideResults(params?: {
 export async function deleteEvent(eventId: number): Promise<void> {
   const res = await fetch(`${API_BASE}/api/events/${eventId}`, {
     method: "DELETE",
+    headers: authHeaders(),
   });
   if (!res.ok) throw new Error(await res.text());
 }
@@ -75,7 +102,7 @@ export async function renameEvent(
 ): Promise<EventSummary> {
   const res = await fetch(`${API_BASE}/api/events/${eventId}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ name }),
   });
   if (!res.ok) throw new Error(await res.text());
