@@ -80,7 +80,7 @@
   </div>
 {/snippet}
 
-{#snippet controls()}
+{#snippet extraControls()}
   {#if yearOptions.length > 1}
     <select class="select select-bordered select-xs" bind:value={filterYear}>
       <option value="">All years</option>
