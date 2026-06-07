@@ -34,3 +34,10 @@ class ResultsResponse(BaseModel):
 
 class EventUpdate(BaseModel):
     name: str
+
+
+class StatsResponse(BaseModel):
+    total_events: int
+    total_gymnasts: int
+    total_scores: int
+    total_clubs: int

@@ -11,7 +11,7 @@ from app.auth import is_auth_configured, check_password
 from app.database import get_session, init_db
 from app.models import Event, LongScore
 from app.parser import ParseError, parse_json, validate_upload_structure
-from app.schemas import EventListItem, EventResponse, EventUpdate, ResultsResponse
+from app.schemas import EventListItem, EventResponse, EventUpdate, ResultsResponse, StatsResponse
 from app.transformer import export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict
 
 
@@ -34,6 +34,28 @@ app.add_middleware(
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/api/stats")
+def get_stats():
+    session = get_session()
+    try:
+        total_events = session.query(func.count(Event.id)).scalar() or 0
+        total_gymnasts = (
+            session.query(func.count(func.distinct(LongScore.gymnast_name))).scalar() or 0
+        )
+        total_scores = session.query(func.count(LongScore.id)).scalar() or 0
+        total_clubs = (
+            session.query(func.count(func.distinct(LongScore.club_name))).scalar() or 0
+        )
+        return StatsResponse(
+            total_events=total_events,
+            total_gymnasts=total_gymnasts,
+            total_scores=total_scores,
+            total_clubs=total_clubs,
+        )
+    finally:
+        session.close()
 
 
 # ---------------------------------------------------------------------------
