@@ -187,6 +187,13 @@ class TestParseRealData:
         gymnasts = set(r["gymnast_name"] for r in rows)
         assert len(gymnasts) >= 500
 
+    def test_csg_classic_international_levels(self):
+        data = load("csg-classic_2025.json")
+        _, rows = parse_json(data)
+        levels = {r["gymnast_name"]: r["level_category"] for r in rows}
+        assert levels.get("Alisa Wada") == "Senior International"
+        assert levels.get("Sarah Kennard") == "Junior International"
+
     def test_affinity_large_wag(self):
         data = load("affinity_2025.json")
         _, rows = parse_json(data)

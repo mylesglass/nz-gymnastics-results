@@ -195,19 +195,24 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
     # Division is encoded in competition node names referenced by resultTableConfigs
     # First map: competition node id -> division
     node_division: dict[str, str | None] = {}
+    node_level: dict[str, str | None] = {}
     for rule in data.get("performanceRules", []):
         for node in rule.get("competition", {}).get("nodeTree", {}).get("nodes", []):
             nid = node.get("id")
             if nid:
                 node_division[nid] = _extract_division(node.get("name", ""))
+                lv = resolve_level(node.get("name", ""))
+                node_level[nid] = lv if lv != node.get("name", "") else None
 
     # Second map: entity_id -> division from performanceIndividuals
     entity_division: dict[str, str | None] = {}
+    entity_level: dict[str, str | None] = {}
     for ind in data.get("performanceIndividuals", []):
         eid = ind.get("_id")
         if not eid:
             continue
         div = None
+        lv = None
         for config in ind.get("resultTableConfigs", []):
             rtid = config.get("resultTableId")
             if rtid and rtid in node_division:
@@ -220,7 +225,13 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
             if rid and rid in division_map and division_map[rid]:
                 div = division_map[rid]
                 break
+        for config in ind.get("resultTableConfigs", []):
+            rtid = config.get("resultTableId")
+            if rtid and rtid in node_level and node_level[rtid]:
+                lv = node_level[rtid]
+                break
         entity_division[eid] = div
+        entity_level[eid] = lv
 
     # -- Index performanceScores by _id --
     scores_by_id: dict[str, dict] = {}
@@ -372,7 +383,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                         is_nationals,
                     )
                     discipline = unit_info.get("discipline", "UNKNOWN")
-                    level_category = resolve_level(unit_info.get("name", ""))
+                    level_category = entity_level.get(entity_id) or resolve_level(unit_info.get("name", ""))
 
                     # Pass number
                     pass_number = 1
