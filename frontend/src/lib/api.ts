@@ -60,6 +60,17 @@ export async function listEvents(): Promise<EventSummary[]> {
   return res.json();
 }
 
+export async function getStats(): Promise<{
+  total_events: number;
+  total_gymnasts: number;
+  total_scores: number;
+  total_clubs: number;
+}> {
+  const res = await fetch(`${API_BASE}/api/stats`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export async function getWideResults(eventId: number): Promise<WideResponse> {
   const res = await fetch(`${API_BASE}/api/events/${eventId}/results/wide`);
   if (!res.ok) throw new Error(await res.text());

@@ -1,15 +1,24 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { checkAuthStatus } from "$lib/api";
+  import { checkAuthStatus, getStats } from "$lib/api";
   import { authConfigured } from "$lib/auth";
 
   let authCfg = $state(false);
+  let stats = $state<{
+    total_events: number;
+    total_gymnasts: number;
+    total_scores: number;
+    total_clubs: number;
+  } | null>(null);
 
   onMount(() => {
     checkAuthStatus()
       .then((s) => authConfigured.set(s.configured))
       .catch(() => {});
     const unsub = authConfigured.subscribe((v) => (authCfg = v));
+    getStats()
+      .then((s) => (stats = s))
+      .catch(() => {});
     return unsub;
   });
 </script>
@@ -62,28 +71,33 @@
     </a>
   </div>
 
-  <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-    <div class="card bg-base-200/50">
-      <div class="card-body">
-        <h3 class="card-title text-base">How it works</h3>
-        <ol class="list-decimal list-inside text-sm text-base-content/70 space-y-1">
-          <li>Export a competition from Scoreholder as JSON</li>
-          <li>Upload the file here — it's parsed automatically</li>
-          <li>Browse results with WAG/MAG tabs, filterable columns, and per-apparatus tooltips</li>
-          <li>Export to CSV or XLSX for offline use</li>
-        </ol>
+  {#if stats}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+      <div class="stat bg-base-200 rounded-box">
+        <div class="stat-title text-base-content/60 text-xs">Events</div>
+        <div class="stat-value text-2xl">{stats.total_events}</div>
+      </div>
+      <div class="stat bg-base-200 rounded-box">
+        <div class="stat-title text-base-content/60 text-xs">Gymnasts</div>
+        <div class="stat-value text-2xl">{stats.total_gymnasts.toLocaleString()}</div>
+      </div>
+      <div class="stat bg-base-200 rounded-box">
+        <div class="stat-title text-base-content/60 text-xs">Scores</div>
+        <div class="stat-value text-2xl">{stats.total_scores.toLocaleString()}</div>
+      </div>
+      <div class="stat bg-base-200 rounded-box">
+        <div class="stat-title text-base-content/60 text-xs">Clubs</div>
+        <div class="stat-value text-2xl">{stats.total_clubs}</div>
       </div>
     </div>
-    <div class="card bg-base-200/50">
-      <div class="card-body">
-        <h3 class="card-title text-base">Features</h3>
-        <ul class="list-disc list-inside text-sm text-base-content/70 space-y-1">
-          <li>Per-gymnast results across all events</li>
-          <li>Club overview pages</li>
-          <li>Wide-format table with AA totals and tooltips</li>
-          <li>Sortable columns and text search</li>
-        </ul>
-      </div>
+  {:else}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+      {#each [1, 2, 3, 4] as _}
+        <div class="stat bg-base-200 rounded-box animate-pulse">
+          <div class="stat-title text-base-content/60 text-xs">&nbsp;</div>
+          <div class="stat-value text-2xl">&nbsp;</div>
+        </div>
+      {/each}
     </div>
-  </div>
+  {/if}
 </div>
