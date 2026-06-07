@@ -105,15 +105,15 @@ def _build_apparatus_and_division_maps(performance_rules: list[dict]) -> tuple[d
 def _extract_division(node_name: str, discipline: str = "WAG") -> str | None:
     lower = node_name.lower()
 
-    for tag in ["under", "unders", "division a"]:
-        if tag in lower:
-            return "UNDER"
-    for tag in ["over", "overs", "division b"]:
-        if tag in lower:
-            return "OVER"
     for tag in ["international", " int"]:
         if tag in lower:
             return "INTERNATIONAL"
+    for tag in ["over", "overs", "division b"]:
+        if tag in lower:
+            return "OVER"
+    for tag in ["under", "unders", "division a"]:
+        if tag in lower:
+            return "UNDER"
 
     if " > u" in lower:
         return "UNDER"
@@ -396,6 +396,8 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
 
                     aa = aa_scores.get(entity_id, {})
                     division = entity_division.get(entity_id)
+                    if level_category and "International" in level_category:
+                        division = None
                     round_type = _infer_round_type(unit_info.get("name", ""), node_name_map.get(rs_id, rs_name))
 
                     row = {
