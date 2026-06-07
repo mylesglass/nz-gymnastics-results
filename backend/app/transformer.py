@@ -247,24 +247,31 @@ def _build_wide_row(row: dict, prefixes: list[str], columns: list[str]) -> dict:
             p2_r = row.get(f"{p}-2-rank")
 
             # Determine display aggregation rule
-            use_average = _use_vault_average(step, rt)
-            if use_average:
-                best_total = (float(p1_total) + float(p2_total)) / 2
-                best_d = (float(p1_d) + float(p2_d)) / 2 if p1_d is not None and p2_d is not None else None
-                best_e = (float(p1_e) + float(p2_e)) / 2 if p1_e is not None and p2_e is not None else None
-                best_n = (float(p1_n) + float(p2_n)) / 2 if p1_n is not None and p2_n is not None else 0.0
+            if p2_total is None:
+                # Only one vault recorded — use it directly
+                best_total = float(p1_total)
+                best_d = p1_d
+                best_e = p1_e
+                best_n = p1_n
             else:
-                # Higher total wins — use that pass's full score
-                if float(p1_total) >= float(p2_total):
-                    best_total = float(p1_total)
-                    best_d = p1_d
-                    best_e = p1_e
-                    best_n = p1_n
+                use_average = _use_vault_average(step, rt)
+                if use_average:
+                    best_total = (float(p1_total) + float(p2_total)) / 2
+                    best_d = (float(p1_d) + float(p2_d)) / 2 if p1_d is not None and p2_d is not None else None
+                    best_e = (float(p1_e) + float(p2_e)) / 2 if p1_e is not None and p2_e is not None else None
+                    best_n = (float(p1_n) + float(p2_n)) / 2 if p1_n is not None and p2_n is not None else 0.0
                 else:
-                    best_total = float(p2_total)
-                    best_d = p2_d
-                    best_e = p2_e
-                    best_n = p2_n
+                    # Higher total wins — use that pass's full score
+                    if float(p1_total) >= float(p2_total):
+                        best_total = float(p1_total)
+                        best_d = p1_d
+                        best_e = p1_e
+                        best_n = p1_n
+                    else:
+                        best_total = float(p2_total)
+                        best_d = p2_d
+                        best_e = p2_e
+                        best_n = p2_n
 
             best_rank = p1_r or p2_r
 
