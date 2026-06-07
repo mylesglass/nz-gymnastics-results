@@ -68,6 +68,15 @@ def _infer_discipline(unit_name: str, event_hint: str | None = None) -> str:
 def resolve_level(unit_name: str) -> str:
     """Extract the level/category string from a unit name."""
     lower = unit_name.lower()
+
+    # Check full international phrases first (before step/level to handle node names)
+    if "junior international" in lower:
+        return "Junior International"
+    if "senior international" in lower:
+        return "Senior International"
+    if "youth international" in lower:
+        return "Youth International"
+
     m = re.search(r"step\s+(\d+)", lower)
     if m:
         return f"STEP {m.group(1)}"
@@ -76,12 +85,6 @@ def resolve_level(unit_name: str) -> str:
         return f"Level {m.group(1)}"
 
     # Known level keywords (check long matches first)
-    if "junior international" in lower:
-        return "Junior International"
-    if "senior international" in lower:
-        return "Senior International"
-    if "youth international" in lower:
-        return "Youth International"
     if "senior open" in lower:
         return "Senior Open"
     if "youth" in lower:
@@ -94,6 +97,12 @@ def resolve_level(unit_name: str) -> str:
         return "Senior"
     if "junior" in lower and "international" not in lower:
         return "Junior"
+
+    # Abbreviation checks (word-boundary)
+    if re.search(r"\bsi\b", lower):
+        return "Senior International"
+    if re.search(r"\bji\b", lower):
+        return "Junior International"
 
     return unit_name
 

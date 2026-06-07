@@ -111,6 +111,24 @@ class TestResolveLevel:
     def test_default_fallback(self):
         assert resolve_level("UNKNOWN") == "UNKNOWN"
 
+    def test_junior_international_node(self):
+        assert resolve_level("All-Around | Junior International") == "Junior International"
+
+    def test_senior_international_node(self):
+        assert resolve_level("All-Around | Senior International") == "Senior International"
+
+    def test_international_with_qualifier(self):
+        assert resolve_level("Vault | Junior International Qualification") == "Junior International"
+
+    def test_si_abbreviation(self):
+        assert resolve_level("WAG DIVISION A | SI") == "Senior International"
+
+    def test_ji_abbreviation(self):
+        assert resolve_level("WAG DIVISION A | JI") == "Junior International"
+
+    def test_composite_unit_falls_to_step(self):
+        assert resolve_level("WAG DIVISION A | STEP 10, JI, SI") == "STEP 10"
+
 
 class TestFixGnzId:
     def test_strips_gs_prefix(self):
