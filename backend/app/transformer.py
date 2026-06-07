@@ -215,7 +215,10 @@ def pivot_to_wide_dict(event_id: int, session, gnz_id: str = None, club: str = N
                             aa_sum += float(total)
                     out_row["aa-score"] = _fmt3(aa_sum) if aa_sum > 0 else None
                     out_row["aa-rank"] = None
-            out_rows.append(out_row)
+
+                # Skip rows where no apparatus has a real score
+                if any(out_row.get(f"{p}-total") not in (None, "DNS") for p in prefixes):
+                    out_rows.append(out_row)
 
         result[disc_key] = {"columns": columns, "rows": out_rows}
 
