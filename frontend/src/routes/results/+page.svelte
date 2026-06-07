@@ -82,7 +82,7 @@
 
 {#snippet extraControls()}
   {#if yearOptions.length > 1}
-    <select class="select select-bordered select-xs w-20" bind:value={filterYear}>
+    <select class="select select-bordered select-xs w-24" bind:value={filterYear}>
       <option value="">All years</option>
       {#each yearOptions as y}
         <option value={y}>{y}</option>
