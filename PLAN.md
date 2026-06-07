@@ -132,4 +132,4 @@
 - [x] Allow user to RENAME a competition (no auth)
 - [x] Simple email & password authentication to protect upload/delete/rename (password-only, env var)
 - [ ] Mobile-responsive table improvements
-- [ ] Allow CSV export of JUST the current information displayed on the filtered table
+- [x] Allow CSV export of JUST the current information displayed on the filtered table
