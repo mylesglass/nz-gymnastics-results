@@ -47,3 +47,9 @@ class ClubItem(BaseModel):
     name: str
     gymnast_count: int
     region: str | None
+
+
+class GymnastItem(BaseModel):
+    gnz_id: str
+    name: str
+    club: str | None

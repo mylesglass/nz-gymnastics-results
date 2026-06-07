@@ -77,10 +77,10 @@
         <div class="stat-title text-base-content/60 text-xs">Events</div>
         <div class="stat-value text-2xl">{stats.total_events}</div>
       </a>
-      <div class="stat bg-base-200 rounded-box">
+      <a href="/gymnasts" class="stat bg-base-200 rounded-box hover:bg-base-300 transition-all cursor-pointer">
         <div class="stat-title text-base-content/60 text-xs">Gymnasts</div>
         <div class="stat-value text-2xl">{stats.total_gymnasts.toLocaleString()}</div>
-      </div>
+      </a>
       <div class="stat bg-base-200 rounded-box">
         <div class="stat-title text-base-content/60 text-xs">Scores</div>
         <div class="stat-value text-2xl">{stats.total_scores.toLocaleString()}</div>
