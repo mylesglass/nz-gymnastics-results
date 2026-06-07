@@ -66,10 +66,6 @@ export async function getWideResults(eventId: number): Promise<WideResponse> {
   return res.json();
 }
 
-export function getExportUrl(eventId: number, format: "csv" | "xlsx"): string {
-  return `${API_BASE}/api/events/${eventId}/export/${format}`;
-}
-
 export async function getAllWideResults(params?: {
   gnz_id?: string;
   club?: string;
