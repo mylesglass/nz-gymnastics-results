@@ -463,9 +463,6 @@
     </h1>
 
     <div class="flex flex-wrap items-center gap-1 pb-1">
-      {#if extraControls}
-        {@render extraControls()}
-      {/if}
       <div role="tablist" class="tabs tabs-boxed">
         {#each Object.keys(allData) as tab}
           <button
@@ -477,6 +474,9 @@
           </button>
         {/each}
       </div>
+      {#if extraControls}
+        {@render extraControls()}
+      {/if}
 
       <label class="input input-bordered input-xs flex items-center gap-1 w-64">
         <span class="text-base-content/50 text-xs">🔍</span>
