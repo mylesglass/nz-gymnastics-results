@@ -1,1 +1,0 @@
-URL = https://scoreholder.com/en/events/680ec420ec238eedfa545c23/results
