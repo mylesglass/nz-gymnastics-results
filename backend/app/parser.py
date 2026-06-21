@@ -502,6 +502,10 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
 
                     aa = aa_scores.get(entity_id, {})
                     division = entity_division.get(entity_id)
+                    if division is None:
+                        unit_name = unit_info.get("name", "")
+                        if "step" in unit_name.lower() or "level" in unit_name.lower():
+                            division = _extract_division(unit_name)
                     if level_category and "International" in level_category:
                         division = None
                     round_type = _infer_round_type(unit_info.get("name", ""), node_name_map.get(rs_id, rs_name))
