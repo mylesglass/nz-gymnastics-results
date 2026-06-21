@@ -202,6 +202,29 @@ def _extract_division(node_name: str, discipline: str = "WAG") -> str | None:
     return None
 
 
+def _is_competitive_level(level: str) -> bool:
+    lower = level.lower()
+    if not lower or lower == "none":
+        return False
+    if "step" in lower and any(c.isdigit() for c in lower):
+        return True
+    if "level" in lower and any(c.isdigit() for c in lower):
+        return True
+    if "international" in lower:
+        return True
+    if "senior open" in lower:
+        return True
+    if "senior" in lower and "open" not in lower:
+        return True
+    if "junior" in lower and "international" not in lower:
+        return True
+    if "youth" in lower:
+        return True
+    if lower in ("u16", "u18") or "under 16" in lower or "under 18" in lower:
+        return True
+    return False
+
+
 def _infer_round_type(unit_name: str, node_name: str) -> str:
     """Determine round type from unit name and competition node name.
     
@@ -217,6 +240,8 @@ def _infer_round_type(unit_name: str, node_name: str) -> str:
 
     # Check unit name patterns
     lower = unit_name.lower()
+    if "day 2" in lower:
+        return "All Around - Day 2"
     if "day two" in lower or "apps day two" in lower:
         return "Apparatus Finals"
     if "aa" in lower and "team" in lower:
@@ -462,6 +487,9 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                     )
                     discipline = unit_info.get("discipline", "UNKNOWN")
                     level_category = entity_level.get(entity_id) or resolve_level(unit_info.get("name", ""))
+
+                    if not _is_competitive_level(level_category):
+                        continue
 
                     # Pass number
                     pass_number = 1
