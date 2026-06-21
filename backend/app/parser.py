@@ -80,6 +80,79 @@ def _normalise_apparatus(name: str) -> str:
     return mapping.get(clean, name)
 
 
+MAG_APPARATUS = {"Pommel Horse", "Still Rings", "Parallel Bars", "Horizontal Bar"}
+WAG_APPARATUS = {"Uneven Bars", "Balance Beam"}
+
+
+def _normalise_base_apparatus(raw: str) -> str:
+    clean = raw.strip()
+    for sep in [" |", " -", " final", " qualification", " finale"]:
+        if sep in clean.lower():
+            clean = clean[:clean.lower().index(sep)].strip()
+    return clean
+
+
+def _infer_discipline_from_nodes(nodes: list[dict]) -> str | None:
+    names: set[str] = set()
+    for n in nodes:
+        raw = n.get("name", "")
+        if not raw:
+            continue
+        base = _normalise_base_apparatus(raw.split(" >")[0].strip())
+        names.add(base)
+    has_mag = bool(MAG_APPARATUS & names)
+    has_wag = bool(WAG_APPARATUS & names)
+    if has_mag:
+        return "MAG"
+    if has_wag:
+        return "WAG"
+    return None
+
+
+def _build_unit_discipline_map(data: dict) -> dict[str, str]:
+    rule_disc: dict[int, str] = {}
+    for i, rule in enumerate(data.get("performanceRules", [])):
+        nodes = rule.get("competition", {}).get("nodeTree", {}).get("nodes", [])
+        d = _infer_discipline_from_nodes(nodes)
+        if d:
+            rule_disc[i] = d
+
+    rs_to_rule: dict[str, int] = {}
+    for i, rule in enumerate(data.get("performanceRules", [])):
+        for node in rule.get("competition", {}).get("nodeTree", {}).get("nodes", []):
+            for rs in node.get("resultSets", []):
+                rs_id = rs.get("id")
+                if rs_id:
+                    rs_to_rule[rs_id] = i
+
+    unit_rs: dict[str, set[str]] = {}
+    for prt in data.get("performanceResultTables", []):
+        uid = prt.get("unitId")
+        if not uid:
+            continue
+        if uid not in unit_rs:
+            unit_rs[uid] = set()
+        for rs in prt.get("resultSets", []):
+            rs_id = rs.get("id")
+            if rs_id:
+                unit_rs[uid].add(rs_id)
+
+    result: dict[str, str] = {}
+    for uid, rs_ids in unit_rs.items():
+        discs: set[str] = set()
+        for rs_id in rs_ids:
+            ri = rs_to_rule.get(rs_id)
+            if ri is not None:
+                d = rule_disc.get(ri)
+                if d:
+                    discs.add(d)
+        if len(discs) == 1:
+            result[uid] = list(discs)[0]
+        elif len(discs) > 1:
+            result[uid] = "WAG+MAG"
+    return result
+
+
 def _build_apparatus_and_division_maps(performance_rules: list[dict]) -> tuple[dict[str, str], dict[str, str | None], dict[str, str]]:
     """Build maps from result_set_id -> base_apparatus, division, and raw_node_name."""
     apparatus_map: dict[str, str] = {}
@@ -188,6 +261,11 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
 
     individuals = resolve_individuals(data.get("performanceIndividuals", []))
     units = resolve_units(data.get("units", []), event_discipline_hint)
+    unit_discipline_map = _build_unit_discipline_map(data)
+    for uid in units:
+        inferred = unit_discipline_map.get(uid)
+        if inferred:
+            units[uid]["discipline"] = inferred
     output_map = build_output_map(data.get("performanceRules", []))
     apparatus_map, division_map, node_name_map = _build_apparatus_and_division_maps(data.get("performanceRules", []))
 
