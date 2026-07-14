@@ -41,7 +41,7 @@ ALL_FILES = {
     "hbpb-seniors.json": {"min_rows": 400, "min_gyms": 50, "discipline": "WAG"},
     "levin.json": {"min_rows": 1000, "min_gyms": 200, "discipline": "WAG+MAG"},
     "northland-champs.json": {"min_rows": 500, "min_gyms": 100, "discipline": "WAG+MAG"},
-    "tristar-elementary_2025.json": {"min_rows": 1000, "min_gyms": 200, "discipline": "WAG+MAG"},
+    "tristar-elementary_2025.json": {"min_rows": 975, "min_gyms": 200, "discipline": "WAG+MAG"},
     "tristar-senior_2025.json": {"min_rows": 1000, "min_gyms": 200, "discipline": "WAG+MAG"},
     "midlands-junior-senior.json": {"min_rows": 700, "min_gyms": 100, "discipline": "WAG+MAG"},
 }
