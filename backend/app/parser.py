@@ -439,7 +439,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                 item_type = si_first.get("itemType")
                 status = si_first.get("status", "")
 
-                if status in ("discarded", "equal-discarded"):
+                if status == "equal-discarded":
                     continue
 
                 # --- Aggregate (AA / Team) results ---
@@ -460,7 +460,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
 
                 # Process every retained score source item for this ranking
                 for si in source_items:
-                    if si.get("status", "") in ("discarded", "equal-discarded"):
+                    if si.get("status", "") == "equal-discarded":
                         continue
                     if si.get("itemType") != "score":
                         continue
@@ -487,6 +487,11 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                     )
                     discipline = unit_info.get("discipline", "UNKNOWN")
                     level_category = entity_level.get(entity_id) or resolve_level(unit_info.get("name", ""))
+
+                    # Filter out GFA (Gym For All) results: check raw unit name for markers
+                    unit_name_lower = unit_info.get("name", "").lower()
+                    if "gfa" in unit_name_lower or ("novice" in unit_name_lower and discipline == "WAG"):
+                        continue
 
                     if not _is_competitive_level(level_category):
                         continue
