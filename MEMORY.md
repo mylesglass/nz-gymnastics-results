@@ -104,7 +104,7 @@ Core logic:
 - Horizontal scroll synced between duplicate headers and main table
 - Client-side CSV export via download snippet
 
-## Test Suite (201 tests)
+## Test Suite (214 tests)
 - `test_decoder.py`: 14 tests — output map building, decoding, DNS detection, Start Value
 - `test_resolver.py`: 21 tests — all resolver functions
 - `test_models.py`: 4 tests — CRUD, cascade delete
@@ -213,6 +213,18 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
 - **Events page**: Rename/delete action buttons hidden when not logged in
 - **Login page**: Simple centered password card, redirects to `/` on success
 - **Docker**: Added commented-out `ADMIN_PASSWORD` env var example to `docker-compose.yml`
+
+## Recent Session (this session)
+
+### Dev workflow script + VS Code tasks
+- Created `.dev.sh` — standalone script that starts backend (uvicorn) and frontend (vite) concurrently with `trap cleanup` on Ctrl+C
+- Created `.vscode/tasks.json` — Backend + Frontend tasks in dedicated terminal panels, grouped as default build task (Ctrl+Shift+B)
+- `.vscode/` is gitignored; only `.dev.sh` is committed
+
+### Documentation refresh
+- Updated README.md: added `.dev.sh` workflow, VS Code tasks note, missing API endpoints (stats, clubs, gymnasts, auth, delete, patch), missing frontend routes (upload, login, gymnasts, clubs), updated project structure to match actual files, auth details, test count 191→214
+- Updated MEMORY.md: test count 201→214, added this session entry
+- Created `AGENTS.md` — AI coding agent guidelines covering project conventions, architecture, and development commands
 
 ## Known Edges & Gotchas
 - **WAG/MAG discipline split**: Tab assignment now uses the `discipline` field from data. Previously used apparatus presence (VT/FX appeared in both lists, causing all gymnasts to show in both tabs).
