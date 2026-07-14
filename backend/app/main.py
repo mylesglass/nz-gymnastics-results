@@ -4,11 +4,12 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, Header, HTTPException, UploadFile, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 from sqlalchemy import func
 
 from app.auth import is_auth_configured, check_password
+from app.cache import cache_headers, invalidate
 from app.database import get_session, init_db
 from app.models import Event, LongScore
 from app.parser import ParseError, parse_json, validate_upload_structure
@@ -38,7 +39,8 @@ def health():
 
 
 @app.get("/api/stats")
-def get_stats():
+def get_stats(response: Response):
+    response.headers.update(cache_headers())
     session = get_session()
     try:
         total_events = session.query(func.count(Event.id)).scalar() or 0
@@ -60,7 +62,8 @@ def get_stats():
 
 
 @app.get("/api/clubs", response_model=list[ClubItem])
-def list_clubs():
+def list_clubs(response: Response):
+    response.headers.update(cache_headers())
     session = get_session()
     try:
         rows = (
@@ -92,7 +95,8 @@ def list_clubs():
 
 
 @app.get("/api/gymnasts", response_model=list[GymnastItem])
-def list_gymnasts():
+def list_gymnasts(response: Response):
+    response.headers.update(cache_headers())
     session = get_session()
     try:
         rows = (
@@ -182,6 +186,7 @@ def upload_file(file: UploadFile = File(...), _auth=Depends(require_auth)):
             score = LongScore(event_id=event.id, **row)
             session.add(score)
         session.commit()
+        invalidate()
 
         gymnast_count = (
             session.query(func.count(func.distinct(LongScore.gymnast_name)))
@@ -219,7 +224,8 @@ def upload_file(file: UploadFile = File(...), _auth=Depends(require_auth)):
 # ---------------------------------------------------------------------------
 
 @app.get("/api/events", response_model=list[EventListItem])
-def list_events():
+def list_events(response: Response):
+    response.headers.update(cache_headers())
     session = get_session()
     try:
         events = session.query(Event).order_by(Event.start_date.desc()).all()
@@ -251,7 +257,8 @@ def list_events():
 # ---------------------------------------------------------------------------
 
 @app.get("/api/events/{event_id}/results", response_model=ResultsResponse)
-def get_results(event_id: int):
+def get_results(event_id: int, response: Response):
+    response.headers.update(cache_headers())
     session = get_session()
     try:
         event = session.query(Event).filter(Event.id == event_id).first()
@@ -304,7 +311,8 @@ def get_results(event_id: int):
 # ---------------------------------------------------------------------------
 
 @app.get("/api/events/{event_id}/results/wide")
-def get_results_wide(event_id: int):
+def get_results_wide(event_id: int, response: Response):
+    response.headers.update(cache_headers())
     session = get_session()
     try:
         event = session.query(Event).filter(Event.id == event_id).first()
@@ -323,7 +331,8 @@ def get_results_wide(event_id: int):
 
 
 @app.get("/api/results/wide-all")
-def get_all_results_wide(gnz_id: str = None, club: str = None, year: int = None):
+def get_all_results_wide(response: Response, gnz_id: str = None, club: str = None, year: int = None):
+    response.headers.update(cache_headers())
     session = get_session()
     try:
         query = session.query(Event).order_by(Event.created_at.desc())
@@ -368,7 +377,8 @@ def get_all_results_wide(gnz_id: str = None, club: str = None, year: int = None)
 # ---------------------------------------------------------------------------
 
 @app.get("/api/events/{event_id}/export/csv")
-def export_event_csv(event_id: int):
+def export_event_csv(event_id: int, response: Response):
+    response.headers.update(cache_headers())
     session = get_session()
     try:
         event = session.query(Event).filter(Event.id == event_id).first()
@@ -390,7 +400,8 @@ def export_event_csv(event_id: int):
 # ---------------------------------------------------------------------------
 
 @app.get("/api/events/{event_id}/export/xlsx")
-def export_event_xlsx(event_id: int):
+def export_event_xlsx(event_id: int, response: Response):
+    response.headers.update(cache_headers())
     session = get_session()
     try:
         event = session.query(Event).filter(Event.id == event_id).first()
@@ -420,6 +431,7 @@ def delete_event(event_id: int, _auth=Depends(require_auth)):
             raise HTTPException(404, "Event not found")
         session.delete(event)
         session.commit()
+        invalidate()
         return {"ok": True}
     finally:
         session.close()
@@ -441,6 +453,7 @@ def rename_event(event_id: int, body: EventUpdate, _auth=Depends(require_auth)):
             {"event_name": body.name}
         )
         session.commit()
+        invalidate()
         gymnast_count = (
             session.query(func.count(func.distinct(LongScore.gymnast_name)))
             .filter(LongScore.event_id == event.id)

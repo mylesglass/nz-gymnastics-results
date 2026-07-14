@@ -6,6 +6,7 @@ import math
 import numpy as np
 import pandas as pd
 
+from app.cache import cached
 from app.models import LongScore
 
 WAG_ORDER = ["VT", "UB", "BB", "FX"]
@@ -57,6 +58,13 @@ def pivot_to_wide(event_id: int, session, event_name: str, event_date: str) -> p
 
 
 def pivot_to_wide_dict(event_id: int, session, gnz_id: str = None, club: str = None) -> dict:
+    return cached(
+        ("pivot", event_id, gnz_id or "", club or ""),
+        lambda: _compute_pivot(event_id, session, gnz_id, club),
+    )
+
+
+def _compute_pivot(event_id: int, session, gnz_id: str = None, club: str = None) -> dict:
     """Pivot long-format scores into wide-format rows per discipline.
 
     Returns dict: {wag: {columns, rows}, mag: {columns, rows}}
