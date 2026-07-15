@@ -43,6 +43,8 @@ def pivot_to_wide(event_id: int, session, event_name: str, event_date: str) -> p
         "competition", "date-created",
     ]
     app_cols = [c for c in df.columns if c not in meta_cols and c not in ("aa-score", "aa-rank")]
+    # Only vault has multiple passes — hide per-pass columns for other apparatus
+    app_cols = [c for c in app_cols if not ('-1-' in c or '-2-' in c) or c.startswith('vt-')]
     ordered = meta_cols + sorted(app_cols) + ["aa-score", "aa-rank"]
 
     for col in ordered:
@@ -167,6 +169,7 @@ def _compute_pivot(event_id: int, session, gnz_id: str = None, club: str = None)
                     wide_row[f"{pfx}-{i}-e"] = p.get("e_score")
                     wide_row[f"{pfx}-{i}-n"] = p.get("n_score")
                     wide_row[f"{pfx}-{i}-rank"] = p.get("apparatus_rank")
+                    wide_row[f"{pfx}-{i}-bonus"] = p.get("bonus")
                 # Grab bonus from any pass (it's the same across the group)
                 wide_row[f"{pfx}-bonus"] = passes[0].get("bonus")
 
@@ -214,8 +217,9 @@ def _compute_pivot(event_id: int, session, gnz_id: str = None, club: str = None)
                 seen.add(key)
                 out_row = _build_wide_row(row, prefixes, columns)
 
-                # Apparatus finals: AA = sum of apparatus scored in this round
-                if str(row.get("round-type", "")).lower() == "apparatus finals":
+                # Apparatus finals / Day 2: AA = sum of apparatus scored in this round
+                rt_lower = str(row.get("round-type", "")).lower()
+                if "apparatus finals" in rt_lower or "day 2" in rt_lower:
                     aa_sum = 0.0
                     for p in prefixes:
                         total = out_row.get(f"{p}-total")
@@ -260,12 +264,14 @@ def _build_wide_row(row: dict, prefixes: list[str], columns: list[str]) -> dict:
             p1_e = row.get(f"{p}-1-e")
             p1_n = row.get(f"{p}-1-n")
             p1_r = row.get(f"{p}-1-rank")
+            p1_bonus = row.get(f"{p}-1-bonus")
 
             p2_total = row.get(f"{p}-2-total")
             p2_d = row.get(f"{p}-2-d")
             p2_e = row.get(f"{p}-2-e")
             p2_n = row.get(f"{p}-2-n")
             p2_r = row.get(f"{p}-2-rank")
+            p2_bonus = row.get(f"{p}-2-bonus")
 
             # Determine display aggregation rule
             if p2_total is None:
@@ -302,9 +308,9 @@ def _build_wide_row(row: dict, prefixes: list[str], columns: list[str]) -> dict:
             out[f"{p}-bonus"] = row.get(f"{p}-bonus")
 
             # Write per-pass columns
-            for prefix_val, p_total, p_d, p_e, p_n, p_r in [
-                (f"{p}-1", p1_total, p1_d, p1_e, p1_n, p1_r),
-                (f"{p}-2", p2_total, p2_d, p2_e, p2_n, p2_r),
+            for prefix_val, p_total, p_d, p_e, p_n, p_r, p_bonus in [
+                (f"{p}-1", p1_total, p1_d, p1_e, p1_n, p1_r, p1_bonus),
+                (f"{p}-2", p2_total, p2_d, p2_e, p2_n, p2_r, p2_bonus),
             ]:
                 if p_total is not None:
                     out[f"{prefix_val}-total"] = _fmt3(p_total)
@@ -312,12 +318,14 @@ def _build_wide_row(row: dict, prefixes: list[str], columns: list[str]) -> dict:
                     out[f"{prefix_val}-e"] = _fmt3(p_e) if p_e is not None else None
                     out[f"{prefix_val}-n"] = _fmt1(p_n) if p_n is not None else 0.0
                     out[f"{prefix_val}-rank"] = p_r
+                    out[f"{prefix_val}-bonus"] = p_bonus
                 else:
                     out[f"{prefix_val}-total"] = "DNS"
                     out[f"{prefix_val}-d"] = None
                     out[f"{prefix_val}-e"] = None
                     out[f"{prefix_val}-n"] = None
                     out[f"{prefix_val}-rank"] = "DNS"
+                    out[f"{prefix_val}-bonus"] = None
         else:
             out[f"{p}-total"] = "DNS"
             out[f"{p}-d"] = None
@@ -421,9 +429,14 @@ def _fmt3(val: object) -> str | None:
 
 def _wide_column_list_for_prefixes(prefixes: list[str], present_apps: set[str]) -> list[str]:
     cols = ["gnz-id", "name", "club", "step", "division", "round-type"]
+    suffixes = ["total", "d", "e", "n", "rank", "bonus"]
     for prefix in prefixes:
-        for suffix in ["total", "d", "e", "n", "rank"]:
+        for suffix in suffixes:
             cols.append(f"{prefix}-{suffix}")
+        if prefix == "vt":
+            for pass_num in (1, 2):
+                for suffix in suffixes:
+                    cols.append(f"{prefix}-{pass_num}-{suffix}")
     cols.extend(["aa-score", "aa-rank"])
     return cols
 

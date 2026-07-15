@@ -229,17 +229,23 @@ def _infer_round_type(unit_name: str, node_name: str) -> str:
     """Determine round type from unit name and competition node name.
     
     Checks node name for qualification/final markers, then unit name
-    for multi-day patterns like "Day Two Apparatus".
+    for multi-day patterns like "Day Two Apparatus" and "App Medals".
     """
-    # Check node name for qualification/finals context
+    import re
     lower_node = node_name.lower()
     if "qualification" in lower_node:
         return "All Around - Qualification"
     if "final" in lower_node:
         return "Apparatus Finals"
 
-    # Check unit name patterns
+    # Determine base round from unit name
     lower = unit_name.lower()
+    if "apparatus finals" in lower:
+        return "Apparatus Finals"
+    if "apparatus" in lower and "all around" not in lower and "aa" not in lower and "team" not in lower:
+        return "Apparatus Finals"
+    if "app medals" in lower:
+        return "Apparatus Finals"
     if "day 2" in lower:
         return "All Around - Day 2"
     if "day two" in lower or "apps day two" in lower:
@@ -293,6 +299,23 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
             units[uid]["discipline"] = inferred
     output_map = build_output_map(data.get("performanceRules", []))
     apparatus_map, division_map, node_name_map = _build_apparatus_and_division_maps(data.get("performanceRules", []))
+
+    # Build unitEventId → apparatus from single-table PRTs with specific node names.
+    # Used to give correct apparatus names to rows from multi-set aggregate PRTs
+    # (e.g. All-around node result sets) where rs_name is generic.
+    unit_event_apparatus: dict[str, str] = {}
+    for _prt in data.get("performanceResultTables", []):
+        if len(_prt.get("resultSets", [])) != 1:
+            continue
+        for _rs in _prt.get("resultSets", []):
+            _rs_id = _rs.get("id")
+            _app_name = apparatus_map.get(_rs_id, "")
+            if not _app_name or _app_name.lower() in ("all-around", "team", ""):
+                continue
+            for _ue in _rs.get("usedEvents", []):
+                _eid = _ue.get("eventId")
+                if _eid:
+                    unit_event_apparatus[_eid] = _app_name
 
     # -- Build entity_id -> division from resultTableConfigs --
     # Division is encoded in competition node names referenced by resultTableConfigs
@@ -445,14 +468,16 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                 # --- Aggregate (AA / Team) results ---
                 if item_type == "result-set":
                     if is_aa:
+                        aa_unit_info = units.get(prt.get("unitId", ""), {})
+                        aa_round_type = _infer_round_type(
+                            aa_unit_info.get("name", ""),
+                            node_name_map.get(rs_id, rs_name),
+                        )
                         aa_scores[entity_id] = {
                             "aa_score": score_value,
                             "aa_rank": rank_value,
+                            "_round_type": aa_round_type,
                         }
-                    continue
-
-                # --- Single-table apparatus rankings ---
-                if not is_single_table:
                     continue
 
                 if item_type != "score":
@@ -506,7 +531,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                         pass_number = sorted_passes.index(score_data["_unitPassId"]) + 1
 
                     aa = aa_scores.get(entity_id, {})
-                    division = entity_division.get(entity_id)
+                    division = division_map.get(rs_id) or entity_division.get(entity_id)
                     if division is None:
                         unit_name = unit_info.get("name", "")
                         if "step" in unit_name.lower() or "level" in unit_name.lower():
@@ -523,7 +548,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                         "discipline": discipline,
                         "level_category": level_category,
                         "division": division,
-                        "apparatus": _normalise_apparatus(rs_name),
+                        "apparatus": _normalise_apparatus(unit_event_apparatus.get(score_data["_unitEventId"], rs_name)),
                         "pass_number": pass_number,
                         "d_score": _sanitise_float(score_data.get("d_score")),
                         "e_score": _sanitise_float(score_data.get("e_score")),
@@ -531,8 +556,8 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                         "pass_final_score": _sanitise_float(score_data.get("pass_final_score")),
                         "start_value": _sanitise_float(score_data.get("start_value")),
                         "apparatus_rank": _sanitise_rank(rank_value),
-                        "aa_score": None if round_type == "Apparatus Finals" else _sanitise_float(aa.get("aa_score")),
-                        "aa_rank": None if round_type == "Apparatus Finals" else _sanitise_rank(aa.get("aa_rank")),
+                        "aa_score": None if "Apparatus Finals" in round_type or "Day 2" in round_type else _sanitise_float(aa.get("aa_score")),
+                        "aa_rank": None if "Apparatus Finals" in round_type or "Day 2" in round_type else _sanitise_rank(aa.get("aa_rank")),
                         "round_type": round_type,
                         "bonus": _sanitise_float(score_data.get("bonus")),
                     }
@@ -558,7 +583,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
         if aa_score is None:
             continue
         for row in rows:
-            if row["gymnast_name"] == name and row["aa_score"] is None and row["round_type"] != "Apparatus Finals":
+            if row["gymnast_name"] == name and row["aa_score"] is None and row["round_type"] == aa_data.get("_round_type"):
                 row["aa_score"] = _sanitise_float(aa_score)
                 row["aa_rank"] = _sanitise_rank(aa_rank)
 
