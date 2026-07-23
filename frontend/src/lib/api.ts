@@ -42,16 +42,36 @@ export async function authLogin(password: string): Promise<void> {
   if (!res.ok) throw new Error(await res.text());
 }
 
-export async function uploadFile(file: File): Promise<EventSummary> {
+export async function uploadFile(file: File, allowUnknown = false): Promise<EventSummary> {
   const form = new FormData();
   form.append("file", file);
-  const res = await fetch(`${API_BASE}/api/upload`, {
+  let url = `${API_BASE}/api/upload`;
+  if (allowUnknown) url += "?allow_unknown=1";
+  const res = await fetch(url, {
     method: "POST",
     body: form,
     headers: authHeaders(),
   });
+  if (res.status === 409) {
+    const body = await res.json();
+    const detail = body.detail || body;
+    const err = new Error(detail.message || "Unknown clubs") as Error & Record<string, unknown>;
+    err._clubConflict = true;
+    err.unknown_clubs = detail.unknown_clubs;
+    err.known_clubs = detail.known_clubs;
+    throw err;
+  }
   if (!res.ok) throw new Error(await res.text());
   return res.json();
+}
+
+export async function saveAliases(aliases: Record<string, string>): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/clubs/aliases`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ aliases }),
+  });
+  if (!res.ok) throw new Error(await res.text());
 }
 
 export async function listEvents(): Promise<EventSummary[]> {

@@ -12,8 +12,8 @@ from app.auth import is_auth_configured, check_password
 from app.cache import cache_headers, invalidate
 from app.database import get_session, init_db
 from app.models import Event, LongScore
-from app.parser import ParseError, parse_json, validate_upload_structure
-from app.schemas import ClubItem, EventListItem, EventResponse, EventUpdate, GymnastItem, ResultsResponse, StatsResponse
+from app.parser import ParseError, _NAME_TO_CANONICAL, find_unknown_clubs, parse_json, reload_club_maps, validate_upload_structure
+from app.schemas import ClubItem, EventListItem, EventResponse, EventUpdate, GymnastItem, ResultsResponse, StatsResponse, UploadValidationResponse
 from app.transformer import export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict
 
 
@@ -77,17 +77,37 @@ def list_clubs(response: Response):
             .all()
         )
         club_data_path = Path(__file__).resolve().parent.parent / "clubs_and_regions.json"
-        region_map: dict[str, str] = {}
         if club_data_path.exists():
             with open(club_data_path) as f:
                 club_data = json.load(f)
+
+        def find_region(club_name: str) -> str | None:
+            lower = club_name.lower().strip()
+            # Direct match against lookup (aliases cover most variants)
+            v = club_data.get("lookup", {}).get(lower)
+            if v:
+                return v["region"] or _region_from_canonical(v["name"])
+            # Prefix fallback: "Levin Gymnastics" → "Levin Gymnastics Club"
+            return _region_from_prefix(lower)
+
+        def _region_from_canonical(canonical: str) -> str | None:
             for region_name, clubs in club_data.get("regions", {}).items():
                 for c in clubs:
-                    region_map[c["name"].lower()] = region_name
-            for v in club_data.get("lookup", {}).values():
-                region_map[v["name"].lower()] = v["region"]
+                    if c["name"].lower() == canonical.lower():
+                        return region_name
+            return None
+
+        def _region_from_prefix(lower: str) -> str | None:
+            for region_name, clubs in club_data.get("regions", {}).items():
+                for c in clubs:
+                    for name in [c["name"]] + c.get("aliases", []):
+                        ln = name.lower()
+                        if lower.startswith(ln) or ln.startswith(lower):
+                            return region_name
+            return None
+
         return [
-            ClubItem(name=name, gymnast_count=count, region=region_map.get(name.lower()))
+            ClubItem(name=name, gymnast_count=count, region=find_region(name))
             for name, count in rows
         ]
     finally:
@@ -140,12 +160,44 @@ def auth_login(body: LoginRequest):
     return {"ok": True}
 
 
+class AliasUpdate(BaseModel):
+    aliases: dict[str, str]
+
+
+@app.post("/api/clubs/aliases")
+def save_aliases(body: AliasUpdate, _auth=Depends(require_auth)):
+    path = Path(__file__).resolve().parent.parent / "clubs_and_regions.json"
+    with open(path) as f:
+        data = json.load(f)
+    for unknown, known in body.aliases.items():
+        lower = unknown.lower().strip()
+        if lower in data["lookup"]:
+            continue
+        region = ""
+        for region_name, region_clubs in data.get("regions", {}).items():
+            for c in region_clubs:
+                if c["name"].lower() == known.lower():
+                    region = region_name
+                    existing = [a.lower() for a in c.get("aliases", [])]
+                    if lower not in existing:
+                        c.setdefault("aliases", []).append(unknown)
+                    break
+            if region:
+                break
+        data["lookup"][lower] = {"name": known, "region": region}
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    reload_club_maps()
+    invalidate()
+    return {"ok": True}
+
+
 # ---------------------------------------------------------------------------
 # Upload
 # ---------------------------------------------------------------------------
 
 @app.post("/api/upload", response_model=EventResponse)
-def upload_file(file: UploadFile = File(...), _auth=Depends(require_auth)):
+def upload_file(file: UploadFile = File(...), allow_unknown: str = None, _auth=Depends(require_auth)):
     if not file.filename or not file.filename.endswith(".json"):
         raise HTTPException(400, "Only .json files are accepted")
 
@@ -158,6 +210,15 @@ def upload_file(file: UploadFile = File(...), _auth=Depends(require_auth)):
     errors = validate_upload_structure(data)
     if errors:
         raise HTTPException(422, {"message": "Invalid upload structure", "errors": errors})
+
+    unknown = find_unknown_clubs(data)
+    if unknown and not allow_unknown:
+        known = sorted(set(_NAME_TO_CANONICAL.values()))
+        raise HTTPException(409, {
+            "message": "Unknown club names found",
+            "unknown_clubs": unknown,
+            "known_clubs": known,
+        })
 
     try:
         event_info, rows = parse_json(data)

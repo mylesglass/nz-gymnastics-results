@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { uploadFile, checkAuthStatus } from "$lib/api";
+  import { uploadFile, saveAliases, checkAuthStatus } from "$lib/api";
   import { isLoggedIn, authConfigured } from "$lib/auth";
 
   interface UploadItem {
@@ -20,6 +20,10 @@
   let uploading = $state(false);
   let loggedIn = $state(false);
   let authCfg = $state(false);
+
+  // Club mapping dialog state
+  let clubDialog = $state<{ file: File; unknown: string[]; known: string[] } | null>(null);
+  let clubMappings = $state<Record<string, string>>({});
 
   onMount(() => {
     checkAuthStatus()
@@ -59,6 +63,17 @@
           uploads = [...uploads];
         }
       } catch (err) {
+        const ce = err as Error & { _clubConflict?: boolean; unknown_clubs?: string[]; known_clubs?: string[] };
+        if (ce._clubConflict && ce.unknown_clubs && ce.known_clubs) {
+          const idx = uploads.findIndex((u) => u.file === file.name && u.status === "uploading");
+          if (idx !== -1) uploads.splice(idx, 1);
+          uploading = false;
+          const mappings: Record<string, string> = {};
+          for (const u of ce.unknown_clubs) mappings[u] = ce.known_clubs[0] || u;
+          clubMappings = mappings;
+          clubDialog = { file, unknown: ce.unknown_clubs, known: ce.known_clubs };
+          return;
+        }
         const text = String(err);
         let errorMessage: string | null = null;
         let errorDetails: string[] = [];
@@ -92,6 +107,45 @@
     }
 
     uploading = false;
+  }
+
+  async function saveAndRetry() {
+    if (!clubDialog) return;
+    try {
+      await saveAliases(clubMappings);
+    } catch {
+      // fall through — retry with the raw file anyway
+    }
+    const file = clubDialog.file;
+    clubDialog = null;
+    await handleFiles([file]);
+  }
+
+  function skipUnknown() {
+    if (!clubDialog) return;
+    const file = clubDialog.file;
+    clubDialog = null;
+    uploading = true;
+    uploads = [...uploads, { file: file.name, status: "uploading" }];
+    uploadFile(file, true)
+      .then((ev) => {
+        const idx = uploads.findIndex((u) => u.file === file.name && u.status === "uploading");
+        if (idx !== -1) {
+          uploads[idx] = {
+            file: file.name, status: "success", id: ev.id, name: ev.name,
+            gymnast_count: ev.gymnast_count, score_count: ev.score_count, club_count: ev.club_count,
+          };
+          uploads = [...uploads];
+        }
+      })
+      .catch((err) => {
+        const idx = uploads.findIndex((u) => u.file === file.name && u.status === "uploading");
+        if (idx !== -1) {
+          uploads[idx] = { file: file.name, status: "error", errorMessage: String(err) };
+          uploads = [...uploads];
+        }
+      })
+      .finally(() => { uploading = false; });
   }
 
   function ondrop(e: DragEvent) {
@@ -229,3 +283,41 @@
     </p>
   {/if}
 </div>
+
+{#if clubDialog}
+  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onclick={() => (clubDialog = null)}>
+    <div class="bg-base-100 rounded-box shadow-xl p-6 w-full max-w-lg mx-4" onclick={(e) => e.stopPropagation()}>
+      <h3 class="text-lg font-bold mb-2">Unknown Club Names</h3>
+      <p class="text-sm text-base-content/70 mb-4">
+        Some clubs in this file aren't in the known club list.
+        Map each to an existing club or skip to keep the original names.
+      </p>
+      <div class="space-y-3 max-h-80 overflow-y-auto">
+        {#each clubDialog.unknown as unknown}
+          <div>
+            <label class="text-sm font-medium block mb-1">"{unknown}" maps to:</label>
+            <select
+              class="select select-bordered select-sm w-full"
+              value={clubMappings[unknown]}
+              onchange={(e) => {
+                const target = e.target as HTMLSelectElement;
+                clubMappings[unknown] = target.value;
+                clubMappings = { ...clubMappings };
+              }}
+            >
+              {#each clubDialog.known as known}
+                <option value={known}>{known}</option>
+              {/each}
+            </select>
+          </div>
+        {/each}
+      </div>
+      <div class="flex justify-end gap-2 mt-6">
+        <button class="btn btn-ghost btn-sm" onclick={() => (clubDialog = null)}>Cancel</button>
+        <button class="btn btn-ghost btn-sm" onclick={skipUnknown}>Skip (keep original)</button>
+        <button class="btn btn-primary btn-sm" onclick={saveAndRetry}>Save &amp; Retry</button>
+      </div>
+    </div>
+  </div>
+{/if}

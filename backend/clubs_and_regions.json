@@ -31,14 +31,17 @@
         "aliases": [
           "Eastern Suburbs Gymnastics Club",
           "Eastern Suburbs",
-          "Eastern Suburbs Gymanstics Club"
+          "Eastern Suburbs Gymanstics Club",
+          "Eastern Suburbs Gymnastic Club",
+          "Eastern Suburbs Gymnastics"
         ]
       },
       {
         "name": "Tri Star Gymnastics",
         "aliases": [
           "Tri Star",
-          "Tri Star Gymnastics"
+          "Tri Star Gymnastics",
+          "Tristar"
         ]
       },
       {
@@ -47,7 +50,7 @@
           "Waitakere Gymnastics Club",
           "Waitakere Gymnastics",
           "Waitakere",
-          "Franklin"
+          "Waitākere Gymnastics"
         ]
       }
     ],
@@ -58,7 +61,9 @@
           "ARGOS Gymnastics Club",
           "ARGOS",
           "Argos Gymnastics",
-          "Argos Gymnastic Club"
+          "Argos Gymnastic Club",
+          "Dynamic Gymnastic Sports",
+          "Hokitika Gymnastics"
         ]
       },
       {
@@ -68,7 +73,8 @@
           "Impact",
           "Impact Gymsports",
           "Impact Gymsport",
-          "Impact Gymnastics"
+          "Impact Gymnastics",
+          "IMPACT Gymnastics Academy"
         ]
       },
       {
@@ -78,7 +84,9 @@
           "MIGS",
           "Mid Island Gym Sports",
           "Mid Island Gymsports Club",
-          "Mid-Island Gym Sports"
+          "Mid-Island Gym Sports",
+          "Mid-Island GymSports",
+          "Mid Island Gymsports"
         ]
       },
       {
@@ -96,7 +104,8 @@
       {
         "name": "Affinity Gymnastics Academy",
         "aliases": [
-          "Affinity Gymnastics Academy"
+          "Affinity Gymnastics Academy",
+          "Affinity Gymnastics"
         ]
       },
       {
@@ -109,7 +118,9 @@
         "name": "ICE Gymsports South Canterbury",
         "aliases": [
           "ICE Gymsports South Canterbury",
-          "ICE Gymnastics"
+          "ICE Gymnastics",
+          "ICE Gymsports",
+          "ICE Gymsports North Canterbury"
         ]
       },
       {
@@ -123,7 +134,8 @@
         "name": "West Melton Gymnastics Club",
         "aliases": [
           "West Melton Gymnastics Club",
-          "West Melton Gymnastics"
+          "West Melton Gymnastics",
+          "Westmelton Gymnastics"
         ]
       },
       {
@@ -132,7 +144,8 @@
           "Olympia Gymnastics Sports",
           "Olympia Gymnastic Sports",
           "Olympia Gymnastics Academy",
-          "Olympia Gymnastics"
+          "Olympia Gymnastics",
+          "Olympia Gymsports"
         ]
       }
     ],
@@ -153,7 +166,8 @@
           "Franklin Gymsports",
           "Franklin Gymnastics Club",
           "Franklin Gymsport",
-          "Franklin Gymsports Club"
+          "Franklin Gymsports Club",
+          "Franklin"
         ]
       },
       {
@@ -161,7 +175,8 @@
         "aliases": [
           "Howick Gymnastics Club",
           "Howick",
-          "Howick Gymnastic Club"
+          "Howick Gymnastic Club",
+          "Howick Gymnastics"
         ]
       }
     ],
@@ -171,7 +186,9 @@
         "aliases": [
           "Central Gym Club",
           "Central Gymnastics Club",
-          "Central  Gymnastics"
+          "Central  Gymnastics",
+          "Central Gymnastics",
+          "Central"
         ]
       },
       {
@@ -198,7 +215,9 @@
           "Omni Gymnastic Centre",
           "OMNI Gymnastic Centre",
           "Omni Gymnastics Centre",
-          "Omni Gymnastics"
+          "Omni Gymnastics",
+          "OMNI",
+          "Omni Gymnastic Sports"
         ]
       }
     ],
@@ -258,7 +277,9 @@
       },
       {
         "name": "Kaitaia Gymnastics Club",
-        "aliases": []
+        "aliases": [
+          "Kaitaia Gymnastic Club"
+        ]
       },
       {
         "name": "Kerikeri Gymnastics Club",
@@ -286,7 +307,8 @@
       {
         "name": "Balcutha Gymnastics Club",
         "aliases": [
-          "Balcutha Gymnastics Club"
+          "Balcutha Gymnastics Club",
+          "Balclutha Gymnastics Club"
         ]
       },
       {
@@ -305,11 +327,12 @@
         ]
       },
       {
-        "name": "St Berndaette's Gymnastics Club",
+        "name": "St Bernadette's Gymnastics Club",
         "aliases": [
           "St Bernadettes",
           "St Bernadette's Gymnastic Club",
-          "St Berndaette's Gymnastics Club"
+          "St Berndaette's Gymnastics Club",
+          "St Bernadette's Gymnastics Club"
         ]
       }
     ],
@@ -350,7 +373,8 @@
       {
         "name": "Buller Gymnastics Club",
         "aliases": [
-          "Buller Gymnastics Club"
+          "Buller Gymnastics Club",
+          "Buller Gymnastics"
         ]
       },
       {
@@ -385,7 +409,8 @@
           "Mt Tauhara Gymnastics Club",
           "Mt Tauhara",
           "Mt Tauhara Gymnastics",
-          "Mount Tauhara Gymnastics Club"
+          "Mount Tauhara Gymnastics Club",
+          "Mount Tauhara"
         ]
       },
       {
@@ -426,7 +451,8 @@
         "name": "Hutt Valley Gymnastics",
         "aliases": [
           "Hutt Valley Gymnastics",
-          "Hutt Valley"
+          "Hutt Valley",
+          "Hutt Valley Gymnastics Club"
         ]
       },
       {
@@ -438,7 +464,9 @@
       },
       {
         "name": "Onslow Gymnastics",
-        "aliases": []
+        "aliases": [
+          "Onslow Gymnastics Club"
+        ]
       },
       {
         "name": "Rimutaka Gymsports",
@@ -873,15 +901,15 @@
       "region": "Otago"
     },
     "st berndaette's gymnastics club": {
-      "name": "St Berndaette's Gymnastics Club",
+      "name": "St Bernadette's Gymnastics Club",
       "region": "Otago"
     },
     "st bernadettes": {
-      "name": "St Berndaette's Gymnastics Club",
+      "name": "St Bernadette's Gymnastics Club",
       "region": "Otago"
     },
     "st bernadette's gymnastic club": {
-      "name": "St Berndaette's Gymnastics Club",
+      "name": "St Bernadette's Gymnastics Club",
       "region": "Otago"
     },
     "invercargill gymnastics club": {
@@ -1071,6 +1099,110 @@
     "twisters gymnastics club": {
       "name": "Twisters Tawa Gymnastics Club",
       "region": "Wellington"
+    },
+    "eastern suburbs gymnastic club": {
+      "name": "Eastern Suburbs Gymnastics Club",
+      "region": ""
+    },
+    "eastern suburbs gymnastics": {
+      "name": "Eastern Suburbs Gymnastics Club",
+      "region": ""
+    },
+    "howick gymnastics": {
+      "name": "Howick Gymnastics Club",
+      "region": ""
+    },
+    "mid-island gymsports": {
+      "name": "Mid Island Gym Sports",
+      "region": ""
+    },
+    "hutt valley gymnastics club": {
+      "name": "Hutt Valley Gymnastics",
+      "region": ""
+    },
+    "ice gymsports": {
+      "name": "ICE Gymsports South Canterbury",
+      "region": ""
+    },
+    "impact gymnastics academy": {
+      "name": "Impact Gymsport Academy",
+      "region": ""
+    },
+    "olympia gymsports": {
+      "name": "Olympia Gymnastic Sports",
+      "region": ""
+    },
+    "tristar": {
+      "name": "Tri Star Gymnastics",
+      "region": ""
+    },
+    "central gymnastics": {
+      "name": "Central Gymnastics Club",
+      "region": ""
+    },
+    "onslow gymnastics club": {
+      "name": "Onslow Gymnastics",
+      "region": ""
+    },
+    "ice gymsports north canterbury": {
+      "name": "ICE Gymsports South Canterbury",
+      "region": ""
+    },
+    "westmelton gymnastics": {
+      "name": "West Melton Gymnastics Club",
+      "region": ""
+    },
+    "affinity gymnastics": {
+      "name": "Affinity Gymnastics Academy",
+      "region": ""
+    },
+    "buller gymnastics": {
+      "name": "Buller Gymnastics Club",
+      "region": ""
+    },
+    "dynamic gymnastic sports": {
+      "name": "ARGOS Gymnastics Club",
+      "region": ""
+    },
+    "hokitika gymnastics": {
+      "name": "ARGOS Gymnastics Club",
+      "region": ""
+    },
+    "central": {
+      "name": "Central Gymnastics Club",
+      "region": ""
+    },
+    "mid island gymsports": {
+      "name": "Mid Island Gym Sports",
+      "region": ""
+    },
+    "mount tauhara": {
+      "name": "Mt Tauhara Gymnastics Club",
+      "region": ""
+    },
+    "omni": {
+      "name": "OMNI Gymnastic Centre",
+      "region": ""
+    },
+    "balclutha gymnastics club": {
+      "name": "Balcutha Gymnastics Club",
+      "region": ""
+    },
+    "st bernadette's gymnastics club": {
+      "name": "St Bernadette's Gymnastics Club",
+      "region": ""
+    },
+    "omni gymnastic sports": {
+      "name": "OMNI Gymnastic Centre",
+      "region": ""
+    },
+    "kaitaia gymnastic club": {
+      "name": "Kaitaia Gymnastics Club",
+      "region": ""
+    },
+    "waitākere gymnastics": {
+      "name": "Waitakere Gymnastics Club",
+      "region": ""
     }
   }
 }

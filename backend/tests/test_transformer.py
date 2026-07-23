@@ -48,7 +48,7 @@ class TestApparatusFinalsAA:
             pytest.skip("csg-classic_2025.json not found")
 
         with open(path, "rb") as f:
-            upload_resp = client.post("/api/upload", files={"file": ("csg-classic_2025.json", f, "application/json")})
+            upload_resp = client.post("/api/upload?allow_unknown=1", files={"file": ("csg-classic_2025.json", f, "application/json")})
         assert upload_resp.status_code == 200, upload_resp.text
         event_id = upload_resp.json()["id"]
 
