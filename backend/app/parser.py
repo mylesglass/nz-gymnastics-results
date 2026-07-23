@@ -248,7 +248,7 @@ def _infer_round_type(unit_name: str, node_name: str) -> str:
     import re
     lower_node = node_name.lower()
     if "qualification" in lower_node:
-        return "All Around - Qualification"
+        return "All Around"
     if "final" in lower_node:
         return "Apparatus Finals"
 
@@ -261,7 +261,11 @@ def _infer_round_type(unit_name: str, node_name: str) -> str:
     if "app medals" in lower:
         return "Apparatus Finals"
     if "day 2" in lower:
-        return "All Around - Day 2"
+        if "all around" in lower:
+            return "All Around - Day 2"
+        if "apparatus" in lower or "apps" in lower or "final" in lower:
+            return "Apparatus Finals"
+        return "Day 2"
     if "day two" in lower or "apps day two" in lower:
         return "Apparatus Finals"
     if "aa" in lower and "team" in lower:
@@ -477,6 +481,13 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                 status = si_first.get("status", "")
 
                 if status == "equal-discarded":
+                    continue
+
+                # Skip individual scores from aggregate result tables (All-around, Team).
+                # These scores are also present in individual apparatus result tables,
+                # which provide the correct round-type context ("All Around" vs
+                # "Apparatus Finals") through their node names.
+                if is_aa and item_type == "score":
                     continue
 
                 # --- Aggregate (AA / Team) results ---
