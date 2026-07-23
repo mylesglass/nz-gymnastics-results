@@ -26,6 +26,20 @@ except (FileNotFoundError, json.JSONDecodeError):
     pass
 
 
+def reload_club_maps() -> None:
+    with open(_CLUB_DATA_PATH) as f:
+        data = json.load(f)
+    _NAME_TO_CANONICAL.clear()
+    _NAME_TO_CANONICAL.update({k: v["name"] for k, v in data["lookup"].items()})
+    _NAME_TO_REGION.clear()
+    _NAME_TO_REGION.update({k: v["region"] for k, v in data["lookup"].items()})
+
+
+def find_unknown_clubs(data: dict) -> list[str]:
+    club_names = {org["name"] for org in data.get("eventOrganizations", []) if "name" in org}
+    return sorted(c for c in club_names if c.lower().strip() not in _NAME_TO_CANONICAL)
+
+
 def _normalise_club(club_name: str, is_nationals: bool) -> str:
     """Resolve a club name to its canonical form, or to region for Nationals."""
     lower = club_name.lower().strip()

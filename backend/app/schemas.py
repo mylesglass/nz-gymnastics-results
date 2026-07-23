@@ -53,3 +53,9 @@ class GymnastItem(BaseModel):
     gnz_id: str
     name: str
     club: str | None
+
+
+class UploadValidationResponse(BaseModel):
+    message: str
+    unknown_clubs: list[str]
+    known_clubs: list[str]
