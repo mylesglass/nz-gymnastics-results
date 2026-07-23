@@ -192,8 +192,8 @@ class TestParseRealData:
         data = load("nationals-2025.json")
         _, rows = parse_json(data)
         round_types = set(r["round_type"] for r in rows)
-        assert "All Around - Qualification" in round_types
-        assert any("Final" in (rt or "") for rt in round_types)
+        assert "All Around" in round_types
+        assert "Apparatus Finals" in round_types
 
     def test_csg_classic_large_event(self):
         data = load("csg-classic_2025.json")
@@ -228,7 +228,7 @@ class TestParseRealData:
                 f"{row['gymnast_name']} finals {row['apparatus']} has aa_rank={row['aa_rank']}"
             )
         # Qualification rows should still have AA
-        quals = [r for r in rows if r["round_type"] == "All Around - Qualification"]
+        quals = [r for r in rows if r["round_type"] == "All Around"]
         assert len(quals) > 0
         assert any(r["aa_score"] is not None for r in quals), "no qualification rows have an aa_score"
 
