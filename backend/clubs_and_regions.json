@@ -226,7 +226,8 @@
         "aliases": [
           "Levin Gymnastics",
           "Levin",
-          "Levin Gymnastics Club"
+          "Levin Gymnastics Club",
+          "Levin Gymsports"
         ]
       },
       {
@@ -459,7 +460,8 @@
         "name": "Kapiti Gymnastics",
         "aliases": [
           "Kapiti Gymnastics",
-          "Kapiti Gymnastics Club"
+          "Kapiti Gymnastics Club",
+          "Kapiti"
         ]
       },
       {
@@ -1199,6 +1201,14 @@
     "capital gymsports": {
       "name": "Eastern Suburbs Gymnastics Club",
       "region": "Auckland"
+    },
+    "kapiti": {
+      "name": "Kapiti Gymnastics",
+      "region": "Wellington"
+    },
+    "levin gymsports": {
+      "name": "Levin Gymnastics Club",
+      "region": "Manawatu - Whanganui"
     }
   }
 }
