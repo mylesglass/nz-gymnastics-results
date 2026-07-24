@@ -12,6 +12,13 @@
 
   let gymnasts = $state<Gymnast[]>([]);
   let loading = $state(true);
+  let search = $state("");
+
+  let filtered = $derived(
+    search
+      ? gymnasts.filter(g => g.name.toLowerCase().includes(search.toLowerCase()))
+      : gymnasts
+  );
 
   onMount(async () => {
     try {
@@ -25,7 +32,7 @@
 
   let grouped = $derived.by(() => {
     const g: Record<string, Gymnast[]> = {};
-    for (const gr of gymnasts) {
+    for (const gr of filtered) {
       const letter = gr.name.charAt(0).toUpperCase();
       if (!/[A-Z]/.test(letter)) continue;
       if (!g[letter]) g[letter] = [];
@@ -56,10 +63,21 @@
 </svelte:head>
 
 <div class="max-w-6xl mx-auto">
-  <h1 class="text-3xl font-bold mb-2">Gymnasts</h1>
-  <p class="text-base-content/70 mb-6">
-    {gymnasts.length} gymnasts
-  </p>
+  <div class="flex items-end justify-between mb-6 gap-4">
+    <div>
+      <h1 class="text-3xl font-bold">Gymnasts</h1>
+      <p class="text-base-content/70 text-sm">
+        {filtered.length} gymnast{filtered.length === 1 ? "" : "s"}
+        {#if search}(filtered){/if}
+      </p>
+    </div>
+    <input
+      type="text"
+      placeholder="Search gymnasts..."
+      class="input input-bordered input-sm w-56"
+      bind:value={search}
+    />
+  </div>
 
   {#if loading}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
