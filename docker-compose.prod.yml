@@ -24,6 +24,7 @@ services:
     environment:
       - PROXY_TARGET=http://backend:8000
       - ORIGIN=${ORIGIN:-http://localhost:3000}
+      - BODY_SIZE_LIMIT=50mb
     restart: unless-stopped
     networks:
       - yams_default
