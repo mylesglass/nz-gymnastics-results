@@ -13,16 +13,16 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 ```
 .
 ├── .dev.sh                  # Start backend + frontend concurrently
-├── .vscode/tasks.json       # VS Code tasks (Ctrl+Shift-B) — gitignored
-├── AGENTS.md                # This file
-├── docker-compose.yml
+├── docker-compose.yml       # Dev Docker Compose
+├── docker-compose.prod.yml  # Production Docker Compose (uses external network)
 │
 ├── backend/
+│   ├── Dockerfile           # Production-ready (no dev dependencies)
 │   ├── app/
 │   │   ├── main.py          # FastAPI routes
-│   │   ├── models.py        # SQLAlchemy models (Base from DeclarativeBase)
-│   │   ├── database.py      # SQLite engine + session
-│   │   ├── schemas.py       # Pydantic models
+│   │   ├── models.py        # SQLAlchemy models (is_national, etc.)
+│   │   ├── database.py      # SQLite engine + session + migration
+│   │   ├── schemas.py       # Pydantic models (RankingRow, etc.)
 │   │   ├── auth.py          # JWT auth (bcrypt, HS256, role-based, seed_admin_user)
 │   │   ├── parser.py        # Scoreholder JSON parser (~630 lines)
 │   │   ├── decoder.py       # Node-tree score field decoder
@@ -34,7 +34,10 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   └── pyproject.toml
 │
 ├── frontend/
+│   ├── Dockerfile           # Dev Dockerfile
+│   ├── Dockerfile.prod      # Multi-stage production build
 │   ├── src/
+│   │   ├── hooks.server.ts  # API proxy (/api → backend in production)
 │   │   ├── lib/
 │   │   │   ├── api.ts              # Typed fetch wrappers
 │   │   │   ├── auth.ts             # JWT auth stores (currentUser, setToken, logout)
@@ -134,7 +137,7 @@ let { label, count = 0 }: { label: string; count?: number } = $props();
 - No `any` — use `unknown`
 
 ### API client (`api.ts`)
-- `API_BASE = ""` in dev (Vite proxy), `"http://backend:8000"` in production
+- `API_BASE = ""` (same-origin) — `/api` requests proxied to backend via `hooks.server.ts` in production, Vite dev proxy in development
 - All functions `async`, typed return values
 - Auth header: `getToken()` reads JWT from localStorage, passed as `Authorization: Bearer <token>`
 - Error: throw with `await res.text()`, callers `.catch()`
@@ -191,9 +194,21 @@ cd backend && source .venv/bin/activate && pytest
 cd backend && source .venv/bin/activate
 python -m app.validate_json path/to/file.json
 
-# Docker
+# Dev Docker
 docker compose up --build
+
+# Production Docker
+docker compose -f docker-compose.prod.yml up --build -d
 ```
+
+## Production Deployment
+
+- **docker-compose.prod.yml** — production config using external `yams_default` network (shared with Nginx Proxy Manager)
+- **frontend/Dockerfile.prod** — multi-stage production build (adapter-node, no dev dependencies)
+- **Nginx Proxy Manager** proxies `scores.mylesglass.com → frontend:3000`
+- **API proxy**: `hooks.server.ts` proxies `/api` requests from frontend server to backend container
+- **Env vars required**: `ADMIN_PASSWORD`, `ORIGIN` (e.g. `https://scores.mylesglass.com`)
+- **Body size**: `BODY_SIZE_LIMIT=52428800` (50MB) needed for JSON uploads — the adapter-node default is 512KB
 
 ## Key Architectural Decisions & Gotchas
 
@@ -213,3 +228,5 @@ docker compose up --build
 - **Region enrichment** — club→region lookup at pivot time via `clubs_and_regions.json`; changes require re-upload.
 - **DaisyUI z-index** — `.dropdown-content` sets `z-index: 1` overriding Tailwind classes; use inline `style="z-index: 50"`.
 - **`$effect` reactivity** — tracks all dependencies read inside it; avoid reading state the effect itself modifies.
+- **Production API proxy** — `hooks.server.ts` forwards `/api/*` from the frontend Node server to the backend container. `API_BASE` is always `""` (same-origin).
+- **Body size limit** — SvelteKit adapter-node defaults to 512KB. JSON uploads can be ~3.5MB. Set `BODY_SIZE_LIMIT=52428800` (bytes) in the frontend service env vars.
