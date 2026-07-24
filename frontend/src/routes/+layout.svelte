@@ -180,7 +180,7 @@
       </div>
     </div>
 
-    <main class="mx-auto grow shrink-0 basis-auto w-full max-w-7xl px-4 pt-6">
+    <main class="mx-auto grow shrink-0 basis-auto w-full max-w-full px-4 pt-6">
       {@render children()}
     </main>
 
