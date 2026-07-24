@@ -1,27 +1,23 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { listEvents, getAllWideResults } from "$lib/api";
+  import { getAllWideResults } from "$lib/api";
+  import { selectedYear, yearOptions } from "$lib/year";
   import WideResultsTable from "$lib/WideResultsTable.svelte";
 
-  let yearOptions = $state<string[]>([]);
-  let filterYear = $state("");
+  let filterYear = $state<string | null>(null);
   let ready = $state(false);
 
   onMount(async () => {
-    try {
-      const events = await listEvents();
-      const years = new Set<string>();
-      for (const e of events) {
-        if (e.year) years.add(String(e.year));
+    const unsub1 = selectedYear.subscribe((v) => {
+      filterYear = v;
+    });
+    const unsub2 = yearOptions.subscribe((v) => {
+      if (v.length > 0) {
+        selectedYear.update((cur) => cur ?? v[0]);
       }
-      yearOptions = [...years].sort().reverse();
-      if (yearOptions.length > 0) {
-        filterYear = yearOptions[0];
-      }
-    } catch {
-      // ignore
-    }
+    });
     ready = true;
+    return () => { unsub1(); unsub2(); };
   });
 
   function loadDataImpl() {
@@ -80,22 +76,10 @@
   </div>
 {/snippet}
 
-{#snippet extraControls()}
-  {#if yearOptions.length > 1}
-    <select class="select select-bordered select-xs w-24" bind:value={filterYear}>
-      <option value="">All years</option>
-      {#each yearOptions as y}
-        <option value={y}>{y}</option>
-      {/each}
-    </select>
-  {/if}
-{/snippet}
-
 {#if ready}
   {#key filterYear}
     <WideResultsTable
       loadData={loadDataImpl}
-      {extraControls}
       showEventFilter={true}
       extraHeadLabels={{ event_name: "Event" }}
       {download}

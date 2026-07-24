@@ -3,16 +3,21 @@
   import { goto } from "$app/navigation";
   import { listEvents, deleteEvent, renameEvent } from "$lib/api";
   import { currentUser } from "$lib/auth";
+  import { selectedYear } from "$lib/year";
 
   let events = $state<Array<{ id: number; name: string; start_date: string; gymnast_count: number; year: number | null }>>([]);
   let loading = $state(true);
-  let filterYear = $state("");
+  let filterYear = $state<string | null>(null);
   let searchQuery = $state("");
   let loggedIn = $state(false);
 
-  let yearOptions = $state<string[]>([]);
   let sortCol = $state("start_date");
   let sortAsc = $state(false);
+
+  onMount(() => {
+    const unsub = selectedYear.subscribe((v) => (filterYear = v));
+    return unsub;
+  });
 
   function sorted<T>(items: T[], col: string, asc: boolean): T[] {
     return [...items].sort((a, b) => {
@@ -65,11 +70,6 @@
   onMount(async () => {
     try {
       events = await listEvents();
-      const years = new Set<string>();
-      for (const e of events) {
-        if (e.year) years.add(String(e.year));
-      }
-      yearOptions = [...years].sort().reverse();
     } catch {
       // ignore
     } finally {
@@ -144,37 +144,17 @@
       </div>
     </div>
   {:else}
-    {#if yearOptions.length > 1}
-      <div class="flex flex-wrap items-center gap-2 mb-3">
-        <select class="select select-bordered select-sm" bind:value={filterYear}>
-          <option value="">All years</option>
-          {#each yearOptions as y}
-            <option value={y}>{y}</option>
-          {/each}
-        </select>
-        <input
-          type="search"
-          placeholder="Search events..."
-          class="input input-bordered input-sm"
-          bind:value={searchQuery}
-        />
-        <span class="text-xs text-base-content/50">
-          {filteredEvents.length} of {events.length}
-        </span>
-      </div>
-    {:else if searchQuery || yearOptions.length > 0}
-      <div class="flex flex-wrap items-center gap-2 mb-3">
-        <input
-          type="search"
-          placeholder="Search events..."
-          class="input input-bordered input-sm"
-          bind:value={searchQuery}
-        />
-        <span class="text-xs text-base-content/50">
-          {filteredEvents.length} of {events.length}
-        </span>
-      </div>
-    {/if}
+    <div class="flex flex-wrap items-center gap-2 mb-3">
+      <input
+        type="search"
+        placeholder="Search events..."
+        class="input input-bordered input-sm"
+        bind:value={searchQuery}
+      />
+      <span class="text-xs text-base-content/50">
+        {filteredEvents.length} of {events.length}
+      </span>
+    </div>
 
     <div class="overflow-x-auto mt-4">
       <table class="table table-zebra table-pin-rows">

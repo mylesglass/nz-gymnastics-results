@@ -147,6 +147,12 @@ export async function listClubs(): Promise<
   return res.json();
 }
 
+export async function listYears(): Promise<{ years: number[] }> {
+  const res = await fetch(`${API_BASE}/api/years`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export async function listGymnasts(): Promise<
   { gnz_id: string; name: string; club: string | null }[]
 > {

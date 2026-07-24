@@ -283,6 +283,23 @@ def save_aliases(body: AliasUpdate, _auth=Depends(require_role("admin"))):
 # Rankings (member+)
 # ---------------------------------------------------------------------------
 
+@app.get("/api/years")
+def list_years(response: Response):
+    response.headers.update(cache_headers())
+    session = get_session()
+    try:
+        years = (
+            session.query(Event.year)
+            .filter(Event.year.isnot(None))
+            .distinct()
+            .order_by(Event.year.desc())
+            .all()
+        )
+        return {"years": [y[0] for y in years]}
+    finally:
+        session.close()
+
+
 @app.get("/api/rankings")
 def get_rankings(_auth=Depends(require_role("admin", "member"))):
     return {"status": "placeholder", "message": "Rankings page — coming soon"}
