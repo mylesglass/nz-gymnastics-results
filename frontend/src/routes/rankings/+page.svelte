@@ -3,6 +3,36 @@
   import { getRankings, getRankingSteps, type RankingRow } from "$lib/api";
   import { selectedYear } from "$lib/year";
 
+  const CSV_HEADERS: Record<string, string> = {
+    rank: "Rank", name: "Name", gnz_id: "GNZ ID", club: "Club",
+    region: "Region",
+    score1: "Score 1", comp1: "Competition 1",
+    score2: "Score 2", comp2: "Competition 2",
+    total: "Total", average: "Average",
+  };
+
+  const REGION_COLORS: Record<string, string> = {
+    "Auckland": "badge-info",
+    "Wellington": "badge-warning",
+    "Harbour": "badge-secondary",
+    "Bay of Plenty": "badge-success",
+    "Canterbury": "badge-error",
+    "Otago": "badge-accent",
+    "Waikato": "badge-neutral",
+    "Southland": "badge-primary",
+    "Counties - Manukau": "badge-ghost text-info",
+    "Northland": "badge-ghost text-success",
+    "Hawkes Bay / Poverty Bay": "badge-ghost text-warning",
+    "Manawatu - Whanganui": "badge-ghost text-secondary",
+    "Taranaki": "badge-ghost text-error",
+    "Top of the South": "badge-ghost text-accent",
+    "Aorangi": "badge-ghost text-neutral",
+  };
+
+  function regionBadge(region: string): string {
+    return REGION_COLORS[region] ?? "badge-ghost";
+  }
+
   let loading = $state(true);
   let error = $state("");
 
@@ -37,12 +67,29 @@
 
   let loadingRankings = $state(false);
 
+  function exportCSV() {
+    const rows = rankings.map((r) => ({
+      rank: r.rank, name: r.name, gnz_id: r.gnz_id, club: r.club ?? "", region: r.region,
+      score1: r.scores[0]?.toFixed(3) ?? "", comp1: r.competitions[0] ?? "",
+      score2: r.scores[1]?.toFixed(3) ?? "", comp2: r.competitions[1] ?? "",
+      total: r.total.toFixed(3),
+      average: (r.total / r.scores.length).toFixed(3),
+    }));
+    const keys = ["rank", "name", "gnz_id", "club", "region", "score1", "comp1", "score2", "comp2", "total", "average"];
+    const header = keys.map((k) => CSV_HEADERS[k]).join(",");
+    const csv = header + "\n" + rows.map((r) => keys.map((k) => `"${String(r[k as keyof typeof r]).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const a = document.createElement("a");
+    a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+    a.download = `rankings-${year}-${selectedStep}-${discipline}.csv`;
+    a.click();
+  }
+
   async function loadRankings() {
     if (!year || !selectedStep) return;
     loadingRankings = true;
     error = "";
     try {
-      const data = await getRankings(Number(year), selectedStep, discipline);
+      const data = await getRankings(Number(year), selectedStep, discipline, quotaMode, qualifierMode);
       rankings = data.rankings;
     } catch (e) {
       error = "Failed to load rankings.";
@@ -51,6 +98,9 @@
       loadingRankings = false;
     }
   }
+
+  let quotaMode = $state(false);
+  let qualifierMode = $state(true);
 
   function switchDisc(d: string) {
     discipline = d;
@@ -84,6 +134,19 @@
           <option value={s}>{s}</option>
         {/each}
       </select>
+
+      <label class="label cursor-pointer gap-2">
+        <input type="checkbox" class="checkbox checkbox-sm" bind:checked={quotaMode} />
+        <span class="label-text text-sm">Enable Region Quotas</span>
+      </label>
+      <label class="label cursor-pointer gap-2">
+        <input type="checkbox" class="checkbox checkbox-sm" bind:checked={qualifierMode} />
+        <span class="label-text text-sm">Exclude non-qualifiers</span>
+      </label>
+
+      <button onclick={exportCSV} class="btn btn-outline btn-sm ml-auto" disabled={rankings.length === 0}>
+        Export CSV
+      </button>
     {:else if year}
       <span class="text-sm text-base-content/50">No STEP levels available</span>
     {/if}
@@ -118,21 +181,30 @@
             <th>Name</th>
             <th>GNZ ID</th>
             <th>Club</th>
+            <th>Region</th>
             <th class="text-right">Score 1</th>
             <th class="text-right">Score 2</th>
             <th class="text-right">Total</th>
+            <th class="text-right">Average</th>
           </tr>
         </thead>
         <tbody>
           {#each rankings as r}
             <tr class="hover:bg-base-300">
               <td class="font-bold text-lg">{r.rank}</td>
-              <td class="font-medium">{r.name}</td>
+              <td class="font-medium">
+                <a href="/gymnast/{r.gnz_id}" class="hover:link">{r.name}</a>
+              </td>
               <td class="text-base-content/60 text-xs">{r.gnz_id}</td>
               <td>{r.club}</td>
+              <td>
+                {#if r.region}
+                  <span class="badge badge-sm {regionBadge(r.region)}">{r.region}</span>
+                {/if}
+              </td>
               {#each r.scores as score, i}
                 <td class="text-right">
-                  <div class="dropdown dropdown-hover dropdown-left">
+                  <div class="dropdown dropdown-hover dropdown-top">
                     <div class="cursor-pointer font-mono" tabindex="0">
                       {score.toFixed(3)}
                     </div>
@@ -149,6 +221,7 @@
                 <td class="text-right text-base-content/40">—</td>
               {/if}
               <td class="text-right font-semibold">{r.total.toFixed(3)}</td>
+              <td class="text-right text-base-content/70">{(r.total / r.scores.length).toFixed(3)}</td>
             </tr>
           {/each}
         </tbody>
