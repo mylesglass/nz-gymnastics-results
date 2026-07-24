@@ -22,6 +22,7 @@ from app.cache import cache_headers, invalidate
 from app.database import get_session, init_db
 from app.models import Event, LongScore, User
 from app.parser import ParseError, _NAME_TO_CANONICAL, find_unknown_clubs, parse_json, reload_club_maps, validate_upload_structure
+from app.reconcile import reconcile_athletes
 from app.schemas import (
     ClubItem,
     EventListItem,
@@ -29,6 +30,7 @@ from app.schemas import (
     EventUpdate,
     GymnastItem,
     LoginRequest,
+    ReconcileReport,
     ResultsResponse,
     StatsResponse,
     TokenResponse,
@@ -303,6 +305,13 @@ def list_years(response: Response):
 @app.get("/api/rankings")
 def get_rankings(_auth=Depends(require_role("admin", "member"))):
     return {"status": "placeholder", "message": "Rankings page — coming soon"}
+
+
+@app.post("/api/admin/reconcile-athletes", response_model=ReconcileReport)
+def admin_reconcile(_auth=Depends(require_role("admin"))):
+    report = reconcile_athletes()
+    invalidate()
+    return report
 
 
 # ---------------------------------------------------------------------------

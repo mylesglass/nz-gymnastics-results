@@ -160,3 +160,17 @@ export async function listGymnasts(): Promise<
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+export async function reconcileAthletes(): Promise<{
+  total_athletes: number;
+  ids_corrected: number;
+  names_unified: number;
+  conflicts: Array<{ name: string; previous_ids: string[]; chosen_id: string | null; rows_updated: number }>;
+}> {
+  const res = await fetch(`${API_BASE}/api/admin/reconcile-athletes`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
