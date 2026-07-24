@@ -88,3 +88,17 @@ class UploadValidationResponse(BaseModel):
     message: str
     unknown_clubs: list[str]
     known_clubs: list[str]
+
+
+class ConflictItem(BaseModel):
+    name: str
+    previous_ids: list[str]
+    chosen_id: str | None
+    rows_updated: int
+
+
+class ReconcileReport(BaseModel):
+    total_athletes: int
+    ids_corrected: int
+    names_unified: int
+    conflicts: list[ConflictItem]

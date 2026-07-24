@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getStats } from "$lib/api";
+  import { getStats, reconcileAthletes } from "$lib/api";
 
   let stats = $state<{
     total_events: number;
@@ -11,6 +11,16 @@
   let loading = $state(true);
   let error = $state<string | null>(null);
 
+  let reconciling = $state(false);
+  let reconcileResult = $state<{
+    total_athletes: number;
+    ids_corrected: number;
+    names_unified: number;
+    conflicts: Array<{ name: string; previous_ids: string[]; chosen_id: string | null; rows_updated: number }>;
+  } | null>(null);
+  let reconcileError = $state<string | null>(null);
+  let showConflicts = $state(false);
+
   onMount(async () => {
     try {
       stats = await getStats();
@@ -20,6 +30,19 @@
       loading = false;
     }
   });
+
+  async function runReconcile() {
+    reconciling = true;
+    reconcileResult = null;
+    reconcileError = null;
+    try {
+      reconcileResult = await reconcileAthletes();
+    } catch (e) {
+      reconcileError = String(e);
+    } finally {
+      reconciling = false;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -58,7 +81,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
       <a href="/admin/users" class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer">
         <div class="card-body">
           <h2 class="card-title">👥 User Management</h2>
@@ -71,6 +94,69 @@
           <p class="text-sm text-base-content/70">Upload a Scoreholder JSON file</p>
         </div>
       </a>
+    </div>
+
+    <div class="card bg-base-200 border border-base-300">
+      <div class="card-body">
+        <h2 class="card-title">🔄 Reconcile Athlete IDs</h2>
+        <p class="text-sm text-base-content/70 mb-3">
+          Scan all events and unify inconsistent GNZ IDs by matching athlete names.
+          Athletes with multiple IDs across events will be consolidated to a single ID.
+        </p>
+
+        {#if reconcileResult}
+          <div role="alert" class="alert alert-success mb-3">
+            <div class="flex flex-col gap-1 w-full">
+              <span class="font-medium">✅ Reconciliation complete</span>
+              <span class="text-sm">{reconcileResult.total_athletes} athletes scanned</span>
+              <span class="text-sm">{reconcileResult.names_unified} names unified</span>
+              <span class="text-sm">{reconcileResult.ids_corrected} rows corrected</span>
+              {#if reconcileResult.conflicts.length > 0}
+                <span class="text-sm text-warning">{reconcileResult.conflicts.length} conflicts (tied IDs — review manually)</span>
+                <button class="btn btn-ghost btn-xs self-start" onclick={() => (showConflicts = !showConflicts)}>
+                  {showConflicts ? "Hide" : "View"} conflicts
+                </button>
+                {#if showConflicts}
+                  <div class="overflow-x-auto mt-2">
+                    <table class="table table-xs">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>IDs</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {#each reconcileResult.conflicts as c}
+                          <tr>
+                            <td class="font-medium">{c.name}</td>
+                            <td>{c.previous_ids.join(", ")}</td>
+                          </tr>
+                        {/each}
+                      </tbody>
+                    </table>
+                  </div>
+                {/if}
+              {:else}
+                <span class="text-sm text-base-content/60">No conflicts found</span>
+              {/if}
+            </div>
+          </div>
+        {/if}
+
+        {#if reconcileError}
+          <div role="alert" class="alert alert-error mb-3">
+            <span>{reconcileError}</span>
+          </div>
+        {/if}
+
+        <button
+          class="btn btn-primary btn-sm"
+          onclick={runReconcile}
+          disabled={reconciling}
+        >
+          {reconciling ? "Reconciling..." : "Run Reconciliation"}
+        </button>
+      </div>
     </div>
   {/if}
 </div>

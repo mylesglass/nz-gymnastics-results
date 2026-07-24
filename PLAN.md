@@ -124,6 +124,16 @@
 - [x] AA Tooltip — new `AATooltip.svelte` component with summed D/E/N across apparatus; integrated into `aa-score` column
 - [ ] Show equals in rankings — backend: append "T" to tied rank values (attempted, reverted — needs correct approach)
 
+### STEP 16: Athlete ID Reconciliation ✅
+- [x] Create `backend/app/reconcile.py` — name-based ID unification logic
+- [x] Add `POST /api/admin/reconcile-athletes` endpoint (admin-only)
+- [x] Add `ReconcileReport` + `ConflictItem` schemas
+- [x] Add `reconcileAthletes()` to frontend API client
+- [x] Add reconciliation card to /admin page with conflict viewer
+- [x] Write 9 tests for reconciliation logic
+- [x] **Test:** 9/9 reconcile tests pass; 242 total tests pass
+- [x] Update BUGS.md with remaining edge cases
+
 ### Next Steps
 - [ ] Re-implement equals in rankings with correct tie detection logic
 - [x] Event page: add year filter/search bar (year dropdown + text search by name)
@@ -138,3 +148,7 @@
 - [x] Gymnasts list page (alphabetically grouped A-Z)
 - [x] Year filter on results, gymnast, and club pages (defaults to latest year, gymnast defaults to all)
 - [x] Allow CSV export of JUST the current information displayed on the filtered table
+- [ ] Automate reconciliation on upload — trigger reconcile after every successful JSON import
+- [ ] Fuzzy name matching — detect nicknames/spelling variations (e.g. "Liz" → "Elizabeth")
+- [ ] Conflict resolution UI — admin dashboard to manually pick the correct ID for ambiguous names
+- [ ] GNZ ID audit log — track when and why an ID was changed for a gymnast
