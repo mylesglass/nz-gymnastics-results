@@ -6,6 +6,7 @@ dist/
 .venv/
 venv/
 *.db
+backend/data/
 
 # Node
 node_modules/
