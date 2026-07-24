@@ -42,7 +42,7 @@ from app.schemas import (
     UserResponse,
     UserUpdate,
 )
-from app.transformer import _find_region, export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict
+from app.transformer import _find_region, _use_vault_average, export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict
 
 
 @asynccontextmanager
@@ -327,7 +327,7 @@ def list_ranking_steps(year: int, discipline: str, _auth=Depends(require_role("a
                 Event.is_national == False,
                 LongScore.discipline == discipline,
                 LongScore.level_category.isnot(None),
-                LongScore.aa_score.isnot(None),
+                LongScore.pass_final_score.isnot(None),
             )
             .distinct()
             .order_by(LongScore.level_category)
@@ -381,39 +381,68 @@ def get_rankings(
                 LongScore.club_name,
                 LongScore.event_id,
                 LongScore.event_name,
-                func.max(LongScore.aa_score),
+                LongScore.apparatus,
+                LongScore.pass_number,
+                LongScore.pass_final_score,
+                LongScore.aa_score,
+                LongScore.round_type,
             )
             .filter(
                 LongScore.event_id.in_(event_ids),
                 LongScore.level_category == step,
                 LongScore.discipline == discipline,
-                LongScore.aa_score.isnot(None),
-            )
-            .group_by(
-                LongScore.gymnast_name,
-                LongScore.gnz_id,
-                LongScore.club_name,
-                LongScore.event_id,
-                LongScore.event_name,
+                LongScore.pass_final_score.isnot(None),
             )
             .all()
         )
 
         from collections import defaultdict
 
+        # Group rows by (gymnast, event, round_type)
+        event_groups: dict[tuple, list] = defaultdict(list)
+        for r in rows:
+            key = (r.gymnast_name, r.gnz_id, r.club_name, r.event_id, r.event_name, r.round_type)
+            event_groups[key].append(r)
+
+        # Compute a single competition score per (gymnast, event, round_type)
+        # then pick top 2 competitions per gymnast (same as before)
+        comp_scores: dict[str, list[tuple[float, str, str, str]]] = defaultdict(list)
+        for (name, gnz_id, club, eid, ename, rt), scores in event_groups.items():
+            aa_values = [s.aa_score for s in scores if s.aa_score is not None]
+            if aa_values:
+                comp_score = float(max(aa_values))
+            else:
+                apparatus_scores: dict[str, list[float]] = defaultdict(list)
+                for s in scores:
+                    if s.pass_final_score is not None:
+                        apparatus_scores[s.apparatus or ""].append(float(s.pass_final_score))
+                comp_score = 0.0
+                for app, app_scores in apparatus_scores.items():
+                    if app == "VT" and len(app_scores) > 1:
+                        if _use_vault_average(step, rt or ""):
+                            comp_score += sum(app_scores) / len(app_scores)
+                        else:
+                            comp_score += max(app_scores)
+                    else:
+                        comp_score += sum(app_scores)
+
+            comp_scores[name].append((comp_score, ename, gnz_id or "", club or ""))
+
+        # Build gymnast_data: aggregate competitions per gymnast,
+        # take top 2 by score, keep the best gnz_id and club per gymnast
         gymnast_data: dict[str, dict] = {}
-        for name, gnz_id, club, eid, ename, aa_score in rows:
-            key = name
-            if key not in gymnast_data:
-                gymnast_data[key] = {
-                    "name": name,
-                    "gnz_id": gnz_id or "",
-                    "club": club,
-                    "scores": [],
-                    "competitions": [],
-                }
-            gymnast_data[key]["scores"].append(float(aa_score))
-            gymnast_data[key]["competitions"].append(ename)
+        for name, entries in comp_scores.items():
+            paired = sorted(entries, key=lambda x: -x[0])
+            top_two = paired[:2]
+            best_gnz_id = next((e[2] for e in paired if e[2]), "")
+            best_club = next((e[3] for e in paired if e[3]), "")
+            gymnast_data[name] = {
+                "name": name,
+                "gnz_id": best_gnz_id,
+                "club": best_club,
+                "scores": [s[0] for s in top_two],
+                "competitions": [s[1] for s in top_two],
+            }
 
         # Qualifier filter: check all per-competition max scores against threshold
         if qualifier:
