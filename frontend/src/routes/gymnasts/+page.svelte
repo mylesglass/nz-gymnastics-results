@@ -40,14 +40,14 @@
 
   function displayIds(gr: Gymnast): string {
     const all = [gr.gnz_id, ...gr.alt_ids];
-    return all.join("-");
+    return all.join(", ");
   }
 
   function displayClubs(gr: Gymnast): string {
     const all: string[] = [];
     if (gr.club) all.push(gr.club);
     all.push(...gr.alt_clubs);
-    return all.join("-");
+    return all.join(", ");
   }
 </script>
 
