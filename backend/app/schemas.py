@@ -3,6 +3,35 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    username: str
+    role: str
+
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    role: str = "member"
+
+
+class UserUpdate(BaseModel):
+    password: str
+
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    role: str
+    created_at: datetime
+
+
 class EventResponse(BaseModel):
     id: int
     name: str

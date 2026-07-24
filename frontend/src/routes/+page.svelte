@@ -1,9 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { checkAuthStatus, getStats } from "$lib/api";
-  import { authConfigured } from "$lib/auth";
+  import { authConfigured, currentUser } from "$lib/auth";
 
   let authCfg = $state(false);
+  let user = $state<{ username: string; role: string } | null>(null);
   let stats = $state<{
     total_events: number;
     total_gymnasts: number;
@@ -15,11 +16,12 @@
     checkAuthStatus()
       .then((s) => authConfigured.set(s.configured))
       .catch(() => {});
-    const unsub = authConfigured.subscribe((v) => (authCfg = v));
+    const unsub1 = authConfigured.subscribe((v) => (authCfg = v));
+    const unsub2 = currentUser.subscribe((v) => (user = v));
     getStats()
       .then((s) => (stats = s))
       .catch(() => {});
-    return unsub;
+    return () => { unsub1(); unsub2(); };
   });
 </script>
 
@@ -36,7 +38,11 @@
     </p>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div
+    class="grid grid-cols-1 gap-4"
+    class:md:grid-cols-3={!authCfg || user?.role === "admin"}
+    class:md:grid-cols-2={authCfg && user?.role !== "admin"}
+  >
     <a
       href="/events"
       class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer"
@@ -57,18 +63,18 @@
         <p class="text-sm text-base-content/70">View all results across every event in one place</p>
       </div>
     </a>
-    <a
-      href={authCfg ? "/login" : "/upload"}
-      class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer"
-    >
-      <div class="card-body items-center text-center py-8">
-        <span class="text-4xl mb-2">📄</span>
-        <h2 class="card-title">Upload</h2>
-        <p class="text-sm text-base-content/70">
-          {authCfg ? "Log in to upload a new competition" : "Upload a Scoreholder JSON file"}
-        </p>
-      </div>
-    </a>
+    {#if !authCfg || user?.role === "admin"}
+      <a
+        href="/upload"
+        class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer"
+      >
+        <div class="card-body items-center text-center py-8">
+          <span class="text-4xl mb-2">📄</span>
+          <h2 class="card-title">Upload</h2>
+          <p class="text-sm text-base-content/70">Upload a Scoreholder JSON file</p>
+        </div>
+      </a>
+    {/if}
   </div>
 
   {#if stats}
