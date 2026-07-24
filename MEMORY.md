@@ -106,6 +106,9 @@ Core logic:
 - `GET /api/auth/users` → list users (admin only)
 - `POST /api/auth/users/{id}/reset-password` → change password (admin only)
 - `DELETE /api/auth/users/{id}` → delete user (admin only)
+- `GET /api/admin/duplicates` → list duplicate GNZ ID groups by name (with club/level instances)
+- `POST /api/admin/duplicates/fix` → auto-fix high-confidence duplicates, return low-confidence for review
+- `POST /api/admin/duplicates/apply` → apply manual ID selections
 
 ### Frontend
 - JWT stored in `localStorage`, read by `getToken()` / `setToken()`
@@ -128,14 +131,14 @@ Core logic:
 - `/` — Landing page: stats cards, role-based grid (Upload card hidden for non-admins)
 - `/upload` — Drag-and-drop JSON upload, club mapping dialog, rich success card (gymnast/score/club counts)
 - `/login` — Username + password form, redirects to `/`
-- `/admin` — Admin dashboard (stats, user management link, reconcile card)
+- `/admin` — Admin dashboard (stats, user management, unified athlete ID reconciliation card with per-instance dropdowns, Quick Fix + Apply Selected buttons)
 - `/admin/users` — User management table (create, delete, reset password)
-- `/rankings` — Rankings placeholder (member+)
-- `/events` — Event list with search bar, year filter, rename/delete for authorized users
+- `/rankings` — Rankings with discipline tabs, STEP dropdown, region quotas, qualifier filter, partial AA support
+- `/events` — Event list with search bar, year filter, rename/delete, Nationals trophy toggle
 - `/events/[id]` — Per-event results (thin wrapper around `WideResultsTable`)
 - `/results` — All events results (thin wrapper around `WideResultsTable`, adds Event filter column)
 - `/gymnast/[gnz_id]` — Individual gymnast results across all events
-- `/gymnasts` — Gymnast list (A-Z grouped)
+- `/gymnasts` — Gymnast list (A-Z grouped, live search, GNZ ID shown subtly, ⚠ for multi-ID, comma-separated clubs for multi-club)
 - `/club/[club]` — Club results across all events
 - `/clubs` — Club list (region-grouped)
 
@@ -204,7 +207,8 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
 - [ ] Re-implement equals in rankings with correct tie detection logic
 - [ ] Mobile-responsive table improvements
 - [ ] Performance: caching, query optimisation, application speed
-- [ ] Automate reconciliation on upload — trigger reconcile after every successful JSON import
+- [ ] Mobile-responsive table improvements
+- [ ] Performance: caching, query optimisation, application speed
 - [ ] Fuzzy name matching — detect nicknames/spelling variations (e.g. "Liz" → "Elizabeth")
 - [ ] Conflict resolution UI — admin dashboard to manually pick the correct ID for ambiguous names
 - [ ] GNZ ID audit log — track when and why an ID was changed for a gymnast
