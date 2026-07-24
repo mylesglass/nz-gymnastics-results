@@ -83,19 +83,19 @@
           {#each letterGymnasts as gr}
             <a
               href="/gymnast/{gr.gnz_id}"
-              class="flex items-center justify-between px-3 py-1.5 rounded hover:bg-base-200 transition-colors"
+              class="flex items-center px-3 py-1.5 rounded hover:bg-base-200 transition-colors gap-1"
             >
-              <span class="text-sm truncate">{gr.name}</span>
-              <span class="flex items-center gap-1 shrink-0 ml-2">
-                {#if gr.alt_ids.length > 0}
-                  <span class="text-warning">⚠</span>
-                {/if}
-                <span class="text-xs text-base-content/40">{displayIds(gr)}</span>
+              <span class="text-sm">{gr.name}</span>
+              {#if gr.alt_ids.length > 0}
+                <span class="text-warning text-xs">⚠</span>
+              {/if}
+              <span class="text-xs text-base-content/40">{displayIds(gr)}</span>
+              <span class="ml-auto flex items-center gap-1 shrink-0">
                 {#if gr.alt_clubs.length > 0}
-                  <span class="text-warning ml-1">⚠</span>
+                  <span class="text-warning text-xs">⚠</span>
                   <span class="text-xs text-base-content/40">{displayClubs(gr)}</span>
                 {:else if gr.club}
-                  <span class="text-xs text-base-content/50 truncate max-w-32">{gr.club}</span>
+                  <span class="text-xs text-base-content/50">{gr.club}</span>
                 {/if}
               </span>
             </a>
