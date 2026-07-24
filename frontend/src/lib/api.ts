@@ -234,3 +234,28 @@ export async function getRankingSteps(
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+export interface DuplicateGroup {
+  name: string;
+  club: string;
+  level_category: string;
+  gnz_ids: string[];
+  total_rows: number;
+}
+
+export async function checkDuplicates(): Promise<DuplicateGroup[]> {
+  const res = await fetch(`${API_BASE}/api/admin/duplicates`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function fixDuplicates(): Promise<{ fixed: number }> {
+  const res = await fetch(`${API_BASE}/api/admin/duplicates/fix`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}

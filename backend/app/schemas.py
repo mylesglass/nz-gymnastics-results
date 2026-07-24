@@ -127,3 +127,11 @@ class RankingsResponse(BaseModel):
 
 class StepsResponse(BaseModel):
     steps: list[str]
+
+
+class DuplicateGroup(BaseModel):
+    name: str
+    club: str
+    level_category: str
+    gnz_ids: list[str]
+    total_rows: int
