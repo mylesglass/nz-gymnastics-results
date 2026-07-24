@@ -5,7 +5,7 @@ WORKDIR /app
 COPY . .
 
 RUN pip install --no-cache-dir setuptools wheel && \
-    pip install --no-cache-dir -e ".[dev]"
+    pip install --no-cache-dir -e "."
 
 EXPOSE 8000
 
