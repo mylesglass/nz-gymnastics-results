@@ -174,17 +174,17 @@
 - [x] Rankings page with year selector, discipline tabs, STEP dropdown, rankings table with competition-name tooltips
 - [x] **Test:** 251/251 tests pass; frontend builds cleanly
 
-### STEP 20: Incomplete AA in Rankings
-- [ ] Include gymnasts who don't have a complete All-Around aggregate in rankings by computing partial AA from individual apparatus passes
+### STEP 20: Incomplete AA in Rankings ✅
+- [x] Include gymnasts who don't have a complete All-Around aggregate in rankings by computing partial AA from individual apparatus passes
   - When no `aa_score` exists for a gymnast+event, sum per-apparatus `pass_final_score` values (applying `_use_vault_average()` rules for vault)
-  - Requires changing rankings query to fetch all score rows (not just those with non-null AA) and aggregating in Python
+  - Changed rankings query to fetch all score rows (not just those with non-null AA) and aggregate in Python
   - **File:** `backend/app/main.py`
 
-### STEP 21: Duplicate Detection in Admin Dashboard
-- [ ] New `GET /api/admin/duplicates` endpoint: query gymnasts with same name + same club + same level_category but different GNZ IDs
-- [ ] New card on admin dashboard showing duplicate count + expandable table (Name, Club, Step, Conflicting IDs, Total rows)
-- [ ] "Quick Fix" button: auto-picks the most frequent GNZ ID per group and updates all rows
-- **Files:** `backend/app/main.py`, `frontend/src/routes/admin/+page.svelte`
+### STEP 21: Duplicate Detection in Admin Dashboard ✅
+- [x] Unified Reconcile + Duplicates into single "Athlete ID Reconciliation" card grouped by name
+- [x] Per-instance (club/level) ID dropdowns with >2x confidence auto-fix
+- [x] "Quick Fix" and "Apply Selected Fixes" buttons
+- **Files:** `backend/app/main.py`, `backend/app/schemas.py`, `frontend/src/routes/admin/+page.svelte`, `frontend/src/lib/api.ts`
 
 ### Next Steps
 - [ ] Mobile-responsive table improvements
