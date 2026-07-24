@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
-  import { listEvents, deleteEvent, renameEvent } from "$lib/api";
+  import { listEvents, deleteEvent, renameEvent, updateEvent } from "$lib/api";
   import { currentUser } from "$lib/auth";
   import { selectedYear } from "$lib/year";
 
@@ -123,6 +123,20 @@
   function cancelDelete() {
     deleteTarget = null;
   }
+
+  let togglingNational = $state<number | null>(null);
+
+  async function toggleNational(ev: { id: number; is_national?: boolean }) {
+    togglingNational = ev.id;
+    try {
+      const updated = await updateEvent(ev.id, { is_national: !ev.is_national });
+      events = events.map((e) => (e.id === updated.id ? updated : e));
+    } catch {
+      // ignore
+    } finally {
+      togglingNational = null;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -198,13 +212,20 @@
               <td>{ev.start_date}</td>
               <td>
                 {#if ev.discipline === "WAG"}
-                  <span class="badge badge-primary badge-sm">WAG</span>
+                  <div class="flex gap-1 items-center">
+                    <span class="badge badge-primary badge-sm">WAG</span>
+                    {#if ev.is_national}<span class="badge badge-ghost badge-sm">Nationals</span>{/if}
+                  </div>
                 {:else if ev.discipline === "MAG"}
-                  <span class="badge badge-secondary badge-sm">MAG</span>
+                  <div class="flex gap-1 items-center">
+                    <span class="badge badge-secondary badge-sm">MAG</span>
+                    {#if ev.is_national}<span class="badge badge-ghost badge-sm">Nationals</span>{/if}
+                  </div>
                 {:else}
-                  <div class="flex gap-1">
+                  <div class="flex gap-1 items-center">
                     <span class="badge badge-primary badge-sm">WAG</span>
                     <span class="badge badge-secondary badge-sm">MAG</span>
+                    {#if ev.is_national}<span class="badge badge-ghost badge-sm">Nationals</span>{/if}
                   </div>
                 {/if}
               </td>
@@ -212,6 +233,17 @@
               {#if loggedIn}
               <td>
                 <div class="flex gap-1">
+                  <button
+                    class="btn btn-ghost btn-xs"
+                    class:btn-warning={ev.is_national}
+                    title={ev.is_national ? "Unmark as Nationals" : "Mark as Nationals"}
+                    onclick={() => toggleNational(ev)}
+                    disabled={togglingNational === ev.id}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 48 48" fill="currentColor" class="size-4 {ev.is_national ? '' : 'text-base-content/30'}">
+                      <path fill="currentColor" fill-rule="evenodd" d="M12 7a1 1 0 0 1 1-1h22a1 1 0 0 1 1 1v1h5a1 1 0 0 1 1 1v6a5 5 0 0 1-5 5h-1.683A12.02 12.02 0 0 1 26 27.834V34h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H16a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h6v-6.166A12.02 12.02 0 0 1 12.683 20H11a5 5 0 0 1-5-5V9a1 1 0 0 1 1-1h5zm24 9v-6h4v5a3 3 0 0 1-3 3h-1zm-24-6H8v5a3 3 0 0 0 3 3h1z" clip-rule="evenodd"/>
+                    </svg>
+                  </button>
                   <button
                     class="btn btn-ghost btn-xs"
                     title="Rename"

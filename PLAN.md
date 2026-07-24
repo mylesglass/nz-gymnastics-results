@@ -164,8 +164,17 @@
 - [x] Add "Levin Gymsports" and "Kapiti" club aliases to clubs_and_regions.json
 - [x] Fix clubs_and_regions.json: Franklin Gymsports, ARGOS alias cleanup, Buller restoration
 
+### STEP 19: Season Rankings + Nationals Flag ✅
+- [x] Add `is_national` boolean column to Event model with DB migration
+- [x] Add Nationals toggle to events page (admin-only badge/button in action column)
+- [x] Add `events` list API: include `is_national` in response
+- [x] Extend `PATCH /api/events/{id}` to update `is_national` (alongside existing rename)
+- [x] Build `GET /api/rankings` endpoint (member+): best 2 comps per gymnast per STEP per year (excludes Nationals events), summed total, tie detection with "T" prefix
+- [x] Build `GET /api/rankings/steps` endpoint: list available STEP levels per year/discipline
+- [x] Rankings page with year selector, discipline tabs, STEP dropdown, rankings table with competition-name tooltips
+- [x] **Test:** 251/251 tests pass; frontend builds cleanly
+
 ### Next Steps
-- [ ] Re-implement equals in rankings with correct tie detection logic
 - [ ] Mobile-responsive table improvements
 - [ ] Performance: caching, query optimisation, application speed
 - [ ] Automate reconciliation on upload — trigger reconcile after every successful JSON import

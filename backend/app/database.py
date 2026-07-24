@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.models import Base
@@ -16,6 +16,17 @@ SessionLocal = sessionmaker(bind=engine, class_=Session)
 
 def init_db():
     Base.metadata.create_all(engine)
+    # Migrate existing tables — add columns that may not exist yet
+    with engine.connect() as conn:
+        existing = {
+            row[1]
+            for row in conn.execute(text("PRAGMA table_info(events)")).fetchall()
+        }
+        if "is_national" not in existing:
+            conn.execute(
+                text("ALTER TABLE events ADD COLUMN is_national BOOLEAN DEFAULT 0")
+            )
+        conn.commit()
 
 
 def get_session() -> Session:
