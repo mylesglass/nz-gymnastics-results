@@ -536,7 +536,7 @@
         class="border-t border-base-300 overflow-x-auto"
         bind:this={dupScrollEl}
       >
-        <table class="table table-xs w-max">
+        <table class="table table-xs min-w-full">
           <thead>
             <tr>
               {#each frontMeta as col, i}
@@ -627,7 +627,7 @@
   </div>
 
   <div class="overflow-x-auto pb-48" bind:this={mainScrollEl}>
-    <table class="table table-zebra table-xs px-2 w-max">
+    <table class="table table-zebra table-xs px-2 min-w-full">
       <thead bind:this={theadEl}>
         <tr>
           {#each frontMeta as col, i}
