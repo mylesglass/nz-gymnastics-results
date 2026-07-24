@@ -85,6 +85,8 @@ class GymnastItem(BaseModel):
     gnz_id: str
     name: str
     club: str | None
+    alt_ids: list[str] = []
+    alt_clubs: list[str] = []
 
 
 class UploadValidationResponse(BaseModel):

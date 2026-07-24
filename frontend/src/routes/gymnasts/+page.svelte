@@ -2,7 +2,15 @@
   import { onMount } from "svelte";
   import { listGymnasts } from "$lib/api";
 
-  let gymnasts = $state<{ gnz_id: string; name: string; club: string | null }[]>([]);
+  interface Gymnast {
+    gnz_id: string;
+    name: string;
+    club: string | null;
+    alt_ids: string[];
+    alt_clubs: string[];
+  }
+
+  let gymnasts = $state<Gymnast[]>([]);
   let loading = $state(true);
 
   onMount(async () => {
@@ -16,19 +24,31 @@
   });
 
   let grouped = $derived.by(() => {
-    const g: Record<string, typeof gymnasts> = {};
+    const g: Record<string, Gymnast[]> = {};
     for (const gr of gymnasts) {
       const letter = gr.name.charAt(0).toUpperCase();
       if (!/[A-Z]/.test(letter)) continue;
       if (!g[letter]) g[letter] = [];
       g[letter].push(gr);
     }
-    const sorted: Record<string, typeof gymnasts> = {};
+    const sorted: Record<string, Gymnast[]> = {};
     for (const k of Object.keys(g).sort()) {
       sorted[k] = g[k];
     }
     return sorted;
   });
+
+  function displayIds(gr: Gymnast): string {
+    const all = [gr.gnz_id, ...gr.alt_ids];
+    return all.join("-");
+  }
+
+  function displayClubs(gr: Gymnast): string {
+    const all: string[] = [];
+    if (gr.club) all.push(gr.club);
+    all.push(...gr.alt_clubs);
+    return all.join("-");
+  }
 </script>
 
 <svelte:head>
@@ -65,10 +85,19 @@
               href="/gymnast/{gr.gnz_id}"
               class="flex items-center justify-between px-3 py-1.5 rounded hover:bg-base-200 transition-colors"
             >
-              <span class="text-sm">{gr.name}</span>
-              {#if gr.club}
-                <span class="text-xs text-base-content/50 truncate ml-2 max-w-32">{gr.club}</span>
-              {/if}
+              <span class="text-sm truncate">{gr.name}</span>
+              <span class="flex items-center gap-1 shrink-0 ml-2">
+                {#if gr.alt_ids.length > 0}
+                  <span class="text-warning">⚠</span>
+                {/if}
+                <span class="text-xs text-base-content/40">{displayIds(gr)}</span>
+                {#if gr.alt_clubs.length > 0}
+                  <span class="text-warning ml-1">⚠</span>
+                  <span class="text-xs text-base-content/40">{displayClubs(gr)}</span>
+                {:else if gr.club}
+                  <span class="text-xs text-base-content/50 truncate max-w-32">{gr.club}</span>
+                {/if}
+              </span>
             </a>
           {/each}
         </div>
