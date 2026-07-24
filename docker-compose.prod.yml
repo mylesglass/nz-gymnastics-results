@@ -1,0 +1,36 @@
+services:
+  backend:
+    build: ./backend
+    expose:
+      - "8000"
+    volumes:
+      - backend_data:/app/data
+    environment:
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    restart: unless-stopped
+    networks:
+      - yams_default
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    expose:
+      - "3000"
+    depends_on:
+      - backend
+    environment:
+      - PROXY_TARGET=http://backend:8000
+      - ORIGIN=${ORIGIN:-http://localhost:3000}
+    restart: unless-stopped
+    networks:
+      - yams_default
+
+volumes:
+  backend_data:
+
+networks:
+  yams_default:
+    external: true
