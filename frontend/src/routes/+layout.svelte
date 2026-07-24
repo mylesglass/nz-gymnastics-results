@@ -1,16 +1,16 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { isLoggedIn, authConfigured, logout } from "$lib/auth";
+  import { currentUser, authConfigured, logout } from "$lib/auth";
   import { goto } from "$app/navigation";
   import "../app.css";
 
   let theme = $state("dark");
-  let loggedIn = $state(false);
+  let user = $state<{ username: string; role: string } | null>(null);
   let authCfg = $state(false);
 
   onMount(() => {
     theme = document.documentElement.dataset.theme || "dark";
-    const unsub1 = isLoggedIn.subscribe((v) => (loggedIn = v));
+    const unsub1 = currentUser.subscribe((v) => (user = v));
     const unsub2 = authConfigured.subscribe((v) => (authCfg = v));
     return () => {
       unsub1();
@@ -31,15 +31,22 @@
       <a href="/" class="btn btn-ghost text-xl">🤸 NZ Gymnastics Results</a>
     </div>
     <div class="flex-none gap-2 items-center">
-      {#if loggedIn || !authCfg}
+      {#if user?.role === "admin"}
         <a href="/upload" class="btn btn-outline btn-sm">Upload</a>
+      {/if}
+      {#if user}
+        <a href="/rankings" class="btn btn-outline btn-sm">Rankings</a>
+      {/if}
+      {#if user?.role === "admin"}
+        <a href="/admin" class="btn btn-outline btn-sm">Admin</a>
       {/if}
       <a href="/events" class="btn btn-outline btn-sm">Events</a>
       <a href="/results" class="btn btn-outline btn-sm">Results</a>
       <a href="/gymnasts" class="btn btn-outline btn-sm">Gymnasts</a>
       <a href="/clubs" class="btn btn-outline btn-sm">Clubs</a>
       {#if authCfg}
-        {#if loggedIn}
+        {#if user}
+          <span class="text-xs text-base-content/60 hidden sm:inline">{user.username}</span>
           <button
             class="btn btn-ghost btn-sm"
             onclick={() => {

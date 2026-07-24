@@ -2,24 +2,50 @@ import json
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, File, Header, HTTPException, UploadFile, Depends
+from fastapi import FastAPI, File, HTTPException, Header, UploadFile, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 from sqlalchemy import func
 
-from app.auth import is_auth_configured, check_password
+from app.auth import (
+    create_token,
+    decode_token,
+    get_current_user,
+    hash_password,
+    is_auth_configured,
+    require_role,
+    seed_admin_user,
+    verify_password,
+)
 from app.cache import cache_headers, invalidate
 from app.database import get_session, init_db
-from app.models import Event, LongScore
+from app.models import Event, LongScore, User
 from app.parser import ParseError, _NAME_TO_CANONICAL, find_unknown_clubs, parse_json, reload_club_maps, validate_upload_structure
-from app.schemas import ClubItem, EventListItem, EventResponse, EventUpdate, GymnastItem, ResultsResponse, StatsResponse, UploadValidationResponse
+from app.schemas import (
+    ClubItem,
+    EventListItem,
+    EventResponse,
+    EventUpdate,
+    GymnastItem,
+    LoginRequest,
+    ResultsResponse,
+    StatsResponse,
+    TokenResponse,
+    UploadValidationResponse,
+    UserCreate,
+    UserResponse,
+    UserUpdate,
+)
 from app.transformer import export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    admin = seed_admin_user()
+    if admin:
+        print(f"  Admin user '{admin}' ready (set ADMIN_PASSWORD to disable auth)")
     yield
 
 
@@ -135,29 +161,90 @@ def list_gymnasts(response: Response):
 # Auth
 # ---------------------------------------------------------------------------
 
-class LoginRequest(BaseModel):
-    password: str
-
-
-async def require_auth(x_admin_password: str | None = Header(None)):
-    if not is_auth_configured():
-        return
-    if not x_admin_password or not check_password(x_admin_password):
-        raise HTTPException(401, "Unauthorized")
-
-
 @app.get("/api/auth/status")
-def auth_status():
-    return {"configured": is_auth_configured()}
+def auth_status(authorization: str | None = Header(None)):
+    resp = {"configured": is_auth_configured()}
+    if authorization:
+        scheme, _, token = authorization.partition(" ")
+        if scheme.lower() == "bearer":
+            payload = decode_token(token)
+            if payload:
+                resp["user"] = {"username": payload["sub"], "role": payload["role"]}
+    return resp
 
 
-@app.post("/api/auth")
+@app.post("/api/auth/login", response_model=TokenResponse)
 def auth_login(body: LoginRequest):
     if not is_auth_configured():
+        raise HTTPException(400, "Auth not configured")
+    session = get_session()
+    try:
+        user = session.query(User).filter(User.username == body.username).first()
+        if not user or not verify_password(body.password, user.hashed_password):
+            raise HTTPException(401, "Invalid username or password")
+        token = create_token(user.username, user.role)
+        return TokenResponse(access_token=token, username=user.username, role=user.role)
+    finally:
+        session.close()
+
+
+@app.post("/api/auth/register", response_model=UserResponse)
+def auth_register(body: UserCreate, _auth=Depends(require_role("admin"))):
+    session = get_session()
+    try:
+        existing = session.query(User).filter(User.username == body.username).first()
+        if existing:
+            raise HTTPException(409, "Username already exists")
+        hashed = hash_password(body.password)
+        user = User(username=body.username, hashed_password=hashed, role=body.role)
+        session.add(user)
+        session.commit()
+        return UserResponse(id=user.id, username=user.username, role=user.role, created_at=user.created_at)
+    finally:
+        session.close()
+
+
+@app.get("/api/auth/users", response_model=list[UserResponse])
+def list_users(_auth=Depends(require_role("admin")), current_user: dict = Depends(get_current_user)):
+    session = get_session()
+    try:
+        users = session.query(User).order_by(User.created_at).all()
+        return [
+            UserResponse(id=u.id, username=u.username, role=u.role, created_at=u.created_at)
+            for u in users
+        ]
+    finally:
+        session.close()
+
+
+@app.post("/api/auth/users/{user_id}/reset-password")
+def reset_password(user_id: int, body: UserUpdate, _auth=Depends(require_role("admin"))):
+    session = get_session()
+    try:
+        user = session.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(404, "User not found")
+        user.hashed_password = hash_password(body.password)
+        session.commit()
         return {"ok": True}
-    if not check_password(body.password):
-        raise HTTPException(401, "Unauthorized")
-    return {"ok": True}
+    finally:
+        session.close()
+
+
+@app.delete("/api/auth/users/{user_id}")
+def delete_user(user_id: int, _auth=Depends(require_role("admin")), current_user: dict = Depends(get_current_user)):
+    session = get_session()
+    try:
+        user = session.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(404, "User not found")
+        if user.username == current_user["username"]:
+            raise HTTPException(400, "Cannot delete yourself")
+        session.delete(user)
+        session.commit()
+        return {"ok": True}
+    finally:
+        session.close()
 
 
 class AliasUpdate(BaseModel):
@@ -165,7 +252,7 @@ class AliasUpdate(BaseModel):
 
 
 @app.post("/api/clubs/aliases")
-def save_aliases(body: AliasUpdate, _auth=Depends(require_auth)):
+def save_aliases(body: AliasUpdate, _auth=Depends(require_role("admin"))):
     path = Path(__file__).resolve().parent.parent / "clubs_and_regions.json"
     with open(path) as f:
         data = json.load(f)
@@ -193,11 +280,20 @@ def save_aliases(body: AliasUpdate, _auth=Depends(require_auth)):
 
 
 # ---------------------------------------------------------------------------
+# Rankings (member+)
+# ---------------------------------------------------------------------------
+
+@app.get("/api/rankings")
+def get_rankings(_auth=Depends(require_role("admin", "member"))):
+    return {"status": "placeholder", "message": "Rankings page — coming soon"}
+
+
+# ---------------------------------------------------------------------------
 # Upload
 # ---------------------------------------------------------------------------
 
 @app.post("/api/upload", response_model=EventResponse)
-def upload_file(file: UploadFile = File(...), allow_unknown: str = None, _auth=Depends(require_auth)):
+def upload_file(file: UploadFile = File(...), allow_unknown: str = None, _auth=Depends(require_role("admin"))):
     if not file.filename or not file.filename.endswith(".json"):
         raise HTTPException(400, "Only .json files are accepted")
 
@@ -484,7 +580,7 @@ def export_event_xlsx(event_id: int, response: Response):
 # ---------------------------------------------------------------------------
 
 @app.delete("/api/events/{event_id}")
-def delete_event(event_id: int, _auth=Depends(require_auth)):
+def delete_event(event_id: int, _auth=Depends(require_role("admin"))):
     session = get_session()
     try:
         event = session.query(Event).filter(Event.id == event_id).first()
@@ -503,7 +599,7 @@ def delete_event(event_id: int, _auth=Depends(require_auth)):
 # ---------------------------------------------------------------------------
 
 @app.patch("/api/events/{event_id}", response_model=EventListItem)
-def rename_event(event_id: int, body: EventUpdate, _auth=Depends(require_auth)):
+def rename_event(event_id: int, body: EventUpdate, _auth=Depends(require_role("admin"))):
     session = get_session()
     try:
         event = session.query(Event).filter(Event.id == event_id).first()

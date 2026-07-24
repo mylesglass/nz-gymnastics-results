@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { listEvents, deleteEvent, renameEvent } from "$lib/api";
-  import { isLoggedIn } from "$lib/auth";
+  import { currentUser } from "$lib/auth";
 
   let events = $state<Array<{ id: number; name: string; start_date: string; gymnast_count: number; year: number | null }>>([]);
   let loading = $state(true);
@@ -75,7 +75,7 @@
     } finally {
       loading = false;
     }
-    const unsub = isLoggedIn.subscribe((v) => (loggedIn = v));
+    const unsub = currentUser.subscribe((v) => (loggedIn = v?.role === "admin"));
     return unsub;
   });
 

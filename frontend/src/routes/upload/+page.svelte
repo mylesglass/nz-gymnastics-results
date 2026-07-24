@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { uploadFile, saveAliases, checkAuthStatus } from "$lib/api";
-  import { isLoggedIn, authConfigured } from "$lib/auth";
+  import { currentUser, authConfigured } from "$lib/auth";
 
   interface UploadItem {
     file: string;
@@ -29,7 +29,7 @@
     checkAuthStatus()
       .then((s) => authConfigured.set(s.configured))
       .catch(() => {});
-    const unsub1 = isLoggedIn.subscribe((v) => (loggedIn = v));
+    const unsub1 = currentUser.subscribe((v) => (loggedIn = v !== null));
     const unsub2 = authConfigured.subscribe((v) => (authCfg = v));
     return () => {
       unsub1();

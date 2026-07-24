@@ -1,11 +1,11 @@
 import { dev } from "$app/environment";
-import { getPassword } from "./auth";
+import { getToken } from "./auth";
 
 const API_BASE = dev ? "" : "http://backend:8000";
 
 function authHeaders(): Record<string, string> {
-  const pw = getPassword();
-  if (pw) return { "X-Admin-Password": pw };
+  const t = getToken();
+  if (t) return { Authorization: `Bearer ${t}` };
   return {};
 }
 
@@ -33,13 +33,14 @@ export async function checkAuthStatus(): Promise<{ configured: boolean }> {
   return res.json();
 }
 
-export async function authLogin(password: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/auth`, {
+export async function authLogin(username: string, password: string): Promise<{ access_token: string; role: string }> {
+  const res = await fetch(`${API_BASE}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ password }),
+    body: JSON.stringify({ username, password }),
   });
   if (!res.ok) throw new Error(await res.text());
+  return res.json();
 }
 
 export async function uploadFile(file: File, allowUnknown = false): Promise<EventSummary> {

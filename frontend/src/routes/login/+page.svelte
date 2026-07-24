@@ -1,9 +1,10 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { authLogin } from "$lib/api";
-  import { authConfigured, login } from "$lib/auth";
+  import { authConfigured, setToken } from "$lib/auth";
   import { onMount } from "svelte";
 
+  let username = $state("");
   let password = $state("");
   let error = $state<string | null>(null);
   let loading = $state(false);
@@ -17,12 +18,12 @@
   });
 
   async function handleSubmit() {
-    if (!password.trim()) return;
+    if (!username.trim() || !password.trim()) return;
     loading = true;
     error = null;
     try {
-      await authLogin(password.trim());
-      login(password.trim());
+      const data = await authLogin(username.trim(), password.trim());
+      setToken(data.access_token);
       goto("/");
     } catch (err) {
       error = String(err);
@@ -51,6 +52,13 @@
       {:else}
         <div class="flex flex-col gap-4">
           <input
+            type="text"
+            class="input input-bordered w-full"
+            placeholder="Username"
+            bind:value={username}
+            autofocus
+          />
+          <input
             type="password"
             class="input input-bordered w-full"
             placeholder="Password"
@@ -58,7 +66,6 @@
             onkeydown={(e) => {
               if (e.key === "Enter") handleSubmit();
             }}
-            autofocus
           />
           {#if error}
             <div role="alert" class="alert alert-error py-2">
@@ -68,7 +75,7 @@
           <button
             class="btn btn-primary"
             onclick={handleSubmit}
-            disabled={loading || !password.trim()}
+            disabled={loading || !username.trim() || !password.trim()}
           >
             {loading ? "Logging in..." : "Log in"}
           </button>
