@@ -22,6 +22,7 @@
 
   let {
     loadData,
+    loadKey = "",
     showEventFilter = false,
     extraHeadLabels = {} as Record<string, string>,
     download,
@@ -29,6 +30,7 @@
     extraControls,
   }: {
     loadData: () => Promise<LoadDataResult>;
+    loadKey?: string;
     showEventFilter?: boolean;
     extraHeadLabels?: Record<string, string>;
     download?: Snippet<[DownloadArgs]>;
@@ -251,7 +253,17 @@
       isScrolled = window.scrollY > 60;
     };
     window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  });
 
+  let loaded = $state(false);
+
+  $effect(() => {
+    void loadKey;
+    loaded = false;
+    errorMessage = null;
+    errorRaw = null;
+    loading = true;
     loadData()
       .then((r) => {
         title = r.title;
@@ -274,14 +286,13 @@
             errorMessage = text;
           }
         } catch {
-          errorMessage = err instanceof Error ? err.message : text;
+          errorMessage = text;
         }
       })
       .finally(() => {
         loading = false;
+        loaded = true;
       });
-
-    return () => window.removeEventListener("scroll", onScroll);
   });
 
   $effect(() => {

@@ -74,13 +74,12 @@
 {/snippet}
 
 {#if ready}
-  {#key filterYear}
-    <WideResultsTable
-      loadData={loadDataImpl}
-      showEventFilter={true}
-      extraHeadLabels={{ event_name: "Event" }}
-      {download}
-      {empty}
-    />
-  {/key}
+  <WideResultsTable
+    loadData={loadDataImpl}
+    loadKey={filterYear ?? ""}
+    showEventFilter={true}
+    extraHeadLabels={{ event_name: "Event" }}
+    {download}
+    {empty}
+  />
 {/if}
