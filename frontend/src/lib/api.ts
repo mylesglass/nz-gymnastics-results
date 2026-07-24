@@ -240,6 +240,7 @@ export interface DuplicateGroup {
   club: string;
   level_category: string;
   gnz_ids: string[];
+  id_counts: Record<string, number>;
   total_rows: number;
 }
 
@@ -251,10 +252,25 @@ export async function checkDuplicates(): Promise<DuplicateGroup[]> {
   return res.json();
 }
 
-export async function fixDuplicates(): Promise<{ fixed: number }> {
+export async function fixDuplicates(): Promise<{
+  fixed: number;
+  low_confidence: DuplicateGroup[];
+}> {
   const res = await fetch(`${API_BASE}/api/admin/duplicates/fix`, {
     method: "POST",
     headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function applyFixes(
+  fixes: Array<{ name: string; club: string; level_category: string; chosen_id: string }>
+): Promise<{ applied: number }> {
+  const res = await fetch(`${API_BASE}/api/admin/duplicates/apply`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(fixes),
   });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
