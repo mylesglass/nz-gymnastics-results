@@ -1,13 +1,61 @@
 """Transform long-format SQLite data into wide-format rows for display/export."""
 
 import io
-
+import json
 import math
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
 from app.cache import cached
 from app.models import LongScore
+
+_CLUB_DATA_PATH = Path(__file__).resolve().parent.parent / "clubs_and_regions.json"
+_CLUB_DATA: dict | None = None
+
+
+def _load_club_data():
+    global _CLUB_DATA
+    if _CLUB_DATA is None:
+        try:
+            with open(_CLUB_DATA_PATH) as f:
+                _CLUB_DATA = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            _CLUB_DATA = {"regions": {}, "lookup": {}}
+    return _CLUB_DATA
+
+
+def _find_region(club_name: str) -> str:
+    if not club_name:
+        return ""
+    club_data = _load_club_data()
+    lower = club_name.lower().strip()
+    v = club_data.get("lookup", {}).get(lower)
+    if v:
+        region = v.get("region")
+        if region:
+            return region
+        return _region_from_canonical(v["name"], club_data)
+    return _region_from_prefix(lower, club_data)
+
+
+def _region_from_canonical(canonical: str, club_data: dict) -> str:
+    for region_name, clubs in club_data.get("regions", {}).items():
+        for c in clubs:
+            if c["name"].lower() == canonical.lower():
+                return region_name
+    return ""
+
+
+def _region_from_prefix(lower: str, club_data: dict) -> str:
+    for region_name, clubs in club_data.get("regions", {}).items():
+        for c in clubs:
+            for name in [c["name"]] + c.get("aliases", []):
+                ln = name.lower()
+                if lower.startswith(ln) or ln.startswith(lower):
+                    return region_name
+    return ""
 
 WAG_ORDER = ["VT", "UB", "BB", "FX"]
 MAG_ORDER = ["FX", "PH", "SR", "VT", "PB", "HB"]
@@ -39,7 +87,7 @@ def pivot_to_wide(event_id: int, session, event_name: str, event_date: str) -> p
 
     # Build column order: meta, apparatus, aa
     meta_cols = [
-        "gnz-id", "name", "club", "step", "division", "round-type",
+        "gnz-id", "name", "club", "region", "step", "division", "round-type",
         "competition", "date-created",
     ]
     app_cols = [c for c in df.columns if c not in meta_cols and c not in ("aa-score", "aa-rank")]
@@ -196,6 +244,7 @@ def _compute_pivot(event_id: int, session, gnz_id: str = None, club: str = None)
         row["step"] = row.pop("level_category", "")
         row["competition"] = ""
         row["date-created"] = ""
+        row["region"] = _find_region(row.get("club", ""))
 
     for disc_key, prefixes in [("wag", ["vt", "ub", "bb", "fx"]), ("mag", ["fx", "ph", "sr", "vt", "pb", "hb"])]:
         if (disc_key == "wag" and not has_wag) or (disc_key == "mag" and not has_mag):
@@ -428,7 +477,7 @@ def _fmt3(val: object) -> str | None:
 
 
 def _wide_column_list_for_prefixes(prefixes: list[str], present_apps: set[str]) -> list[str]:
-    cols = ["gnz-id", "name", "club", "step", "division", "round-type"]
+    cols = ["gnz-id", "name", "club", "region", "step", "division", "round-type"]
     suffixes = ["total", "d", "e", "n", "rank", "bonus"]
     for prefix in prefixes:
         for suffix in suffixes:

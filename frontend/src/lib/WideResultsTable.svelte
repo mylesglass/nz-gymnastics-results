@@ -62,12 +62,14 @@
   let filterEvent = $state<string[]>([]);
   let filterStep = $state<string[]>([]);
   let filterClub = $state<string[]>([]);
+  let filterRegion = $state<string[]>([]);
   let filterDivision = $state<string[]>([]);
   let filterRound = $state<string[]>([]);
 
   let eventOptions = $state<string[]>([]);
   let stepOptions = $state<string[]>([]);
   let clubOptions = $state<string[]>([]);
+  let regionOptions = $state<string[]>([]);
   let divisionOptions = $state<string[]>([]);
   let roundOptions = $state<string[]>([]);
 
@@ -84,6 +86,7 @@
     "gnz-id": "ID",
     name: "Name",
     club: "Club",
+    region: "Region",
     step: "STEP",
     division: "Division",
     "round-type": "Round",
@@ -101,13 +104,16 @@
     step: "min-w-18",
     name: "min-w-36",
     club: "min-w-36",
+    region: "min-w-24",
     division: "min-w-18",
     "round-type": "min-w-18",
+    event_name: "min-w-36 max-w-56 truncate",
   };
 
   const FILTERABLE_COLS = new Set([
     "step",
     "club",
+    "region",
     "division",
     "round-type",
     "event_name",
@@ -127,6 +133,7 @@
     > = {
       step: { selected: filterStep, options: stepOptions, label: stepLabel },
       club: { selected: filterClub, options: clubOptions, label: "Club" },
+      region: { selected: filterRegion, options: regionOptions, label: "Region" },
       division: {
         selected: filterDivision,
         options: divisionOptions,
@@ -206,6 +213,7 @@
     const events = new Set<string>();
     const steps = new Set<string>();
     const clubs = new Set<string>();
+    const regions = new Set<string>();
     const divs = new Set<string>();
     const rounds = new Set<string>();
     for (const r of rs) {
@@ -217,6 +225,8 @@
       if (s) steps.add(String(s));
       const c = r.club;
       if (c) clubs.add(String(c));
+      const reg = r.region;
+      if (reg) regions.add(String(reg));
       const d = r.division;
       if (d) divs.add(String(d));
       const rt = r["round-type"];
@@ -225,6 +235,7 @@
     eventOptions = [...events].sort();
     stepOptions = [...steps].sort();
     clubOptions = [...clubs].sort();
+    regionOptions = [...regions].sort();
     divisionOptions = [...divs].sort();
     roundOptions = [...rounds].sort();
   }
@@ -341,6 +352,7 @@
     filterEvent = [];
     filterStep = [];
     filterClub = [];
+    filterRegion = [];
     filterDivision = [];
     filterRound = [];
     const d = allData[tab];
@@ -363,6 +375,7 @@
       eventOptions = [];
       stepOptions = [];
       clubOptions = [];
+      regionOptions = [];
       divisionOptions = [];
       roundOptions = [];
     }
@@ -392,6 +405,10 @@
     if (filterClub.length) {
       const sel = new Set(filterClub);
       result = result.filter((r) => sel.has(String(r.club ?? "")));
+    }
+    if (filterRegion.length) {
+      const sel = new Set(filterRegion);
+      result = result.filter((r) => sel.has(String(r.region ?? "")));
     }
     if (filterDivision.length) {
       const sel = new Set(filterDivision);
@@ -519,7 +536,7 @@
         class="border-t border-base-300 overflow-x-auto"
         bind:this={dupScrollEl}
       >
-        <table class="table table-xs">
+        <table class="table table-xs w-max">
           <thead>
             <tr>
               {#each frontMeta as col, i}
@@ -610,7 +627,7 @@
   </div>
 
   <div class="overflow-x-auto pb-48" bind:this={mainScrollEl}>
-    <table class="table table-zebra table-xs px-2">
+    <table class="table table-zebra table-xs px-2 w-max">
       <thead bind:this={theadEl}>
         <tr>
           {#each frontMeta as col, i}
@@ -703,9 +720,9 @@
       </thead>
       <tbody>
         {#each filteredRows() as row}
-          <tr>
+          <tr class="hover:bg-base-300 transition-colors">
             {#each frontMeta as col}
-              <td class="whitespace-nowrap {COL_MIN_CLASS[col] ?? ''}">
+              <td class="whitespace-nowrap py-1.5 {COL_MIN_CLASS[col] ?? ''}">
                 {#if col === "name" && row["gnz-id"]}
                   <a href={`/gymnast/${row["gnz-id"]}`} class="link link-hover"
                     >{row[col] ?? ""}</a
@@ -721,17 +738,17 @@
               </td>
             {/each}
             {#each apparatusPrefixes as prefix, i}
-              <td class="text-left min-w-12 {COL_MIN_CLASS[prefix] ?? ''}">
+              <td class="text-left min-w-12 whitespace-nowrap py-1.5 {COL_MIN_CLASS[prefix] ?? ''}">
                 <ScoreTooltip {row} {prefix} isLast={i === apparatusPrefixes.length - 1} />
               </td>
             {/each}
             {#each backMeta as col}
               {#if col === "aa-score"}
-                <td class="whitespace-nowrap {COL_MIN_CLASS[col] ?? ''}">
+                <td class="whitespace-nowrap py-1.5 {COL_MIN_CLASS[col] ?? ''}">
                   <AATooltip {row} prefixes={apparatusPrefixes} />
                 </td>
               {:else}
-                <td class="whitespace-nowrap {COL_MIN_CLASS[col] ?? ''}"
+                <td class="whitespace-nowrap py-1.5 {COL_MIN_CLASS[col] ?? ''}"
                   >{row[col] ?? ""}</td
                 >
               {/if}
