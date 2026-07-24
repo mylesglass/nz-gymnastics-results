@@ -1,7 +1,6 @@
-import { dev } from "$app/environment";
 import { getToken } from "./auth";
 
-const API_BASE = dev ? "" : "http://backend:8000";
+const API_BASE = "";
 
 function authHeaders(): Record<string, string> {
   const t = getToken();
