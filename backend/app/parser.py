@@ -26,7 +26,7 @@ try:
 except (FileNotFoundError, json.JSONDecodeError):
     pass
 
-_NAME_LEVEL_SUFFIX = re.compile(r"\s+\(L\d+\)$")
+_NAME_LEVEL_SUFFIX = re.compile(r"\s+\((?:L\d+|STEP\s*\d+|YI)\)$")
 
 
 def reload_club_maps() -> None:
