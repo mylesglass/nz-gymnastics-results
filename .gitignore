@@ -13,7 +13,7 @@ frontend/.svelte-kit/
 frontend/build/
 
 # IDE
-.vscode/
+# .vscode/
 
 # OS
 .DS_Store
