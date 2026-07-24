@@ -6,18 +6,20 @@ A web application for parsing, storing, and viewing gymnastics competition resul
 - Upload Scoreholder JSON files and parse into a normalized database
 - View results in a wide-format table with WAG/MAG tabs
 - Hover tooltips on apparatus scores showing full breakdown (D, E, N, Bonus, Rank)
-- Filter, sort, and search results by name/ID, STEP/Level, Club, Division, Round — filters integrated into column headers
+- Filter, sort, and search results by name/ID, STEP/Level, Club, Division, Round, Region — filters integrated into column headers
 - View results for a single gymnast or club across all events (clickable table cells)
 - Export to CSV and XLSX (all columns including per-pass vault data)
 - Light/dark theme toggle
 - Responsive column sizing with configurable per-column min-widths
 - Sticky duplicate header with scroll-sync for long tables
 - Supports both WAG (Women's Artistic Gymnastics) and MAG (Men's Artistic Gymnastics)
-- Password-protected write operations (upload, delete, rename) via `ADMIN_PASSWORD` env var
+- Role-based JWT authentication with user management (admin/uploader roles); write operations protected by role
+- Athlete ID reconciliation to unify duplicate GNZ IDs across events
+- Global year toggle in nav to filter results across all pages
 - Footer with GitHub link and Ko-fi donation support
 
 ## Tech Stack
-- **Backend:** Python, FastAPI, SQLAlchemy, SQLite, Pandas
+- **Backend:** Python, FastAPI, SQLAlchemy, SQLite, Pandas, bcrypt, PyJWT
 - **Frontend:** SvelteKit 5, Tailwind CSS v4, DaisyUI v5 (dark theme)
 - **Infrastructure:** Docker Compose
 
@@ -80,7 +82,7 @@ source .venv/bin/activate
 pytest
 ```
 
-Runs 214 tests covering the decoder, resolver, parser, database models, transformer, and API endpoints.
+Runs 251 tests covering the decoder, resolver, parser, database models, transformer, reconciliation, and API endpoints.
 
 ## API Endpoints
 
@@ -88,19 +90,25 @@ Runs 214 tests covering the decoder, resolver, parser, database models, transfor
 |--------|------|-------------|
 | GET | `/api/health` | Health check |
 | GET | `/api/stats` | Aggregate statistics (event/gymnast/score/club counts) |
+| GET | `/api/years` | List all years with events |
 | GET | `/api/clubs` | List all clubs with gymnast counts and region mapping |
 | GET | `/api/gymnasts` | List all gymnasts with GNZ ID and club |
-| GET | `/api/auth/status` | Check if admin password is configured |
-| POST | `/api/auth` | Verify admin password |
-| POST | `/api/upload` | Upload a Scoreholder JSON file (requires auth if configured) |
+| GET | `/api/rankings` | Rankings (member+ placeholder) |
+| POST | `/api/auth/login` | JWT login (username + password) |
+| POST | `/api/auth/register` | Register new user (admin only) |
+| GET | `/api/auth/users` | List users (admin only) |
+| POST | `/api/auth/users/{id}/reset-password` | Reset user password (admin only) |
+| DELETE | `/api/auth/users/{id}` | Delete user (admin only) |
+| POST | `/api/upload` | Upload a Scoreholder JSON file (requires auth) |
 | GET | `/api/events` | List all uploaded events |
 | GET | `/api/events/{id}/results` | Get results (long format) |
 | GET | `/api/events/{id}/results/wide` | Get results (wide format, WAG/MAG split) |
-| GET | `/api/results/wide-all` | Get results across all events (filters: `?gnz_id=`, `?club=`, `?year=`) |
+| GET | `/api/results/wide-all` | Get results across all events (filters: `?gnz_id=`, `?club=`, `?year=`, `?region=`) |
 | GET | `/api/events/{id}/export/csv` | Download results as CSV |
 | GET | `/api/events/{id}/export/xlsx` | Download results as XLSX |
-| PATCH | `/api/events/{id}` | Rename an event (requires auth if configured) |
-| DELETE | `/api/events/{id}` | Delete an event and its scores (requires auth if configured) |
+| PATCH | `/api/events/{id}` | Rename an event (requires auth) |
+| DELETE | `/api/events/{id}` | Delete an event and its scores (requires auth) |
+| POST | `/api/admin/reconcile-athletes` | Reconcile duplicate GNZ IDs (admin only) |
 
 ## Project Structure
 
@@ -108,22 +116,24 @@ Runs 214 tests covering the decoder, resolver, parser, database models, transfor
 backend/                  # Python FastAPI backend
 ├── app/
 │   ├── main.py           # FastAPI app + endpoints
-│   ├── models.py         # SQLAlchemy ORM models
+│   ├── models.py         # SQLAlchemy ORM models (Event, LongScore, User)
 │   ├── database.py       # SQLite engine + session
 │   ├── schemas.py        # Pydantic models
-│   ├── auth.py           # Password-based auth (ADMIN_PASSWORD env var)
+│   ├── auth.py           # JWT auth (bcrypt, HS256, role-based, seed_admin_user)
 │   ├── parser.py         # Scoreholder JSON parser
 │   ├── decoder.py        # Node-tree score field decoder
 │   ├── resolver.py       # ID chain resolver
-│   ├── transformer.py    # Pandas long→wide pivot + export
+│   ├── transformer.py    # Pandas long→wide pivot + export + region enrichment
+│   ├── reconcile.py      # Athlete ID reconciliation logic
 │   └── validate_json.py  # Batch validation CLI
-└── tests/                # pytest suite (214 tests)
+└── tests/                # pytest suite (251 tests)
 
 frontend/                 # SvelteKit + Tailwind CSS v4 + DaisyUI v5
 ├── src/
 │   ├── lib/
 │   │   ├── api.ts              # Typed API client
-│   │   ├── auth.ts             # Auth stores (isLoggedIn, authConfigured)
+│   │   ├── auth.ts             # JWT auth stores (currentUser, setToken, logout)
+│   │   ├── year.ts             # Global year toggle store
 │   │   ├── ScoreTooltip.svelte # Apparatus score tooltip
 │   │   ├── AATooltip.svelte    # All-Around score tooltip (D/E/N sum)
 │   │   ├── MultiSelect.svelte  # Multi-select dropdown
@@ -131,10 +141,13 @@ frontend/                 # SvelteKit + Tailwind CSS v4 + DaisyUI v5
 │   ├── app.css              # @import "tailwindcss"; @plugin "daisyui";
 │   ├── app.html             # Inline theme script (flash prevention)
 │   └── routes/
-│       ├── +layout.svelte       # Nav bar, footer, theme toggle
-│       ├── +page.svelte         # Landing page (stats / upload / login prompt)
-│       ├── upload/+page.svelte  # JSON upload drop-zone
-│       ├── login/+page.svelte   # Password login form
+│       ├── +layout.svelte       # Nav bar (year toggle, role-based links), footer (theme toggle)
+│       ├── +page.svelte         # Landing page (stats, role-based cards)
+│       ├── upload/+page.svelte  # JSON upload drop-zone (admin/uploader only in nav)
+│       ├── login/+page.svelte   # Username + password login form
+│       ├── admin/+page.svelte   # Admin dashboard (stats, reconcile card)
+│       ├── admin/users/+page.svelte  # User management (create, delete, reset password)
+│       ├── rankings/+page.svelte     # Rankings placeholder (member+)
 │       ├── events/+page.svelte  # Event list (search, year filter, rename/delete)
 │       ├── events/[id]/+page.svelte  # Per-event results
 │       ├── results/+page.svelte      # All-events results

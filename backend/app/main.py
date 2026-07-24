@@ -111,6 +111,10 @@ def list_clubs(response: Response):
 
         def find_region(club_name: str) -> str | None:
             lower = club_name.lower().strip()
+            # Direct region name match (e.g. Nationals where org is the region)
+            for region_name in club_data.get("regions", {}):
+                if lower == region_name.lower():
+                    return region_name
             # Direct match against lookup (aliases cover most variants)
             v = club_data.get("lookup", {}).get(lower)
             if v:
@@ -134,10 +138,16 @@ def list_clubs(response: Response):
                             return region_name
             return None
 
-        return [
-            ClubItem(name=name, gymnast_count=count, region=find_region(name))
-            for name, count in rows
-        ]
+        items: list[ClubItem] = []
+        for name, count in rows:
+            region = find_region(name)
+            items.append(ClubItem(
+                name=name,
+                gymnast_count=count,
+                region=region,
+                is_region=region is not None and name.lower() == region.lower(),
+            ))
+        return items
     finally:
         session.close()
 
