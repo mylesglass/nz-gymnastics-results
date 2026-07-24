@@ -92,7 +92,6 @@
               <span class="text-xs text-base-content/40">{displayIds(gr)}</span>
               <span class="ml-auto flex items-center gap-1 shrink-0">
                 {#if gr.alt_clubs.length > 0}
-                  <span class="text-warning text-xs">⚠</span>
                   <span class="text-xs text-base-content/40">{displayClubs(gr)}</span>
                 {:else if gr.club}
                   <span class="text-xs text-base-content/50">{gr.club}</span>
