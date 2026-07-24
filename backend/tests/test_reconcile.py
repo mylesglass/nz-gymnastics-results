@@ -176,12 +176,12 @@ class TestReconcile:
         seed_admin_user()
         try:
             # No auth token → 401
-            resp = client.post("/api/admin/reconcile-athletes")
+            resp = client.post("/api/admin/duplicates/fix")
             assert resp.status_code == 401
             # Login as admin
             login = client.post("/api/auth/login", json={"username": "admin", "password": "test"})
             token = login.json()["access_token"]
-            resp2 = client.post("/api/admin/reconcile-athletes", headers={"Authorization": f"Bearer {token}"})
+            resp2 = client.post("/api/admin/duplicates/fix", headers={"Authorization": f"Bearer {token}"})
             assert resp2.status_code == 200
         finally:
             os.environ.pop("ADMIN_PASSWORD", None)
