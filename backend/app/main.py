@@ -163,13 +163,46 @@ def list_gymnasts(response: Response):
     session = get_session()
     try:
         rows = (
-            session.query(LongScore.gnz_id, LongScore.gymnast_name, LongScore.club_name)
+            session.query(LongScore.gymnast_name, LongScore.gnz_id, LongScore.club_name)
             .filter(LongScore.gnz_id.isnot(None), LongScore.gnz_id != "")
-            .group_by(LongScore.gnz_id, LongScore.gymnast_name)
-            .order_by(LongScore.gymnast_name)
+            .distinct()
             .all()
         )
-        return [GymnastItem(gnz_id=g, name=n, club=c) for g, n, c in rows]
+
+        from collections import defaultdict
+
+        name_groups: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        club_groups: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        name_casing: dict[str, str] = {}
+
+        for name, gnz_id, club in rows:
+            key = name.strip().lower()
+            name_casing[key] = name_casing.get(key, name.strip())
+            name_groups[key][gnz_id or ""] += 1
+            club_groups[key][club or ""] += 1
+
+        result = []
+        for key in sorted(name_groups):
+            ids = name_groups[key]
+            clubs = club_groups[key]
+            sorted_ids = sorted(ids.items(), key=lambda x: (-x[1], x[0].isdigit(), x[0]))
+            best_id = sorted_ids[0][0]
+            alt_ids = [gid for gid, _ in sorted_ids[1:]]
+
+            sorted_clubs = sorted(clubs.items(), key=lambda x: (-x[1], x[0]))
+            best_club = sorted_clubs[0][0] or None
+            alt_clubs = [c for c, _ in sorted_clubs[1:]]
+
+            result.append(GymnastItem(
+                gnz_id=best_id,
+                name=name_casing[key],
+                club=best_club,
+                alt_ids=alt_ids,
+                alt_clubs=alt_clubs,
+            ))
+
+        result.sort(key=lambda x: x.name.lower())
+        return result
     finally:
         session.close()
 
