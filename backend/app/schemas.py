@@ -129,12 +129,16 @@ class StepsResponse(BaseModel):
     steps: list[str]
 
 
-class DuplicateGroup(BaseModel):
-    name: str
+class DuplicateInstance(BaseModel):
     club: str
     level_category: str
-    gnz_ids: list[str]
     id_counts: dict[str, int]
+    total_rows: int
+
+
+class DuplicateGroup(BaseModel):
+    name: str
+    instances: list[DuplicateInstance]
     total_rows: int
 
 
