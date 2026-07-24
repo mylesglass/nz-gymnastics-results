@@ -42,7 +42,7 @@ from app.schemas import (
     UserResponse,
     UserUpdate,
 )
-from app.transformer import export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict
+from app.transformer import _find_region, export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict
 
 
 @asynccontextmanager
@@ -338,11 +338,28 @@ def list_ranking_steps(year: int, discipline: str, _auth=Depends(require_role("a
         session.close()
 
 
+_QUALIFIER_THRESHOLDS = {
+    "STEP 5": 52.0,
+    "STEP 6": 52.0,
+    "STEP 7": 43.0,
+    "STEP 8": 43.0,
+}
+
+
+def _is_qualifier(data: dict, step: str) -> bool:
+    threshold = _QUALIFIER_THRESHOLDS.get(step)
+    if threshold is None:
+        return True
+    return any(s >= threshold for s in data["scores"])
+
+
 @app.get("/api/rankings", response_model=RankingsResponse)
 def get_rankings(
     year: int,
     step: str,
     discipline: str,
+    quota: bool = False,
+    qualifier: bool = False,
     _auth=Depends(require_role("admin", "member")),
 ):
     session = get_session()
@@ -398,6 +415,13 @@ def get_rankings(
             gymnast_data[key]["scores"].append(float(aa_score))
             gymnast_data[key]["competitions"].append(ename)
 
+        # Qualifier filter: check all per-competition max scores against threshold
+        if qualifier:
+            gymnast_data = {
+                k: v for k, v in gymnast_data.items()
+                if _is_qualifier(v, step)
+            }
+
         ranking_list = []
         for data in gymnast_data.values():
             scores = data["scores"]
@@ -410,6 +434,27 @@ def get_rankings(
             ranking_list.append(data)
 
         ranking_list.sort(key=lambda x: -x["total"])
+
+        # Quota mode: cap each region at 4 for the first pass, then fill remaining
+        if quota:
+            region_count: dict[str, int] = {}
+            quota_entries = []
+            remaining = []
+            for entry in ranking_list:
+                region = _find_region(entry["club"] or "")
+                if not region:
+                    continue
+                entry["region"] = region
+                cnt = region_count.get(region, 0)
+                if cnt < 4:
+                    region_count[region] = cnt + 1
+                    quota_entries.append(entry)
+                else:
+                    remaining.append(entry)
+            ranking_list = quota_entries + remaining
+        else:
+            for entry in ranking_list:
+                entry["region"] = _find_region(entry["club"] or "")
 
         rank = 1
         prev_total = None
@@ -433,6 +478,7 @@ def get_rankings(
                 name=r["name"],
                 gnz_id=r["gnz_id"],
                 club=r["club"],
+                region=r["region"],
                 scores=r["scores"],
                 competitions=r["competitions"],
                 total=round(r["total"], 3),

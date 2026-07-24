@@ -194,6 +194,7 @@ export interface RankingRow {
   name: string;
   gnz_id: string;
   club: string | null;
+  region: string;
   scores: number[];
   competitions: string[];
   total: number;
@@ -209,9 +210,13 @@ export interface RankingsResponse {
 export async function getRankings(
   year: number,
   step: string,
-  discipline: string
+  discipline: string,
+  quota?: boolean,
+  qualifier?: boolean
 ): Promise<RankingsResponse> {
   const params = new URLSearchParams({ year: String(year), step, discipline });
+  if (quota) params.set("quota", "true");
+  if (qualifier) params.set("qualifier", "true");
   const res = await fetch(`${API_BASE}/api/rankings?${params}`, {
     headers: authHeaders(),
   });

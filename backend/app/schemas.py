@@ -112,6 +112,7 @@ class RankingRow(BaseModel):
     name: str
     gnz_id: str
     club: str | None
+    region: str = ""
     scores: list[float]
     competitions: list[str]
     total: float
