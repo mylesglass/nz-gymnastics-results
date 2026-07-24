@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getStats, reconcileAthletes, checkDuplicates, fixDuplicates } from "$lib/api";
+  import { getStats, reconcileAthletes, checkDuplicates, fixDuplicates, applyFixes } from "$lib/api";
   import type { DuplicateGroup } from "$lib/api";
 
   let stats = $state<{
@@ -28,6 +28,19 @@
   let showDuplicates = $state(false);
   let fixing = $state(false);
   let fixResult = $state<{ fixed: number } | null>(null);
+  let lowConfidence = $state<DuplicateGroup[]>([]);
+  let selections = $state<Record<string, string>>({});
+  let applying = $state(false);
+  let applyResult = $state<{ applied: number } | null>(null);
+
+  function bestId(d: DuplicateGroup): string {
+    const sorted = Object.entries(d.id_counts).sort((a, b) => b[1] - a[1] || (b[0].localeCompare(a[0])));
+    return sorted[0][0];
+  }
+
+  function groupKey(d: DuplicateGroup): string {
+    return `${d.name}|${d.club}|${d.level_category}`;
+  }
 
   onMount(async () => {
     try {
@@ -39,6 +52,9 @@
     }
     try {
       duplicates = await checkDuplicates();
+      for (const d of duplicates) {
+        selections[groupKey(d)] = bestId(d);
+      }
     } catch (e) {
       dupError = String(e);
     } finally {
@@ -62,14 +78,56 @@
   async function runFix() {
     fixing = true;
     fixResult = null;
+    lowConfidence = [];
     try {
-      fixResult = await fixDuplicates();
+      const result = await fixDuplicates();
+      if (result.fixed > 0) {
+        fixResult = { fixed: result.fixed };
+      }
+      lowConfidence = result.low_confidence;
       duplicates = await checkDuplicates();
+      for (const d of duplicates) {
+        selections[groupKey(d)] = bestId(d);
+      }
     } catch (e) {
       dupError = String(e);
     } finally {
       fixing = false;
     }
+  }
+
+  async function runApply() {
+    applying = true;
+    applyResult = null;
+    try {
+      const fixes = Object.entries(selections)
+        .filter(([key, chosen]) => {
+          const parts = key.split("|");
+          const d = lowConfidence.find(g => groupKey(g) === key)
+            || duplicates.find(g => groupKey(g) === key);
+          return d && chosen !== bestId(d);
+        })
+        .map(([key, chosen_id]) => {
+          const parts = key.split("|");
+          return { name: parts[0], club: parts[1], level_category: parts[2], chosen_id };
+        });
+      if (fixes.length > 0) {
+        applyResult = await applyFixes(fixes);
+      }
+      lowConfidence = [];
+      duplicates = await checkDuplicates();
+      for (const d of duplicates) {
+        selections[groupKey(d)] = bestId(d);
+      }
+    } catch (e) {
+      dupError = String(e);
+    } finally {
+      applying = false;
+    }
+  }
+
+  function selectedIdsChanged(d: DuplicateGroup) {
+    // Only used for low-confidence groups to track if dropdown changed
   }
 </script>
 
@@ -205,7 +263,7 @@
           <div role="alert" class="alert alert-error mb-3">
             <span>{dupError}</span>
           </div>
-        {:else if duplicates.length > 0}
+        {:else if duplicates.length > 0 || lowConfidence.length > 0}
           <button class="btn btn-ghost btn-xs self-start mb-2" onclick={() => (showDuplicates = !showDuplicates)}>
             {showDuplicates ? "Hide" : "View"} {duplicates.length} duplicate groups
           </button>
@@ -219,16 +277,33 @@
                     <th>Club</th>
                     <th>Step</th>
                     <th>Conflicting IDs</th>
+                    <th>Correct ID</th>
                     <th>Total Rows</th>
                   </tr>
                 </thead>
                 <tbody>
                   {#each duplicates as d}
-                    <tr>
+                    {@const key = groupKey(d)}
+                    {@const isLow = lowConfidence.some(g => groupKey(g) === key)}
+                    <tr class={isLow ? "bg-warning/5" : ""}>
                       <td class="font-medium">{d.name}</td>
                       <td>{d.club}</td>
                       <td>{d.level_category}</td>
-                      <td>{d.gnz_ids.join(", ")}</td>
+                      <td>
+                        {#each Object.entries(d.id_counts) as [id, count], i}
+                          {i > 0 ? ", " : ""}{id} <span class="text-base-content/50 text-xs">({count})</span>
+                        {/each}
+                      </td>
+                      <td>
+                        <select
+                          class="select select-bordered select-xs w-32"
+                          bind:value={selections[key]}
+                        >
+                          {#each Object.keys(d.id_counts) as id}
+                            <option value={id}>{id}</option>
+                          {/each}
+                        </select>
+                      </td>
                       <td>{d.total_rows}</td>
                     </tr>
                   {/each}
@@ -239,17 +314,38 @@
 
           {#if fixResult}
             <div role="alert" class="alert alert-success mb-2">
-              <span>✅ Fixed {fixResult.fixed} rows</span>
+              <span>✅ Fixed {fixResult.fixed} rows (high confidence)</span>
             </div>
           {/if}
 
-          <button
-            class="btn btn-primary btn-sm"
-            onclick={runFix}
-            disabled={fixing}
-          >
-            {fixing ? "Fixing..." : "Quick Fix"}
-          </button>
+          {#if applyResult}
+            <div role="alert" class="alert alert-success mb-2">
+              <span>✅ Applied {applyResult.applied} row fixes</span>
+            </div>
+          {/if}
+
+          {#if lowConfidence.length > 0}
+            <div role="alert" class="alert alert-warning mb-2">
+              <span>⚠ {lowConfidence.length} groups need manual review (confidence too low to auto-fix)</span>
+            </div>
+          {/if}
+
+          <div class="flex gap-2">
+            <button
+              class="btn btn-primary btn-sm"
+              onclick={runFix}
+              disabled={fixing}
+            >
+              {fixing ? "Fixing..." : "Quick Fix"}
+            </button>
+            <button
+              class="btn btn-outline btn-sm"
+              onclick={runApply}
+              disabled={applying || duplicates.length === 0}
+            >
+              {applying ? "Applying..." : "Apply Selected Fixes"}
+            </button>
+          </div>
         {:else}
           <p class="text-sm text-base-content/60">No duplicates found</p>
         {/if}

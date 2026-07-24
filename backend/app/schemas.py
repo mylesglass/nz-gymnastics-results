@@ -134,4 +134,17 @@ class DuplicateGroup(BaseModel):
     club: str
     level_category: str
     gnz_ids: list[str]
+    id_counts: dict[str, int]
     total_rows: int
+
+
+class FixDuplicatesResponse(BaseModel):
+    fixed: int = 0
+    low_confidence: list[DuplicateGroup] = []
+
+
+class ApplyFixItem(BaseModel):
+    name: str
+    club: str
+    level_category: str
+    chosen_id: str
