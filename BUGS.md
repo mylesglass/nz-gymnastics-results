@@ -3,4 +3,3 @@
   - Nickname/spelling variations ("Liz" vs "Elizabeth")
   - Completely different IDs for the same name with equal frequency (reported as conflicts)
   - Automatic reconciliation on upload (currently manual/admin-triggered only)
-- Fix CSG Naming errors "Zizzi Hide" vs "Zizzi Hide (L6)"

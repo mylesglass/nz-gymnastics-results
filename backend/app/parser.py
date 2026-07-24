@@ -1,6 +1,7 @@
 """Parse Scoreholder JSON into long-format rows for SQLite storage."""
 
 import json
+import re
 from pathlib import Path
 
 from app.decoder import build_output_map, decode_public_outputs
@@ -24,6 +25,8 @@ try:
     _NAME_TO_REGION = {k: v["region"] for k, v in _club_data["lookup"].items()}
 except (FileNotFoundError, json.JSONDecodeError):
     pass
+
+_NAME_LEVEL_SUFFIX = re.compile(r"\s+\(L\d+\)$")
 
 
 def reload_club_maps() -> None:
@@ -530,7 +533,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                     part_info = participants.get(participant_id, {})
                     unit_info = units.get(unit_id, {})
                     gnz_id = fix_gnz_id(part_info.get("gnz_id", ""))
-                    gymnast_name = part_info.get("name", "")
+                    gymnast_name = _NAME_LEVEL_SUFFIX.sub("", part_info.get("name", "")).strip()
                     club_name = _normalise_club(
                         clubs.get(part_info.get("org_id", ""), ""),
                         is_nationals,
