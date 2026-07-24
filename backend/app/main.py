@@ -25,6 +25,7 @@ from app.parser import ParseError, _NAME_TO_CANONICAL, find_unknown_clubs, parse
 from app.reconcile import reconcile_athletes
 from app.schemas import (
     ClubItem,
+    DuplicateGroup,
     EventListItem,
     EventResponse,
     EventUpdate,
@@ -525,6 +526,132 @@ def admin_reconcile(_auth=Depends(require_role("admin"))):
     report = reconcile_athletes()
     invalidate()
     return report
+
+
+@app.get("/api/admin/duplicates", response_model=list[DuplicateGroup])
+def list_duplicates(_auth=Depends(require_role("admin"))):
+    session = get_session()
+    try:
+        rows = (
+            session.query(
+                LongScore.gymnast_name,
+                LongScore.gnz_id,
+                LongScore.club_name,
+                LongScore.level_category,
+            )
+            .filter(
+                LongScore.gnz_id.isnot(None),
+                LongScore.gnz_id != "",
+            )
+            .distinct()
+            .all()
+        )
+        groups: dict[tuple[str, str, str], set[str]] = {}
+        for name, gnz_id, club, level in rows:
+            key = (name.strip().lower(), (club or "").strip().lower(), level or "")
+            if key not in groups:
+                groups[key] = set()
+            groups[key].add(gnz_id or "")
+
+        duplicates = []
+        for (name_lower, club_lower, level), ids in groups.items():
+            if len(ids) < 2:
+                continue
+            # Find the original-cased name and club from first occurrence
+            orig_rows = [
+                r for r in rows
+                if r.gymnast_name.strip().lower() == name_lower
+                and (r.club_name or "").strip().lower() == club_lower
+                and (r.level_category or "") == level
+            ]
+            first = orig_rows[0] if orig_rows else None
+            if not first:
+                continue
+
+            total = (
+                session.query(LongScore)
+                .filter(
+                    LongScore.gymnast_name.ilike(name_lower),
+                    LongScore.club_name.ilike(club_lower),
+                    LongScore.level_category == level,
+                )
+                .count()
+            )
+
+            duplicates.append(DuplicateGroup(
+                name=first.gymnast_name.strip(),
+                club=first.club_name or "",
+                level_category=level or "",
+                gnz_ids=sorted(ids, key=lambda x: (not x.isdigit(), x)),
+                total_rows=total,
+            ))
+
+        duplicates.sort(key=lambda x: -x.total_rows)
+        return duplicates
+    finally:
+        session.close()
+
+
+@app.post("/api/admin/duplicates/fix", response_model=dict)
+def fix_duplicates(_auth=Depends(require_role("admin"))):
+    session = get_session()
+    try:
+        rows = (
+            session.query(
+                LongScore.gymnast_name,
+                LongScore.gnz_id,
+                LongScore.club_name,
+                LongScore.level_category,
+            )
+            .filter(
+                LongScore.gnz_id.isnot(None),
+                LongScore.gnz_id != "",
+            )
+            .distinct()
+            .all()
+        )
+
+        groups: dict[tuple[str, str, str], dict[str, int]] = {}
+        for name, gnz_id, club, level in rows:
+            key = (name.strip().lower(), (club or "").strip().lower(), level or "")
+            if key not in groups:
+                groups[key] = {}
+            gid = gnz_id or ""
+            groups[key][gid] = groups[key].get(gid, 0) + 1
+
+        fixed = 0
+        for (name_lower, club_lower, level), id_counts in groups.items():
+            if len(id_counts) < 2:
+                continue
+            best_id = max(id_counts, key=lambda x: (id_counts[x], x.isdigit(), x))
+            current_ids = {
+                r.gnz_id for r in rows
+                if r.gymnast_name.strip().lower() == name_lower
+                and (r.club_name or "").strip().lower() == club_lower
+                and (r.level_category or "") == level
+                and r.gnz_id != best_id
+            }
+
+            for old_id in current_ids:
+                updated = (
+                    session.query(LongScore)
+                    .filter(
+                        LongScore.gymnast_name.ilike(name_lower),
+                        LongScore.club_name.ilike(club_lower),
+                        LongScore.level_category == level,
+                        LongScore.gnz_id == old_id,
+                    )
+                    .update({LongScore.gnz_id: best_id}, synchronize_session=False)
+                )
+                fixed += updated
+
+        if fixed:
+            session.commit()
+            invalidate()
+
+        return {"fixed": fixed}
+    finally:
+        session.close()
 
 
 # ---------------------------------------------------------------------------

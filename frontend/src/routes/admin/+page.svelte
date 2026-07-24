@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getStats, reconcileAthletes } from "$lib/api";
+  import { getStats, reconcileAthletes, checkDuplicates, fixDuplicates } from "$lib/api";
+  import type { DuplicateGroup } from "$lib/api";
 
   let stats = $state<{
     total_events: number;
@@ -21,6 +22,13 @@
   let reconcileError = $state<string | null>(null);
   let showConflicts = $state(false);
 
+  let duplicates = $state<DuplicateGroup[]>([]);
+  let dupLoading = $state(true);
+  let dupError = $state<string | null>(null);
+  let showDuplicates = $state(false);
+  let fixing = $state(false);
+  let fixResult = $state<{ fixed: number } | null>(null);
+
   onMount(async () => {
     try {
       stats = await getStats();
@@ -28,6 +36,13 @@
       error = String(e);
     } finally {
       loading = false;
+    }
+    try {
+      duplicates = await checkDuplicates();
+    } catch (e) {
+      dupError = String(e);
+    } finally {
+      dupLoading = false;
     }
   });
 
@@ -41,6 +56,19 @@
       reconcileError = String(e);
     } finally {
       reconciling = false;
+    }
+  }
+
+  async function runFix() {
+    fixing = true;
+    fixResult = null;
+    try {
+      fixResult = await fixDuplicates();
+      duplicates = await checkDuplicates();
+    } catch (e) {
+      dupError = String(e);
+    } finally {
+      fixing = false;
     }
   }
 </script>
@@ -156,6 +184,75 @@
         >
           {reconciling ? "Reconciling..." : "Run Reconciliation"}
         </button>
+      </div>
+    </div>
+
+    <div class="card bg-base-200 border border-base-300 mt-4">
+      <div class="card-body">
+        <div class="flex items-center gap-3 mb-3">
+          <h2 class="card-title">🔍 Potential Duplicates</h2>
+          {#if !dupLoading && duplicates.length > 0}
+            <div class="badge badge-warning gap-1">{duplicates.length}</div>
+          {/if}
+        </div>
+        <p class="text-sm text-base-content/70 mb-3">
+          Gymnasts with the same name, club, and level but different GNZ IDs.
+        </p>
+
+        {#if dupLoading}
+          <span class="loading loading-spinner loading-sm"></span>
+        {:else if dupError}
+          <div role="alert" class="alert alert-error mb-3">
+            <span>{dupError}</span>
+          </div>
+        {:else if duplicates.length > 0}
+          <button class="btn btn-ghost btn-xs self-start mb-2" onclick={() => (showDuplicates = !showDuplicates)}>
+            {showDuplicates ? "Hide" : "View"} {duplicates.length} duplicate groups
+          </button>
+
+          {#if showDuplicates}
+            <div class="overflow-x-auto mb-3">
+              <table class="table table-xs">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Club</th>
+                    <th>Step</th>
+                    <th>Conflicting IDs</th>
+                    <th>Total Rows</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {#each duplicates as d}
+                    <tr>
+                      <td class="font-medium">{d.name}</td>
+                      <td>{d.club}</td>
+                      <td>{d.level_category}</td>
+                      <td>{d.gnz_ids.join(", ")}</td>
+                      <td>{d.total_rows}</td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          {/if}
+
+          {#if fixResult}
+            <div role="alert" class="alert alert-success mb-2">
+              <span>✅ Fixed {fixResult.fixed} rows</span>
+            </div>
+          {/if}
+
+          <button
+            class="btn btn-primary btn-sm"
+            onclick={runFix}
+            disabled={fixing}
+          >
+            {fixing ? "Fixing..." : "Quick Fix"}
+          </button>
+        {:else}
+          <p class="text-sm text-base-content/60">No duplicates found</p>
+        {/if}
       </div>
     </div>
   {/if}
