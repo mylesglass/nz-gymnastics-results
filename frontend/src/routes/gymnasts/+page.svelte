@@ -62,7 +62,7 @@
   </p>
 
   {#if loading}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {#each [1, 2, 3, 4, 5, 6] as _}
         <div class="card bg-base-200 animate-pulse">
           <div class="card-body">
@@ -79,7 +79,7 @@
           <span class="text-lg font-bold">{letter}</span>
           <span class="text-xs text-base-content/50">({letterGymnasts.length})</span>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-1">
           {#each letterGymnasts as gr}
             <a
               href="/gymnast/{gr.gnz_id}"
