@@ -65,14 +65,42 @@
     bind:checked={drawerOpen}
   />
   <div class="drawer-content flex flex-col min-h-screen">
-    <div class="navbar bg-base-200 shadow-sm flex-none">
-      <div class="flex-1 gap-2">
+    <div class="navbar bg-base-200 shadow-sm flex-none relative z-30 overflow-visible">
+      <div class="flex-1 gap-1 items-center">
         <label for="nav-drawer" class="btn btn-ghost btn-sm btn-square md:hidden" aria-label="Open menu">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-5 fill-current">
             <path d="M3 6h18v2H3V6Zm0 5h18v2H3v-2Zm0 5h18v2H3v-2Z" />
           </svg>
         </label>
         <a href="/" class="btn btn-ghost text-lg sm:text-xl">🤸 NZ Gymnastics Results</a>
+      </div>
+
+      <div class="flex-none">
+        <div role="tablist" class="tabs tabs-box tabs-xs">
+          {#each years as yr}
+            <input
+              type="radio"
+              name="year_tabs"
+              role="tab"
+              class="tab"
+              aria-label={yr}
+              checked={selYear === yr}
+              onchange={() => selectedYear.set(yr)}
+            />
+          {/each}
+          <input
+            type="radio"
+            name="year_tabs"
+            role="tab"
+            class="tab"
+            aria-label="All"
+            checked={selYear === null}
+            onchange={() => selectedYear.set(null)}
+          />
+        </div>
+      </div>
+
+      <div class="flex-1 flex justify-end gap-1 items-center">
         <div class="hidden md:flex gap-1 items-center">
           <a
             href="/events"
@@ -88,49 +116,20 @@
           >
             Results
           </a>
-        </div>
-      </div>
-
-      <div class="flex-none">
-        <div role="tablist" class="tabs tabs-box tabs-xs">
-          <input
-            type="radio"
-            name="year_tabs"
-            role="tab"
-            class="tab"
-            aria-label="All"
-            checked={selYear === null}
-            onchange={() => selectedYear.set(null)}
-          />
-          {#each years as yr}
-            <input
-              type="radio"
-              name="year_tabs"
-              role="tab"
-              class="tab"
-              aria-label={yr}
-              checked={selYear === yr}
-              onchange={() => selectedYear.set(yr)}
-            />
-          {/each}
-        </div>
-      </div>
-
-      <div class="flex-1 flex justify-end gap-1 items-center">
-        <div class="hidden md:flex gap-1 items-center">
-          <div class="dropdown dropdown-hover dropdown-end">
-            <div tabindex="0" role="button" class="btn btn-ghost btn-sm" class:btn-active={active("/gymnasts") || active("/clubs")}>
-              More
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current">
-                <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-[1] w-44 p-2 shadow">
-              <li><a href="/gymnasts" onclick={handleNavClick}>Gymnasts</a></li>
-              <li><a href="/clubs" onclick={handleNavClick}>Clubs</a></li>
-            </ul>
-          </div>
-
+          <a
+            href="/gymnasts"
+            class="btn btn-ghost btn-sm"
+            class:btn-active={active("/gymnasts")}
+          >
+            Gymnasts
+          </a>
+          <a
+            href="/clubs"
+            class="btn btn-ghost btn-sm"
+            class:btn-active={active("/clubs")}
+          >
+            Clubs
+          </a>
           {#if user}
             <a
               href="/rankings"
@@ -165,7 +164,7 @@
                 {user.username}
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-3 fill-current opacity-60"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
               </div>
-              <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-[1] w-44 p-2 shadow">
+              <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box w-44 p-2 shadow" style="z-index: 50">
                 <li><span class="text-xs text-base-content/60 px-3 py-1">{user.role}</span></li>
                 <li class="border-t border-base-300 mt-1 pt-1">
                   <button onclick={() => { logout(); goto("/"); }}>
@@ -181,7 +180,7 @@
       </div>
     </div>
 
-    <main class="mx-auto grow shrink-0 basis-auto w-full max-w-7xl px-4">
+    <main class="mx-auto grow shrink-0 basis-auto w-full max-w-7xl px-4 pt-6">
       {@render children()}
     </main>
 
@@ -271,15 +270,6 @@
       <li class="menu-title mt-4"><span>Year</span></li>
       <li>
         <div role="tablist" class="tabs tabs-box tabs-xs mt-1">
-          <input
-            type="radio"
-            name="drawer_year"
-            role="tab"
-            class="tab"
-            aria-label="All"
-            checked={selYear === null}
-            onchange={() => { selectedYear.set(null); handleNavClick(); }}
-          />
           {#each years as yr}
             <input
               type="radio"
@@ -291,6 +281,15 @@
               onchange={() => { selectedYear.set(yr); handleNavClick(); }}
             />
           {/each}
+          <input
+            type="radio"
+            name="drawer_year"
+            role="tab"
+            class="tab"
+            aria-label="All"
+            checked={selYear === null}
+            onchange={() => { selectedYear.set(null); handleNavClick(); }}
+          />
         </div>
       </li>
       {#if user?.role === "admin"}
