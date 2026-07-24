@@ -76,6 +76,7 @@ class ClubItem(BaseModel):
     name: str
     gymnast_count: int
     region: str | None
+    is_region: bool = False
 
 
 class GymnastItem(BaseModel):

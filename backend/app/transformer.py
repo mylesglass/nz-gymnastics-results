@@ -31,6 +31,10 @@ def _find_region(club_name: str) -> str:
         return ""
     club_data = _load_club_data()
     lower = club_name.lower().strip()
+    # Direct region name match (e.g. Nationals where org is the region)
+    for region_name in club_data.get("regions", {}):
+        if lower == region_name.lower():
+            return region_name
     v = club_data.get("lookup", {}).get(lower)
     if v:
         region = v.get("region")

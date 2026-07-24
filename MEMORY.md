@@ -17,7 +17,7 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 
 ### 1. decoder.py — `build_output_map()` / `decode_public_outputs()`
 - Maps opaque `publicOutputs` keys → human names via `performanceRules[].scores[].nodeTree.interface.outputs[]`
-- Returns: `pass_final_score`, `d_score`, `e_score`, `neutral_deductions`, `bonus`
+- Returns: `pass_final_score`, `d_score`, `e_score`, `neutral_deductions`, `bonus`, `start_value`
 - Skips `Execution Deductions` (tracked as `_execution_deductions`)
 - `has_dns()` checks for DNS strings or boolean `true` on "Did Not Start" key
 
@@ -42,10 +42,12 @@ Core logic:
 6. Extract division from `resultTableConfigs` → competition node names (UNDER/OVER/INTERNATIONAL)
 7. Infer `round_type` from unit name + node name (All Around / Apparatus Finals / Qualification)
 8. Sanitise floats/ranks (DNS/DNF → None)
+9. **Name cleaning**: `_NAME_LEVEL_SUFFIX = re.compile(r"\s+\((?:L\d+|STEP\s*\d+|YI)\)$")` strips `(L6)`, `(STEP 10)`, `(YI)` etc. suffixes from gymnast names at parse time
 
 ### 4. transformer.py — `pivot_to_wide()` / `pivot_to_wide_dict()`
 - `pivot_to_wide()`: For CSV/XLSX — reuses `pivot_to_wide_dict()` to build rich wide rows, then flattens WAG+MAG into a single DataFrame. Includes all columns: meta, apparatus display scores, per-pass vault details (vt-1-*, vt-2-*), bonus, division, round_type.
 - `pivot_to_wide_dict()`: For `/results/wide` endpoint — per-pass columns, level-aware vault aggregation, WAG/MAG split tabs using the actual `discipline` field from data (not apparatus heuristic — fixes VT/FX appearing in both tabs).
+- **Region enrichment**: column added between Club and Step at pivot time via `_find_region()` lookup in `clubs_and_regions.json`
 - **Vault aggregation rules** (`_use_vault_average()`):
   - STEP 6 & STEP 7 → always average both vaults
   - STEP 10, Senior International, Junior International, Youth on Apparatus Finals day → average both vaults
@@ -75,156 +77,98 @@ Core logic:
 | event_name, gymnast_name, gnz_id, club_name, discipline, level_category, division | STRING |
 | apparatus | STRING (VT/UB/BB/FX/PH/SR/PB/HB) |
 | pass_number | INTEGER |
-| d_score, e_score, neutral_deductions, pass_final_score, bonus | FLOAT |
+| d_score, e_score, neutral_deductions, pass_final_score, bonus, start_value | FLOAT |
 | apparatus_rank, aa_rank | INTEGER |
 | aa_score | FLOAT |
 | round_type | STRING |
 | date_created | DATETIME |
 
+### users table
+| Column | Type |
+|--------|------|
+| id | INTEGER PK |
+| username | STRING UNIQUE |
+| hashed_password | STRING |
+| role | STRING (admin/uploader) |
+| created_at | DATETIME |
+
+## Auth (JWT-based, role-based access)
+
+### Backend
+- `backend/app/auth.py`: bcrypt hashing, JWT create/decode (HS256, 7-day expiry), `require_role()` FastAPI dependency factory
+- `seed_admin_user()`: reads `ADMIN_USERNAME`/`ADMIN_PASSWORD`/`ADMIN_ROLE` env vars on startup; creates admin user if not exists
+- Auto-generated `JWT_SECRET` persisted to `data/jwt_secret.txt` (survives container restarts)
+- When `ADMIN_PASSWORD` env var is unset, auth is disabled (all endpoints public)
+
+### Endpoints
+- `POST /api/auth/login` → returns JWT token + user info
+- `POST /api/auth/register` → create user (admin only)
+- `GET /api/auth/users` → list users (admin only)
+- `POST /api/auth/users/{id}/reset-password` → change password (admin only)
+- `DELETE /api/auth/users/{id}` → delete user (admin only)
+
+### Frontend
+- JWT stored in `localStorage`, read by `getToken()` / `setToken()`
+- `currentUser` Svelte store holds `{ username, role }` decoded from JWT payload
+- `logout()` clears token + store
+- Nav bar shows/hides Upload/Admin/Rankings links based on role
+- All write API calls send `Authorization: Bearer <token>` header
+
 ## Frontend
 
 **Tech:** SvelteKit 5 (runes: `$state`, `$effect`, `$derived`), Tailwind CSS v4 (Vite plugin), DaisyUI v5 (dark theme).
 
-**Shared component:** `WideResultsTable.svelte` — encapsulates all table rendering, filtering, sorting, sticky headers, scroll sync, and duplicate header column width alignment. Used by all result pages.
+**Shared components:**
+- `WideResultsTable.svelte` — encapsulate all table rendering, filtering, sorting, sticky headers, scroll sync, duplicate header column width alignment, region column. Used by all result pages.
+- `ScoreTooltip.svelte` — DaisyUI dropdown hover card showing D, E, N, Bonus, Rank for each apparatus
+- `AATooltip.svelte` — DaisyUI dropdown-hover tooltip showing AA score, rank, and summed D/E/N across all apparatus
+- `MultiSelect.svelte` — DaisyUI dropdown with checkboxes, Clear button, `min-w-48` buttons
 
 **Routes:**
-- `/` — Upload page: drag-and-drop JSON file, DaisyUI card drop-zone, loading spinner, alert for errors, success card with links
-- `/events` — Event list: `table table-zebra table-pin-rows`, loading spinner, empty-state card with upload link
-- `/events/[id]` — Per-event results page (thin wrapper around `WideResultsTable`)
-- `/results` — All events results page (thin wrapper around `WideResultsTable`, adds Event filter + column)
-- `/gymnast/[gnz_id]` — Individual gymnast results (thin wrapper, shows matches across all events)
-- `/club/[club]` — Club results (thin wrapper, shows all gymnasts from that club across all events)
-- **API client:** `src/lib/api.ts` — typed wrappers, dev mode proxies `/api/*` to `:8000`.
-- **MultiSelect:** `src/lib/MultiSelect.svelte` — DaisyUI dropdown with checkboxes, Clear button, `min-w-48` buttons
-- **ScoreTooltip:** `src/lib/ScoreTooltip.svelte` — DaisyUI dropdown hover card showing D, E, N, Bonus, Rank for each apparatus
+- `/` — Landing page: stats cards, role-based grid (Upload card hidden for non-admins)
+- `/upload` — Drag-and-drop JSON upload, club mapping dialog, rich success card (gymnast/score/club counts)
+- `/login` — Username + password form, redirects to `/`
+- `/admin` — Admin dashboard (stats, user management link, reconcile card)
+- `/admin/users` — User management table (create, delete, reset password)
+- `/rankings` — Rankings placeholder (member+)
+- `/events` — Event list with search bar, year filter, rename/delete for authorized users
+- `/events/[id]` — Per-event results (thin wrapper around `WideResultsTable`)
+- `/results` — All events results (thin wrapper around `WideResultsTable`, adds Event filter column)
+- `/gymnast/[gnz_id]` — Individual gymnast results across all events
+- `/gymnasts` — Gymnast list (A-Z grouped)
+- `/club/[club]` — Club results across all events
+- `/clubs` — Club list (region-grouped)
+
+**Shared stores:**
+- `src/lib/year.ts` — `selectedYear` and `yearOptions` stores populated from `GET /api/years`; used globally in nav toggle
+- `src/lib/auth.ts` — `currentUser`, `setToken()`, `getToken()`, `logout()`
+
+**Nav bar layout:**
+- Logo → Year toggle (DaisyUI `tabs tabs-box` radio inputs) → Role-based links → User badge dropdown (or Login button)
+- Theme toggle in footer bottom-right
 
 ### Table Features
-- Column widths synced between duplicate sticky headers and main table via JS measurement + explicit `width`/`min-width` styles
-- Name cells link to `/gymnast/[gnz_id]`, club cells link to `/club/[club]` (only when value is present)
+- Column widths synced between duplicate sticky headers and main table via JS measurement + ResizeObserver
+- Name cells link to `/gymnast/[gnz_id]`, club cells link to `/club/[club]`
 - Horizontal scroll synced between duplicate headers and main table
 - Client-side CSV export via download snippet
+- Row hover highlight (`hover:bg-base-300 transition-colors`), `py-1.5` vertical padding
+- `whitespace-nowrap` on apparatus score cells
+- `truncate max-w-56` on event_name column
+- `min-w-full` table fills container width
+- Region column filterable via column header dropdown
 
-## Test Suite (214 tests)
+## Test Suite (251 tests)
 - `test_decoder.py`: 14 tests — output map building, decoding, DNS detection, Start Value
 - `test_resolver.py`: 21 tests — all resolver functions
 - `test_models.py`: 4 tests — CRUD, cascade delete
-- `test_parser.py`: 35 parametrized tests + validation + equal-discarded regression — 15 known-file tests + bulk 2025 scan + real-data + validation + edge case tests
+- `test_parser.py`: 35 parametrized tests + validation + equal-discarded regression — known-file tests + bulk 2025 scan + real-data + validation + edge case tests
 - `test_api.py`: 13 tests — health, upload validation, list, results, CSV/XLSX export
+- `test_reconcile.py`: 9 tests — athlete ID reconciliation logic
 
 Run: `cd backend && source .venv/bin/activate && pytest`
 
 CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
-
-## Recent Work (last 10 commits)
-- Parser robustness: equal-discarded fix, Start Value mapping, input validation, batch CLI
-- Per-pass vault columns with level-aware aggregation
-
-## Recent Work (last 10 commits)
-- Per-pass vault columns with level-aware aggregation
-- DNS/DNF handling + decimal formatting + round_type grouping
-- Fix round-type showing as None in wide view
-- Add /results/wide endpoint with WAG/MAG tabbed view
-- Division extraction (UNDER/OVER/INTERNATIONAL) from competition nodes
-- Robust parsing improvements + bulk test suite
-
-## Recent Session (this session)
-
-### Refactor: shared WideResultsTable component
-- Extracted ~90% duplicated logic from `events/[id]/+page.svelte` and `results/+page.svelte` into `$lib/WideResultsTable.svelte`
-- Component props: `loadData`, `showEventFilter`, `extraHeadLabels`, `download` snippet, `empty` snippet
-- Both pages are now thin wrappers (~30 lines each)
-
-### Duplicate header column width alignment
-- Added `columnWidths` state + measurement `$effect` that queries `<th>` widths from the main `<thead>`
-- ResizeObserver catches window resize and re-measures
-- Applied explicit `width` + `min-width` to duplicate header `<th>` elements
-- Applied `min-width` to main table `<th>` elements for column stability
-
-### Gymnast & Club filter routes
-- New `GET /api/results/wide-all?gnz_id=...&club=...` query params (backend `pivot_to_wide_dict` + `main.py`)
-- New `/gymnast/[gnz_id]` route — shows all results for a gymnast across events
-- New `/club/[club]` route — shows all results for a club across events
-- Name and club cells are clickable links in the table (conditional on value being present)
-- Client-side CSV download on both pages
-
-### Bug fixes
-- `api.ts`: replaced `new URL()` with string concat + `URLSearchParams` — `new URL` throws on relative paths in dev mode
-- `transformer.py`: added `numpy.int64` → `int` / `numpy.floating` → `float` conversion in NaN cleanup loop to fix JSON serialization 500 error on filtered queries
-
-### UX tweaks
-- `MultiSelect` buttons: `max-w-52` → `min-w-48` (wider filter buttons)
-- Column widths synced between duplicate headers and main table
-
-### Parser robustness analysis
-- Scanned all 40 real JSON files in `data-collection/2025/json/` for structural variations
-- Found 1 real data bug: `"equal-discarded"` status not filtered (31 files affected)
-- Found 1 missing field: `"Start Value"` output not mapped (kaitaia_2025.json)
-- Found 44 unit name patterns that fall through `resolve_level` (cosmetic, not breaking)
-- Old format files (`quar/`, `Archive/json`) use a completely different JSON structure (`{event, sessions, rounds, scores, competitors, organizations}`) — not relevant, won't be used going forward
-
-## Recent Session (this session)
-
-### Event page improvements
-- Replaced discipline text with daisyUI badges (`badge-primary` for WAG, `badge-secondary` for MAG, both for WAG+MAG)
-- Made rows clickable via `goto()` with `cursor-pointer hover:bg-base-300`
-- Removed separate "View" button column
-
-### AA Tooltip
-- Created `frontend/src/lib/AATooltip.svelte` — daisyUI dropdown-hover tooltip showing AA score, rank, and summed D/E/N across all apparatus
-- Integrated into `WideResultsTable.svelte` `backMeta` loop — `aa-score` column gets tooltip, `aa-rank` remains plain text
-
-### Equals in rankings (reverted)
-- Experimented with `_mark_tied_ranks()` in transformer.py but the approach had issues — reverted
-- Still pending: correct tie-detection logic
-
-### Event page search
-- Added text search input filtering events by name (`searchQuery`, case-insensitive `includes`)
-- Search bar shows alongside year dropdown (or alone when only 1 year present)
-- Filter count updates reactively with both filters
-
-### AA Tooltip E Deductions fix
-- Changed E deductions calculation from `prefixes.length * 10 - totalE` to `appCount * 10 - totalE`
-- `appCount` counts only apparatus with a valid E score (handles gymnasts who competed <4/6 apparatus)
-
-### Improved error handling & upload stats
-- **Backend**: Added `club_count` to `EventResponse` schema + upload handler query (distinct `LongScore.club_name`)
-- **Upload page**: Richer success card now shows score count + club count alongside gymnast count
-- **Upload page**: Structured error display — validation errors render as bullet list; expandable "Show details" reveals full raw error text
-- **WideResultsTable**: `.catch()` now captures error message + raw text instead of silently swallowing
-- **WideResultsTable**: Empty state shows error panel with expandable details when an error occurred, before falling back to the `empty` snippet
-
-### Delete + Rename event
-- **Backend**: Added `DELETE /api/events/{event_id}` endpoint (cascade deletes scores via model)
-- **Backend**: Added `PATCH /api/events/{event_id}` + `EventUpdate(name)` schema — updates `Event.name` + syncs denormalized `LongScore.event_name`
-- **Frontend**: Added `deleteEvent()` and `renameEvent()` to API client
-- **Events page**: Action column with pencil (rename) and trash (delete) icon buttons
-- **Rename**: Opens a modal with pre-filled name input, calls PATCH, updates local list on success
-- **Delete**: Opens a confirmation modal, calls DELETE, removes from local list
-
-### Password-only auth
-- **Backend**: Added `backend/app/auth.py` — reads `ADMIN_PASSWORD` env var, exposes `is_auth_configured()` / `check_password()`
-- **Backend**: Added `GET /api/auth/status` (returns `{ configured: bool }`) and `POST /api/auth` (password check)
-- **Backend**: Protected `POST /api/upload`, `DELETE`, `PATCH` via `Depends(require_auth)` checking `X-Admin-Password` header
-- When `ADMIN_PASSWORD` env var is unset, all endpoints are public (dev-friendly)
-- **Frontend**: Created `frontend/src/lib/auth.ts` — Svelte writable stores for `isLoggedIn` / `authConfigured`, in-memory password
-- **Frontend**: Added `checkAuthStatus()` and `authLogin()` to API client; write calls send `X-Admin-Password` header
-- **Landing page**: When not logged in, shows three option cards (Events / Results / Login) instead of upload drop zone
-- **Navbar**: "Upload" link hidden when not logged in; Login/Logout links shown when auth is configured
-- **Events page**: Rename/delete action buttons hidden when not logged in
-- **Login page**: Simple centered password card, redirects to `/` on success
-- **Docker**: Added commented-out `ADMIN_PASSWORD` env var example to `docker-compose.yml`
-
-## Recent Session (this session)
-
-### Dev workflow script + VS Code tasks
-- Created `.dev.sh` — standalone script that starts backend (uvicorn) and frontend (vite) concurrently with `trap cleanup` on Ctrl+C
-- Created `.vscode/tasks.json` — Backend + Frontend tasks in dedicated terminal panels, grouped as default build task (Ctrl+Shift+B)
-- `.vscode/` is gitignored; only `.dev.sh` is committed
-
-### Documentation refresh
-- Updated README.md: added `.dev.sh` workflow, VS Code tasks note, missing API endpoints (stats, clubs, gymnasts, auth, delete, patch), missing frontend routes (upload, login, gymnasts, clubs), updated project structure to match actual files, auth details, test count 191→214
-- Updated MEMORY.md: test count 201→214, added this session entry
-- Created `AGENTS.md` — AI coding agent guidelines covering project conventions, architecture, and development commands
 
 ## Known Edges & Gotchas
 - **WAG/MAG discipline split**: Tab assignment now uses the `discipline` field from data. Previously used apparatus presence (VT/FX appeared in both lists, causing all gymnasts to show in both tabs).
@@ -238,13 +182,17 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
 - **GNZ ID**: Stored without "GS" prefix after `fix_gnz_id()` cleanup.
 - **5-key DNS variants**: Some files encode DNS via 5-key node-tree instead of 4-key normal. `has_dns()` handles both string and boolean forms.
 - **Frontend builds take ~7 min on first Docker run** (npm install). Subsequent builds are cached.
-- **Parser: `"equal-discarded"` status** — appears in 31/40 files from tied scores; not filtered out. Could produce duplicate rows.
-- **Parser: `"Start Value"` output** — vault-specific field in `kaitaia_2025.json`; not mapped in `_OUTPUT_NAMES_TO_COLUMNS`, silently dropped.
+- **Parser: `"equal-discarded"` status** — appears in 31/40 files from tied scores; now filtered out.
+- **Parser: `"Start Value"` output** — vault-specific field; mapped in decoder.py, stored as `start_value` column.
 - **Parser: 44 unit name patterns** fall through `resolve_level()` returning raw name (e.g. "Bronze All Around & Apparatus", "WAG Step1 C1", "MAG Grade 1"). Cosmetic only — no data loss.
 - **Parser: `"Open"` division** — competitions like affinity, dga-invitational, tristar have open-section competitors with no division tag; returns `None`, still correct.
+- **Name cleaning**: `_NAME_LEVEL_SUFFIX` regex strips `(L#)`, `(STEP 10)`, `(YI)` from gymnast names at parse time. Re-upload required for existing events.
 - **Two JSON formats exist** — `data-collection/2025/json/` uses the new format (`eventOrganizations`, `performanceRules`, etc); `data-collection/JSON 2025/quar/` and `Archive/json/` use an old format (`event`, `sessions`, `rounds`). Old format is not supported and won't be used going forward.
 - **`new URL()` breaks with relative URLs** — `api.ts`: `new URL("/api/results/wide-all")` throws when `API_BASE = ""` in dev mode. All API functions must use string concatenation for relative URLs.
 - **Numpy types in JSON responses** — pandas/numpy produce `numpy.int64` and `numpy.float64` values that FastAPI's `jsonable_encoder` can't serialize. Must convert to native Python types in transformer.py.
+- **DaisyUI z-index**: `.dropdown-content` sets `z-index: 1` and overrides Tailwind `z-*` classes because imported after Tailwind — use inline `style="z-index: 50"` to beat specificity.
+- **$effect reactivity**: `$effect` tracks all reactive dependencies read inside it — avoid reading state that the effect itself modifies to prevent cycles. Fixed sort-revert bug by using `loaded` flag.
+- **Region enrichment**: Club→region lookup at pivot time via `clubs_and_regions.json`. Changes to lookup file require re-upload of events.
 
 ## Docker
 - `docker compose up --build` starts both services
@@ -253,8 +201,10 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
 - Vite proxies `/api/*` to backend in dev mode
 
 ## Open Questions / Next Potential Areas
-- [ ] Parser robustness: fix `"equal-discarded"` filter, add input validation, add batch validation CLI (see PLAN.md Step 13)
-- [ ] Caching: repeated `pivot_to_wide_dict()` calls for same event_id hit SQLite each time
-- [ ] Mobile-responsive table: wide tables don't scroll well on mobile
-- [ ] Pagination: large events (3000+ gymnasts) may need server-side pagination
-- [ ] Edit/re-rank: no mechanism to correct parsed data after upload
+- [ ] Re-implement equals in rankings with correct tie detection logic
+- [ ] Mobile-responsive table improvements
+- [ ] Performance: caching, query optimisation, application speed
+- [ ] Automate reconciliation on upload — trigger reconcile after every successful JSON import
+- [ ] Fuzzy name matching — detect nicknames/spelling variations (e.g. "Liz" → "Elizabeth")
+- [ ] Conflict resolution UI — admin dashboard to manually pick the correct ID for ambiguous names
+- [ ] GNZ ID audit log — track when and why an ID was changed for a gymnast

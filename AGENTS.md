@@ -4,7 +4,7 @@
 
 Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot to wide format, and display/export results via a SvelteKit frontend.
 
-- **Backend:** Python 3.12+, FastAPI, SQLAlchemy, SQLite, Pandas
+- **Backend:** Python 3.12+, FastAPI, SQLAlchemy, SQLite, Pandas, bcrypt, PyJWT
 - **Frontend:** SvelteKit 5, Tailwind CSS v4 (`@import "tailwindcss"`), DaisyUI v5 (`@plugin "daisyui"`)
 - **Infrastructure:** Docker Compose
 
@@ -23,20 +23,22 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   ├── models.py        # SQLAlchemy models (Base from DeclarativeBase)
 │   │   ├── database.py      # SQLite engine + session
 │   │   ├── schemas.py       # Pydantic models
-│   │   ├── auth.py          # Password auth (ADMIN_PASSWORD env var)
+│   │   ├── auth.py          # JWT auth (bcrypt, HS256, role-based, seed_admin_user)
 │   │   ├── parser.py        # Scoreholder JSON parser (~630 lines)
 │   │   ├── decoder.py       # Node-tree score field decoder
 │   │   ├── resolver.py      # ID chain resolver
-│   │   ├── transformer.py   # Pandas long→wide pivot + CSV/XLSX export
+│   │   ├── transformer.py   # Pandas long→wide pivot + CSV/XLSX export + region enrichment
+│   │   ├── reconcile.py     # Athlete ID reconciliation
 │   │   └── validate_json.py # Batch validation CLI
-│   ├── tests/               # pytest suite (214 tests)
+│   ├── tests/               # pytest suite (251 tests)
 │   └── pyproject.toml
 │
 ├── frontend/
 │   ├── src/
 │   │   ├── lib/
 │   │   │   ├── api.ts              # Typed fetch wrappers
-│   │   │   ├── auth.ts             # Svelte stores for login state
+│   │   │   ├── auth.ts             # JWT auth stores (currentUser, setToken, logout)
+│   │   │   ├── year.ts             # Shared year toggle store
 │   │   │   ├── WideResultsTable.svelte  # Shared results table
 │   │   │   ├── ScoreTooltip.svelte      # Apparatus score tooltip
 │   │   │   ├── AATooltip.svelte         # AA score tooltip
@@ -45,7 +47,10 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   │   ├── +layout.svelte          # Nav, footer, theme toggle
 │   │   │   ├── +page.svelte            # Landing page
 │   │   │   ├── upload/+page.svelte     # JSON upload
-│   │   │   ├── login/+page.svelte      # Password login
+│   │   │   ├── login/+page.svelte      # Username+password login
+│   │   │   ├── admin/+page.svelte      # Admin dashboard
+│   │   │   ├── admin/users/+page.svelte # User management
+│   │   │   ├── rankings/+page.svelte   # Rankings (member+)
 │   │   │   ├── events/+page.svelte     # Event list
 │   │   │   ├── events/[id]/+page.svelte # Event results
 │   │   │   ├── results/+page.svelte    # All-events results
@@ -73,7 +78,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from app.auth import check_password
+from app.auth import require_role
 from app.database import get_session
 ```
 
@@ -131,7 +136,7 @@ let { label, count = 0 }: { label: string; count?: number } = $props();
 ### API client (`api.ts`)
 - `API_BASE = ""` in dev (Vite proxy), `"http://backend:8000"` in production
 - All functions `async`, typed return values
-- Auth header helper: `authHeaders()` reads password from module-level variable
+- Auth header: `getToken()` reads JWT from localStorage, passed as `Authorization: Bearer <token>`
 - Error: throw with `await res.text()`, callers `.catch()`
 - Relative URLs: use string concatenation + `URLSearchParams`, **never** `new URL()` (breaks on relative paths)
 
@@ -200,7 +205,11 @@ docker compose up --build
 - **WAG/MAG split** — tab assignment uses `discipline` field from data, not apparatus heuristic.
 - **Division extraction** — heuristic text matching (UNDER/OVER/A/B) from competition node names.
 - **Numpy types in JSON** — pandas/numpy produce `numpy.int64`/`numpy.float64` that FastAPI's `jsonable_encoder` can't serialize; must convert in transformer.py.
-- **Auth** — optional password protection via `ADMIN_PASSWORD` env var; when unset, all endpoints are public.
-- **DB schema** — `events` table + `long_scores` table (one row per apparatus pass per gymnast).
+- **Auth** — JWT-based (bcrypt, HS256, 7-day expiry), role-based (admin/uploader). Admin seeded from env vars (`ADMIN_USERNAME`, `ADMIN_PASSWORD`, `ADMIN_ROLE`). JWT_SECRET auto-generated and persisted to `data/jwt_secret.txt`. When `ADMIN_PASSWORD` is unset, all endpoints are public.
+- **DB schema** — `events` table + `long_scores` table (one row per apparatus pass per gymnast) + `users` table (username, hashed_password, role).
 - **`new URL()` breaks** on relative paths in dev mode — use string concatenation in api.ts.
 - **Two JSON formats exist** — only the new format (`eventOrganizations`, `performanceRules`, etc.) is supported.
+- **Name cleaning** — `_NAME_LEVEL_SUFFIX` regex strips `(L#)`, `(STEP 10)`, `(YI)` from gymnast names at parse time.
+- **Region enrichment** — club→region lookup at pivot time via `clubs_and_regions.json`; changes require re-upload.
+- **DaisyUI z-index** — `.dropdown-content` sets `z-index: 1` overriding Tailwind classes; use inline `style="z-index: 50"`.
+- **`$effect` reactivity** — tracks all dependencies read inside it; avoid reading state the effect itself modifies.

@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { listClubs } from "$lib/api";
 
-  let clubs = $state<{ name: string; gymnast_count: number; region: string | null }[]>([]);
+  let clubs = $state<{ name: string; gymnast_count: number; region: string | null; is_region: boolean }[]>([]);
   let loading = $state(true);
 
   onMount(async () => {
@@ -66,7 +66,12 @@
               class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer"
             >
               <div class="card-body py-3 px-4 flex-row items-center justify-between">
-                <span class="font-medium text-sm">{club.name}</span>
+                <span class="font-medium text-sm">
+                  {club.name}
+                  {#if club.is_region}
+                    <span class="badge badge-ghost badge-xs ml-1">Provincial Team</span>
+                  {/if}
+                </span>
                 <span class="text-xs text-base-content/50">{club.gymnast_count} gymnasts</span>
               </div>
             </a>

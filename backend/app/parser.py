@@ -253,6 +253,8 @@ def _infer_round_type(unit_name: str, node_name: str) -> str:
     if "qualification" in lower_node:
         return "All Around"
     if "final" in lower_node:
+        if "all-around" in lower_node or "all around" in lower_node:
+            return "All Around - Final"
         return "Apparatus Finals"
 
     # Determine base round from unit name
@@ -456,13 +458,12 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
     #   1-set tables -> individual apparatus rankings (emit rows with score + rank)
     #   Multi-set tables -> capture AA aggregate scores only
     #   Deduplicate by score _id (same physical score may appear in multiple result sets)
-    aa_scores: dict[str, dict] = {}
+    aa_scores: dict[tuple[str, str], dict] = {}
     rows: list[dict] = []
     emitted_score_ids: set[str] = set()
 
     for prt in data.get("performanceResultTables", []):
         result_sets = prt.get("resultSets", [])
-        is_single_table = len(result_sets) == 1
 
         for rs in result_sets:
             rs_id = rs.get("id")
@@ -486,13 +487,6 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                 if status == "equal-discarded":
                     continue
 
-                # Skip individual scores from aggregate result tables (All-around, Team).
-                # These scores are also present in individual apparatus result tables,
-                # which provide the correct round-type context ("All Around" vs
-                # "Apparatus Finals") through their node names.
-                if is_aa and item_type == "score":
-                    continue
-
                 # --- Aggregate (AA / Team) results ---
                 if item_type == "result-set":
                     if is_aa:
@@ -501,10 +495,9 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                             aa_unit_info.get("name", ""),
                             node_name_map.get(rs_id, rs_name),
                         )
-                        aa_scores[entity_id] = {
+                        aa_scores[(entity_id, aa_round_type)] = {
                             "aa_score": score_value,
                             "aa_rank": rank_value,
-                            "_round_type": aa_round_type,
                         }
                     continue
 
@@ -558,7 +551,6 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                     if len(sorted_passes) > 1:
                         pass_number = sorted_passes.index(score_data["_unitPassId"]) + 1
 
-                    aa = aa_scores.get(entity_id, {})
                     division = division_map.get(rs_id) or entity_division.get(entity_id)
                     if division is None:
                         unit_name = unit_info.get("name", "")
@@ -567,6 +559,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                     if level_category and "International" in level_category:
                         division = None
                     round_type = _infer_round_type(unit_info.get("name", ""), node_name_map.get(rs_id, rs_name))
+                    aa = aa_scores.get((entity_id, round_type), {})
 
                     row = {
                         "event_name": event_info["name"],
@@ -602,7 +595,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
         name = part_info.get("name", "")
         if name:
             entity_to_name[eid] = name
-    for eid, aa_data in aa_scores.items():
+    for (eid, rt), aa_data in aa_scores.items():
         name = entity_to_name.get(eid)
         if not name:
             continue
@@ -611,7 +604,7 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
         if aa_score is None:
             continue
         for row in rows:
-            if row["gymnast_name"] == name and row["aa_score"] is None and row["round_type"] == aa_data.get("_round_type"):
+            if row["gymnast_name"] == name and row["aa_score"] is None and row["round_type"] == rt:
                 row["aa_score"] = _sanitise_float(aa_score)
                 row["aa_rank"] = _sanitise_rank(aa_rank)
 

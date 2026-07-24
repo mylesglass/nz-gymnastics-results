@@ -97,7 +97,7 @@
 - [x] Propagate bonus across all passes in same (entityId, unitEventId) group
 - [x] Clarify vault aggregation rules (STEP 6/7 avg, high-level AA best, high-level Apps avg)
 - [x] Change `_fmt3` from round to truncate (floor), with floating-point noise cleanup
-- [x] **Test:** 191/191 pytest passing
+- [x] **Test:** 191/251 pytest passing
 
 ### Step 13: Parser Robustness ✅
 - [x] Fix `"equal-discarded"` status not being filtered — causes duplicate rows from tied-then-discarded scores (31/40 files affected)
@@ -134,20 +134,40 @@
 - [x] **Test:** 9/9 reconcile tests pass; 242 total tests pass
 - [x] Update BUGS.md with remaining edge cases
 
+### STEP 17: Auth Overhaul (Password → JWT) ✅
+- [x] Add `User` SQLAlchemy model (id, username, hashed_password, role, created_at)
+- [x] Rewrite `auth.py` with bcrypt hashing, JWT create/decode (HS256, 7-day expiry)
+- [x] Add `require_role()` FastAPI dependency factory
+- [x] Add `seed_admin_user()` from env vars (ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_ROLE)
+- [x] Auto-generate JWT_SECRET persisted to `data/jwt_secret.txt`
+- [x] Add endpoints: POST /api/auth/login, POST /api/auth/register, GET /api/auth/users, POST /api/auth/users/{id}/reset-password, DELETE /api/auth/users/{id}
+- [x] Add GET /api/rankings (member+ placeholder)
+- [x] Replace frontend auth: JWT in localStorage, currentUser store with role
+- [x] Update login page with username+password fields
+- [x] Add admin user management page at /admin/users
+- [x] Nav bar: role-based visibility for Upload/Admin/Rankings, user badge dropdown
+- [x] **Test:** 251/251 tests pass; frontend builds
+
+### STEP 18: UI/UX Improvements ✅
+- [x] Move theme toggle from nav to footer bottom-right
+- [x] Add `pt-6` to main content for breathing room
+- [x] Replace "More" dropdown with direct Gymnasts/Clubs links in nav
+- [x] Fix dropdown z-index issue (inline `style="z-index: 50"`)
+- [x] Global year toggle in nav (DaisyUI `tabs tabs-box` radio inputs)
+- [x] Add GET /api/years endpoint; shared selectedYear store
+- [x] Landing page: Upload card hidden for non-admins; grid switches to 2 columns
+- [x] Fix sort-revert bug in WideResultsTable ($effect cycle → loaded flag)
+- [x] Add region column to wide results (enriched at pivot time, filterable)
+- [x] Table improvements: max-w-full layout, min-w-full, whitespace-nowrap cells, hover:bg-base-300, py-1.5
+- [x] Event name truncation (truncate max-w-56)
+- [x] Add name cleaning regex: strips (L#), (STEP 10), (YI) at parse time
+- [x] Add "Levin Gymsports" and "Kapiti" club aliases to clubs_and_regions.json
+- [x] Fix clubs_and_regions.json: Franklin Gymsports, ARGOS alias cleanup, Buller restoration
+
 ### Next Steps
 - [ ] Re-implement equals in rankings with correct tie detection logic
-- [x] Event page: add year filter/search bar (year dropdown + text search by name)
-- [x] Improve error detection when loading JSONs / expandable error details / upload stats
-- [x] Allow user to DELETE an event from the event page (no auth)
-- [x] Allow user to RENAME a competition (no auth)
-- [x] Simple email & password authentication to protect upload/delete/rename (password-only, env var)
 - [ ] Mobile-responsive table improvements
 - [ ] Performance: caching, query optimisation, application speed
-- [x] Stats dashboard on landing page (total results, events, gymnasts, etc.)
-- [x] Clubs list page (region-grouped from clubs_and_regions.json)
-- [x] Gymnasts list page (alphabetically grouped A-Z)
-- [x] Year filter on results, gymnast, and club pages (defaults to latest year, gymnast defaults to all)
-- [x] Allow CSV export of JUST the current information displayed on the filtered table
 - [ ] Automate reconciliation on upload — trigger reconcile after every successful JSON import
 - [ ] Fuzzy name matching — detect nicknames/spelling variations (e.g. "Liz" → "Elizabeth")
 - [ ] Conflict resolution UI — admin dashboard to manually pick the correct ID for ambiguous names

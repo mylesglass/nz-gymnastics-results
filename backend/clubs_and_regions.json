@@ -248,7 +248,7 @@
         ]
       }
     ],
-    "North Harbour": [
+    "Harbour": [
       {
         "name": "NHG Gymnastics",
         "aliases": [
@@ -800,19 +800,31 @@
     },
     "nhg gymnastics": {
       "name": "NHG Gymnastics",
-      "region": "North Harbour"
+      "region": "Harbour"
     },
     "north harbour gymnastics": {
       "name": "NHG Gymnastics",
-      "region": "North Harbour"
+      "region": "Harbour"
     },
     "nhg": {
       "name": "NHG Gymnastics",
-      "region": "North Harbour"
+      "region": "Harbour"
     },
     "nhg gymnastics club": {
       "name": "NHG Gymnastics",
-      "region": "North Harbour"
+      "region": "Harbour"
+    },
+    "harbour": {
+      "name": "Harbour",
+      "region": "Harbour"
+    },
+    "gymsport manukau": {
+      "name": "Gymsport Manukau",
+      "region": "Counties - Manukau"
+    },
+    "wanganui / manawatu": {
+      "name": "Wanganui / Manawatu",
+      "region": "Manawatu - Whanganui"
     },
     "bay of island gymnastics club": {
       "name": "Bay of Island Gymnastics Club",
