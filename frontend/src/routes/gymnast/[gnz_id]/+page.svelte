@@ -1,25 +1,17 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { page } from "$app/stores";
-  import { getAllWideResults, listEvents } from "$lib/api";
+  import { getAllWideResults } from "$lib/api";
+  import { selectedYear } from "$lib/year";
   import WideResultsTable from "$lib/WideResultsTable.svelte";
 
-  let yearOptions = $state<string[]>([]);
-  let filterYear = $state("");
+  let filterYear = $state<string | null>(null);
   let ready = $state(false);
 
-  onMount(async () => {
-    try {
-      const events = await listEvents();
-      const years = new Set<string>();
-      for (const e of events) {
-        if (e.year) years.add(String(e.year));
-      }
-      yearOptions = [...years].sort().reverse();
-    } catch {
-      // ignore
-    }
+  onMount(() => {
+    const unsub = selectedYear.subscribe((v) => (filterYear = v));
     ready = true;
+    return unsub;
   });
 
   function loadDataImpl() {
@@ -75,17 +67,6 @@
   </button>
 {/snippet}
 
-{#snippet extraControls()}
-  {#if yearOptions.length > 1}
-    <select class="select select-bordered select-xs w-24" bind:value={filterYear}>
-      <option value="">All years</option>
-      {#each yearOptions as y}
-        <option value={y}>{y}</option>
-      {/each}
-    </select>
-  {/if}
-{/snippet}
-
 {#snippet empty()}
   <div role="alert" class="alert alert-error mt-4">
     <span>Gymnast not found</span>
@@ -96,7 +77,6 @@
   {#key filterYear}
     <WideResultsTable
       loadData={loadDataImpl}
-      {extraControls}
       showEventFilter={true}
       extraHeadLabels={{ event_name: "Event" }}
       {download}
