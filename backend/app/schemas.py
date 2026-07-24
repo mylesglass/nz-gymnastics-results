@@ -53,6 +53,7 @@ class EventListItem(BaseModel):
     discipline: str
     year: int | None = None
     gymnast_count: int
+    is_national: bool = False
 
 
 class ResultsResponse(BaseModel):
@@ -62,7 +63,8 @@ class ResultsResponse(BaseModel):
 
 
 class EventUpdate(BaseModel):
-    name: str
+    name: str | None = None
+    is_national: bool | None = None
 
 
 class StatsResponse(BaseModel):
@@ -103,3 +105,24 @@ class ReconcileReport(BaseModel):
     ids_corrected: int
     names_unified: int
     conflicts: list[ConflictItem]
+
+
+class RankingRow(BaseModel):
+    rank: str
+    name: str
+    gnz_id: str
+    club: str | None
+    scores: list[float]
+    competitions: list[str]
+    total: float
+
+
+class RankingsResponse(BaseModel):
+    year: int
+    step: str
+    discipline: str
+    rankings: list[RankingRow]
+
+
+class StepsResponse(BaseModel):
+    steps: list[str]

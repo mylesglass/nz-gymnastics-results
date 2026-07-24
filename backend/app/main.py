@@ -30,9 +30,12 @@ from app.schemas import (
     EventUpdate,
     GymnastItem,
     LoginRequest,
+    RankingsResponse,
+    RankingRow,
     ReconcileReport,
     ResultsResponse,
     StatsResponse,
+    StepsResponse,
     TokenResponse,
     UploadValidationResponse,
     UserCreate,
@@ -312,9 +315,134 @@ def list_years(response: Response):
         session.close()
 
 
-@app.get("/api/rankings")
-def get_rankings(_auth=Depends(require_role("admin", "member"))):
-    return {"status": "placeholder", "message": "Rankings page — coming soon"}
+@app.get("/api/rankings/steps", response_model=StepsResponse)
+def list_ranking_steps(year: int, discipline: str, _auth=Depends(require_role("admin", "member"))):
+    session = get_session()
+    try:
+        steps = (
+            session.query(LongScore.level_category)
+            .join(Event)
+            .filter(
+                Event.year == year,
+                Event.is_national == False,
+                LongScore.discipline == discipline,
+                LongScore.level_category.isnot(None),
+                LongScore.aa_score.isnot(None),
+            )
+            .distinct()
+            .order_by(LongScore.level_category)
+            .all()
+        )
+        return StepsResponse(steps=[s[0] for s in steps])
+    finally:
+        session.close()
+
+
+@app.get("/api/rankings", response_model=RankingsResponse)
+def get_rankings(
+    year: int,
+    step: str,
+    discipline: str,
+    _auth=Depends(require_role("admin", "member")),
+):
+    session = get_session()
+    try:
+        event_ids = [
+            e.id
+            for e in session.query(Event).filter(
+                Event.year == year,
+                Event.is_national == False,
+            ).all()
+        ]
+        if not event_ids:
+            return RankingsResponse(year=year, step=step, discipline=discipline, rankings=[])
+
+        rows = (
+            session.query(
+                LongScore.gymnast_name,
+                LongScore.gnz_id,
+                LongScore.club_name,
+                LongScore.event_id,
+                LongScore.event_name,
+                func.max(LongScore.aa_score),
+            )
+            .filter(
+                LongScore.event_id.in_(event_ids),
+                LongScore.level_category == step,
+                LongScore.discipline == discipline,
+                LongScore.aa_score.isnot(None),
+            )
+            .group_by(
+                LongScore.gymnast_name,
+                LongScore.gnz_id,
+                LongScore.club_name,
+                LongScore.event_id,
+                LongScore.event_name,
+            )
+            .all()
+        )
+
+        from collections import defaultdict
+
+        gymnast_data: dict[str, dict] = {}
+        for name, gnz_id, club, eid, ename, aa_score in rows:
+            key = name
+            if key not in gymnast_data:
+                gymnast_data[key] = {
+                    "name": name,
+                    "gnz_id": gnz_id or "",
+                    "club": club,
+                    "scores": [],
+                    "competitions": [],
+                }
+            gymnast_data[key]["scores"].append(float(aa_score))
+            gymnast_data[key]["competitions"].append(ename)
+
+        ranking_list = []
+        for data in gymnast_data.values():
+            scores = data["scores"]
+            comps = data["competitions"]
+            paired = sorted(zip(scores, comps), key=lambda x: -x[0])
+            top_two = paired[:2]
+            data["scores"] = [s for s, _ in top_two]
+            data["competitions"] = [c for _, c in top_two]
+            data["total"] = sum(data["scores"])
+            ranking_list.append(data)
+
+        ranking_list.sort(key=lambda x: -x["total"])
+
+        rank = 1
+        prev_total = None
+        for i, entry in enumerate(ranking_list):
+            if prev_total is not None and entry["total"] < prev_total:
+                rank = i + 1
+            entry["rank"] = rank
+            prev_total = entry["total"]
+
+        for i, entry in enumerate(ranking_list):
+            if i > 0 and entry["total"] == ranking_list[i - 1]["total"]:
+                entry["rank_text"] = f"T{entry['rank']}"
+            elif i < len(ranking_list) - 1 and entry["total"] == ranking_list[i + 1]["total"]:
+                entry["rank_text"] = f"T{entry['rank']}"
+            else:
+                entry["rank_text"] = str(entry["rank"])
+
+        rankings = [
+            RankingRow(
+                rank=r["rank_text"],
+                name=r["name"],
+                gnz_id=r["gnz_id"],
+                club=r["club"],
+                scores=r["scores"],
+                competitions=r["competitions"],
+                total=round(r["total"], 3),
+            )
+            for r in ranking_list
+        ]
+
+        return RankingsResponse(year=year, step=step, discipline=discipline, rankings=rankings)
+    finally:
+        session.close()
 
 
 @app.post("/api/admin/reconcile-athletes", response_model=ReconcileReport)
@@ -438,6 +566,7 @@ def list_events(response: Response):
                     discipline=ev.discipline,
                     year=ev.year,
                     gymnast_count=gymnast_count or 0,
+                    is_national=bool(ev.is_national),
                 )
             )
         return result
@@ -631,20 +760,23 @@ def delete_event(event_id: int, _auth=Depends(require_role("admin"))):
 
 
 # ---------------------------------------------------------------------------
-# Rename event
+# Update event
 # ---------------------------------------------------------------------------
 
 @app.patch("/api/events/{event_id}", response_model=EventListItem)
-def rename_event(event_id: int, body: EventUpdate, _auth=Depends(require_role("admin"))):
+def update_event(event_id: int, body: EventUpdate, _auth=Depends(require_role("admin"))):
     session = get_session()
     try:
         event = session.query(Event).filter(Event.id == event_id).first()
         if not event:
             raise HTTPException(404, "Event not found")
-        event.name = body.name
-        session.query(LongScore).filter(LongScore.event_id == event_id).update(
-            {"event_name": body.name}
-        )
+        if body.name is not None:
+            event.name = body.name
+            session.query(LongScore).filter(LongScore.event_id == event_id).update(
+                {"event_name": body.name}
+            )
+        if body.is_national is not None:
+            event.is_national = body.is_national
         session.commit()
         invalidate()
         gymnast_count = (
@@ -660,6 +792,7 @@ def rename_event(event_id: int, body: EventUpdate, _auth=Depends(require_role("a
             discipline=event.discipline,
             year=event.year,
             gymnast_count=gymnast_count,
+            is_national=bool(event.is_national),
         )
     finally:
         session.close()

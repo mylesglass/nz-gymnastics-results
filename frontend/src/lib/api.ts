@@ -19,6 +19,7 @@ export interface EventSummary {
   gymnast_count: number;
   score_count: number;
   club_count?: number;
+  is_national?: boolean;
 }
 
 export interface WideResponse {
@@ -139,6 +140,19 @@ export async function renameEvent(
   return res.json();
 }
 
+export async function updateEvent(
+  eventId: number,
+  data: { name?: string; is_national?: boolean }
+): Promise<EventSummary> {
+  const res = await fetch(`${API_BASE}/api/events/${eventId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export async function listClubs(): Promise<
   { name: string; gymnast_count: number; region: string | null }[]
 > {
@@ -169,6 +183,48 @@ export async function reconcileAthletes(): Promise<{
 }> {
   const res = await fetch(`${API_BASE}/api/admin/reconcile-athletes`, {
     method: "POST",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export interface RankingRow {
+  rank: string;
+  name: string;
+  gnz_id: string;
+  club: string | null;
+  scores: number[];
+  competitions: string[];
+  total: number;
+}
+
+export interface RankingsResponse {
+  year: number;
+  step: string;
+  discipline: string;
+  rankings: RankingRow[];
+}
+
+export async function getRankings(
+  year: number,
+  step: string,
+  discipline: string
+): Promise<RankingsResponse> {
+  const params = new URLSearchParams({ year: String(year), step, discipline });
+  const res = await fetch(`${API_BASE}/api/rankings?${params}`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getRankingSteps(
+  year: number,
+  discipline: string
+): Promise<{ steps: string[] }> {
+  const params = new URLSearchParams({ year: String(year), discipline });
+  const res = await fetch(`${API_BASE}/api/rankings/steps?${params}`, {
     headers: authHeaders(),
   });
   if (!res.ok) throw new Error(await res.text());

@@ -366,7 +366,7 @@ class TestRankingsEndpoint:
     def test_admin_can_access(self):
         login = client.post("/api/auth/login", json={"username": "admin", "password": TEST_PASSWORD})
         token = login.json()["access_token"]
-        resp = client.get("/api/rankings", headers={"Authorization": f"Bearer {token}"})
+        resp = client.get("/api/rankings?year=2026&step=STEP+10&discipline=WAG", headers={"Authorization": f"Bearer {token}"})
         assert resp.status_code == 200
 
     def test_member_can_access(self):
@@ -379,7 +379,7 @@ class TestRankingsEndpoint:
         )
         login2 = client.post("/api/auth/login", json={"username": "alice", "password": "alice-pw"})
         member_token = login2.json()["access_token"]
-        resp = client.get("/api/rankings", headers={"Authorization": f"Bearer {member_token}"})
+        resp = client.get("/api/rankings?year=2026&step=STEP+10&discipline=WAG", headers={"Authorization": f"Bearer {member_token}"})
         assert resp.status_code == 200
 
     def test_unauthenticated_cannot_access(self):

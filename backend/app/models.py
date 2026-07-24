@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import DeclarativeBase, relationship
 
 
@@ -27,6 +27,7 @@ class Event(Base):
     end_date = Column(String, nullable=False)
     discipline = Column(String, nullable=False)
     year = Column(Integer, nullable=True)
+    is_national = Column(Boolean, default=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     scores = relationship("LongScore", back_populates="event", cascade="all, delete-orphan")
