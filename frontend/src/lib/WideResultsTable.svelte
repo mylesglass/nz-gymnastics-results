@@ -747,6 +747,8 @@
                   {:else}
                     {row[col]}
                   {/if}
+                {:else if col === "event_name"}
+                  <span class="truncate block max-w-56">{row[col] ?? ""}</span>
                 {:else}
                   {row[col] ?? ""}
                 {/if}
