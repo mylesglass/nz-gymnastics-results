@@ -10,6 +10,14 @@
 
   let { children }: { children: Snippet } = $props();
 
+  const THEMES = [
+    "light", "dark", "cupcake", "bumblebee", "emerald", "corporate",
+    "synthwave", "retro", "cyberpunk", "valentine", "halloween",
+    "garden", "forest", "aqua", "lofi", "pastel", "fantasy",
+    "wireframe", "black", "luxury", "dracula", "cmyk", "autumn",
+    "business", "acid", "lemonade", "night", "coffee", "winter",
+    "dim", "nord", "sunset", "caramellatte", "abyss", "silk",
+  ];
   let theme = $state("dark");
   let user = $state<{ username: string; role: string } | null>(null);
   let authCfg = $state(false);
@@ -34,10 +42,10 @@
     };
   });
 
-  function toggleTheme() {
-    theme = theme === "dark" ? "light" : "dark";
-    document.documentElement.dataset.theme = theme;
-    localStorage.setItem("theme", theme);
+  function setTheme(t: string) {
+    theme = t;
+    document.documentElement.dataset.theme = t;
+    localStorage.setItem("theme", t);
   }
 
   function active(path: string) {
@@ -82,7 +90,7 @@
               type="radio"
               name="year_tabs"
               role="tab"
-              class="tab"
+              class="tab checked:bg-primary checked:text-primary-content"
               aria-label={yr}
               checked={selYear === yr}
               onchange={() => selectedYear.set(yr)}
@@ -92,7 +100,7 @@
             type="radio"
             name="year_tabs"
             role="tab"
-            class="tab"
+            class="tab checked:bg-primary checked:text-primary-content"
             aria-label="All"
             checked={selYear === null}
             onchange={() => selectedYear.set(null)}
@@ -104,37 +112,32 @@
         <div class="hidden md:flex gap-1 items-center">
           <a
             href="/events"
-            class="btn btn-ghost btn-sm"
-            class:btn-active={active("/events")}
+            class="btn btn-sm {active('/events') ? 'btn-primary' : 'btn-ghost'}"
           >
             Events
           </a>
           <a
             href="/results"
-            class="btn btn-ghost btn-sm"
-            class:btn-active={active("/results")}
+            class="btn btn-sm {active('/results') ? 'btn-primary' : 'btn-ghost'}"
           >
             Results
           </a>
           <a
             href="/gymnasts"
-            class="btn btn-ghost btn-sm"
-            class:btn-active={active("/gymnasts")}
+            class="btn btn-sm {active('/gymnasts') ? 'btn-primary' : 'btn-ghost'}"
           >
             Gymnasts
           </a>
           <a
             href="/clubs"
-            class="btn btn-ghost btn-sm"
-            class:btn-active={active("/clubs")}
+            class="btn btn-sm {active('/clubs') ? 'btn-primary' : 'btn-ghost'}"
           >
             Clubs
           </a>
           {#if user}
             <a
               href="/rankings"
-              class="btn btn-ghost btn-sm"
-              class:btn-active={active("/rankings")}
+              class="btn btn-sm {active('/rankings') ? 'btn-primary' : 'btn-ghost'}"
             >
               Rankings
             </a>
@@ -142,15 +145,13 @@
           {#if user?.role === "admin"}
             <a
               href="/upload"
-              class="btn btn-ghost btn-sm"
-              class:btn-active={active("/upload")}
+              class="btn btn-sm {active('/upload') ? 'btn-primary' : 'btn-ghost'}"
             >
               Upload
             </a>
             <a
               href="/admin"
-              class="btn btn-ghost btn-sm"
-              class:btn-active={active("/admin")}
+              class="btn btn-sm {active('/admin') ? 'btn-primary' : 'btn-ghost'}"
             >
               Admin
             </a>
@@ -215,18 +216,27 @@
         </p>
       </div>
       <div class="flex justify-end mt-4">
-        <button onclick={toggleTheme} class="btn btn-ghost btn-xs gap-2" aria-label="Toggle theme">
-          {#if theme === "dark"}
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-4 fill-current">
-              <path d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75A9.75 9.75 0 0 1 8.25 6c0-1.418.3-2.765.852-3.978A9.746 9.746 0 0 0 3 12a9.75 9.75 0 0 0 9.75 9.75a9.746 9.746 0 0 0 9.002-6.748Z" />
-            </svg>
-          {:else}
+        <div class="dropdown dropdown-top dropdown-end">
+          <button class="btn btn-ghost btn-xs gap-2" aria-label="Select theme">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="size-4 fill-current">
-              <path d="M11 5V1h2v4zm6.65 2.75l-1.375-1.375l2.8-2.875l1.4 1.425zM19 13v-2h4v2zm-8 10v-4h2v4zM6.35 7.7L3.5 4.925l1.425-1.4L7.75 6.35zm12.7 12.8l-2.775-2.875l1.35-1.35l2.85 2.75zM1 13v-2h4v2zm3.925 7.5l-1.4-1.425l2.8-2.8l.725.675l.725.7zm2.825-4.25Q6 14.5 6 12t1.75-4.25T12 6t4.25 1.75T18 12t-1.75 4.25T12 18t-4.25-1.75"/>
+              <path d="M11 22q-.825 0-1.412-.587T9 20v-4H6q-.825 0-1.412-.587T4 14V7q0-1.65 1.175-2.825T8 3h12v11q0 .825-.587 1.413T18 16h-3v4q0 .825-.587 1.413T13 22zM6 10h12V5h-1v4h-2V5h-1v2h-2V5H8q-.825 0-1.412.588T6 7z"/>
             </svg>
-          {/if}
-          Change Theme
-        </button>
+            {theme}
+          </button>
+          <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box w-96 p-2 shadow flex-row flex-wrap gap-x-4 gap-y-1" style="z-index: 50">
+            {#each THEMES as t}
+              <li class="w-1/3">
+                <button class={t === theme ? "active" : ""} onclick={() => setTheme(t)}>
+                  <span data-theme={t} class="inline-flex items-center gap-0.5 shrink-0 rounded-full border px-1.5 py-0.5" style="background: var(--color-base-100); border-color: var(--color-base-300)">
+                    <span class="size-2.5 rounded-full" style="background: var(--color-primary)"></span>
+                    <span class="size-2.5 rounded-full" style="background: var(--color-secondary)"></span>
+                  </span>
+                  {t}
+                </button>
+              </li>
+            {/each}
+          </ul>
+        </div>
       </div>
     </footer>
   </div>
@@ -275,7 +285,7 @@
               type="radio"
               name="drawer_year"
               role="tab"
-              class="tab"
+              class="tab checked:bg-primary checked:text-primary-content"
               aria-label={yr}
               checked={selYear === yr}
               onchange={() => { selectedYear.set(yr); handleNavClick(); }}
@@ -285,7 +295,7 @@
             type="radio"
             name="drawer_year"
             role="tab"
-            class="tab"
+            class="tab checked:bg-primary checked:text-primary-content"
             aria-label="All"
             checked={selYear === null}
             onchange={() => { selectedYear.set(null); handleNavClick(); }}
@@ -334,14 +344,27 @@
         {/if}
       {/if}
       <li class="mt-4">
-        <button onclick={toggleTheme}>
-          {#if theme === "dark"}
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 0 1 .26.77 7 7 0 0 0 9.958 7.967.75.75 0 0 1 1.067.853A8.5 8.5 0 1 1 6.647 1.921a.75.75 0 0 1 .808.083Z" clip-rule="evenodd" /></svg>
-          {:else}
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="size-4 fill-current"><path d="M11 5V1h2v4zm6.65 2.75l-1.375-1.375l2.8-2.875l1.4 1.425zM19 13v-2h4v2zm-8 10v-4h2v4zM6.35 7.7L3.5 4.925l1.425-1.4L7.75 6.35zm12.7 12.8l-2.775-2.875l1.35-1.35l2.85 2.75zM1 13v-2h4v2zm3.925 7.5l-1.4-1.425l2.8-2.8l.725.675l.725.7zm2.825-4.25Q6 14.5 6 12t1.75-4.25T12 6t4.25 1.75T18 12t-1.75 4.25T12 18t-4.25-1.75"/></svg>
-          {/if}
-          Change Theme
-        </button>
+        <details class="dropdown w-full">
+          <summary class="cursor-pointer list-none flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-base-300 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="size-4 fill-current">
+              <path d="M11 22q-.825 0-1.412-.587T9 20v-4H6q-.825 0-1.412-.587T4 14V7q0-1.65 1.175-2.825T8 3h12v11q0 .825-.587 1.413T18 16h-3v4q0 .825-.587 1.413T13 22zM6 10h12V5h-1v4h-2V5h-1v2h-2V5H8q-.825 0-1.412.588T6 7z"/>
+            </svg>
+            {theme}
+          </summary>
+          <ul class="menu bg-base-200 rounded-box w-full p-2 shadow flex-row flex-wrap gap-x-4 gap-y-1">
+            {#each THEMES as t}
+              <li class="w-1/3">
+                <button class={t === theme ? "active" : ""} onclick={() => { setTheme(t); closeDrawer(); }}>
+                  <span data-theme={t} class="inline-flex items-center gap-0.5 shrink-0 rounded-full border px-1.5 py-0.5" style="background: var(--color-base-100); border-color: var(--color-base-300)">
+                    <span class="size-2.5 rounded-full" style="background: var(--color-primary)"></span>
+                    <span class="size-2.5 rounded-full" style="background: var(--color-secondary)"></span>
+                  </span>
+                  {t}
+                </button>
+              </li>
+            {/each}
+          </ul>
+        </details>
       </li>
     </ul>
   </div>
