@@ -27,8 +27,9 @@
   let mergesLoading = $state(true);
   let mergesError = $state<string | null>(null);
   let showMerges = $state(false);
-  let mergingRow = $state<string | null>(null);
-  let mergeResult = $state<string | null>(null);
+  let mergeToast = $state<string | null>(null);
+
+  let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
   function instanceKey(inst: DuplicateInstance, name: string): string {
     return `${name}|${inst.club}|${inst.level_category}`;
@@ -60,16 +61,17 @@
 
   async function runMerge(keep: string, merge: string) {
     merges = merges.filter(m => !(m.name_a === merge && m.name_b === keep));
-    mergeResult = null;
+    clearTimeout(toastTimer);
     try {
       const res = await mergeNames(merge, keep);
       merges = await getSuggestedMerges();
       duplicates = await checkDuplicates();
-      mergeResult = `Merged ${res.merged} rows, ${res.names_unified} names unified, ${res.ids_corrected} IDs corrected`;
+      mergeToast = `Merged ${res.merged} rows, ${res.names_unified} names unified, ${res.ids_corrected} IDs corrected`;
     } catch (e) {
-      mergeResult = `Error: ${e}`;
+      mergeToast = `Error: ${e}`;
       merges = await getSuggestedMerges();
     }
+    toastTimer = setTimeout(() => { mergeToast = null; }, 4000);
   }
 
   onMount(async () => {
@@ -326,11 +328,6 @@
             <span>{mergesError}</span>
           </div>
         {:else if merges.length > 0}
-          {#if mergeResult}
-            <div role="alert" class="alert alert-success mb-2">
-              <span>{mergeResult}</span>
-            </div>
-          {/if}
           <button class="btn btn-ghost btn-xs self-start mb-2" onclick={() => (showMerges = !showMerges)}>
             {showMerges ? "Hide" : "View"} {merges.length} suggestions
           </button>
@@ -386,3 +383,11 @@
     </div>
   {/if}
 </div>
+
+{#if mergeToast}
+  <div class="toast toast-bottom toast-end z-50">
+    <div class="alert alert-success text-sm">
+      <span>{mergeToast}</span>
+    </div>
+  </div>
+{/if}
