@@ -3,6 +3,7 @@
 
   let c = $derived(colors.length ? colors : ["#888", "#888"]);
   let bg = $derived(c[0]);
+  let accents = $derived(c.slice(1));
 
   function textColor(hex: string): string {
     let h = hex.replace("#", "");
@@ -17,11 +18,11 @@
   class="inline-flex items-stretch h-5 text-xs font-medium rounded overflow-hidden leading-none"
   style="background: {bg}; color: {textColor(bg)}"
 >
-  <span class="grid grid-cols-2 w-5 shrink-0">
-    <span class="w-2.5 h-2.5" style="background: {c[0]}"></span>
-    <span class="w-2.5 h-2.5" style="background: {c[1 % c.length]}"></span>
-    <span class="w-2.5 h-2.5" style="background: {c[2 % c.length]}"></span>
-    <span class="w-2.5 h-2.5" style="background: {c[3 % c.length]}"></span>
-  </span>
-  <span class="px-1.5 flex items-center">{region}</span>
+  {#each accents as ac}
+    <span class="w-[3px] h-full shrink-0" style="background: {ac}"></span>
+  {/each}
+  <span class="px-1.5 flex items-center truncate max-w-28">{region}</span>
+  {#each [...accents].reverse() as ac}
+    <span class="w-[3px] h-full shrink-0" style="background: {ac}"></span>
+  {/each}
 </span>
