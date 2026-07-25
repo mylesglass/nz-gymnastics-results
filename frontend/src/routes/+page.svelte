@@ -53,7 +53,7 @@
   >
     <a
       href="/events"
-      class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer"
+      class="card bg-base-200 hover:bg-base-300 border border-base-300 hover:border-base-content/20 hover:-translate-y-1 hover:shadow-lg transition-all cursor-pointer group"
     >
       <div class="card-body items-center text-center py-6">
         <span class="text-3xl mb-1">📋</span>
@@ -63,7 +63,7 @@
     </a>
     <a
       href="/results"
-      class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer"
+      class="card bg-base-200 hover:bg-base-300 border border-base-300 hover:border-base-content/20 hover:-translate-y-1 hover:shadow-lg transition-all cursor-pointer group"
     >
       <div class="card-body items-center text-center py-6">
         <span class="text-3xl mb-1">🏆</span>
@@ -73,7 +73,7 @@
     </a>
     <a
       href="/gymnasts"
-      class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer"
+      class="card bg-base-200 hover:bg-base-300 border border-base-300 hover:border-base-content/20 hover:-translate-y-1 hover:shadow-lg transition-all cursor-pointer group"
     >
       <div class="card-body items-center text-center py-6">
         <span class="text-3xl mb-1">🤸</span>
@@ -83,7 +83,7 @@
     </a>
     <a
       href="/clubs"
-      class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer"
+      class="card bg-base-200 hover:bg-base-300 border border-base-300 hover:border-base-content/20 hover:-translate-y-1 hover:shadow-lg transition-all cursor-pointer group"
     >
       <div class="card-body items-center text-center py-6">
         <span class="text-3xl mb-1">🏛️</span>
@@ -94,7 +94,7 @@
     {#if authCfg && user?.role === "admin"}
       <a
         href="/upload"
-        class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer"
+        class="card bg-base-200 hover:bg-base-300 border border-base-300 hover:border-base-content/20 hover:-translate-y-1 hover:shadow-lg transition-all cursor-pointer group"
       >
         <div class="card-body items-center text-center py-6">
           <span class="text-3xl mb-1">📄</span>

@@ -83,6 +83,7 @@
         <a href="/" class="btn btn-ghost text-lg sm:text-xl">🤸 NZ Gymnastics Results</a>
       </div>
 
+      {#if $page.url.pathname === "/events" || $page.url.pathname === "/results" || $page.url.pathname === "/rankings"}
       <div class="flex-none">
         <div role="tablist" class="tabs tabs-box tabs-xs">
           {#each years as yr}
@@ -107,6 +108,7 @@
           />
         </div>
       </div>
+      {/if}
 
       <div class="flex-1 flex justify-end gap-1 items-center">
         <div class="hidden md:flex gap-1 items-center">
@@ -277,6 +279,7 @@
           </a>
         </li>
       {/if}
+      {#if $page.url.pathname === "/events" || $page.url.pathname === "/results" || $page.url.pathname === "/rankings"}
       <li class="menu-title mt-4"><span>Year</span></li>
       <li>
         <div role="tablist" class="tabs tabs-box tabs-xs mt-1">
@@ -302,6 +305,7 @@
           />
         </div>
       </li>
+      {/if}
       {#if user?.role === "admin"}
         <li>
           <a href="/upload" onclick={handleNavClick} class:active={active("/upload")}>
