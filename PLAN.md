@@ -186,6 +186,13 @@
 - [x] "Quick Fix" and "Apply Selected Fixes" buttons
 - **Files:** `backend/app/main.py`, `backend/app/schemas.py`, `frontend/src/routes/admin/+page.svelte`, `frontend/src/lib/api.ts`
 
+### STEP 22: Import JSON from URL
+- [ ] New `POST /api/upload/from-url` endpoint accepting `{ url: str }` — fetches JSON via `urllib.request`, validates, parses, stores
+- [ ] Frontend: URL input field on upload page alongside drag-and-drop area, same success/error UX
+- [ ] Handle timeouts, invalid URLs, non-JSON responses gracefully
+- [ ] Reuse existing club mapping dialog for unknown clubs
+- **Files:** `backend/app/main.py`, `frontend/src/routes/upload/+page.svelte`, `frontend/src/lib/api.ts`
+
 ### Next Steps
 - [ ] Mobile-responsive table improvements
 - [ ] Performance: caching, query optimisation, application speed, Search/ research perforomance improvements (i.e. Large result tables are slow), how do we make the user exp[erience more fluid and modern?
