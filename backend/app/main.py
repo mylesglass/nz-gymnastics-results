@@ -766,7 +766,7 @@ def apply_duplicate_fixes(
         session.close()
 
 
-def _find_similar_names(session, threshold: float = 0.8) -> list[dict]:
+def _find_similar_names(session, threshold: float = 0.85) -> list[dict]:
     import difflib
 
     rows = (
