@@ -19,11 +19,11 @@
   class="inline-flex items-stretch h-5 text-xs font-medium leading-none rounded overflow-hidden whitespace-nowrap"
   style="background: {bg}; color: {textColor(bg)}"
 >
-  <span class="grid grid-cols-2 w-5 h-full shrink-0">
-    <span style="background: {ckA}"></span>
-    <span style="background: {ckB}"></span>
-    <span style="background: {ckB}"></span>
-    <span style="background: {ckA}"></span>
+  <span class="flex flex-wrap w-5 h-5 shrink-0 overflow-hidden">
+    <span class="w-2.5 h-2.5" style="background: {ckA}"></span>
+    <span class="w-2.5 h-2.5" style="background: {ckB}"></span>
+    <span class="w-2.5 h-2.5" style="background: {ckB}"></span>
+    <span class="w-2.5 h-2.5" style="background: {ckA}"></span>
   </span>
   <span class="px-1.5 flex items-center">{region}</span>
 </span>
