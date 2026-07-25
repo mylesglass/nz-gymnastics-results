@@ -3,17 +3,13 @@
   - Completely different IDs for the same name with equal frequency (reported as conflicts)
   - Automatic reconciliation on upload (currently manual/admin-triggered only)
 
-- Name-level suffix stripping: `(L#)`, `(STEP 10)`, `(YI)` suffixes are cleaned from gymnast names at parse time via `_NAME_LEVEL_SUFFIX` regex at `parser.py:29`. Missing `(SI)` and `(JI)` — these are not stripped and remain in displayed names. Existing events need re-upload to apply fix.
-  - **Fix:** Add `SI|JI` to the regex.
-  - **File:** `backend/app/parser.py:29`
+- ✅ Name-level suffix stripping: `(L#)`, `(STEP 10)`, `(YI)`, `(SI)`, `(JI)` suffixes cleaned at parse time via `_NAME_LEVEL_SUFFIX` regex at `parser.py:29`. Applied on next upload.
 
-- Youth vs Youth International inconsistency: `resolve_level()` at `resolver.py:77-91` returns `"Youth International"` when unit name contains `"youth international"`, but `"Youth"` for bare `"youth"`. These are distinct `level_category` values. Should normalize to `"Youth International"` to stay inline with Junior & Senior International naming.
-  - **Fix:** Change bare `"youth"` check to return `"Youth International"` instead of `"Youth"`.
-  - **File:** `backend/app/resolver.py:89-91`
+- ✅ Youth vs Youth International inconsistency: `resolve_level()` at `resolver.py:89-91` now returns `"Youth International"` for bare `"youth"` matches, keeping naming consistent with Junior & Senior International.
 
-- WAG STEP4 extra division: `resolve_level()` regex at `resolver.py:81` uses `step\s+(\d+)` (>=1 whitespace required). Unit names like `"WAG STEP4"` (no space, e.g. `data-collection/2026/gissy-2026.json`) don't match and fall through to the raw unit name.
-  - **Fix:** Change to `step\s*(\d+)` (zero-or-more whitespace).
-  - **File:** `backend/app/resolver.py:81`
+- ✅ WAG STEP4 extra division: `resolve_level()` regex at `resolver.py:80` now uses `step\s*(\d+)` to match unit names like `"WAG STEP4"` (no space). Applied on next upload.
+
+- ✅ GNZ ID prefix pollution: `fix_gnz_id()` in `resolver.py:110-118` now strips `GS`, `GNZ`, and `GGS` prefixes; non-numeric values (e.g. club codes like `ARG`, `BOI`, `NHG`) return empty string. Applied on next upload; existing data can be fixed via re-upload.
 
 - Gymnasts appear twice on `/gymnasts` page due to case differences in names (e.g. `Toreth Wongeoon` vs `Toreth WONGEOON`, `Alisa Wada` vs `Alisa WADA`). The `list_gymnasts` query groups by exact `(gnz_id, gymnast_name)` but Scoreholder data sometimes has inconsistent casing (ALL CAPS surnames in some files). 20+ gymnasts affected.
   - **Fix:** Normalize case (e.g. title-case) when grouping at the endpoint level, or normalize at parse time.
@@ -24,9 +20,4 @@
 - Nickname/parenthetical names not stripped: `Alexander (Sasha) Bradley Hide` and `Sasha Hide` share the same GNZ ID 805374 and club (Kapiti Gymnastics) but appear as separate gymnasts. The `(Sasha)` nickname is embedded in the name and not stripped by the current `_NAME_LEVEL_SUFFIX` regex. Also: `Zack (Zizzi) Nikolai Hide` vs `Zizzi Hide` (ID 805370).
   - **Fix:** Extend `_NAME_LEVEL_SUFFIX` (or add a separate pass) to strip parenthesized nicknames like `(Sasha)`, `(Zizzi)` from names at parse time.
 
-- GNZ ID prefix pollution: Some IDs have non-numeric prefixes that should be stripped:
-  - `GNZ` prefix: `GNZ699917`, `GNZ592969`, `GNZ723457`, `GNZ691749`, `GNZ758664`, `GNZ691634`, `GNZ691798`, `GNZ775527`, `GNZ765054`, `GNZ625530`, `GNZ782597`, `GNZ624320`, `GNZ816963`
-  - `GGS` prefix: `GGS200576`
-  - Club code IDs treated as GNZ IDs: `AGA`, `TWG`, `SCG`, `CSG`, `GNI`, `WGC`, `TGC`, `CMG`, `TRI`, `NHG`, `TPG`, `WHG`, `KER`, `KPR`, `ESG`, `BOI`
-  - Note: No `GS` prefix IDs found, but related `GNZ` and `GGS` prefixes are present.
-  - **Fix:** Strip `GNZ`/`GGS` prefix from IDs in `fix_gnz_id()` in resolver.py; filter out club-code IDs during reconciliation.
+- `data-collection/2026/nhg-26.json` has no actual GNZ IDs — the `identifier` field contains club codes (`ARG`, `BOI`, `NHG`, etc.) instead of individual athlete IDs. Previously these were stored as-is; now `fix_gnz_id()` returns empty string for non-numeric values. The data parses but gymnasts won't have clickable links. Any future re-upload of this file will store empty IDs.
