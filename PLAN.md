@@ -193,6 +193,13 @@
 - [ ] Reuse existing club mapping dialog for unknown clubs
 - **Files:** `backend/app/main.py`, `frontend/src/routes/upload/+page.svelte`, `frontend/src/lib/api.ts`
 
+### Minor Polish
+- [x] RegionBadge component — 2x2 checkerboard (primary+secondary) + primary fill + whitespace-nowrap
+- [x] Region color palettes (NZ sports team inspired, 15 regions, 2-3 colors each)
+- [x] Region color dots (two 6px circles) in wide results table region column
+- [x] Truncate competition names in wide results table (max-w-56, ellipsis)
+- [x] Refresh docs
+
 ### Next Steps
 - [ ] Mobile-responsive table improvements
 - [ ] Performance: caching, query optimisation, application speed, Search/ research perforomance improvements (i.e. Large result tables are slow), how do we make the user exp[erience more fluid and modern?
