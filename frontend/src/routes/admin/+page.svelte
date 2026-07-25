@@ -28,6 +28,7 @@
   let mergesError = $state<string | null>(null);
   let showMerges = $state(false);
   let mergeToast = $state<string | null>(null);
+  let declinedKeys = $state<Set<string>>(new Set());
 
   let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -59,6 +60,12 @@
     return lowConfidence.some(l => l.name === d.name);
   }
 
+  function mergeKey(m: SuggestedMerge): string {
+    return `${m.name_a}|${m.name_b}`;
+  }
+
+  let visibleMerges = $derived(merges.filter(m => !declinedKeys.has(mergeKey(m))));
+
   async function runMerge(keep: string, merge: string) {
     merges = merges.filter(m => !(m.name_a === merge && m.name_b === keep));
     clearTimeout(toastTimer);
@@ -72,6 +79,11 @@
       merges = await getSuggestedMerges();
     }
     toastTimer = setTimeout(() => { mergeToast = null; }, 4000);
+  }
+
+  function runDecline(m: SuggestedMerge) {
+    declinedKeys.add(mergeKey(m));
+    declinedKeys = new Set(declinedKeys);
   }
 
   onMount(async () => {
@@ -327,9 +339,9 @@
           <div role="alert" class="alert alert-error mb-3">
             <span>{mergesError}</span>
           </div>
-        {:else if merges.length > 0}
+        {:else if visibleMerges.length > 0}
           <button class="btn btn-ghost btn-xs self-start mb-2" onclick={() => (showMerges = !showMerges)}>
-            {showMerges ? "Hide" : "View"} {merges.length} suggestions
+            {showMerges ? "Hide" : "View"} {visibleMerges.length} suggestions
           </button>
           {#if showMerges}
             <div class="overflow-x-auto">
@@ -344,7 +356,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {#each merges as m}
+                  {#each visibleMerges as m}
                     <tr>
                       <td class="font-medium">{m.name_a}<span class="text-xs text-base-content/50 ml-1">({m.rows_a})</span></td>
                       <td class="font-medium">{m.name_b}<span class="text-xs text-base-content/50 ml-1">({m.rows_b})</span></td>
@@ -358,16 +370,20 @@
                         <button
                           class="btn btn-ghost btn-xs"
                           onclick={() => runMerge(m.name_a, m.name_b)}
-                          disabled={mergingRow === `${m.name_a}|${m.name_b}` || mergingRow === `${m.name_b}|${m.name_a}`}
                         >
                           Keep A
                         </button>
                         <button
                           class="btn btn-primary btn-xs"
                           onclick={() => runMerge(m.name_b, m.name_a)}
-                          disabled={mergingRow === `${m.name_a}|${m.name_b}` || mergingRow === `${m.name_b}|${m.name_a}`}
                         >
                           Keep B
+                        </button>
+                        <button
+                          class="btn btn-ghost btn-xs text-error"
+                          onclick={() => runDecline(m)}
+                        >
+                          Decline
                         </button>
                       </td>
                     </tr>
@@ -376,6 +392,8 @@
               </table>
             </div>
           {/if}
+        {:else if merges.length > 0 && visibleMerges.length === 0}
+          <p class="text-sm text-base-content/60">All suggestions dismissed. Refresh the page to see new suggestions.</p>
         {:else}
           <p class="text-sm text-base-content/60">No similar name pairs found.</p>
         {/if}
