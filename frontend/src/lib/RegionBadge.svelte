@@ -3,8 +3,8 @@
 
   let c = $derived(colors.length ? colors : ["#888", "#888"]);
   let bg = $derived(c[0]);
-  let ckA = $derived(c.length >= 3 ? c[1] : c[0]);
-  let ckB = $derived(c.length >= 3 ? c[2] : c[1]);
+  let ckA = $derived(c[0]);
+  let ckB = $derived(c[1]);
 
   function textColor(hex: string): string {
     let h = hex.replace("#", "");
