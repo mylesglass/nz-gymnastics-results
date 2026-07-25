@@ -24,6 +24,7 @@
   // Club mapping dialog state
   let clubDialog = $state<{ file: File; unknown: string[]; known: string[] } | null>(null);
   let clubMappings = $state<Record<string, string>>({});
+  let remainingFiles = $state<File[]>([]);
 
   onMount(() => {
     checkAuthStatus()
@@ -68,11 +69,12 @@
           const idx = uploads.findIndex((u) => u.file === file.name && u.status === "uploading");
           if (idx !== -1) uploads.splice(idx, 1);
           uploading = false;
+          remainingFiles = files.slice(i + 1);
           const mappings: Record<string, string> = {};
           for (const u of ce.unknown_clubs) mappings[u] = ce.known_clubs[0] || u;
           clubMappings = mappings;
           clubDialog = { file, unknown: ce.unknown_clubs, known: ce.known_clubs };
-          return;
+          break;
         }
         const text = String(err);
         let errorMessage: string | null = null;
@@ -117,35 +119,43 @@
       // fall through — retry with the raw file anyway
     }
     const file = clubDialog.file;
+    const rest = remainingFiles;
+    remainingFiles = [];
     clubDialog = null;
-    await handleFiles([file]);
+    const files = rest.length > 0 ? [file, ...rest] : [file];
+    await handleFiles(files);
   }
 
-  function skipUnknown() {
+  async function skipUnknown() {
     if (!clubDialog) return;
     const file = clubDialog.file;
+    const rest = remainingFiles;
+    remainingFiles = [];
     clubDialog = null;
     uploading = true;
     uploads = [...uploads, { file: file.name, status: "uploading" }];
-    uploadFile(file, true)
-      .then((ev) => {
-        const idx = uploads.findIndex((u) => u.file === file.name && u.status === "uploading");
-        if (idx !== -1) {
-          uploads[idx] = {
-            file: file.name, status: "success", id: ev.id, name: ev.name,
-            gymnast_count: ev.gymnast_count, score_count: ev.score_count, club_count: ev.club_count,
-          };
-          uploads = [...uploads];
-        }
-      })
-      .catch((err) => {
-        const idx = uploads.findIndex((u) => u.file === file.name && u.status === "uploading");
-        if (idx !== -1) {
-          uploads[idx] = { file: file.name, status: "error", errorMessage: String(err) };
-          uploads = [...uploads];
-        }
-      })
-      .finally(() => { uploading = false; });
+    try {
+      const ev = await uploadFile(file, true);
+      const idx = uploads.findIndex((u) => u.file === file.name && u.status === "uploading");
+      if (idx !== -1) {
+        uploads[idx] = {
+          file: file.name, status: "success", id: ev.id, name: ev.name,
+          gymnast_count: ev.gymnast_count, score_count: ev.score_count, club_count: ev.club_count,
+        };
+        uploads = [...uploads];
+      }
+    } catch (err) {
+      const idx = uploads.findIndex((u) => u.file === file.name && u.status === "uploading");
+      if (idx !== -1) {
+        uploads[idx] = { file: file.name, status: "error", errorMessage: String(err) };
+        uploads = [...uploads];
+      }
+    } finally {
+      uploading = false;
+    }
+    if (rest.length > 0) {
+      await handleFiles(rest);
+    }
   }
 
   function ondrop(e: DragEvent) {
