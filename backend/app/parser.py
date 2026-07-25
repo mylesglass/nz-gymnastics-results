@@ -39,7 +39,31 @@ def reload_club_maps() -> None:
 
 
 def find_unknown_clubs(data: dict) -> list[str]:
-    club_names = {org["name"] for org in data.get("eventOrganizations", []) if "name" in org}
+    orgs = {org.get("orgId"): org["name"] for org in data.get("eventOrganizations", []) if "name" in org and org.get("orgId")}
+
+    non_gfa_units = {
+        u["_id"] for u in data.get("units", [])
+        if "gfa" not in (u.get("name") or "").lower()
+    }
+
+    if not non_gfa_units:
+        return []
+
+    part_to_org = {
+        ep.get("participantId"): ep.get("orgId")
+        for ep in data.get("eventParticipants", [])
+        if ep.get("participantId") and ep.get("orgId")
+    }
+
+    competitive_orgs = set()
+    for pi in data.get("performanceIndividuals", []):
+        pid, uid = pi.get("participantId"), pi.get("unitId")
+        if pid and uid and uid in non_gfa_units:
+            oid = part_to_org.get(pid)
+            if oid and oid in orgs:
+                competitive_orgs.add(oid)
+
+    club_names = {orgs[oid] for oid in competitive_orgs}
     return sorted(c for c in club_names if c.lower().strip() not in _NAME_TO_CANONICAL)
 
 
