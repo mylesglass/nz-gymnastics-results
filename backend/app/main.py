@@ -907,6 +907,30 @@ def upload_file(file: UploadFile = File(...), allow_unknown: str = None, _auth=D
         session.add(event)
         session.flush()
 
+        # Backfill missing GNZ IDs from existing database records
+        rows_without = [r for r in rows if not r.get("gnz_id")]
+        if rows_without:
+            names = {r["gymnast_name"].strip().lower() for r in rows_without}
+            existing = (
+                session.query(func.lower(func.trim(LongScore.gymnast_name)), LongScore.gnz_id)
+                .filter(
+                    func.lower(func.trim(LongScore.gymnast_name)).in_(names),
+                    LongScore.gnz_id.isnot(None),
+                    LongScore.gnz_id != "",
+                )
+                .distinct()
+                .all()
+            )
+            name_to_id: dict[str, str] = {}
+            for name, gid in existing:
+                if gid.isdigit() and (name not in name_to_id or len(gid) > len(name_to_id[name])):
+                    name_to_id[name] = gid
+            for row in rows:
+                if not row.get("gnz_id"):
+                    key = row["gymnast_name"].strip().lower()
+                    if key in name_to_id:
+                        row["gnz_id"] = name_to_id[key]
+
         for row in rows:
             score = LongScore(event_id=event.id, **row)
             session.add(score)
