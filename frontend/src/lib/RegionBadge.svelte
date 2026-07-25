@@ -3,7 +3,8 @@
 
   let c = $derived(colors.length ? colors : ["#888", "#888"]);
   let bg = $derived(c[0]);
-  let borderColor = $derived(c.length >= 3 ? c[2] : c[1 % c.length]);
+  let ckA = $derived(c.length >= 3 ? c[1] : c[0]);
+  let ckB = $derived(c.length >= 3 ? c[2] : c[1]);
 
   function textColor(hex: string): string {
     let h = hex.replace("#", "");
@@ -16,15 +17,15 @@
 
 <span
   class="inline-flex items-stretch h-5 text-xs font-medium leading-none rounded overflow-hidden"
-  style="background: {bg}; color: {textColor(bg)}; box-shadow: 0 0 0 1.5px {borderColor}"
+  style="background: {bg}; color: {textColor(bg)}"
 >
   <span class="grid grid-cols-3 w-[30px] h-full shrink-0">
-    <span style="background: {c[0]}"></span>
-    <span style="background: {c[1]}"></span>
-    <span style="background: {c[0]}"></span>
-    <span style="background: {c[1]}"></span>
-    <span style="background: {c[0]}"></span>
-    <span style="background: {c[1]}"></span>
+    <span style="background: {ckA}"></span>
+    <span style="background: {ckB}"></span>
+    <span style="background: {ckA}"></span>
+    <span style="background: {ckB}"></span>
+    <span style="background: {ckA}"></span>
+    <span style="background: {ckB}"></span>
   </span>
   <span class="px-1.5 flex items-center">{region}</span>
 </span>
