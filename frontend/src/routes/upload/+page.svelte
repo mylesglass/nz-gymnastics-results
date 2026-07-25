@@ -250,6 +250,16 @@
                     <span class="text-base-content/50 mx-2">&middot;</span>
                     <span>{item.club_count} clubs</span>
                   {/if}
+                  {#if item.names_unified && item.names_unified > 0}
+                    <div class="mt-1 text-xs text-base-content/60">
+                      {item.ids_corrected} IDs corrected, {item.names_unified} names unified
+                      {#if item.conflicts && item.conflicts.length > 0}
+                        <span class="text-warning ml-1">
+                          ⚠ {item.conflicts.length} conflicts (review in admin dashboard)
+                        </span>
+                      {/if}
+                    </div>
+                  {/if}
                 </div>
                 <div class="card-actions mt-2">
                   <a href="/events/{item.id}" class="btn btn-primary btn-xs">View Results</a>
