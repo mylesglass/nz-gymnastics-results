@@ -14,7 +14,7 @@ def resolve_participants(event_participants: list[dict]) -> dict[str, dict]:
         if not pid:
             continue
         mapping[pid] = {
-            "name": p.get("name", ""),
+            "name": p.get("name", "").replace("\ufffd", "").replace("\u00a0", " ").strip(),
             "gnz_id": p.get("identifier", ""),
             "org_id": p.get("organizationId", ""),
         }
