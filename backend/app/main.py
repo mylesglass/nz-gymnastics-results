@@ -48,7 +48,7 @@ from app.schemas import (
     UserResponse,
     UserUpdate,
 )
-from app.transformer import _find_region, _use_vault_average, export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict
+from app.transformer import _find_region, _use_vault_average, export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict, pivot_to_wide_dict_multi
 
 
 @asynccontextmanager
@@ -776,6 +776,23 @@ def _find_similar_names(session, threshold: float = 0.85) -> list[dict]:
     )
     names = sorted({r[0] for r in rows if r[0]})
 
+    count_rows = (
+        session.query(LongScore.gymnast_name, func.count(LongScore.id))
+        .group_by(LongScore.gymnast_name)
+        .all()
+    )
+    name_to_count = {r[0]: r[1] for r in count_rows}
+
+    gnz_id_rows = (
+        session.query(LongScore.gymnast_name, LongScore.gnz_id)
+        .filter(LongScore.gnz_id.isnot(None), LongScore.gnz_id != "")
+        .distinct()
+        .all()
+    )
+    name_to_gnz_ids: dict[str, list[str]] = {}
+    for name, gnz_id in gnz_id_rows:
+        name_to_gnz_ids.setdefault(name, []).append(gnz_id)
+
     token_groups: dict[str, list[str]] = {}
     for name in names:
         lower = name.lower().strip()
@@ -799,25 +816,18 @@ def _find_similar_names(session, threshold: float = 0.85) -> list[dict]:
                 if key in seen:
                     continue
                 seen.add(key)
-                ratio = difflib.SequenceMatcher(None, a.lower(), b.lower()).ratio()
+                matcher = difflib.SequenceMatcher(None, a.lower(), b.lower())
+                if matcher.quick_ratio() < threshold:
+                    continue
+                ratio = matcher.ratio()
                 if ratio >= threshold and a.lower().strip() != b.lower().strip():
-                    rows_a = session.query(LongScore).filter(LongScore.gymnast_name == a).count()
-                    rows_b = session.query(LongScore).filter(LongScore.gymnast_name == b).count()
+                    rows_a = name_to_count.get(a, 0)
+                    rows_b = name_to_count.get(b, 0)
                     if rows_b < rows_a:
                         a, b = b, a
                         rows_a, rows_b = rows_b, rows_a
-                    ids_a_vals = [
-                        r[0] for r in session.query(LongScore.gnz_id)
-                        .filter(LongScore.gymnast_name == a, LongScore.gnz_id.isnot(None), LongScore.gnz_id != "")
-                        .distinct().all()
-                        if r[0]
-                    ]
-                    ids_b_vals = [
-                        r[0] for r in session.query(LongScore.gnz_id)
-                        .filter(LongScore.gymnast_name == b, LongScore.gnz_id.isnot(None), LongScore.gnz_id != "")
-                        .distinct().all()
-                        if r[0]
-                    ]
+                    ids_a_vals = name_to_gnz_ids.get(a, [])
+                    ids_b_vals = name_to_gnz_ids.get(b, [])
                     result.append({
                         "name_a": a, "name_b": b, "score": round(ratio, 4),
                         "gnz_ids_a": ids_a_vals, "gnz_ids_b": ids_b_vals,
@@ -963,7 +973,7 @@ def upload_file(file: UploadFile = File(...), allow_unknown: str = None, _auth=D
             score = LongScore(event_id=event.id, **row)
             session.add(score)
         session.commit()
-        invalidate()
+        invalidate(event.id)
 
         gymnast_count = (
             session.query(func.count(func.distinct(LongScore.gymnast_name)))
@@ -1010,27 +1020,29 @@ def list_events(response: Response):
     response.headers.update(cache_headers())
     session = get_session()
     try:
-        events = session.query(Event).order_by(Event.start_date.desc()).all()
-        result = []
-        for ev in events:
-            gymnast_count = (
-                session.query(func.count(func.distinct(LongScore.gymnast_name)))
-                .filter(LongScore.event_id == ev.id)
-                .scalar()
+        stmt = (
+            session.query(
+                Event,
+                func.count(func.distinct(LongScore.gymnast_name)).label("gymnast_count"),
             )
-            result.append(
-                EventListItem(
-                    id=ev.id,
-                    name=ev.name,
-                    start_date=ev.start_date,
-                    end_date=ev.end_date,
-                    discipline=ev.discipline,
-                    year=ev.year,
-                    gymnast_count=gymnast_count or 0,
-                    is_national=bool(ev.is_national),
-                )
+            .outerjoin(LongScore, Event.id == LongScore.event_id)
+            .group_by(Event.id)
+            .order_by(Event.start_date.desc())
+        )
+        results = stmt.all()
+        return [
+            EventListItem(
+                id=ev.id,
+                name=ev.name,
+                start_date=ev.start_date,
+                end_date=ev.end_date,
+                discipline=ev.discipline,
+                year=ev.year,
+                gymnast_count=gymnast_count or 0,
+                is_national=bool(ev.is_national),
             )
-        return result
+            for ev, gymnast_count in results
+        ]
     finally:
         session.close()
 
@@ -1118,39 +1130,13 @@ def get_all_results_wide(response: Response, gnz_id: str = None, club: str = Non
     response.headers.update(cache_headers())
     session = get_session()
     try:
-        query = session.query(Event).order_by(Event.created_at.desc())
+        query = session.query(Event.id).order_by(Event.created_at.desc())
         if year:
             query = query.filter(Event.year == year)
-        events = query.all()
-        combined: dict[str, dict] = {}
-
-        for ev in events:
-            data = pivot_to_wide_dict(ev.id, session, gnz_id, club)
-            if not data:
-                continue
-            for disc_key in ("wag", "mag"):
-                if disc_key not in data:
-                    continue
-                if disc_key not in combined:
-                    combined[disc_key] = {"columns": [], "rows": []}
-                disc = data[disc_key]
-                for row in disc["rows"]:
-                    row["event_name"] = ev.name
-                    row["event_id"] = ev.id
-                combined[disc_key]["rows"].extend(disc["rows"])
-                if not combined[disc_key]["columns"]:
-                    combined[disc_key]["columns"] = list(disc["columns"])
-                else:
-                    for c in disc["columns"]:
-                        if c not in combined[disc_key]["columns"]:
-                            combined[disc_key]["columns"].append(c)
-
-        for disc_key in combined:
-            if "event_name" in combined[disc_key]["columns"]:
-                combined[disc_key]["columns"].remove("event_name")
-            combined[disc_key]["columns"].insert(0, "event_name")
-
-        return combined
+        event_ids = [r[0] for r in query.all()]
+        if not event_ids:
+            return {}
+        return pivot_to_wide_dict_multi(event_ids, session, gnz_id, club)
     finally:
         session.close()
 
@@ -1214,7 +1200,7 @@ def delete_event(event_id: int, _auth=Depends(require_role("admin"))):
             raise HTTPException(404, "Event not found")
         session.delete(event)
         session.commit()
-        invalidate()
+        invalidate(event_id)
         return {"ok": True}
     finally:
         session.close()
@@ -1239,7 +1225,7 @@ def update_event(event_id: int, body: EventUpdate, _auth=Depends(require_role("a
         if body.is_national is not None:
             event.is_national = body.is_national
         session.commit()
-        invalidate()
+        invalidate(event_id)
         gymnast_count = (
             session.query(func.count(func.distinct(LongScore.gymnast_name)))
             .filter(LongScore.event_id == event.id)

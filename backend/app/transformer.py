@@ -113,25 +113,19 @@ def pivot_to_wide(event_id: int, session, event_name: str, event_date: str) -> p
 
 def pivot_to_wide_dict(event_id: int, session, gnz_id: str = None, club: str = None) -> dict:
     return cached(
-        ("pivot", event_id, gnz_id or "", club or ""),
+        ("event", event_id, "pivot", gnz_id or "", club or ""),
         lambda: _compute_pivot(event_id, session, gnz_id, club),
     )
 
 
-def _compute_pivot(event_id: int, session, gnz_id: str = None, club: str = None) -> dict:
-    """Pivot long-format scores into wide-format rows per discipline.
+def pivot_to_wide_dict_multi(event_ids: list[int], session, gnz_id: str = None, club: str = None) -> dict:
+    return _compute_pivot_multi(event_ids, session, gnz_id, club)
 
-    Returns dict: {wag: {columns, rows}, mag: {columns, rows}}
-    """
-    query = session.query(LongScore).filter(LongScore.event_id == event_id)
-    if gnz_id:
-        query = query.filter(LongScore.gnz_id == gnz_id)
-    if club:
-        query = query.filter(LongScore.club_name == club)
+
+def _long_rows_from_session(query) -> list[dict]:
     scores = query.all()
     if not scores:
-        return {}
-
+        return []
     long_rows = []
     for s in scores:
         long_rows.append({
@@ -152,7 +146,98 @@ def _compute_pivot(event_id: int, session, gnz_id: str = None, club: str = None)
             "aa_rank": s.aa_rank,
             "bonus": s.bonus,
         })
+    return long_rows
 
+
+def _compute_pivot(event_id: int, session, gnz_id: str = None, club: str = None) -> dict:
+    """Pivot long-format scores into wide-format rows per discipline.
+
+    Returns dict: {wag: {columns, rows}, mag: {columns, rows}}
+    """
+    query = session.query(LongScore).filter(LongScore.event_id == event_id)
+    if gnz_id:
+        query = query.filter(LongScore.gnz_id == gnz_id)
+    if club:
+        query = query.filter(LongScore.club_name == club)
+    long_rows = _long_rows_from_session(query)
+    if not long_rows:
+        return {}
+    return _pivot_long_rows(long_rows)
+
+
+def _compute_pivot_multi(event_ids: list[int], session, gnz_id: str = None, club: str = None) -> dict:
+    query = session.query(LongScore).filter(LongScore.event_id.in_(event_ids))
+    if gnz_id:
+        query = query.filter(LongScore.gnz_id == gnz_id)
+    if club:
+        query = query.filter(LongScore.club_name == club)
+    scores = query.all()
+    if not scores:
+        return {}
+
+    rows_by_event: dict[int, list[dict]] = {}
+    event_names: dict[int, str] = {}
+    for s in scores:
+        rows_by_event.setdefault(s.event_id, []).append(s)
+        if s.event_id not in event_names:
+            event_names[s.event_id] = s.event_name or ""
+
+    combined: dict[str, dict] = {}
+    for event_id in event_ids:
+        if event_id not in rows_by_event:
+            continue
+        event_scores = rows_by_event[event_id]
+        long_rows = []
+        for s in event_scores:
+            long_rows.append({
+                "gymnast_name": s.gymnast_name,
+                "gnz_id": s.gnz_id or "",
+                "club_name": s.club_name or "",
+                "discipline": s.discipline,
+                "level_category": s.level_category or "",
+                "division": s.division or "",
+                "round_type": s.round_type or "",
+                "apparatus": s.apparatus,
+                "d_score": s.d_score,
+                "e_score": s.e_score,
+                "n_score": s.neutral_deductions,
+                "total_score": s.pass_final_score,
+                "apparatus_rank": s.apparatus_rank,
+                "aa_score": s.aa_score,
+                "aa_rank": s.aa_rank,
+                "bonus": s.bonus,
+            })
+        data = _pivot_long_rows(long_rows)
+        if not data:
+            continue
+        event_name = event_names.get(event_id, "")
+        for disc_key in ("wag", "mag"):
+            if disc_key not in data:
+                continue
+            if disc_key not in combined:
+                combined[disc_key] = {"columns": [], "rows": []}
+            disc = data[disc_key]
+            for row in disc["rows"]:
+                row["event_name"] = event_name
+                row["event_id"] = event_id
+            combined[disc_key]["rows"].extend(disc["rows"])
+            if not combined[disc_key]["columns"]:
+                combined[disc_key]["columns"] = list(disc["columns"])
+            else:
+                for c in disc["columns"]:
+                    if c not in combined[disc_key]["columns"]:
+                        combined[disc_key]["columns"].append(c)
+
+    for disc_key in combined:
+        if "event_name" in combined[disc_key]["columns"]:
+            combined[disc_key]["columns"].remove("event_name")
+        combined[disc_key]["columns"].insert(0, "event_name")
+
+    return combined
+
+
+def _pivot_long_rows(long_rows: list[dict]) -> dict:
+    """Core pivot logic: given long-format rows, return wide-format per discipline."""
     df = pd.DataFrame(long_rows)
     present_apps = set(df["apparatus"].unique())
 
