@@ -3,6 +3,7 @@
   import type { Snippet } from "svelte";
   import ScoreTooltip from "./ScoreTooltip.svelte";
   import AATooltip from "./AATooltip.svelte";
+  import { REGION_PALETTES } from "./regions";
 
   interface TabData {
     columns: string[];
@@ -735,6 +736,17 @@
                     href={`/club/${encodeURIComponent(String(row["club"]))}`}
                     class="link link-hover">{row[col] ?? ""}</a
                   >
+                {:else if col === "region" && row[col]}
+                  {@const pal = REGION_PALETTES[String(row[col])]}
+                  {#if pal}
+                    <span class="inline-flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background: {pal[0]}"></span>
+                      <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background: {pal[1]}"></span>
+                      {row[col]}
+                    </span>
+                  {:else}
+                    {row[col]}
+                  {/if}
                 {:else}
                   {row[col] ?? ""}
                 {/if}
