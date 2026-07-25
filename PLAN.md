@@ -188,10 +188,9 @@
 
 ### Next Steps
 - [ ] Mobile-responsive table improvements
-- [ ] Performance: caching, query optimisation, application speed
+- [ ] Performance: caching, query optimisation, application speed, Search/ research perforomance improvements (i.e. Large result tables are slow), how do we make the user exp[erience more fluid and modern?
 - [ ] Automate reconciliation on upload — trigger reconcile after every successful JSON import
 - [ ] Fuzzy name matching — detect nicknames/spelling variations (e.g. "Liz" → "Elizabeth")
 - [ ] Conflict resolution UI — admin dashboard to manually pick the correct ID for ambiguous names
 - [ ] GNZ ID audit log — track when and why an ID was changed for a gymnast
 - [ ] Make 10.0 Scoreboard Icon & Favicon
-- [ ] Search perforomance improvements (i.e. Large result tables are slow)

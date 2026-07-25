@@ -144,7 +144,7 @@
         <span class="label-text text-sm">Exclude non-qualifiers</span>
       </label>
 
-      <button onclick={exportCSV} class="btn btn-outline btn-sm ml-auto" disabled={rankings.length === 0}>
+      <button onclick={exportCSV} class="btn btn-primary btn-sm ml-auto" disabled={rankings.length === 0}>
         Export CSV
       </button>
     {:else if year}

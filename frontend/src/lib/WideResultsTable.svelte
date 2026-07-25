@@ -42,6 +42,7 @@
   let isScrolled = $state(false);
   let showDuplicateHeaders = $state(false);
   let activeTab = $state("wag");
+  let discTabsName = $state(`disc-tabs-${Math.random().toString(36).slice(2, 7)}`);
   let columns = $state<string[]>([]);
   let rows = $state<Record<string, unknown>[]>([]);
   let allData = $state<Record<string, TabData>>({});
@@ -491,15 +492,17 @@
     </h1>
 
     <div class="flex flex-wrap items-center gap-1 pb-1">
-      <div role="tablist" class="tabs tabs-boxed">
+      <div role="tablist" class="tabs tabs-box tabs-xs">
         {#each Object.keys(allData) as tab}
-          <button
+          <input
+            type="radio"
+            name={discTabsName}
             role="tab"
-            class="tab {activeTab === tab ? 'tab-active font-bold' : ''}"
-            onclick={() => applyTab(tab)}
-          >
-            {tab.toUpperCase()}
-          </button>
+            class="tab checked:bg-primary checked:text-primary-content"
+            aria-label={tab.toUpperCase()}
+            checked={activeTab === tab}
+            onchange={() => applyTab(tab)}
+          />
         {/each}
       </div>
       {#if extraControls}
@@ -720,7 +723,7 @@
       </thead>
       <tbody>
         {#each filteredRows() as row}
-          <tr class="hover:bg-base-300 transition-colors">
+          <tr class="hover:bg-primary/15 transition-colors">
             {#each frontMeta as col}
               <td class="whitespace-nowrap py-1.5 {COL_MIN_CLASS[col] ?? ''}">
                 {#if col === "name" && row["gnz-id"]}
