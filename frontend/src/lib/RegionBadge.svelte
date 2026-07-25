@@ -20,9 +20,9 @@
 >
   <span class="grid grid-cols-2 w-5 shrink-0">
     <span class="w-2.5 h-2.5" style="background: {c[0]}"></span>
-    <span class="w-2.5 h-2.5" style="background: {c[1 % c.length]}"></span>
-    <span class="w-2.5 h-2.5" style="background: {c[2 % c.length]}"></span>
-    <span class="w-2.5 h-2.5" style="background: {c[3 % c.length]}"></span>
+    <span class="w-2.5 h-2.5" style="background: {c[1]}"></span>
+    <span class="w-2.5 h-2.5" style="background: {c[1]}"></span>
+    <span class="w-2.5 h-2.5" style="background: {c[0]}"></span>
   </span>
   <span class="px-1.5 flex items-center">{region}</span>
 </span>
