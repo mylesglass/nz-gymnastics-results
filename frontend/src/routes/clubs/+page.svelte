@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { listClubs } from "$lib/api";
+  import RegionBadge from "$lib/RegionBadge.svelte";
+  import { REGION_PALETTES } from "$lib/regions";
 
   let clubs = $state<{ name: string; gymnast_count: number; region: string | null; is_region: boolean }[]>([]);
   let loading = $state(true);
@@ -55,10 +57,10 @@
   {:else}
     {#each Object.entries(grouped) as [region, regionClubs]}
       <div class="mb-8">
-        <div class="flex items-center gap-2 mb-3">
-          <span class="text-lg font-semibold">{region}</span>
-          <span class="text-xs text-base-content/50">({regionClubs.length})</span>
-        </div>
+          <div class="flex items-center gap-2 mb-3">
+            <RegionBadge region={region} colors={REGION_PALETTES[region] ?? []} />
+            <span class="text-xs text-base-content/50">({regionClubs.length})</span>
+          </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
           {#each regionClubs as club}
             <a
