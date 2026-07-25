@@ -35,11 +35,13 @@ from app.schemas import (
     FixDuplicatesResponse,
     GymnastItem,
     LoginRequest,
+    MergeNamesRequest,
     RankingsResponse,
     RankingRow,
     ResultsResponse,
     StatsResponse,
     StepsResponse,
+    SuggestedMerge,
     TokenResponse,
     UploadValidationResponse,
     UserCreate,
@@ -760,6 +762,96 @@ def apply_duplicate_fixes(
             invalidate()
 
         return {"applied": total}
+    finally:
+        session.close()
+
+
+def _find_similar_names(session, threshold: float = 0.8) -> list[dict]:
+    import difflib
+
+    rows = (
+        session.query(LongScore.gymnast_name)
+        .distinct()
+        .all()
+    )
+    names = sorted({r[0] for r in rows if r[0]})
+
+    token_groups: dict[str, list[str]] = {}
+    for name in names:
+        lower = name.lower().strip()
+        tokens = lower.split()
+        for t in tokens:
+            if len(t) < 3:
+                continue
+            if t not in token_groups:
+                token_groups[t] = []
+            token_groups[t].append(name)
+
+    seen = set()
+    result = []
+    for token, group in token_groups.items():
+        if len(group) < 2:
+            continue
+        for i in range(len(group)):
+            for j in range(i + 1, len(group)):
+                a, b = group[i], group[j]
+                key = (a, b) if a < b else (b, a)
+                if key in seen:
+                    continue
+                seen.add(key)
+                ratio = difflib.SequenceMatcher(None, a.lower(), b.lower()).ratio()
+                if ratio >= threshold:
+                    ids_a = [
+                        r[0] for r in session.query(LongScore.gnz_id)
+                        .filter(LongScore.gymnast_name == a, LongScore.gnz_id.isnot(None), LongScore.gnz_id != "")
+                        .distinct().all()
+                        if r[0]
+                    ]
+                    ids_b = [
+                        r[0] for r in session.query(LongScore.gnz_id)
+                        .filter(LongScore.gymnast_name == b, LongScore.gnz_id.isnot(None), LongScore.gnz_id != "")
+                        .distinct().all()
+                        if r[0]
+                    ]
+                    result.append({
+                        "name_a": a, "name_b": b, "score": round(ratio, 4),
+                        "gnz_ids_a": ids_a, "gnz_ids_b": ids_b,
+                    })
+    result.sort(key=lambda x: -x["score"])
+    return result
+
+
+@app.get("/api/admin/suggested-merges", response_model=list[SuggestedMerge])
+def list_suggested_merges(_auth=Depends(require_role("admin"))):
+    session = get_session()
+    try:
+        return [SuggestedMerge(**m) for m in _find_similar_names(session)]
+    finally:
+        session.close()
+
+
+@app.post("/api/admin/merge-names", response_model=dict)
+def merge_names(
+    req: MergeNamesRequest,
+    _auth=Depends(require_role("admin")),
+):
+    session = get_session()
+    try:
+        updated = (
+            session.query(LongScore)
+            .filter(LongScore.gymnast_name == req.from_name)
+            .update({LongScore.gymnast_name: req.to_name}, synchronize_session=False)
+        )
+        if updated:
+            session.commit()
+            invalidate()
+        report = reconcile_athletes()
+        return {
+            "merged": updated,
+            "names_unified": report["names_unified"],
+            "ids_corrected": report["ids_corrected"],
+            "conflicts": report.get("conflicts", []),
+        }
     finally:
         session.close()
 

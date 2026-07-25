@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getStats, checkDuplicates, fixDuplicates, applyFixes } from "$lib/api";
-  import type { DuplicateGroup, DuplicateInstance } from "$lib/api";
+  import { getStats, checkDuplicates, fixDuplicates, applyFixes, getSuggestedMerges, mergeNames } from "$lib/api";
+  import type { DuplicateGroup, DuplicateInstance, SuggestedMerge } from "$lib/api";
 
   let stats = $state<{
     total_events: number;
@@ -22,6 +22,13 @@
   let selections = $state<Record<string, string>>({});
   let applying = $state(false);
   let applyResult = $state<{ applied: number } | null>(null);
+
+  let merges = $state<SuggestedMerge[]>([]);
+  let mergesLoading = $state(true);
+  let mergesError = $state<string | null>(null);
+  let showMerges = $state(false);
+  let mergingRow = $state<string | null>(null);
+  let mergeResult = $state<string | null>(null);
 
   function instanceKey(inst: DuplicateInstance, name: string): string {
     return `${name}|${inst.club}|${inst.level_category}`;
@@ -51,6 +58,22 @@
     return lowConfidence.some(l => l.name === d.name);
   }
 
+  async function runMerge(name_a: string, name_b: string) {
+    const key = `${name_a}|${name_b}`;
+    mergingRow = key;
+    mergeResult = null;
+    try {
+      const res = await mergeNames(name_a, name_b);
+      mergeResult = `Merged ${res.merged} rows, ${res.names_unified} names unified, ${res.ids_corrected} IDs corrected`;
+      merges = await getSuggestedMerges();
+      duplicates = await checkDuplicates();
+    } catch (e) {
+      mergeResult = `Error: ${e}`;
+    } finally {
+      mergingRow = null;
+    }
+  }
+
   onMount(async () => {
     try {
       stats = await getStats();
@@ -70,6 +93,13 @@
       dupError = String(e);
     } finally {
       dupLoading = false;
+    }
+    try {
+      merges = await getSuggestedMerges();
+    } catch (e) {
+      mergesError = String(e);
+    } finally {
+      mergesLoading = false;
     }
   });
 
@@ -280,6 +310,72 @@
           </div>
         {:else}
           <p class="text-sm text-base-content/60">No ID inconsistencies found. All gymnasts have consistent GNZ IDs.</p>
+        {/if}
+      </div>
+    </div>
+
+    <div class="card bg-base-200 border border-base-300 mt-4">
+      <div class="card-body">
+        <h2 class="card-title">🔗 Suggested Merges</h2>
+        <p class="text-sm text-base-content/70 mb-3">
+          Names that may refer to the same gymnast — review and merge if correct.
+        </p>
+
+        {#if mergesLoading}
+          <span class="loading loading-spinner loading-sm"></span>
+        {:else if mergesError}
+          <div role="alert" class="alert alert-error mb-3">
+            <span>{mergesError}</span>
+          </div>
+        {:else if merges.length > 0}
+          {#if mergeResult}
+            <div role="alert" class="alert alert-success mb-2">
+              <span>{mergeResult}</span>
+            </div>
+          {/if}
+          <button class="btn btn-ghost btn-xs self-start mb-2" onclick={() => (showMerges = !showMerges)}>
+            {showMerges ? "Hide" : "View"} {merges.length} suggestions
+          </button>
+          {#if showMerges}
+            <div class="overflow-x-auto">
+              <table class="table table-xs">
+                <thead>
+                  <tr>
+                    <th>Name A</th>
+                    <th>Name B</th>
+                    <th>Similarity</th>
+                    <th>IDs</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {#each merges as m}
+                    <tr>
+                      <td class="font-medium">{m.name_a}</td>
+                      <td class="font-medium">{m.name_b}</td>
+                      <td>{m.score.toFixed(2)}</td>
+                      <td class="text-xs">
+                        {#each m.gnz_ids_a as id, i}{i > 0 ? ", " : ""}{id}{/each}
+                        &rarr;
+                        {#each m.gnz_ids_b as id, i}{i > 0 ? ", " : ""}{id}{/each}
+                      </td>
+                      <td>
+                        <button
+                          class="btn btn-primary btn-xs"
+                          onclick={() => runMerge(m.name_a, m.name_b)}
+                          disabled={mergingRow === `${m.name_a}|${m.name_b}`}
+                        >
+                          {mergingRow === `${m.name_a}|${m.name_b}` ? "Merging..." : "Merge"}
+                        </button>
+                      </td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          {/if}
+        {:else}
+          <p class="text-sm text-base-content/60">No similar name pairs found.</p>
         {/if}
       </div>
     </div>
