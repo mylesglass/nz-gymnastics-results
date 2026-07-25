@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { getRankings, getRankingSteps, type RankingRow } from "$lib/api";
-  import { selectedYear } from "$lib/year";
+  import { selectedYear, yearOptions } from "$lib/year";
   import RegionBadge from "$lib/RegionBadge.svelte";
   import { REGION_PALETTES } from "$lib/regions";
 
@@ -21,15 +21,27 @@
   let steps = $state<string[]>([]);
   let selectedStep = $state("");
   let rankings = $state<RankingRow[]>([]);
+  let years = $state<string[]>([]);
 
   let subYear: (() => void) | undefined;
+  let subYears: (() => void) | undefined;
 
   onMount(() => {
     subYear = selectedYear.subscribe((v) => {
       year = v;
       if (v) loadSteps();
     });
-    return () => subYear?.();
+    subYears = yearOptions.subscribe((v) => {
+      years = v;
+      if (v.length > 0 && !year) {
+        const maxYear = v.reduce((a, b) => (Number(a) > Number(b) ? a : b));
+        selectedYear.set(maxYear);
+      }
+    });
+    return () => {
+      subYear?.();
+      subYears?.();
+    };
   });
 
   async function loadSteps() {
