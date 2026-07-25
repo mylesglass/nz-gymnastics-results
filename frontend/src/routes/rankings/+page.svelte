@@ -2,6 +2,8 @@
   import { onMount } from "svelte";
   import { getRankings, getRankingSteps, type RankingRow } from "$lib/api";
   import { selectedYear } from "$lib/year";
+  import RegionBadge from "$lib/RegionBadge.svelte";
+  import { REGION_PALETTES } from "$lib/regions";
 
   const CSV_HEADERS: Record<string, string> = {
     rank: "Rank", name: "Name", gnz_id: "GNZ ID", club: "Club",
@@ -10,28 +12,6 @@
     score2: "Score 2", comp2: "Competition 2",
     total: "Total", average: "Average",
   };
-
-  const REGION_COLORS: Record<string, string> = {
-    "Auckland": "badge-info",
-    "Wellington": "badge-warning",
-    "Harbour": "badge-secondary",
-    "Bay of Plenty": "badge-success",
-    "Canterbury": "badge-error",
-    "Otago": "badge-accent",
-    "Waikato": "badge-neutral",
-    "Southland": "badge-primary",
-    "Counties - Manukau": "badge-ghost text-info",
-    "Northland": "badge-ghost text-success",
-    "Hawkes Bay / Poverty Bay": "badge-ghost text-warning",
-    "Manawatu - Whanganui": "badge-ghost text-secondary",
-    "Taranaki": "badge-ghost text-error",
-    "Top of the South": "badge-ghost text-accent",
-    "Aorangi": "badge-ghost text-neutral",
-  };
-
-  function regionBadge(region: string): string {
-    return REGION_COLORS[region] ?? "badge-ghost";
-  }
 
   let loading = $state(true);
   let error = $state("");
@@ -199,7 +179,7 @@
               <td>{r.club}</td>
               <td>
                 {#if r.region}
-                  <span class="badge badge-sm {regionBadge(r.region)}">{r.region}</span>
+                  <RegionBadge region={r.region} colors={REGION_PALETTES[r.region] ?? []} />
                 {/if}
               </td>
               {#each r.scores as score, i}

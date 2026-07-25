@@ -1,0 +1,17 @@
+export const REGION_PALETTES: Record<string, string[]> = {
+  "Aorangi":                ["#4FC3F7", "#FFFFFF"],
+  "Auckland":               ["#D32F2F", "#1976D2"],
+  "Bay of Plenty":          ["#FFB300", "#00BCD4"],
+  "Canterbury":             ["#81C784", "#A1887F"],
+  "Counties - Manukau":     ["#388E3C", "#1976D2"],
+  "Harbour":                ["#0D47A1", "#90A4AE"],
+  "Hawkes Bay / Poverty Bay": ["#8E24AA", "#FDD835"],
+  "Manawatu - Whanganui":   ["#00ACC1", "#43A047"],
+  "Northland":              ["#00897B", "#FFB300"],
+  "Otago":                  ["#FFB300", "#1E88E5"],
+  "Southland":              ["#2E7D32", "#0288D1"],
+  "Taranaki":               ["#78909C", "#66BB6A"],
+  "Top of the South":       ["#FDD835", "#43A047"],
+  "Waikato":                ["#5D4037", "#1976D2"],
+  "Wellington":             ["#C62828", "#1565C0"],
+};
