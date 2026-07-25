@@ -275,6 +275,8 @@ export interface SuggestedMerge {
   score: number;
   gnz_ids_a: string[];
   gnz_ids_b: string[];
+  rows_a: number;
+  rows_b: number;
 }
 
 export async function getSuggestedMerges(): Promise<SuggestedMerge[]> {

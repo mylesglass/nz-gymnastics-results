@@ -58,12 +58,12 @@
     return lowConfidence.some(l => l.name === d.name);
   }
 
-  async function runMerge(name_a: string, name_b: string) {
-    const key = `${name_a}|${name_b}`;
+  async function runMerge(keep: string, merge: string) {
+    const key = `${keep}|${merge}`;
     mergingRow = key;
     mergeResult = null;
     try {
-      const res = await mergeNames(name_a, name_b);
+      const res = await mergeNames(merge, keep);
       mergeResult = `Merged ${res.merged} rows, ${res.names_unified} names unified, ${res.ids_corrected} IDs corrected`;
       merges = await getSuggestedMerges();
       duplicates = await checkDuplicates();
@@ -351,21 +351,28 @@
                 <tbody>
                   {#each merges as m}
                     <tr>
-                      <td class="font-medium">{m.name_a}</td>
-                      <td class="font-medium">{m.name_b}</td>
+                      <td class="font-medium">{m.name_a}<span class="text-xs text-base-content/50 ml-1">({m.rows_a})</span></td>
+                      <td class="font-medium">{m.name_b}<span class="text-xs text-base-content/50 ml-1">({m.rows_b})</span></td>
                       <td>{m.score.toFixed(2)}</td>
                       <td class="text-xs">
                         {#each m.gnz_ids_a as id, i}{i > 0 ? ", " : ""}<a href="/gymnast/{id}" class="link link-hover">{id}</a>{/each}
                         &rarr;
                         {#each m.gnz_ids_b as id, i}{i > 0 ? ", " : ""}<a href="/gymnast/{id}" class="link link-hover">{id}</a>{/each}
                       </td>
-                      <td>
+                      <td class="flex gap-1">
+                        <button
+                          class="btn btn-ghost btn-xs"
+                          onclick={() => runMerge(m.name_a, m.name_b)}
+                          disabled={mergingRow === `${m.name_a}|${m.name_b}` || mergingRow === `${m.name_b}|${m.name_a}`}
+                        >
+                          Keep A
+                        </button>
                         <button
                           class="btn btn-primary btn-xs"
-                          onclick={() => runMerge(m.name_a, m.name_b)}
-                          disabled={mergingRow === `${m.name_a}|${m.name_b}`}
+                          onclick={() => runMerge(m.name_b, m.name_a)}
+                          disabled={mergingRow === `${m.name_a}|${m.name_b}` || mergingRow === `${m.name_b}|${m.name_a}`}
                         >
-                          {mergingRow === `${m.name_a}|${m.name_b}` ? "Merging..." : "Merge"}
+                          Keep B
                         </button>
                       </td>
                     </tr>
