@@ -2,7 +2,6 @@ from collections import defaultdict
 
 from sqlalchemy import func
 
-from app.cache import invalidate
 from app.database import get_session
 from app.models import LongScore
 
