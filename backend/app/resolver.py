@@ -77,7 +77,7 @@ def resolve_level(unit_name: str) -> str:
     if "youth international" in lower:
         return "Youth International"
 
-    m = re.search(r"step\s+(\d+)", lower)
+    m = re.search(r"step\s*(\d+)", lower)
     if m:
         return f"STEP {m.group(1)}"
     m = re.search(r"level\s+(\d+)", lower)
@@ -88,7 +88,7 @@ def resolve_level(unit_name: str) -> str:
     if "senior open" in lower:
         return "Senior Open"
     if "youth" in lower:
-        return "Youth"
+        return "Youth International"
     if "under 16" in lower or "u16" in lower:
         return "U16"
     if "under 18" in lower or "u18" in lower:
@@ -108,7 +108,11 @@ def resolve_level(unit_name: str) -> str:
 
 
 def fix_gnz_id(identifier: str) -> str:
-    """Normalise GNZ IDs (strip leading 'GS' prefix)."""
-    if identifier.startswith("GS"):
-        return identifier[2:]
-    return identifier
+    """Normalise GNZ IDs (strip leading prefixes, reject non-numeric)."""
+    raw = (identifier or "").strip()
+    for prefix in ("GS", "GNZ", "GGS"):
+        if raw.startswith(prefix):
+            raw = raw.removeprefix(prefix)
+    if raw.isdigit():
+        return raw
+    return ""

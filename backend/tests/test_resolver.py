@@ -139,3 +139,13 @@ class TestFixGnzId:
 
     def test_empty(self):
         assert fix_gnz_id("") == ""
+
+    def test_club_code_returns_empty(self):
+        assert fix_gnz_id("ARG") == ""
+        assert fix_gnz_id("NHG") == ""
+
+    def test_strips_gnz_prefix(self):
+        assert fix_gnz_id("GNZ699917") == "699917"
+
+    def test_strips_ggs_prefix(self):
+        assert fix_gnz_id("GGS200576") == "200576"
