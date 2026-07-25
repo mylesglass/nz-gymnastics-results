@@ -845,9 +845,31 @@ def merge_names(
     try:
         updated = (
             session.query(LongScore)
-            .filter(LongScore.gymnast_name == req.from_name)
+            .filter(
+                func.trim(func.lower(LongScore.gymnast_name))
+                == func.trim(func.lower(req.from_name))
+            )
             .update({LongScore.gymnast_name: req.to_name}, synchronize_session=False)
         )
+
+        # Normalize survivor name to its most common form
+        canonical = (
+            session.query(LongScore.gymnast_name, func.count(LongScore.id).label("cnt"))
+            .filter(
+                func.trim(func.lower(LongScore.gymnast_name))
+                == func.trim(func.lower(req.to_name))
+            )
+            .group_by(LongScore.gymnast_name)
+            .order_by(func.count(LongScore.id).desc())
+            .first()
+        )
+        if canonical and canonical[0] != req.to_name:
+            session.query(LongScore).filter(
+                func.trim(func.lower(LongScore.gymnast_name))
+                == func.trim(func.lower(req.to_name)),
+                LongScore.gymnast_name != canonical[0],
+            ).update({LongScore.gymnast_name: canonical[0]}, synchronize_session=False)
+
         if updated:
             session.commit()
             invalidate()
