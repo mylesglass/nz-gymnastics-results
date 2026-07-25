@@ -26,6 +26,12 @@
     <span style="background: {ckB}"></span>
     <span style="background: {ckA}"></span>
     <span style="background: {ckB}"></span>
+    <span style="background: {ckA}"></span>
+    <span style="background: {ckB}"></span>
+    <span style="background: {ckA}"></span>
+    <span style="background: {ckB}"></span>
+    <span style="background: {ckA}"></span>
+    <span style="background: {ckB}"></span>
   </span>
   <span class="px-1.5 flex items-center">{region}</span>
 </span>
