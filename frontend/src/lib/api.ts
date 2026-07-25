@@ -19,6 +19,9 @@ export interface EventSummary {
   score_count: number;
   club_count?: number;
   is_national?: boolean;
+  ids_corrected?: number;
+  names_unified?: number;
+  conflicts?: Array<{ name: string; previous_ids: string[]; chosen_id: string | null; rows_updated: number }>;
 }
 
 export interface WideResponse {

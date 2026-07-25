@@ -1,4 +1,12 @@
 import re
+import unicodedata
+
+
+def _clean_name(raw: str) -> str:
+    name = (raw or "").replace("\ufffd", "").replace("\u00a0", " ")
+    name = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii")
+    name = re.sub(r"\s+", " ", name).strip()
+    return " ".join(w.capitalize() for w in name.split())
 
 
 def resolve_clubs(event_organizations: list[dict]) -> dict[str, str]:
@@ -14,7 +22,7 @@ def resolve_participants(event_participants: list[dict]) -> dict[str, dict]:
         if not pid:
             continue
         mapping[pid] = {
-            "name": p.get("name", "").replace("\ufffd", "").replace("\u00a0", " ").strip(),
+            "name": _clean_name(p.get("name", "")),
             "gnz_id": p.get("identifier", ""),
             "org_id": p.get("organizationId", ""),
         }

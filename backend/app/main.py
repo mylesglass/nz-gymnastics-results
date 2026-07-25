@@ -22,9 +22,11 @@ from app.cache import cache_headers, invalidate
 from app.database import get_session, init_db
 from app.models import Event, LongScore, User
 from app.parser import ParseError, _NAME_TO_CANONICAL, find_unknown_clubs, parse_json, reload_club_maps, validate_upload_structure
+from app.reconcile import reconcile_athletes
 from app.schemas import (
     ApplyFixItem,
     ClubItem,
+    ConflictItem,
     DuplicateGroup,
     DuplicateInstance,
     EventListItem,
@@ -835,6 +837,8 @@ def upload_file(file: UploadFile = File(...), allow_unknown: str = None, _auth=D
             .scalar()
         )
 
+        report = reconcile_athletes()
+
         return EventResponse(
             id=event.id,
             name=event.name,
@@ -845,6 +849,9 @@ def upload_file(file: UploadFile = File(...), allow_unknown: str = None, _auth=D
             gymnast_count=gymnast_count,
             score_count=score_count,
             club_count=club_count,
+            ids_corrected=report["ids_corrected"],
+            names_unified=report["names_unified"],
+            conflicts=[ConflictItem(**c) for c in report.get("conflicts", [])],
         )
     finally:
         session.close()

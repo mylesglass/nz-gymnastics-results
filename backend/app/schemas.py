@@ -32,6 +32,13 @@ class UserResponse(BaseModel):
     created_at: datetime
 
 
+class ConflictItem(BaseModel):
+    name: str
+    previous_ids: list[str]
+    chosen_id: str | None
+    rows_updated: int
+
+
 class EventResponse(BaseModel):
     id: int
     name: str
@@ -43,6 +50,9 @@ class EventResponse(BaseModel):
     score_count: int
     club_count: int
     created_at: datetime | None = None
+    ids_corrected: int = 0
+    names_unified: int = 0
+    conflicts: list[ConflictItem] = []
 
 
 class EventListItem(BaseModel):
