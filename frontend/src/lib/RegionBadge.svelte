@@ -18,17 +18,13 @@
   class="inline-flex items-stretch h-5 text-xs font-medium leading-none rounded overflow-hidden"
   style="background: {bg}; color: {textColor(bg)}; box-shadow: 0 0 0 1.5px {borderColor}"
 >
-  <span class="grid grid-cols-2 w-5 shrink-0">
-    <span class="w-2.5 h-2.5" style="background: {c[0]}"></span>
-    <span class="w-2.5 h-2.5" style="background: {c[1]}"></span>
-    <span class="w-2.5 h-2.5" style="background: {c[1]}"></span>
-    <span class="w-2.5 h-2.5" style="background: {c[0]}"></span>
+  <span class="grid grid-cols-3 w-[30px] h-full shrink-0">
+    <span style="background: {c[0]}"></span>
+    <span style="background: {c[1]}"></span>
+    <span style="background: {c[0]}"></span>
+    <span style="background: {c[1]}"></span>
+    <span style="background: {c[0]}"></span>
+    <span style="background: {c[1]}"></span>
   </span>
   <span class="px-1.5 flex items-center">{region}</span>
-  <span class="grid grid-cols-2 w-5 shrink-0">
-    <span class="w-2.5 h-2.5" style="background: {c[1]}"></span>
-    <span class="w-2.5 h-2.5" style="background: {c[0]}"></span>
-    <span class="w-2.5 h-2.5" style="background: {c[0]}"></span>
-    <span class="w-2.5 h-2.5" style="background: {c[1]}"></span>
-  </span>
 </span>
