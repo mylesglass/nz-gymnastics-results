@@ -30,48 +30,76 @@
 </svelte:head>
 
 <div class="max-w-6xl mx-auto">
-  <div class="text-center mb-10 mt-4">
+  <div class="text-center mb-12 mt-4">
     <h1 class="text-4xl font-bold mb-3">NZ Gymnastics Results</h1>
     <p class="text-lg text-base-content/70 max-w-2xl mx-auto">
-      A community tool for viewing, searching, and sharing New Zealand gymnastics
-      competition results. Upload a Scoreholder JSON export to get started.
+      Search, browse, and share New Zealand gymnastics competition results.
     </p>
+    {#if stats}
+      <p class="text-base text-base-content/60 mt-2">
+        Explore {stats.total_events} event{stats.total_events !== 1 ? "s" : ""},
+        {stats.total_gymnasts.toLocaleString()} gymnast{stats.total_gymnasts !== 1 ? "s" : ""},
+        and {stats.total_clubs} club{stats.total_clubs !== 1 ? "s" : ""} nationwide.
+      </p>
+    {:else}
+      <p class="text-base text-base-content/60 mt-2 animate-pulse">&nbsp;</p>
+    {/if}
   </div>
 
   <div
-    class="grid grid-cols-1 gap-4"
-    class:md:grid-cols-3={!authCfg || user?.role === "admin"}
-    class:md:grid-cols-2={authCfg && user?.role !== "admin"}
+    class="grid grid-cols-2 gap-4"
+    class:md:grid-cols-4={!authCfg || user?.role !== "admin"}
+    class:md:grid-cols-5={authCfg && user?.role === "admin"}
   >
     <a
       href="/events"
       class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer"
     >
-      <div class="card-body items-center text-center py-8">
-        <span class="text-4xl mb-2">📋</span>
-        <h2 class="card-title">Events</h2>
-        <p class="text-sm text-base-content/70">Browse uploaded events by name, year, or discipline</p>
+      <div class="card-body items-center text-center py-6">
+        <span class="text-3xl mb-1">📋</span>
+        <h2 class="card-title text-base">Events</h2>
+        <p class="text-xs text-base-content/70">Browse competitions by name, year, or discipline</p>
       </div>
     </a>
     <a
       href="/results"
       class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer"
     >
-      <div class="card-body items-center text-center py-8">
-        <span class="text-4xl mb-2">🏆</span>
-        <h2 class="card-title">Results</h2>
-        <p class="text-sm text-base-content/70">View all results across every event in one place</p>
+      <div class="card-body items-center text-center py-6">
+        <span class="text-3xl mb-1">🏆</span>
+        <h2 class="card-title text-base">Results</h2>
+        <p class="text-xs text-base-content/70">View all scores across every event in one place</p>
       </div>
     </a>
-    {#if !authCfg || user?.role === "admin"}
+    <a
+      href="/gymnasts"
+      class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer"
+    >
+      <div class="card-body items-center text-center py-6">
+        <span class="text-3xl mb-1">🤸</span>
+        <h2 class="card-title text-base">Gymnasts</h2>
+        <p class="text-xs text-base-content/70">Look up gymnast profiles and history across events</p>
+      </div>
+    </a>
+    <a
+      href="/clubs"
+      class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer"
+    >
+      <div class="card-body items-center text-center py-6">
+        <span class="text-3xl mb-1">🏛️</span>
+        <h2 class="card-title text-base">Clubs</h2>
+        <p class="text-xs text-base-content/70">Explore clubs and their competition results</p>
+      </div>
+    </a>
+    {#if authCfg && user?.role === "admin"}
       <a
         href="/upload"
         class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer"
       >
-        <div class="card-body items-center text-center py-8">
-          <span class="text-4xl mb-2">📄</span>
-          <h2 class="card-title">Upload</h2>
-          <p class="text-sm text-base-content/70">Upload a Scoreholder JSON file</p>
+        <div class="card-body items-center text-center py-6">
+          <span class="text-3xl mb-1">📄</span>
+          <h2 class="card-title text-base">Upload</h2>
+          <p class="text-xs text-base-content/70">Add a new Scoreholder JSON file</p>
         </div>
       </a>
     {/if}
@@ -106,4 +134,34 @@
       {/each}
     </div>
   {/if}
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 mb-8">
+    <div class="card bg-base-200 border border-base-300">
+      <div class="card-body items-center text-center py-6">
+        <span class="text-3xl mb-2">🤸</span>
+        <h3 class="card-title text-sm">WAG &amp; MAG</h3>
+        <p class="text-xs text-base-content/70">
+          Complete results for both disciplines with per-apparatus breakdowns, vault aggregation, and AA totals.
+        </p>
+      </div>
+    </div>
+    <div class="card bg-base-200 border border-base-300">
+      <div class="card-body items-center text-center py-6">
+        <span class="text-3xl mb-2">📥</span>
+        <h3 class="card-title text-sm">Export &amp; Share</h3>
+        <p class="text-xs text-base-content/70">
+          Download CSV or XLSX with full per-pass vault detail, or share links to gymnast and club profile pages.
+        </p>
+      </div>
+    </div>
+    <div class="card bg-base-200 border border-base-300">
+      <div class="card-body items-center text-center py-6">
+        <span class="text-3xl mb-2">🔍</span>
+        <h3 class="card-title text-sm">Smart Filtering</h3>
+        <p class="text-xs text-base-content/70">
+          Filter by year, level, club, region, division, or round type with column-header dropdowns.
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
