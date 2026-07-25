@@ -800,7 +800,7 @@ def _find_similar_names(session, threshold: float = 0.85) -> list[dict]:
                     continue
                 seen.add(key)
                 ratio = difflib.SequenceMatcher(None, a.lower(), b.lower()).ratio()
-                if ratio >= threshold:
+                if ratio >= threshold and a.lower().strip() != b.lower().strip():
                     rows_a = session.query(LongScore).filter(LongScore.gymnast_name == a).count()
                     rows_b = session.query(LongScore).filter(LongScore.gymnast_name == b).count()
                     if rows_b < rows_a:
