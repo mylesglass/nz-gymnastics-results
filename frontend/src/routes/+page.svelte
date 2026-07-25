@@ -98,19 +98,19 @@
 
   {#if stats}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-      <a href="/events" class="stat bg-base-200 rounded-box hover:bg-base-300 transition-all cursor-pointer">
+      <a href="/events" class="stat bg-base-200 rounded-box border border-base-300 hover:bg-base-300 transition-all cursor-pointer">
         <div class="stat-title text-base-content/60 text-xs">Events</div>
         <div class="stat-value text-2xl">{stats.total_events}</div>
       </a>
-      <a href="/gymnasts" class="stat bg-base-200 rounded-box hover:bg-base-300 transition-all cursor-pointer">
+      <a href="/gymnasts" class="stat bg-base-200 rounded-box border border-base-300 hover:bg-base-300 transition-all cursor-pointer">
         <div class="stat-title text-base-content/60 text-xs">Gymnasts</div>
         <div class="stat-value text-2xl">{stats.total_gymnasts.toLocaleString()}</div>
       </a>
-      <a href="/results" class="stat bg-base-200 rounded-box hover:bg-base-300 transition-all cursor-pointer">
+      <a href="/results" class="stat bg-base-200 rounded-box border border-base-300 hover:bg-base-300 transition-all cursor-pointer">
         <div class="stat-title text-base-content/60 text-xs">Scores</div>
         <div class="stat-value text-2xl">{stats.total_scores.toLocaleString()}</div>
       </a>
-      <a href="/clubs" class="stat bg-base-200 rounded-box hover:bg-base-300 transition-all cursor-pointer">
+      <a href="/clubs" class="stat bg-base-200 rounded-box border border-base-300 hover:bg-base-300 transition-all cursor-pointer">
         <div class="stat-title text-base-content/60 text-xs">Clubs</div>
         <div class="stat-value text-2xl">{stats.total_clubs}</div>
       </a>
@@ -118,7 +118,7 @@
   {:else}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
       {#each [1, 2, 3, 4] as _}
-        <div class="stat bg-base-200 rounded-box animate-pulse">
+        <div class="stat bg-base-200 rounded-box border border-base-300 animate-pulse">
           <div class="stat-title text-base-content/60 text-xs">&nbsp;</div>
           <div class="stat-value text-2xl">&nbsp;</div>
         </div>
