@@ -252,7 +252,7 @@
                         <td class="text-xs">{inst.club}<br><span class="text-base-content/50">{inst.level_category}</span></td>
                         <td class="text-xs">
                           {#each Object.entries(inst.id_counts) as [id, cnt], j}
-                            {j > 0 ? ", " : ""}{id}<span class="text-base-content/50"> ({cnt})</span>
+                            {j > 0 ? ", " : ""}<a href="/gymnast/{id}" class="link link-hover">{id}</a><span class="text-base-content/50"> ({cnt})</span>
                           {/each}
                         </td>
                         <td>
@@ -355,9 +355,9 @@
                       <td class="font-medium">{m.name_b}</td>
                       <td>{m.score.toFixed(2)}</td>
                       <td class="text-xs">
-                        {#each m.gnz_ids_a as id, i}{i > 0 ? ", " : ""}{id}{/each}
+                        {#each m.gnz_ids_a as id, i}{i > 0 ? ", " : ""}<a href="/gymnast/{id}" class="link link-hover">{id}</a>{/each}
                         &rarr;
-                        {#each m.gnz_ids_b as id, i}{i > 0 ? ", " : ""}{id}{/each}
+                        {#each m.gnz_ids_b as id, i}{i > 0 ? ", " : ""}<a href="/gymnast/{id}" class="link link-hover">{id}</a>{/each}
                       </td>
                       <td>
                         <button
