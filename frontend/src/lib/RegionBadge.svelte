@@ -19,7 +19,7 @@
   class="inline-flex items-stretch h-5 text-xs font-medium leading-none rounded overflow-hidden"
   style="background: {bg}; color: {textColor(bg)}"
 >
-  <span class="grid grid-cols-3 w-[30px] h-full shrink-0">
+  <span class="grid grid-cols-4 w-[40px] h-full shrink-0">
     <span style="background: {ckA}"></span>
     <span style="background: {ckB}"></span>
     <span style="background: {ckA}"></span>
