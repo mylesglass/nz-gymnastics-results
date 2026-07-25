@@ -164,3 +164,16 @@ class ApplyFixItem(BaseModel):
     club: str
     level_category: str
     chosen_id: str
+
+
+class SuggestedMerge(BaseModel):
+    name_a: str
+    name_b: str
+    score: float
+    gnz_ids_a: list[str]
+    gnz_ids_b: list[str]
+
+
+class MergeNamesRequest(BaseModel):
+    from_name: str
+    to_name: str

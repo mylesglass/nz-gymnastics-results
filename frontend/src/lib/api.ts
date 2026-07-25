@@ -268,3 +268,32 @@ export async function applyFixes(
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+export interface SuggestedMerge {
+  name_a: string;
+  name_b: string;
+  score: number;
+  gnz_ids_a: string[];
+  gnz_ids_b: string[];
+}
+
+export async function getSuggestedMerges(): Promise<SuggestedMerge[]> {
+  const res = await fetch(`${API_BASE}/api/admin/suggested-merges`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function mergeNames(
+  from_name: string,
+  to_name: string
+): Promise<{ merged: number; names_unified: number; ids_corrected: number; conflicts: unknown[] }> {
+  const res = await fetch(`${API_BASE}/api/admin/merge-names`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ from_name, to_name }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
