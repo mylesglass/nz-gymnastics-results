@@ -1,8 +1,8 @@
 <script lang="ts">
   let { region, colors = [] }: { region: string; colors?: string[] } = $props();
 
-  let c0 = $derived(colors[0] ?? "#888");
-  let c1 = $derived(colors[1] ?? "#888");
+  let c = $derived(colors.length ? colors : ["#888", "#888"]);
+  let bg = $derived(c[0]);
 
   function textColor(hex: string): string {
     let h = hex.replace("#", "");
@@ -15,13 +15,13 @@
 
 <span
   class="inline-flex items-stretch h-5 text-xs font-medium rounded overflow-hidden leading-none"
-  style="background: {c0}; color: {textColor(c0)}"
+  style="background: {bg}; color: {textColor(bg)}"
 >
   <span class="grid grid-cols-2 w-5 shrink-0">
-    <span class="w-2.5 h-2.5" style="background: {c0}"></span>
-    <span class="w-2.5 h-2.5" style="background: {c1}"></span>
-    <span class="w-2.5 h-2.5" style="background: {c1}"></span>
-    <span class="w-2.5 h-2.5" style="background: {c0}"></span>
+    <span class="w-2.5 h-2.5" style="background: {c[0]}"></span>
+    <span class="w-2.5 h-2.5" style="background: {c[1 % c.length]}"></span>
+    <span class="w-2.5 h-2.5" style="background: {c[2 % c.length]}"></span>
+    <span class="w-2.5 h-2.5" style="background: {c[3 % c.length]}"></span>
   </span>
   <span class="px-1.5 flex items-center">{region}</span>
 </span>
