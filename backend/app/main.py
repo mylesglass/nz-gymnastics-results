@@ -943,7 +943,7 @@ def upload_file(file: UploadFile = File(...), allow_unknown: str = None, _auth=D
             club_count=club_count,
             ids_corrected=report["ids_corrected"],
             names_unified=report["names_unified"],
-            conflicts=[ConflictItem(**c) for c in report.get("conflicts", [])],
+            conflicts=report.get("conflicts", []),
         )
     finally:
         session.close()
