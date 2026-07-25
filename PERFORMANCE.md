@@ -35,11 +35,11 @@
 | Column | Type | Indexed? | Used in filter |
 |--------|------|----------|----------------|
 | `id` | INTEGER PK | ✓ auto-index | — |
-| `event_id` | INTEGER FK | | every per-event query |
+| `event_id` | INTEGER FK | ✓ B-tree (`idx_long_scores_event_id`) | every per-event query |
 | `event_name` | STRING | | — |
-| `gymnast_name` | STRING | | duplicates, merge, counts |
-| `gnz_id` | STRING | | gymnasts list, duplicates |
-| `club_name` | STRING | | clubs list, counts |
+| `gymnast_name` | STRING | ✓ B-tree (`idx_long_scores_gymnast_name`) | duplicates, merge, counts |
+| `gnz_id` | STRING | ✓ B-tree (`idx_long_scores_gnz_id`) | gymnasts list, duplicates |
+| `club_name` | STRING | ✓ B-tree (`idx_long_scores_club_name`) | clubs list, counts |
 | `discipline` | STRING | | rankings, steps |
 | `level_category` | STRING | | rankings, steps |
 | `division` | STRING | | filter |
@@ -48,7 +48,7 @@
 | `d_score` | FLOAT | | — |
 | `e_score` | FLOAT | | — |
 | `neutral_deductions` | FLOAT | | — |
-| `pass_final_score` | FLOAT | | rankings (not null) |
+| `pass_final_score` | FLOAT | ✓ compound (`idx_long_scores_rankings`) | rankings (not null) |
 | `bonus` | FLOAT | | — |
 | `start_value` | FLOAT | | — |
 | `apparatus_rank` | INTEGER | | — |
@@ -64,16 +64,17 @@
 | `id` | INTEGER PK | ✓ auto-index |
 | `username` | STRING | ✓ UNIQUE INDEX (`ix_users_username`) |
 
-**Critical finding:** Zero indexes on `long_scores` or `events` beyond primary keys. Every query against `long_scores` (90K rows) is a full table scan.
+**Critical finding (resolved):** Zero indexes on `long_scores` or `events` beyond primary keys. Every query against `long_scores` (90K rows) was a full table scan. Seven B-tree indexes (5 single-column + 2 compound) now cover all expensive query patterns.
 
 ### SQLite PRAGMA Settings
 
 | Setting | Value | Implication |
 |---------|-------|-------------|
-| `journal_mode` | `delete` | No WAL mode — reads block writes and vice versa |
-| `synchronous` | `FULL` (2) | Full fsync on every commit |
-| `cache_size` | `-2000` (~2MB) | Small page cache |
-| `foreign_keys` | `0` | FK constraint not enforced |
+| `journal_mode` | `WAL` | Write-Ahead Logging — reads don't block writes |
+| `synchronous` | `NORMAL` | Safe in WAL mode, reduced fsync overhead |
+| `cache_size` | `-64000` (~64MB) | Large page cache holds most of the DB in RAM |
+| `temp_store` | `MEMORY` | Temp tables/indexes in RAM during GROUP BY/DISTINCT |
+| `foreign_keys` | `ON` | FK constraints enforced |
 | `auto_vacuum` | `0` (NONE) | DB file never shrinks |
 
 ### Data Volume
@@ -207,15 +208,15 @@ Each row generates ~150-250 DOM nodes:
 
 ## 6. Identified Bottlenecks (Ranked by Impact)
 
-1. **Zero indexes on `long_scores`** — every query is a full table scan of 90K rows
+1. ~~**Zero indexes on `long_scores`** — every query is a full table scan of 90K rows~~ *(resolved)*
 2. **N+1 in events list** — 82 queries for 81 events (COUNT per event)
 3. **N+1 in wide-all** — 1 + N queries for cross-event results
 4. **No pagination on any endpoint** — all data fetched and rendered every time
 5. **No virtualization in frontend** — all rows rendered simultaneously (up to 1.2M DOM nodes)
 6. **O(n^2) name matching** in suggested merges with difflib
 7. **Global cache invalidation** — no per-key granularity
-8. **No WAL mode** — reads block writes and vice versa
-9. **Synchronous mode FULL** — fsync on every commit
+8. ~~**No WAL mode** — reads block writes and vice versa~~ *(resolved)*
+9. ~~**Synchronous mode FULL** — fsync on every commit~~ *(resolved)*
 10. **No server-side filtering/pagination** for large result sets
 11. **No debounced search** — every keystroke re-filters on the full dataset
 12. **No SSR for data pages** — every page load shows spinner before content

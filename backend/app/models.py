@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import DeclarativeBase, relationship
 
 
@@ -21,6 +21,10 @@ class User(Base):
 class Event(Base):
     __tablename__ = "events"
 
+    __table_args__ = (
+        Index("idx_events_year", "year"),
+    )
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
     start_date = Column(String, nullable=False)
@@ -35,6 +39,15 @@ class Event(Base):
 
 class LongScore(Base):
     __tablename__ = "long_scores"
+
+    __table_args__ = (
+        Index("idx_long_scores_event_id", "event_id"),
+        Index("idx_long_scores_gnz_id", "gnz_id"),
+        Index("idx_long_scores_gymnast_name", "gymnast_name"),
+        Index("idx_long_scores_club_name", "club_name"),
+        Index("idx_long_scores_event_gymnast", "event_id", "gymnast_name"),
+        Index("idx_long_scores_rankings", "discipline", "level_category", "pass_final_score"),
+    )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
