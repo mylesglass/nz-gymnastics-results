@@ -33,17 +33,8 @@
   <div class="text-center mb-12 mt-4">
     <h1 class="text-4xl font-bold mb-3">NZ Gymnastics Results</h1>
     <p class="text-lg text-base-content/70 max-w-2xl mx-auto">
-      Search, browse, and share New Zealand gymnastics competition results.
+      Search, browse, and share New Zealand Artistic Gymnastics competition results.
     </p>
-    {#if stats}
-      <p class="text-base text-base-content/60 mt-2">
-        Explore {stats.total_events} event{stats.total_events !== 1 ? "s" : ""},
-        {stats.total_gymnasts.toLocaleString()} gymnast{stats.total_gymnasts !== 1 ? "s" : ""},
-        and {stats.total_clubs} club{stats.total_clubs !== 1 ? "s" : ""} nationwide.
-      </p>
-    {:else}
-      <p class="text-base text-base-content/60 mt-2 animate-pulse">&nbsp;</p>
-    {/if}
   </div>
 
   <div
