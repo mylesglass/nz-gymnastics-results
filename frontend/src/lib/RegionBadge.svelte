@@ -16,8 +16,8 @@
 </script>
 
 <span
-  class="inline-flex items-stretch h-5 text-xs font-medium leading-none rounded overflow-hidden"
-  style="background: {bg}; color: {textColor(bg)}"
+  class="inline-flex items-stretch h-5 text-xs font-medium leading-none rounded overflow-hidden shrink-0"
+  style="background: {bg}; color: {textColor(bg)}; box-shadow: 0 0 0 1.5px {ckB}"
 >
   <span class="grid grid-cols-2 w-5 h-full shrink-0">
     <span style="background: {ckA}"></span>
@@ -25,5 +25,5 @@
     <span style="background: {ckB}"></span>
     <span style="background: {ckA}"></span>
   </span>
-  <span class="px-1.5 flex items-center">{region}</span>
+  <span class="px-1.5 flex items-center truncate max-w-28">{region}</span>
 </span>
