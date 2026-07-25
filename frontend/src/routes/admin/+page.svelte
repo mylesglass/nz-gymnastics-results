@@ -60,17 +60,16 @@
 
   async function runMerge(keep: string, merge: string) {
     const key = `${keep}|${merge}`;
-    mergingRow = key;
+    merges = merges.filter(m => !(m.name_a === merge && m.name_b === keep));
     mergeResult = null;
     try {
       const res = await mergeNames(merge, keep);
       mergeResult = `Merged ${res.merged} rows, ${res.names_unified} names unified, ${res.ids_corrected} IDs corrected`;
-      merges = await getSuggestedMerges();
-      duplicates = await checkDuplicates();
+      getSuggestedMerges().then(fresh => { merges = fresh; });
+      checkDuplicates().then(fresh => { duplicates = fresh; });
     } catch (e) {
       mergeResult = `Error: ${e}`;
-    } finally {
-      mergingRow = null;
+      merges = await getSuggestedMerges();
     }
   }
 
