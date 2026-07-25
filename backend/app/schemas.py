@@ -172,6 +172,8 @@ class SuggestedMerge(BaseModel):
     score: float
     gnz_ids_a: list[str]
     gnz_ids_b: list[str]
+    rows_a: int = 0
+    rows_b: int = 0
 
 
 class MergeNamesRequest(BaseModel):

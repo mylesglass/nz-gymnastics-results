@@ -801,13 +801,18 @@ def _find_similar_names(session, threshold: float = 0.8) -> list[dict]:
                 seen.add(key)
                 ratio = difflib.SequenceMatcher(None, a.lower(), b.lower()).ratio()
                 if ratio >= threshold:
-                    ids_a = [
+                    rows_a = session.query(LongScore).filter(LongScore.gymnast_name == a).count()
+                    rows_b = session.query(LongScore).filter(LongScore.gymnast_name == b).count()
+                    if rows_b < rows_a:
+                        a, b = b, a
+                        rows_a, rows_b = rows_b, rows_a
+                    ids_a_vals = [
                         r[0] for r in session.query(LongScore.gnz_id)
                         .filter(LongScore.gymnast_name == a, LongScore.gnz_id.isnot(None), LongScore.gnz_id != "")
                         .distinct().all()
                         if r[0]
                     ]
-                    ids_b = [
+                    ids_b_vals = [
                         r[0] for r in session.query(LongScore.gnz_id)
                         .filter(LongScore.gymnast_name == b, LongScore.gnz_id.isnot(None), LongScore.gnz_id != "")
                         .distinct().all()
@@ -815,7 +820,8 @@ def _find_similar_names(session, threshold: float = 0.8) -> list[dict]:
                     ]
                     result.append({
                         "name_a": a, "name_b": b, "score": round(ratio, 4),
-                        "gnz_ids_a": ids_a, "gnz_ids_b": ids_b,
+                        "gnz_ids_a": ids_a_vals, "gnz_ids_b": ids_b_vals,
+                        "rows_a": rows_a, "rows_b": rows_b,
                     })
     result.sort(key=lambda x: -x["score"])
     return result
