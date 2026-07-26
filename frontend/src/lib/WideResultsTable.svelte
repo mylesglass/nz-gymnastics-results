@@ -540,7 +540,7 @@
       </label>
 
       <span class="text-xs text-base-content/50 ml-1">
-        Showing {visibleRows.length} of {filteredCount} results
+        Showing {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, filteredCount)} of {filteredCount} results
       </span>
 
       {#if totalPages > 1}
