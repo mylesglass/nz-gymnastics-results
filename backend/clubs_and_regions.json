@@ -14,14 +14,16 @@
         "name": "Timaru Gymnastics Club",
         "aliases": [
           "Timaru Gymnastics Club",
-          "Timaru Gymnastic Club"
+          "Timaru Gymnastic Club",
+          "Timaru Gymnastics"
         ]
       },
       {
         "name": "Waimate Gymnastics",
         "aliases": [
           "Waimate Gymnastics Club",
-          "Waimate Gymnastics"
+          "Waimate Gymnastics",
+          "Waimate"
         ]
       }
     ],
@@ -104,7 +106,8 @@
         "name": "Affinity Gymnastics Academy",
         "aliases": [
           "Affinity Gymnastics Academy",
-          "Affinity Gymnastics"
+          "Affinity Gymnastics",
+          "Affinity"
         ]
       },
       {
@@ -196,7 +199,9 @@
           "Gisborne Gymnastics Club",
           "Gisborne Gymnastics",
           "Gisborne",
-          "Gisborne Gymastics Club"
+          "Gisborne Gymastics Club",
+          "Gisbourne Gymnastics Club",
+          "Gisbourne Gym Club"
         ]
       },
       {
@@ -244,7 +249,8 @@
           "Whanganui Boys & Girls Gym",
           "Whanganui Boys and Girls Gym Club",
           "Whanganui Boys & Girls Gym Club",
-          "Whanganui Gymnastics"
+          "Whanganui Gymnastics",
+          "Whanganui"
         ]
       }
     ],
@@ -301,7 +307,9 @@
         "name": "Aspiring Gymsports",
         "aliases": [
           "Aspiring Gymnastics Club",
-          "Aspiring Gymsports"
+          "Aspiring Gymsports",
+          "Aspiring Gymnastics Sports",
+          "Apspiring Gymsports"
         ]
       },
       {
@@ -1221,6 +1229,38 @@
     "levin gymsports": {
       "name": "Levin Gymnastics Club",
       "region": "Manawatu - Whanganui"
+    },
+    "waimate": {
+      "name": "Waimate Gymnastics",
+      "region": "Aorangi"
+    },
+    "timaru gymnastics": {
+      "name": "Timaru Gymnastics Club",
+      "region": "Aorangi"
+    },
+    "affinity": {
+      "name": "Affinity Gymnastics Academy",
+      "region": "Canterbury"
+    },
+    "whanganui": {
+      "name": "Whanganui Boys and Girls Gym Club",
+      "region": "Manawatu - Whanganui"
+    },
+    "aspiring gymnastics sports": {
+      "name": "Aspiring Gymsports",
+      "region": "Otago"
+    },
+    "apspiring gymsports": {
+      "name": "Aspiring Gymsports",
+      "region": "Otago"
+    },
+    "gisbourne gymnastics club": {
+      "name": "Gisborne Gymnastics Club",
+      "region": "Hawkes Bay / Poverty Bay"
+    },
+    "gisbourne gym club": {
+      "name": "Gisborne Gymnastics Club",
+      "region": "Hawkes Bay / Poverty Bay"
     }
   }
 }
