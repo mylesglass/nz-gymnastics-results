@@ -452,8 +452,8 @@
   let totalCount = $derived(rows?.length ?? 0);
 
   $effect(() => {
-    void filteredRows.length;
-    if (currentPage !== 1) currentPage = 1;
+    searchText + filterEvent.join(",") + filterStep.join(",") + filterClub.join(",") + filterRegion.join(",") + filterDivision.join(",") + filterRound.join(",");
+    currentPage = 1;
   });
 
   function toggleSort(col: string) {
