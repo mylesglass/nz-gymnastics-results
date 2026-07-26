@@ -106,18 +106,20 @@
           {#each letterGymnasts as gr}
             <a
               href="/gymnast/{gr.gnz_id}"
-              class="flex items-center px-3 py-1.5 rounded hover:bg-base-200 transition-colors gap-1"
+              class="flex flex-col px-3 py-1.5 rounded hover:bg-base-200 transition-colors"
             >
-              <span class="text-sm">{gr.name}</span>
-              {#if gr.alt_ids.length > 0}
-                <span class="text-warning text-xs">⚠</span>
-              {/if}
-              <span class="text-xs text-base-content/40">{displayIds(gr)}</span>
-              <span class="ml-auto text-xs text-right leading-snug max-w-48">
+              <span class="flex items-center gap-1">
+                <span class="text-sm font-medium">{gr.name}</span>
+                {#if gr.alt_ids.length > 0}
+                  <span class="text-warning text-xs">⚠</span>
+                {/if}
+                <span class="ml-auto text-xs text-base-content/40">{displayIds(gr)}</span>
+              </span>
+              <span class="text-xs leading-snug mt-0.5">
                 {#each (gr.alt_clubs.length > 0 ? [gr.club, ...gr.alt_clubs].filter(Boolean) : gr.club ? [gr.club] : []) as clubName, i}
-                  <span class="inline-block max-w-36 truncate align-middle {clubName === gr.club ? 'text-base-content/50' : 'text-base-content/40'}" title={clubName}>{i > 0 ? ", " : ""}{clubName}</span>
+                  <span class="{clubName === gr.club ? 'text-base-content/50' : 'text-base-content/40'}">{i > 0 ? ", " : ""}{clubName}</span>
                 {:else}
-                  <span class="text-base-content/30 text-xs">—</span>
+                  <span class="text-base-content/30">—</span>
                 {/each}
               </span>
             </a>
