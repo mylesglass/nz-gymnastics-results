@@ -31,7 +31,8 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   ├── transformer.py   # Pandas long→wide pivot + CSV/XLSX export + region enrichment
 │   │   ├── reconcile.py     # Athlete ID reconciliation
 │   │   ├── reconcile_clubs.py # Club name normalization script
-│   │   └── validate_json.py # Batch validation CLI
+│   │   ├── validate_json.py # Batch validation CLI
+│   │   └── wellington_ranking.py # Wellington regional ranking computation
 │   ├── tests/               # pytest suite (129 pass, 87 skip)
 │   └── pyproject.toml
 │
@@ -57,7 +58,8 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   │   ├── login/+page.svelte      # Username+password login
 │   │   │   ├── admin/+page.svelte      # Admin dashboard
 │   │   │   ├── admin/users/+page.svelte # User management
-│   │   │   ├── rankings/+page.svelte   # Rankings (member+)
+│   │   │   ├── rankings/+page.svelte   # National Rankings (member+)
+│   │   │   ├── wellington-ranking/+page.svelte # Wellington Rankings (member+)
 │   │   │   ├── events/+page.server.ts  # SSR load function for event list
 │   │   │   ├── events/+page.svelte     # Event list with sort/search/edit
 │   │   │   ├── events/[id]/+page.server.ts # SSR load for event results
