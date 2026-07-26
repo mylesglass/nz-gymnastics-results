@@ -88,7 +88,7 @@
         </a>
       </div>
 
-      {#if $page.url.pathname === "/events" || $page.url.pathname === "/results" || $page.url.pathname === "/rankings" || $page.url.pathname.startsWith("/gymnast/") || $page.url.pathname.startsWith("/club/")}
+      {#if $page.url.pathname === "/events" || $page.url.pathname === "/results" || $page.url.pathname === "/rankings" || $page.url.pathname === "/wellington-ranking" || $page.url.pathname.startsWith("/gymnast/") || $page.url.pathname.startsWith("/club/")}
       <div class="flex-none">
         <div role="tablist" class="tabs tabs-box tabs-xs">
           {#each years as yr}
@@ -142,12 +142,19 @@
             Clubs
           </a>
           {#if user}
-            <a
-              href="/rankings"
-              class="btn btn-sm {active('/rankings') ? 'btn-primary' : 'btn-ghost'}"
-            >
-              Rankings
-            </a>
+            <div class="dropdown dropdown-hover dropdown-end">
+              <button
+                class="btn btn-sm {active('/rankings') || active('/wellington-ranking') ? 'btn-primary' : 'btn-ghost'}"
+                onclick={() => goto('/rankings')}
+              >
+                Rankings
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-3 fill-current opacity-60"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
+              </button>
+              <ul class="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow z-50" style="z-index: 50">
+                <li><a href="/rankings" class={active('/rankings') ? 'active' : ''}>National Rankings</a></li>
+                <li><a href="/wellington-ranking" class={active('/wellington-ranking') ? 'active' : ''}>Wellington Rankings</a></li>
+              </ul>
+            </div>
           {/if}
           {#if user?.role === "admin"}
             <a
@@ -283,13 +290,23 @@
       </li>
       {#if user}
         <li>
-          <a href="/rankings" onclick={handleNavClick} class:active={active("/rankings")}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="M10 1a.75.75 0 0 1 .75.75V3h2.692A2.25 2.25 0 0 1 15.5 4.808v.442a2.25 2.25 0 0 1-1.5 2.09v.163a2.25 2.25 0 0 1 1.5 2.09v.442a2.25 2.25 0 0 1-2.058 2.247V15.5a.75.75 0 0 1-.75.75H10v.75a.75.75 0 0 1-1.5 0v-.75H6.308A2.25 2.25 0 0 1 4.5 14.692v-.442a2.25 2.25 0 0 1 1.5-2.09v-.163a2.25 2.25 0 0 1-1.5-2.09v-.442a2.25 2.25 0 0 1 2.058-2.247V3.75H10V1.75A.75.75 0 0 1 10 1ZM6.308 4.5h2.442v.203c0 .356.155.694.425.929l.415.36.415-.36a1.25 1.25 0 0 0 .425-.93V4.5h2.442a.75.75 0 0 1 .75.75v.442a.75.75 0 0 1-.75.75h-4.2a.75.75 0 0 1 0-1.5h1.2v-.392a1.4 1.4 0 0 0-.081-.46.75.75 0 0 0-.319-.402l-.315-.18-.315.18a.75.75 0 0 0-.319.402c-.05.15-.078.303-.081.46h-1.2a.75.75 0 0 1-.75-.75v-.442a.75.75 0 0 1 .75-.75Zm4.2 3.5h-1.016a2.25 2.25 0 0 0-1.723.77l-.187.222a1.25 1.25 0 0 0 .24 1.744l.658.513a1.25 1.25 0 0 0 .847.281h2.146a1.25 1.25 0 0 0 .847-.28l.658-.514a1.25 1.25 0 0 0 .24-1.744l-.187-.222A2.25 2.25 0 0 0 10.508 8Zm-2.732 4A2.25 2.25 0 0 0 5.66 11.27l-.375.624a.75.75 0 0 0 .267 1.003l.81.486c.55.33 1.184.507 1.832.517h1.612c.648-.01 1.282-.187 1.832-.517l.81-.486a.75.75 0 0 0 .267-1.003l-.375-.624A2.25 2.25 0 0 0 12.224 12H7.776Z" clip-rule="evenodd" /></svg>
-            Rankings
-          </a>
+          <details class="w-full">
+            <summary class="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-base-300 transition-colors cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="M10 1a.75.75 0 0 1 .75.75V3h2.692A2.25 2.25 0 0 1 15.5 4.808v.442a2.25 2.25 0 0 1-1.5 2.09v.163a2.25 2.25 0 0 1 1.5 2.09v.442a2.25 2.25 0 0 1-2.058 2.247V15.5a.75.75 0 0 1-.75.75H10v.75a.75.75 0 0 0-1.5 0v-.75H6.308A2.25 2.25 0 0 1 4.5 14.692v-.442a2.25 2.25 0 0 1 1.5-2.09v-.163a2.25 2.25 0 0 1-1.5-2.09v-.442a2.25 2.25 0 0 1 2.058-2.247V3.75H10V1.75A.75.75 0 0 1 10 1ZM6.308 4.5h2.442v.203c0 .356.155.694.425.929l.415.36.415-.36a1.25 1.25 0 0 0 .425-.93V4.5h2.442a.75.75 0 0 1 .75.75v.442a.75.75 0 0 1-.75.75h-4.2a.75.75 0 0 1 0-1.5h1.2v-.392a1.4 1.4 0 0 0-.081-.46.75.75 0 0 0-.319-.402l-.315-.18-.315.18a.75.75 0 0 0-.319.402c-.05.15-.078.303-.081.46h-1.2a.75.75 0 0 1-.75-.75v-.442a.75.75 0 0 1 .75-.75Zm4.2 3.5h-1.016a2.25 2.25 0 0 0-1.723.77l-.187.222a1.25 1.25 0 0 0 .24 1.744l.658.513a1.25 1.25 0 0 0 .847.281h2.146a1.25 1.25 0 0 0 .847-.28l.658-.514a1.25 1.25 0 0 0 .24-1.744l-.187-.222A2.25 2.25 0 0 0 10.508 8Zm-2.732 4A2.25 2.25 0 0 0 5.66 11.27l-.375.624a.75.75 0 0 0 .267 1.003l.81.486c.55.33 1.184.507 1.832.517h1.612c.648-.01 1.282-.187 1.832-.517l.81-.486a.75.75 0 0 0 .267-1.003l-.375-.624A2.25 2.25 0 0 0 12.224 12H7.776Z" clip-rule="evenodd" /></svg>
+              Rankings
+            </summary>
+            <ul class="ml-4 border-l border-base-300 pl-2 mt-1">
+              <li>
+                <a href="/rankings" onclick={handleNavClick} class:active={active("/rankings")}>National Rankings</a>
+              </li>
+              <li>
+                <a href="/wellington-ranking" onclick={handleNavClick} class:active={active("/wellington-ranking")}>Wellington Rankings</a>
+              </li>
+            </ul>
+          </details>
         </li>
       {/if}
-      {#if $page.url.pathname === "/events" || $page.url.pathname === "/results" || $page.url.pathname === "/rankings" || $page.url.pathname.startsWith("/gymnast/") || $page.url.pathname.startsWith("/club/")}
+      {#if $page.url.pathname === "/events" || $page.url.pathname === "/results" || $page.url.pathname === "/rankings" || $page.url.pathname === "/wellington-ranking" || $page.url.pathname.startsWith("/gymnast/") || $page.url.pathname.startsWith("/club/")}
       <li class="menu-title mt-4"><span>Year</span></li>
       <li>
         <div role="tablist" class="tabs tabs-box tabs-xs mt-1">

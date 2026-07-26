@@ -47,8 +47,11 @@ from app.schemas import (
     UserCreate,
     UserResponse,
     UserUpdate,
+    WellingtonRankingRow,
+    WellingtonRankingResponse,
 )
 from app.transformer import _find_region, _use_vault_average, export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict, pivot_to_wide_dict_multi
+from app.wellington_ranking import compute_wellington_rankings
 
 
 @asynccontextmanager
@@ -78,6 +81,7 @@ async def add_cache_control(request: Request, call_next):
     if request.method == "GET" and (
         path.startswith("/api/events")
         or path.startswith("/api/results")
+        or path.startswith("/api/rankings")
         or path == "/api/stats"
         or path == "/api/clubs"
         or path == "/api/gymnasts"
@@ -585,6 +589,46 @@ def get_rankings(
         return RankingsResponse(year=year, step=step, discipline=discipline, rankings=rankings)
     finally:
         session.close()
+
+
+@app.get("/api/rankings/wellington", response_model=WellingtonRankingResponse)
+def get_wellington_rankings(
+    year: int,
+    step: str,
+    discipline: str,
+    gnz_qualifier: bool = True,
+    wellington_qualifier: bool = True,
+    _auth=Depends(require_role("admin", "member")),
+):
+    result = compute_wellington_rankings(
+        year, discipline, step,
+        gnz_qualifier=gnz_qualifier, wellington_qualifier=wellington_qualifier,
+    )
+    rankings = [
+        WellingtonRankingRow(
+            rank=r["rank_text"],
+            name=r["name"],
+            gnz_id=r["gnz_id"],
+            club=r["club"],
+            region=r["region"],
+            scores=r["scores"],
+            competitions=r["competitions"],
+            categories=r["categories"],
+            apparatus=r.get("apparatus", []),
+            total=r["total"],
+            average=r["average"],
+        )
+        for r in result["rankings"]
+    ]
+    return WellingtonRankingResponse(
+        year=result["year"],
+        step=result["step"],
+        discipline=result["discipline"],
+        rankings=rankings,
+        config_key=result.get("config_key", ""),
+        qualifying_score=result.get("gnz_qualifying_score"),
+        wellington_qualifying_score=result.get("wellington_qualifying_score"),
+    )
 
 
 def _build_duplicate_groups(session) -> list[tuple[dict, list[dict]]]:

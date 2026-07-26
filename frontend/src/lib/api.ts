@@ -212,6 +212,59 @@ export async function getRankings(
   return res.json();
 }
 
+export interface ApparatusPass {
+  app: string;
+  pass_number: number;
+  d: number | null;
+  e: number | null;
+  n: number | null;
+  total: number | null;
+  bonus: number | null;
+  rank: number | null;
+  start_value: number | null;
+}
+
+export interface WellingtonRankingRow {
+  rank: string;
+  name: string;
+  gnz_id: string;
+  club: string | null;
+  region: string;
+  scores: number[];
+  competitions: string[];
+  categories: string[];
+  apparatus: ApparatusPass[][];
+  total: number;
+  average: number;
+}
+
+export interface WellingtonRankingResponse {
+  year: number;
+  step: string;
+  discipline: string;
+  rankings: WellingtonRankingRow[];
+  config_key: string;
+  qualifying_score: number | null;
+  wellington_qualifying_score: number | null;
+}
+
+export async function getWellingtonRankings(
+  year: number,
+  step: string,
+  discipline: string,
+  gnzQualifier?: boolean,
+  wellingtonQualifier?: boolean,
+): Promise<WellingtonRankingResponse> {
+  const params = new URLSearchParams({ year: String(year), step, discipline });
+  if (gnzQualifier !== undefined) params.set("gnz_qualifier", gnzQualifier ? "true" : "false");
+  if (wellingtonQualifier !== undefined) params.set("wellington_qualifier", wellingtonQualifier ? "true" : "false");
+  const res = await fetch(`${API_BASE}/api/rankings/wellington?${params}`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export async function getRankingSteps(
   year: number,
   discipline: string

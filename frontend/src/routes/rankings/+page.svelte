@@ -107,11 +107,11 @@
 </script>
 
 <svelte:head>
-  <title>Rankings — NZ Gymnastics Results</title>
+  <title>National Rankings — NZ Gymnastics Results</title>
 </svelte:head>
 
 <div class="max-w-6xl mx-auto">
-  <h1 class="text-3xl font-bold mb-2">Rankings</h1>
+  <h1 class="text-3xl font-bold mb-2">National Rankings</h1>
   <p class="text-base-content/70 mb-6">Season rankings — top 2 All Around scores per gymnast (excludes Nationals).</p>
 
   <div class="flex flex-wrap items-center gap-3 mb-6">
