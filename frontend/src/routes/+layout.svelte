@@ -82,10 +82,18 @@
         </label>
         <a href="/" class="btn btn-ghost text-lg sm:text-xl">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="size-6">
-            <rect width="40" height="30" x="4" y="10" fill="none" stroke="currentColor" stroke-width="3" rx="4"/>
-            <path stroke="currentColor" stroke-width="3" stroke-linecap="round" d="M14 6v6m20-6v6"/>
-            <path stroke="currentColor" stroke-width="2" d="M4 20h40"/>
-            <circle cx="34" cy="28" r="5" fill="currentColor"/>
+            <defs>
+              <mask id="logo-mask">
+                <g fill="none" stroke-linejoin="round" stroke-width="4">
+                  <rect width="40" height="28" x="4" y="12" fill="#fff" stroke="#fff" rx="3"/>
+                  <path stroke="#fff" stroke-linecap="round" d="M14 6v6m20-6v6"/>
+                  <path stroke="#000" stroke-linecap="round" d="M10.227 24L15 19.017V33m9-21v28"/>
+                  <ellipse cx="34" cy="26" stroke="#000" rx="3" ry="7"/>
+                  <path stroke="#fff" stroke-linecap="round" d="M21 12h6m-6 28h6"/>
+                </g>
+              </mask>
+            </defs>
+            <path fill="currentColor" d="M0 0h48v48H0z" mask="url(#logo-mask)"/>
           </svg>
           NZ Gymnastics Results
         </a>
@@ -255,11 +263,19 @@
     <label for="nav-drawer" class="drawer-overlay" aria-label="Close menu"></label>
     <ul class="menu bg-base-200 min-h-full w-72 p-4 gap-1 text-base-content">
       <li class="menu-title text-lg mb-2">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="size-5">
-          <rect width="40" height="30" x="4" y="10" fill="none" stroke="currentColor" stroke-width="3" rx="4"/>
-          <path stroke="currentColor" stroke-width="3" stroke-linecap="round" d="M14 6v6m20-6v6"/>
-          <path stroke="currentColor" stroke-width="2" d="M4 20h40"/>
-          <circle cx="34" cy="28" r="5" fill="currentColor"/>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="size-5 -ml-1">
+          <defs>
+            <mask id="drawer-mask">
+              <g fill="none" stroke-linejoin="round" stroke-width="4">
+                <rect width="40" height="28" x="4" y="12" fill="#fff" stroke="#fff" rx="3"/>
+                <path stroke="#fff" stroke-linecap="round" d="M14 6v6m20-6v6"/>
+                <path stroke="#000" stroke-linecap="round" d="M10.227 24L15 19.017V33m9-21v28"/>
+                <ellipse cx="34" cy="26" stroke="#000" rx="3" ry="7"/>
+                <path stroke="#fff" stroke-linecap="round" d="M21 12h6m-6 28h6"/>
+              </g>
+            </mask>
+          </defs>
+          <path fill="currentColor" d="M0 0h48v48H0z" mask="url(#drawer-mask)"/>
         </svg>
         NZ Gymnastics Results
       </li>
