@@ -478,9 +478,9 @@ def _build_wide_row(row: dict, prefixes: list[str], columns: list[str]) -> dict:
     if aa_score is not None and aa_score != -999999.0:
         out["aa-score"] = _fmt3(aa_score)
         out["aa-rank"] = aa_rank
-    elif completed_count < expected_count and completed_count > 0:
+    elif completed_count > 0:
         out["aa-score"] = _fmt3(completed_total)
-        out["aa-rank"] = "DNF"
+        out["aa-rank"] = "DNF" if completed_count < expected_count else None
     else:
         out["aa-score"] = None
         out["aa-rank"] = None
