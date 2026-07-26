@@ -141,6 +141,42 @@ class StepsResponse(BaseModel):
     steps: list[str]
 
 
+class ApparatusRow(BaseModel):
+    app: str
+    pass_number: int
+    d: float | None = None
+    e: float | None = None
+    n: float | None = None
+    total: float | None = None
+    bonus: float | None = None
+    rank: int | None = None
+    start_value: float | None = None
+
+
+class WellingtonRankingRow(BaseModel):
+    rank: str
+    name: str
+    gnz_id: str
+    club: str | None
+    region: str = ""
+    scores: list[float]
+    competitions: list[str]
+    categories: list[str]
+    apparatus: list[list[ApparatusRow]] = []
+    total: float
+    average: float
+
+
+class WellingtonRankingResponse(BaseModel):
+    year: int
+    step: str
+    discipline: str
+    rankings: list[WellingtonRankingRow]
+    config_key: str = ""
+    qualifying_score: float | None = None
+    wellington_qualifying_score: float | None = None
+
+
 class DuplicateInstance(BaseModel):
     club: str
     level_category: str
