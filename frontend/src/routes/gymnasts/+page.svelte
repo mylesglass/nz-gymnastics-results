@@ -113,7 +113,7 @@
                 {#if gr.alt_ids.length > 0}
                   <span class="text-warning text-xs">⚠</span>
                 {/if}
-                <span class="ml-auto text-xs text-base-content/40">{displayIds(gr)}</span>
+                <span class="ml-auto"><span class="badge badge-ghost badge-xs font-mono">{displayIds(gr)}</span></span>
               </span>
               <span class="text-xs leading-snug mt-0.5">
                 {#each (gr.alt_clubs.length > 0 ? [gr.club, ...gr.alt_clubs].filter(Boolean) : gr.club ? [gr.club] : []) as clubName, i}
