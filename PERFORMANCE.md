@@ -8,10 +8,11 @@
 ```
 
 - **Backend:** Python 3.12+, FastAPI, SQLAlchemy ORM, SQLite, Pandas
-- **Frontend:** SvelteKit 5 (adapter-node, client-side data fetching), Tailwind CSS v4, DaisyUI v5
+- **Frontend:** SvelteKit 5 (adapter-node, SSR via +page.server.ts), Tailwind CSS v4, DaisyUI v5
 - **Infrastructure:** Docker Compose, single-server self-hosted deployment
 - **API proxy:** `hooks.server.ts` forwards `/api/*` from frontend Node server to backend container in production; Vite dev proxy in development
-- **Cache:** Simple in-memory dict with version-based invalidation (28 lines)
+- **Cache:** GranularTTLCache with per-key TTL + per-event prefix invalidation (68 lines)
+- **HTTP caching:** `Cache-Control: public, max-age=300, stale-while-revalidate=3600` on read endpoints; `no-store` on admin/write
 
 ---
 
@@ -209,17 +210,17 @@ Each row generates ~150-250 DOM nodes:
 ## 6. Identified Bottlenecks (Ranked by Impact)
 
 1. ~~**Zero indexes on `long_scores`** — every query is a full table scan of 90K rows~~ *(resolved)*
-2. **N+1 in events list** — 82 queries for 81 events (COUNT per event)
-3. **N+1 in wide-all** — 1 + N queries for cross-event results
-4. **No pagination on any endpoint** — all data fetched and rendered every time
-5. **No virtualization in frontend** — all rows rendered simultaneously (up to 1.2M DOM nodes)
-6. **O(n^2) name matching** in suggested merges with difflib
-7. **Global cache invalidation** — no per-key granularity
+2. ~~**N+1 in events list** — 82 queries for 81 events~~ *(resolved: outerjoin + group_by)*
+3. ~~**N+1 in wide-all** — 1 + N queries for cross-event results~~ *(resolved: single multi-event pivot query)*
+4. ~~**No pagination on any endpoint** — all data fetched and rendered every time~~ *(resolved: paginated in WideResultsTable)*
+5. ~~**No virtualization in frontend** — all rows rendered simultaneously (up to 1.2M DOM nodes)~~ *(resolved: 50 rows/page pagination)*
+6. ~~**O(n^2) name matching** in suggested merges with difflib~~ *(resolved: bulk pre-loaded maps + quick_ratio filter)*
+7. ~~**Global cache invalidation** — no per-key granularity~~ *(resolved: GranularTTLCache + prefix-based invalidation)*
 8. ~~**No WAL mode** — reads block writes and vice versa~~ *(resolved)*
 9. ~~**Synchronous mode FULL** — fsync on every commit~~ *(resolved)*
-10. **No server-side filtering/pagination** for large result sets
-11. **No debounced search** — every keystroke re-filters on the full dataset
-12. **No SSR for data pages** — every page load shows spinner before content
+10. **No server-side filtering/pagination** for rankings (handled at query time)
+11. ~~**No debounced search** — every keystroke re-filters on the full dataset~~ *(resolved)*
+12. ~~**No SSR for data pages** — every page load shows spinner before content~~ *(resolved: +page.server.ts load functions)*
 
 ---
 

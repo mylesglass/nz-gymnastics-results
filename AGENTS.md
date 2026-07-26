@@ -24,13 +24,15 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   ├── database.py      # SQLite engine + session + migration
 │   │   ├── schemas.py       # Pydantic models (RankingRow, etc.)
 │   │   ├── auth.py          # JWT auth (bcrypt, HS256, role-based, seed_admin_user)
+│   │   ├── cache.py         # GranularTTLCache with per-key TTL + per-event prefix invalidation
 │   │   ├── parser.py        # Scoreholder JSON parser (~630 lines)
 │   │   ├── decoder.py       # Node-tree score field decoder
 │   │   ├── resolver.py      # ID chain resolver
 │   │   ├── transformer.py   # Pandas long→wide pivot + CSV/XLSX export + region enrichment
 │   │   ├── reconcile.py     # Athlete ID reconciliation
+│   │   ├── reconcile_clubs.py # Club name normalization script
 │   │   └── validate_json.py # Batch validation CLI
-│   ├── tests/               # pytest suite (251 tests)
+│   ├── tests/               # pytest suite (129 pass, 87 skip)
 │   └── pyproject.toml
 │
 ├── frontend/
@@ -41,25 +43,34 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   ├── lib/
 │   │   │   ├── api.ts              # Typed fetch wrappers
 │   │   │   ├── auth.ts             # JWT auth stores (currentUser, setToken, logout)
-│   │   │   ├── year.ts             # Shared year toggle store
-│   │   │   ├── WideResultsTable.svelte  # Shared results table
+│   │   │   ├── year.ts             # yearOptions store (selectedYear removed)
+│   │   │   ├── utils/debounce.ts   # Debounce helper for search inputs
+│   │   │   ├── regions.ts          # Region color palettes
+│   │   │   ├── RegionBadge.svelte  # Region color badge component
+│   │   │   ├── WideResultsTable.svelte  # Shared results table (paginated, virtualized)
 │   │   │   ├── ScoreTooltip.svelte      # Apparatus score tooltip
-│   │   │   ├── AATooltip.svelte         # AA score tooltip
-│   │   │   └── MultiSelect.svelte       # Multi-select dropdown
+│   │   │   └── AATooltip.svelte         # AA score tooltip
 │   │   ├── routes/
-│   │   │   ├── +layout.svelte          # Nav, footer, theme toggle
-│   │   │   ├── +page.svelte            # Landing page
+│   │   │   ├── +layout.svelte          # Nav, footer, theme toggle, year tabs via goto()
+│   │   │   ├── +page.svelte            # Landing page with stat cards
 │   │   │   ├── upload/+page.svelte     # JSON upload
 │   │   │   ├── login/+page.svelte      # Username+password login
 │   │   │   ├── admin/+page.svelte      # Admin dashboard
 │   │   │   ├── admin/users/+page.svelte # User management
 │   │   │   ├── rankings/+page.svelte   # Rankings (member+)
-│   │   │   ├── events/+page.svelte     # Event list
+│   │   │   ├── events/+page.server.ts  # SSR load function for event list
+│   │   │   ├── events/+page.svelte     # Event list with sort/search/edit
+│   │   │   ├── events/[id]/+page.server.ts # SSR load for event results
 │   │   │   ├── events/[id]/+page.svelte # Event results
+│   │   │   ├── results/+page.server.ts # SSR load for all results
 │   │   │   ├── results/+page.svelte    # All-events results
+│   │   │   ├── clubs/+page.server.ts   # SSR load for club list
 │   │   │   ├── clubs/+page.svelte      # Club list
+│   │   │   ├── club/[club]/+page.server.ts # SSR load for club results
 │   │   │   ├── club/[club]/+page.svelte # Club results
-│   │   │   ├── gymnasts/+page.svelte   # Gymnast list
+│   │   │   ├── gymnasts/+page.server.ts # SSR load for gymnast list
+│   │   │   ├── gymnasts/+page.svelte   # Gymnast list with A-Z letter jump
+│   │   │   ├── gymnast/[gnz_id]/+page.server.ts # SSR load for gymnast results
 │   │   │   └── gymnast/[gnz_id]/+page.svelte # Gymnast results
 │   │   ├── app.css              # @import "tailwindcss"; @plugin "daisyui";
 │   │   └── app.html
@@ -152,8 +163,9 @@ let { label, count = 0 }: { label: string; count?: number } = $props();
 
 ### Routing
 - File-based SvelteKit routing under `src/routes/`
-- Data fetching client-side in `onMount` (no load functions)
+- Data fetching in `+page.server.ts` load functions (SSR) for all data routes
 - `goto()` from `$app/navigation` for programmatic navigation
+- URL search params drive year filtering, search, and pagination state
 
 ## Testing Conventions
 
@@ -161,6 +173,7 @@ let { label, count = 0 }: { label: string; count?: number } = $props();
 - All tests in `backend/tests/`, one file per module
 - **Run:** `cd backend && source .venv/bin/activate && pytest`
 - **Run single:** `pytest tests/test_parser.py -v`
+- **Stats:** 129 pass, 87 skip (skipped tests rely on data-collection JSON files not always present)
 - Plain `assert` statements (no `unittest` methods)
 - `@pytest.mark.parametrize` for data-driven tests
 - Inline fixtures (no conftest.py) — SQLite `:memory:` or temp file

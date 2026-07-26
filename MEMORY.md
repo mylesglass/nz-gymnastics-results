@@ -196,8 +196,10 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
 - **`new URL()` breaks with relative URLs** — `api.ts`: `new URL("/api/results/wide-all")` throws when `API_BASE = ""` in dev mode. All API functions must use string concatenation for relative URLs.
 - **Numpy types in JSON responses** — pandas/numpy produce `numpy.int64` and `numpy.float64` values that FastAPI's `jsonable_encoder` can't serialize. Must convert to native Python types in transformer.py.
 - **DaisyUI z-index**: `.dropdown-content` sets `z-index: 1` and overrides Tailwind `z-*` classes because imported after Tailwind — use inline `style="z-index: 50"` to beat specificity.
-- **$effect reactivity**: `$effect` tracks all reactive dependencies read inside it — avoid reading state that the effect itself modifies to prevent cycles. Fixed sort-revert bug by using `loaded` flag.
-- **Region enrichment**: Club→region lookup at pivot time via `clubs_and_regions.json`. Changes to lookup file require re-upload of events.
+- **$effect reactivity**: `$effect` tracks all reactive dependencies read inside it — avoid reading state that the effect itself modifies to prevent cycles. Fixed sort-revert bug by using `loaded` flag. Fixed page-reset-next-button bug by reading only filter state, not currentPage.
+- **AA score fallback**: `_build_wide_row` now computes AA score from apparatus totals when stored `aa_score` is NULL. This handles cases where the parser's round_type mismatch prevents AA lookup.
+- **resolver regex**: `resolve_level()` uses `r"level\s*(\d+)"` (zero-or-more whitespace) — consistent with STEP regex — to handle no-space variants like `"MAG Level3"`.
+- **Region enrichment**: Club→region lookup at pivot time via `clubs_and_regions.json`. Changes to lookup file require re-upload of events. Run `reconcile_clubs.py` after adding aliases to fix existing data.
 
 ## Docker
 - `docker compose up --build` starts both services
@@ -205,12 +207,29 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
 - SQLite persists in `backend/data/` via named volume `backend_data`
 - Vite proxies `/api/*` to backend in dev mode
 
+## Cache Architecture
+- **GranularTTLCache** — in-memory dict with per-key TTL.
+  - No-TTL entries (pivot caches) stored as direct values.
+  - TTL entries stored as `(expiry, value)` tuples, auto-evicted on read.
+  - Prefix-based invalidation: `invalidate(event_id)` clears `event:{id}:*` keys.
+  - Full clear: `invalidate()` without event_id (used by admin bulk operations).
+- **Cached endpoints:**
+  - `/api/stats` — key `"stats"`, TTL 300s
+  - `/api/gymnasts` — key `"gymnasts"`, TTL 300s
+  - `/api/clubs` — key `"clubs"`, TTL 300s
+  - `/api/results/wide-all` — key `"wide-all:{year}:{gnz_id}:{club}"`, TTL 300s
+  - `/api/events/{id}/results/wide` — key `"event:{id}:pivot:{gnz_id}:{club}"`, no TTL (invalidation-driven)
+- **HTTP caching:** `Cache-Control: public, max-age=300, stale-while-revalidate=3600` on GET read endpoints, set via middleware. `no-store, no-cache, private` on admin/write.
+- **ETag** — global version counter, incremented on every invalidation. Returned in response headers for conditional requests.
+
+## HTTP Cache-Control
+- Middleware at `main.py` `@app.middleware("http")` applies headers based on path + method:
+  - Read endpoints → `public, max-age=300, stale-while-revalidate=3600`
+  - Admin/write (POST/PUT/DELETE/PATCH) → `no-store, no-cache, private`
+- Individual endpoint `cache_headers()` now only sets the ETag (removed Cache-Control).
+
 ## Open Questions / Next Potential Areas
-- [ ] Re-implement equals in rankings with correct tie detection logic
-- [ ] Mobile-responsive table improvements
-- [ ] Performance: caching, query optimisation, application speed
-- [ ] Mobile-responsive table improvements
-- [ ] Performance: caching, query optimisation, application speed
+- [ ] Mobile-responsive table improvements (column overflow on small screens)
 - [ ] Fuzzy name matching — detect nicknames/spelling variations (e.g. "Liz" → "Elizabeth")
 - [ ] Conflict resolution UI — admin dashboard to manually pick the correct ID for ambiguous names
 - [ ] GNZ ID audit log — track when and why an ID was changed for a gymnast
