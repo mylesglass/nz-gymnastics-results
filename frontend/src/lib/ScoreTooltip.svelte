@@ -23,7 +23,7 @@
 
 {#if hasMulti}
   <div class="dropdown dropdown-hover {isLast ? 'dropdown-left' : 'dropdown-right'}">
-    <div class="cursor-pointer" tabindex="0">
+    <div class="cursor-pointer border-b border-dotted border-base-content/30 hover:border-base-content/60 leading-tight" tabindex="0">
       {row[`${prefix}-d`] ?? ""} / {row[`${prefix}-total`] ?? "DNS"}
     </div>
     <div
@@ -61,7 +61,7 @@
   </div>
 {:else}
   <div class="dropdown dropdown-hover {isLast ? 'dropdown-left' : 'dropdown-right'}">
-    <div class="cursor-pointer" tabindex="0">
+    <div class="cursor-pointer border-b border-dotted border-base-content/30 hover:border-base-content/60 leading-tight" tabindex="0">
       {row[`${prefix}-d`] ?? ""} / {row[`${prefix}-total`] ?? "DNS"}
     </div>
     <div
