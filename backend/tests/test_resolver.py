@@ -108,6 +108,9 @@ class TestResolveLevel:
     def test_mag_level(self):
         assert resolve_level("MAG Level 4") == "Level 4"
 
+    def test_mag_level_no_space(self):
+        assert resolve_level("MAG Level3") == "Level 3"
+
     def test_default_fallback(self):
         assert resolve_level("UNKNOWN") == "UNKNOWN"
 
