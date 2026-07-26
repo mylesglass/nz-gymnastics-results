@@ -119,11 +119,11 @@
                 <span class="text-warning text-xs">⚠</span>
               {/if}
               <span class="text-xs text-base-content/40">{displayIds(gr)}</span>
-              <span class="ml-auto flex items-center gap-1 shrink-0">
+              <span class="ml-auto flex items-center gap-1 shrink-0 min-w-0">
                 {#if gr.alt_clubs.length > 0}
-                  <span class="text-xs text-base-content/40">{displayClubs(gr)}</span>
+                  <span class="text-xs text-base-content/40 truncate max-w-40" title={displayClubs(gr)}>{displayClubs(gr)}</span>
                 {:else if gr.club}
-                  <span class="text-xs text-base-content/50">{gr.club}</span>
+                  <span class="text-xs text-base-content/50 truncate max-w-40" title={gr.club}>{gr.club}</span>
                 {/if}
               </span>
             </a>
