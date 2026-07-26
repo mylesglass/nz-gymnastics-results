@@ -50,12 +50,6 @@
     return all.join(", ");
   }
 
-  function displayClubs(gr: Gymnast): string {
-    const all: string[] = [];
-    if (gr.club) all.push(gr.club);
-    all.push(...gr.alt_clubs);
-    return all.join(", ");
-  }
 </script>
 
 <svelte:head>
@@ -119,12 +113,12 @@
                 <span class="text-warning text-xs">⚠</span>
               {/if}
               <span class="text-xs text-base-content/40">{displayIds(gr)}</span>
-              <span class="ml-auto flex items-center gap-1 shrink-0 min-w-0">
-                {#if gr.alt_clubs.length > 0}
-                  <span class="text-xs text-base-content/40 truncate max-w-40" title={displayClubs(gr)}>{displayClubs(gr)}</span>
-                {:else if gr.club}
-                  <span class="text-xs text-base-content/50 truncate max-w-40" title={gr.club}>{gr.club}</span>
-                {/if}
+              <span class="ml-auto text-xs text-right leading-snug max-w-48">
+                {#each (gr.alt_clubs.length > 0 ? [gr.club, ...gr.alt_clubs].filter(Boolean) : gr.club ? [gr.club] : []) as clubName, i}
+                  <span class="inline-block max-w-36 truncate align-middle {clubName === gr.club ? 'text-base-content/50' : 'text-base-content/40'}" title={clubName}>{i > 0 ? ", " : ""}{clubName}</span>
+                {:else}
+                  <span class="text-base-content/30 text-xs">—</span>
+                {/each}
               </span>
             </a>
           {/each}
