@@ -88,7 +88,7 @@ def resolve_level(unit_name: str) -> str:
     m = re.search(r"step\s*(\d+)", lower)
     if m:
         return f"STEP {m.group(1)}"
-    m = re.search(r"level\s+(\d+)", lower)
+    m = re.search(r"level\s*(\d+)", lower)
     if m:
         return f"Level {m.group(1)}"
 
