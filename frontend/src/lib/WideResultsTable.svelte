@@ -545,6 +545,18 @@
           : ""} results
       </span>
 
+      {#if totalPages > 1}
+        <div class="join ml-1">
+          <button class="btn btn-xs join-item" disabled={currentPage <= 1}
+            onclick={() => { if (currentPage > 1) currentPage--; }}
+          >«</button>
+          <button class="btn btn-xs join-item no-animation">{currentPage}/{totalPages}</button>
+          <button class="btn btn-xs join-item" disabled={currentPage >= totalPages}
+            onclick={() => { if (currentPage < totalPages) currentPage++; }}
+          >»</button>
+        </div>
+      {/if}
+
       {#if download}
         {@render download({
           columns,
@@ -575,12 +587,13 @@
                     {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
                       <button
                         onclick={(e) => toggleDropdown(col, e)}
-                        class="btn btn-ghost btn-xs px-0.5 min-h-0 h-4"
+                        class="btn btn-ghost btn-xs px-0.5 min-h-0 h-5"
+                        title="Filter"
                       >
                         <span
                           class="text-xs {filterStateFor(col).selected.length
                             ? 'text-primary'
-                            : 'opacity-40'}">▾</span
+                            : 'opacity-60'}">▾</span
                         >
                         {#if filterStateFor(col).selected.length}
                           <span class="badge badge-xs badge-accent"
@@ -625,12 +638,13 @@
                     {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
                       <button
                         onclick={(e) => toggleDropdown(col, e)}
-                        class="btn btn-ghost btn-xs px-0.5 min-h-0 h-4"
+                        class="btn btn-ghost btn-xs px-0.5 min-h-0 h-5"
+                        title="Filter"
                       >
                         <span
                           class="text-xs {filterStateFor(col).selected.length
                             ? 'text-primary'
-                            : 'opacity-40'}">▾</span
+                            : 'opacity-60'}">▾</span
                         >
                         {#if filterStateFor(col).selected.length}
                           <span class="badge badge-xs badge-accent"
@@ -672,12 +686,12 @@
                 {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
                   <button
                     onclick={(e) => toggleDropdown(col, e)}
-                    class="btn btn-ghost btn-xs px-0.5 min-h-0 h-4"
+                    class="btn btn-ghost btn-xs px-0.5 min-h-0 h-5"
                   >
                     <span
                       class="text-xs {filterStateFor(col).selected.length
                         ? 'text-primary'
-                        : 'opacity-40'}">▾</span
+                        : 'opacity-60'}">▾</span
                     >
                     {#if filterStateFor(col).selected.length}
                       <span class="badge badge-xs badge-accent"
@@ -722,12 +736,12 @@
                 {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
                   <button
                     onclick={(e) => toggleDropdown(col, e)}
-                    class="btn btn-ghost btn-xs px-0.5 min-h-0 h-4"
+                    class="btn btn-ghost btn-xs px-0.5 min-h-0 h-5"
                   >
                     <span
                       class="text-xs {filterStateFor(col).selected.length
                         ? 'text-primary'
-                        : 'opacity-40'}">▾</span
+                        : 'opacity-60'}">▾</span
                     >
                     {#if filterStateFor(col).selected.length}
                       <span class="badge badge-xs badge-accent"
