@@ -137,7 +137,7 @@
           </a>
           <a
             href="/clubs"
-            class="btn btn-sm {active('/clubs') ? 'btn-primary' : 'btn-ghost'}"
+            class="btn btn-sm {active('/clubs') || currentPath.startsWith('/club/') ? 'btn-primary' : 'btn-ghost'}"
           >
             Clubs
           </a>
@@ -276,7 +276,7 @@
         </a>
       </li>
       <li>
-        <a href="/clubs" onclick={handleNavClick} class:active={active("/clubs")}>
+        <a href="/clubs" onclick={handleNavClick} class:active={active("/clubs") || currentPath.startsWith("/club/")}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="m3.528 2.47 5.5 5.5a.75.75 0 0 1 0 1.06l-5.5 5.5a.75.75 0 0 1-1.06-1.06L7.44 8.5 2.47 3.53a.75.75 0 0 1 1.06-1.06Z" clip-rule="evenodd" /><path fill-rule="evenodd" d="m9.528 2.47 5.5 5.5a.75.75 0 0 1 0 1.06l-5.5 5.5a.75.75 0 0 1-1.06-1.06L13.44 8.5 8.47 3.53a.75.75 0 0 1 1.06-1.06Z" clip-rule="evenodd" /></svg>
           Clubs
         </a>
