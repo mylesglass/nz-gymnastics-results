@@ -79,7 +79,7 @@
     />
   </div>
 
-  <div class="flex flex-wrap gap-1 mb-4">
+  <div class="flex flex-wrap gap-1 mb-4 justify-center">
     {#each Object.keys(grouped) as letter}
       <button
         class="btn btn-xs btn-outline"
