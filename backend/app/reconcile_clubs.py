@@ -9,6 +9,7 @@ Usage:
 
 from sqlalchemy import func
 
+from app.cache import invalidate
 from app.database import get_session
 from app.models import LongScore
 from app.parser import _NAME_TO_CANONICAL
@@ -46,6 +47,7 @@ def reconcile_clubs() -> dict:
             updates += updated
 
         session.commit()
+        invalidate()
 
         return {
             "distinct_names": len(distinct_names),
