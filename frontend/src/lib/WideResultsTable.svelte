@@ -540,9 +540,7 @@
       </label>
 
       <span class="text-xs text-base-content/50 ml-1">
-        Showing {visibleRows.length}{filteredCount < totalCount
-          ? ` of ${filteredCount}`
-          : ""} results
+        Showing {visibleRows.length} of {filteredCount} results
       </span>
 
       {#if totalPages > 1}
