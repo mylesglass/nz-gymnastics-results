@@ -81,11 +81,8 @@
           </svg>
         </label>
         <a href="/" class="btn btn-ghost text-lg sm:text-xl">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="size-6">
-            <rect width="40" height="28" x="4" y="12" fill="none" stroke="currentColor" stroke-width="3" rx="3"/>
-            <path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" d="M14 6v6m20-6v6"/>
-            <path fill="none" stroke="currentColor" stroke-width="1.5" d="M4 21h40"/>
-            <text x="24" y="34" text-anchor="middle" font-size="9" font-weight="bold" fill="currentColor" font-family="monospace">1|0|.|0</text>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-6 text-primary">
+            <path fill="currentColor" d="M8 22h5v-4H6v2q0 .825.588 1.413T8 22m7 0h5q.825 0 1.413-.587T22 20v-2h-7zM2 18V4q0-.825.588-1.412T4 2h14v2H4v14zm4-2h7v-4H6zm9 0h7v-4h-7zm-9-6h16V8q0-.825-.587-1.412T20 6H8q-.825 0-1.412.588T6 8z"/>
           </svg>
           NZ Gymnastics Results
         </a>
@@ -255,11 +252,8 @@
     <label for="nav-drawer" class="drawer-overlay" aria-label="Close menu"></label>
     <ul class="menu bg-base-200 min-h-full w-72 p-4 gap-1 text-base-content">
       <li class="menu-title text-lg mb-2">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="size-5 -ml-1">
-          <rect width="40" height="28" x="4" y="12" fill="none" stroke="currentColor" stroke-width="3" rx="3"/>
-          <path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" d="M14 6v6m20-6v6"/>
-          <path fill="none" stroke="currentColor" stroke-width="1.5" d="M4 21h40"/>
-          <text x="24" y="34" text-anchor="middle" font-size="9" font-weight="bold" fill="currentColor" font-family="monospace">1|0|.|0</text>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-5 -ml-1 text-primary">
+          <path fill="currentColor" d="M8 22h5v-4H6v2q0 .825.588 1.413T8 22m7 0h5q.825 0 1.413-.587T22 20v-2h-7zM2 18V4q0-.825.588-1.412T4 2h14v2H4v14zm4-2h7v-4H6zm9 0h7v-4h-7zm-9-6h16V8q0-.825-.587-1.412T20 6H8q-.825 0-1.412.588T6 8z"/>
         </svg>
         NZ Gymnastics Results
       </li>
