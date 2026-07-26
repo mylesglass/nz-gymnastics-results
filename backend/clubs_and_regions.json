@@ -201,7 +201,8 @@
           "Gisborne",
           "Gisborne Gymastics Club",
           "Gisbourne Gymnastics Club",
-          "Gisbourne Gym Club"
+          "Gisbourne Gym Club",
+          "Gisborne Gym Club"
         ]
       },
       {
@@ -240,7 +241,8 @@
         "aliases": [
           "Manawatu Gymnastics",
           "Manawatu Gymsports",
-          "Manawatu GymSports"
+          "Manawatu GymSports",
+          "Manawatu"
         ]
       },
       {
@@ -1261,6 +1263,18 @@
     "gisbourne gym club": {
       "name": "Gisborne Gymnastics Club",
       "region": "Hawkes Bay / Poverty Bay"
+    },
+    "eastern suburbs gym club": {
+      "name": "Eastern Suburbs Gymnastics Club",
+      "region": "Auckland"
+    },
+    "gisborne gym club": {
+      "name": "Gisborne Gymnastics Club",
+      "region": "Hawkes Bay / Poverty Bay"
+    },
+    "manawatu": {
+      "name": "Manawatu Gymsports",
+      "region": "Manawatu - Whanganui"
     }
   }
 }
