@@ -98,21 +98,21 @@
 
   {#if stats}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-      <a href="/events" class="stat bg-base-200 rounded-box border border-base-300 hover:bg-base-300 transition-all cursor-pointer">
+      <a href="/events" class="stat bg-base-200 rounded-box border-t-4 border-primary border-x-0 border-b-0 hover:bg-base-300 transition-all cursor-pointer">
         <div class="stat-title text-base-content/60 text-xs">Events</div>
-        <div class="stat-value text-2xl">{stats.total_events}</div>
+        <div class="stat-value text-2xl text-primary">{stats.total_events}</div>
       </a>
-      <a href="/gymnasts" class="stat bg-base-200 rounded-box border border-base-300 hover:bg-base-300 transition-all cursor-pointer">
+      <a href="/gymnasts" class="stat bg-base-200 rounded-box border-t-4 border-secondary border-x-0 border-b-0 hover:bg-base-300 transition-all cursor-pointer">
         <div class="stat-title text-base-content/60 text-xs">Gymnasts</div>
-        <div class="stat-value text-2xl">{stats.total_gymnasts.toLocaleString()}</div>
+        <div class="stat-value text-2xl text-secondary">{stats.total_gymnasts.toLocaleString()}</div>
       </a>
-      <a href="/results" class="stat bg-base-200 rounded-box border border-base-300 hover:bg-base-300 transition-all cursor-pointer">
+      <a href="/results" class="stat bg-base-200 rounded-box border-t-4 border-accent border-x-0 border-b-0 hover:bg-base-300 transition-all cursor-pointer">
         <div class="stat-title text-base-content/60 text-xs">Scores</div>
-        <div class="stat-value text-2xl">{stats.total_scores.toLocaleString()}</div>
+        <div class="stat-value text-2xl text-accent">{stats.total_scores.toLocaleString()}</div>
       </a>
-      <a href="/clubs" class="stat bg-base-200 rounded-box border border-base-300 hover:bg-base-300 transition-all cursor-pointer">
+      <a href="/clubs" class="stat bg-base-200 rounded-box border-t-4 border-info border-x-0 border-b-0 hover:bg-base-300 transition-all cursor-pointer">
         <div class="stat-title text-base-content/60 text-xs">Clubs</div>
-        <div class="stat-value text-2xl">{stats.total_clubs}</div>
+        <div class="stat-value text-2xl text-info">{stats.total_clubs}</div>
       </a>
     </div>
   {:else}
@@ -127,7 +127,7 @@
   {/if}
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 mb-8">
-    <div class="card bg-base-200 border border-base-300">
+    <div class="card bg-base-200 border border-base-300 border-t-4 border-t-primary">
       <div class="card-body items-center text-center py-6">
         <span class="text-3xl mb-2">🤸</span>
         <h3 class="card-title text-sm">WAG &amp; MAG</h3>
@@ -136,7 +136,7 @@
         </p>
       </div>
     </div>
-    <div class="card bg-base-200 border border-base-300">
+    <div class="card bg-base-200 border border-base-300 border-t-4 border-t-secondary">
       <div class="card-body items-center text-center py-6">
         <span class="text-3xl mb-2">📥</span>
         <h3 class="card-title text-sm">Export &amp; Share</h3>
@@ -145,7 +145,7 @@
         </p>
       </div>
     </div>
-    <div class="card bg-base-200 border border-base-300">
+    <div class="card bg-base-200 border border-base-300 border-t-4 border-t-accent">
       <div class="card-body items-center text-center py-6">
         <span class="text-3xl mb-2">🔍</span>
         <h3 class="card-title text-sm">Smart Filtering</h3>

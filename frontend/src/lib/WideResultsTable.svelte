@@ -518,7 +518,7 @@
             type="radio"
             name={discTabsName}
             role="tab"
-            class="tab checked:bg-secondary checked:text-secondary-content"
+            class="tab {tab === 'wag' ? 'checked:bg-primary checked:text-primary-content' : 'checked:bg-secondary checked:text-secondary-content'}"
             aria-label={tab.toUpperCase()}
             checked={activeTab === tab}
             onchange={() => applyTab(tab)}
@@ -570,7 +570,7 @@
                       class="hover:text-primary text-xs font-bold"
                     >
                       {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
-                      {#if sortCol === col}{sortAsc ? " ▲" : " ▼"}{/if}
+                      {#if sortCol === col}<span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>{/if}
                     </button>
                     {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
                       <button
@@ -583,7 +583,7 @@
                             : 'opacity-40'}">▾</span
                         >
                         {#if filterStateFor(col).selected.length}
-                          <span class="badge badge-xs badge-primary"
+                          <span class="badge badge-xs badge-accent"
                             >{filterStateFor(col).selected.length}</span
                           >
                         {/if}
@@ -620,7 +620,7 @@
                       class="hover:text-primary text-xs font-bold"
                     >
                       {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
-                      {#if sortCol === col}{sortAsc ? " ▲" : " ▼"}{/if}
+                      {#if sortCol === col}<span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>{/if}
                     </button>
                     {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
                       <button
@@ -633,7 +633,7 @@
                             : 'opacity-40'}">▾</span
                         >
                         {#if filterStateFor(col).selected.length}
-                          <span class="badge badge-xs badge-primary"
+                          <span class="badge badge-xs badge-accent"
                             >{filterStateFor(col).selected.length}</span
                           >
                         {/if}
@@ -666,7 +666,7 @@
                 >
                   {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
                   {#if sortCol === col}
-                    {sortAsc ? " ▲" : " ▼"}
+                    <span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>
                   {/if}
                 </button>
                 {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
@@ -680,7 +680,7 @@
                         : 'opacity-40'}">▾</span
                     >
                     {#if filterStateFor(col).selected.length}
-                      <span class="badge badge-xs badge-primary"
+                      <span class="badge badge-xs badge-accent"
                         >{filterStateFor(col).selected.length}</span
                       >
                     {/if}
@@ -699,7 +699,7 @@
             >
               {appDisplayLabel(prefix)}
               {#if sortCol === `${prefix}-total`}
-                {sortAsc ? " ▲" : " ▼"}
+                <span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>
               {/if}
             </th>
           {/each}
@@ -716,7 +716,7 @@
                 >
                   {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
                   {#if sortCol === col}
-                    {sortAsc ? " ▲" : " ▼"}
+                    <span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>
                   {/if}
                 </button>
                 {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
@@ -730,7 +730,7 @@
                         : 'opacity-40'}">▾</span
                     >
                     {#if filterStateFor(col).selected.length}
-                      <span class="badge badge-xs badge-primary"
+                      <span class="badge badge-xs badge-accent"
                         >{filterStateFor(col).selected.length}</span
                       >
                     {/if}
