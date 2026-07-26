@@ -205,3 +205,4 @@
 - [ ] Performance: caching, query optimisation, application speed, Search/ research perforomance improvements (i.e. Large result tables are slow), how do we make the user exp[erience more fluid and modern?
 - [ ] Fuzzy name matching — detect nicknames/spelling variations (e.g. "Liz" → "Elizabeth")
 - [ ] Make 10.0 Scoreboard Icon & Favicon
+- [ ] Wellington Provincial Team Rankings and Selection. 

@@ -518,7 +518,7 @@
             type="radio"
             name={discTabsName}
             role="tab"
-            class="tab checked:bg-primary checked:text-primary-content"
+            class="tab checked:bg-secondary checked:text-secondary-content"
             aria-label={tab.toUpperCase()}
             checked={activeTab === tab}
             onchange={() => applyTab(tab)}

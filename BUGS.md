@@ -9,3 +9,7 @@ All previously reported bugs have been fixed. See `git log` for details.
 - GFA-only clubs no longer trigger unknown-club dialog on upload
 - Batch upload continues after club dialog dismissal
 - Unified athlete ID reconciliation card (grouped by name, per-instance dropdowns, confidence-gated auto-fix)
+
+
+Unfixed:
+- "Beatrix Prestidge-young" in "Twisters Elementary Competition 2025" has all apparatus scores but no AA total

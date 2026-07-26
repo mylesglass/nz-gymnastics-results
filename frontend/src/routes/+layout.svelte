@@ -96,7 +96,7 @@
               type="radio"
               name="year_tabs"
               role="tab"
-              class="tab checked:bg-primary checked:text-primary-content"
+              class="tab checked:bg-secondary checked:text-secondary-content"
               aria-label={yr}
               checked={selYear === yr}
               onchange={() => selectedYear.set(yr)}
@@ -106,7 +106,7 @@
             type="radio"
             name="year_tabs"
             role="tab"
-            class="tab checked:bg-primary checked:text-primary-content"
+            class="tab checked:bg-secondary checked:text-secondary-content"
             aria-label="All"
             checked={selYear === null}
             onchange={() => selectedYear.set(null)}
@@ -298,7 +298,7 @@
               type="radio"
               name="drawer_year"
               role="tab"
-              class="tab checked:bg-primary checked:text-primary-content"
+              class="tab checked:bg-secondary checked:text-secondary-content"
               aria-label={yr}
               checked={selYear === yr}
               onchange={() => { selectedYear.set(yr); handleNavClick(); }}
@@ -308,7 +308,7 @@
             type="radio"
             name="drawer_year"
             role="tab"
-            class="tab checked:bg-primary checked:text-primary-content"
+            class="tab checked:bg-secondary checked:text-secondary-content"
             aria-label="All"
             checked={selYear === null}
             onchange={() => { selectedYear.set(null); handleNavClick(); }}
