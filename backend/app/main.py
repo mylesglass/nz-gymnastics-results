@@ -18,7 +18,7 @@ from app.auth import (
     seed_admin_user,
     verify_password,
 )
-from app.cache import cache_headers, invalidate
+from app.cache import cache_headers, cached, invalidate
 from app.database import get_session, init_db
 from app.models import Event, LongScore, User
 from app.parser import ParseError, _NAME_TO_CANONICAL, find_unknown_clubs, parse_json, reload_club_maps, validate_upload_structure
@@ -78,21 +78,18 @@ def health():
 @app.get("/api/stats")
 def get_stats(response: Response):
     response.headers.update(cache_headers())
+    data = cached(("stats",), lambda: _compute_stats(), ttl=300)
+    return data
+
+
+def _compute_stats() -> StatsResponse:
     session = get_session()
     try:
-        total_events = session.query(func.count(Event.id)).scalar() or 0
-        total_gymnasts = (
-            session.query(func.count(func.distinct(LongScore.gymnast_name))).scalar() or 0
-        )
-        total_scores = session.query(func.count(LongScore.id)).scalar() or 0
-        total_clubs = (
-            session.query(func.count(func.distinct(LongScore.club_name))).scalar() or 0
-        )
         return StatsResponse(
-            total_events=total_events,
-            total_gymnasts=total_gymnasts,
-            total_scores=total_scores,
-            total_clubs=total_clubs,
+            total_events=session.query(func.count(Event.id)).scalar() or 0,
+            total_gymnasts=session.query(func.count(func.distinct(LongScore.gymnast_name))).scalar() or 0,
+            total_scores=session.query(func.count(LongScore.id)).scalar() or 0,
+            total_clubs=session.query(func.count(func.distinct(LongScore.club_name))).scalar() or 0,
         )
     finally:
         session.close()
@@ -101,6 +98,11 @@ def get_stats(response: Response):
 @app.get("/api/clubs", response_model=list[ClubItem])
 def list_clubs(response: Response):
     response.headers.update(cache_headers())
+    data = cached(("clubs",), lambda: _compute_clubs(), ttl=300)
+    return data
+
+
+def _compute_clubs() -> list[ClubItem]:
     session = get_session()
     try:
         rows = (
@@ -120,15 +122,12 @@ def list_clubs(response: Response):
 
         def find_region(club_name: str) -> str | None:
             lower = club_name.lower().strip()
-            # Direct region name match (e.g. Nationals where org is the region)
             for region_name in club_data.get("regions", {}):
                 if lower == region_name.lower():
                     return region_name
-            # Direct match against lookup (aliases cover most variants)
             v = club_data.get("lookup", {}).get(lower)
             if v:
                 return v["region"] or _region_from_canonical(v["name"])
-            # Prefix fallback: "Levin Gymnastics" → "Levin Gymnastics Club"
             return _region_from_prefix(lower)
 
         def _region_from_canonical(canonical: str) -> str | None:
@@ -164,6 +163,13 @@ def list_clubs(response: Response):
 @app.get("/api/gymnasts", response_model=list[GymnastItem])
 def list_gymnasts(response: Response):
     response.headers.update(cache_headers())
+    data = cached(("gymnasts",), lambda: _compute_gymnasts(), ttl=300)
+    return data
+
+
+def _compute_gymnasts() -> list[GymnastItem]:
+    from collections import defaultdict
+
     session = get_session()
     try:
         rows = (
@@ -172,8 +178,6 @@ def list_gymnasts(response: Response):
             .distinct()
             .all()
         )
-
-        from collections import defaultdict
 
         name_groups: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
         club_groups: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
@@ -1128,6 +1132,14 @@ def get_results_wide(event_id: int, response: Response):
 @app.get("/api/results/wide-all")
 def get_all_results_wide(response: Response, gnz_id: str = None, club: str = None, year: int = None):
     response.headers.update(cache_headers())
+    return cached(
+        ("wide-all", year or "", gnz_id or "", club or ""),
+        lambda: _compute_wide_all(year, gnz_id, club),
+        ttl=300,
+    )
+
+
+def _compute_wide_all(year: int | None, gnz_id: str | None, club: str | None) -> dict:
     session = get_session()
     try:
         query = session.query(Event.id).order_by(Event.created_at.desc())
