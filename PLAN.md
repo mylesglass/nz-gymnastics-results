@@ -200,8 +200,13 @@
 - [x] Truncate competition names in wide results table (max-w-56, ellipsis)
 - [x] Refresh docs
 
+### STEP 23: Wellington Regional Rankings ✅
+- [x] New `backend/app/wellington_ranking.py` module with event classification (regional/club/away), per-step-range selection rules, distinct-event enforcement, GNZ + Wellington dual qualifier filters
+- [x] `GET /api/rankings/wellington` endpoint (auth: member+)
+- [x] Wellington Rankings page with WAG/MAG tabs, STEP selector, qualifier toggles, CSV export, apparatus tooltips
+- [x] Rankings nav dropdown with National Rankings / Wellington Rankings
+- [x] Config: WAG STEP 5-6 (GNZ 50.0 2×+away, Wgtn 53.0), WAG STEP 7-10 (GNZ 43.0 1×), MAG TBD
+
 ### Next Steps
-- [ ] Mobile-responsive table improvements
-- [ ] Performance: caching, query optimisation, application speed, Search/ research perforomance improvements (i.e. Large result tables are slow), how do we make the user exp[erience more fluid and modern?
-- [ ] Fuzzy name matching — detect nicknames/spelling variations (e.g. "Liz" → "Elizabeth")
-- [ ] Wellington Provincial Team Rankings and Selection. 
+- [ ] Edit row functionality for admin
+- [ ] MAG Wellington ranking thresholds TBD
