@@ -79,6 +79,17 @@
     />
   </div>
 
+  <div class="flex flex-wrap gap-1 mb-4">
+    {#each Object.keys(grouped) as letter}
+      <button
+        class="btn btn-xs btn-outline"
+        onclick={() => document.getElementById(`letter-${letter}`)?.scrollIntoView({ behavior: 'smooth' })}
+      >
+        {letter}
+      </button>
+    {/each}
+  </div>
+
   {#if loading}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {#each [1, 2, 3, 4, 5, 6] as _}
@@ -92,7 +103,7 @@
     </div>
   {:else}
     {#each Object.entries(grouped) as [letter, letterGymnasts]}
-      <div class="mb-6">
+      <div class="mb-6" id="letter-{letter}">
         <div class="flex items-center gap-2 mb-2">
           <span class="text-lg font-bold">{letter}</span>
           <span class="text-xs text-base-content/50">({letterGymnasts.length})</span>
