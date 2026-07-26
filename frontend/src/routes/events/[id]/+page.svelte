@@ -46,7 +46,7 @@
 </svelte:head>
 
 {#snippet download({columns, rows, headerLabels})}
-  <button onclick={() => exportCSV(columns, rows, headerLabels)} class="btn btn-secondary btn-sm ml-auto">
+  <button onclick={() => exportCSV(columns, rows, headerLabels)} class="btn btn-primary btn-sm ml-auto">
     Download CSV
   </button>
 {/snippet}
