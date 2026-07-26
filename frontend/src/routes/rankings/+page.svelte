@@ -116,8 +116,8 @@
 
   <div class="flex flex-wrap items-center gap-3 mb-6">
     <div role="tablist" class="tabs tabs-box">
-      <button role="tab" class="tab tab-sm {discipline === 'WAG' ? 'tab-active' : ''}" onclick={() => switchDisc('WAG')}>WAG</button>
-      <button role="tab" class="tab tab-sm {discipline === 'MAG' ? 'tab-active' : ''}" onclick={() => switchDisc('MAG')}>MAG</button>
+      <button role="tab" class="tab tab-sm {discipline === 'WAG' ? 'bg-secondary text-secondary-content rounded-lg' : ''}" onclick={() => switchDisc('WAG')}>WAG</button>
+      <button role="tab" class="tab tab-sm {discipline === 'MAG' ? 'bg-secondary text-secondary-content rounded-lg' : ''}" onclick={() => switchDisc('MAG')}>MAG</button>
     </div>
 
     {#if steps.length > 0}
@@ -136,7 +136,7 @@
         <span class="label-text text-sm">Exclude non-qualifiers</span>
       </label>
 
-      <button onclick={exportCSV} class="btn btn-primary btn-sm ml-auto" disabled={rankings.length === 0}>
+      <button onclick={exportCSV} class="btn btn-secondary btn-sm ml-auto" disabled={rankings.length === 0}>
         Export CSV
       </button>
     {:else if year}
