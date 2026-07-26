@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type { Snippet } from "svelte";
+  import { debounce } from "$lib/utils/debounce";
   import ScoreTooltip from "./ScoreTooltip.svelte";
   import AATooltip from "./AATooltip.svelte";
   import { REGION_PALETTES } from "./regions";
@@ -60,7 +61,14 @@
   let apparatusPrefixes = $state<string[]>([]);
   let appCols = $state<Record<string, string[]>>({});
 
+  let rawSearchInput = $state("");
   let searchText = $state("");
+
+  $effect(() => {
+    const val = rawSearchInput;
+    const timer = setTimeout(() => searchText = val, 200);
+    return () => clearTimeout(timer);
+  });
   let filterEvent = $state<string[]>([]);
   let filterStep = $state<string[]>([]);
   let filterClub = $state<string[]>([]);
@@ -384,7 +392,10 @@
     sortCol = null;
   }
 
-  function filteredRows() {
+  let pageSize = $state(50);
+  let currentPage = $state(1);
+
+  let filteredRows = $derived.by(() => {
     if (!rows) return [];
     let result = [...rows];
     const q = searchText.toLowerCase().trim();
@@ -432,10 +443,18 @@
       });
     }
     return result;
-  }
+  });
 
-  let filteredCount = $derived(filteredRows().length);
+  let totalPages = $derived(Math.max(1, Math.ceil(filteredRows.length / pageSize)));
+  let visibleRows = $derived(filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize));
+
+  let filteredCount = $derived(filteredRows.length);
   let totalCount = $derived(rows?.length ?? 0);
+
+  $effect(() => {
+    searchText + filterEvent.join(",") + filterStep.join(",") + filterClub.join(",") + filterRegion.join(",") + filterDivision.join(",") + filterRound.join(",");
+    currentPage = 1;
+  });
 
   function toggleSort(col: string) {
     if (sortCol === col) {
@@ -516,20 +535,20 @@
           type="text"
           class="grow text-xs w-12"
           placeholder="Search name or ID"
-          bind:value={searchText}
+          bind:value={rawSearchInput}
         />
       </label>
 
       <span class="text-xs text-base-content/50 ml-1">
-        Showing {filteredCount}{filteredCount < totalCount
-          ? ` of ${totalCount}`
+        Showing {visibleRows.length}{filteredCount < totalCount
+          ? ` of ${filteredCount}`
           : ""} results
       </span>
 
       {#if download}
         {@render download({
           columns,
-          rows: filteredRows(),
+          rows: filteredRows,
           headerLabels: HEADER_LABELS,
         })}
       {/if}
@@ -723,7 +742,7 @@
         </tr>
       </thead>
       <tbody>
-        {#each filteredRows() as row}
+        {#each visibleRows as row}
           <tr class="hover:bg-primary/15 transition-colors">
             {#each frontMeta as col}
               <td class="whitespace-nowrap py-1.5 {COL_MIN_CLASS[col] ?? ''}">
@@ -771,10 +790,52 @@
               {/if}
             {/each}
           </tr>
+        {:else}
+          <tr>
+            <td colspan="100%" class="text-center py-8 text-base-content/60">
+              No results found matching criteria.
+            </td>
+          </tr>
         {/each}
       </tbody>
     </table>
   </div>
+
+  {#if totalPages > 1}
+    <div class="flex items-center justify-between gap-2 mt-2">
+      <div class="join">
+        <button
+          class="btn btn-sm join-item"
+          disabled={currentPage <= 1}
+          onclick={() => { if (currentPage > 1) currentPage--; }}
+        >
+          « Prev
+        </button>
+        <button class="btn btn-sm join-item no-animation">
+          Page {currentPage} of {totalPages}
+        </button>
+        <button
+          class="btn btn-sm join-item"
+          disabled={currentPage >= totalPages}
+          onclick={() => { if (currentPage < totalPages) currentPage++; }}
+        >
+          Next »
+        </button>
+      </div>
+      <select
+        class="select select-bordered select-sm"
+        value={pageSize}
+        onchange={(e) => {
+          pageSize = Number((e.target as HTMLSelectElement).value);
+          currentPage = 1;
+        }}
+      >
+        <option value={25}>25 per page</option>
+        <option value={50}>50 per page</option>
+        <option value={100}>100 per page</option>
+      </select>
+    </div>
+  {/if}
 
   {#if openDropdown}
     <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->

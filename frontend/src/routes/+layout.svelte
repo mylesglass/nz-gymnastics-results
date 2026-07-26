@@ -83,7 +83,7 @@
         <a href="/" class="btn btn-ghost text-lg sm:text-xl">🤸 NZ Gymnastics Results</a>
       </div>
 
-      {#if $page.url.pathname === "/events" || $page.url.pathname === "/results" || $page.url.pathname === "/rankings"}
+      {#if $page.url.pathname === "/events" || $page.url.pathname === "/results" || $page.url.pathname === "/rankings" || $page.url.pathname.startsWith("/gymnast/") || $page.url.pathname.startsWith("/club/")}
       <div class="flex-none">
         <div role="tablist" class="tabs tabs-box tabs-xs">
           {#each years as yr}
@@ -279,7 +279,7 @@
           </a>
         </li>
       {/if}
-      {#if $page.url.pathname === "/events" || $page.url.pathname === "/results" || $page.url.pathname === "/rankings"}
+      {#if $page.url.pathname === "/events" || $page.url.pathname === "/results" || $page.url.pathname === "/rankings" || $page.url.pathname.startsWith("/gymnast/") || $page.url.pathname.startsWith("/club/")}
       <li class="menu-title mt-4"><span>Year</span></li>
       <li>
         <div role="tablist" class="tabs tabs-box tabs-xs mt-1">
