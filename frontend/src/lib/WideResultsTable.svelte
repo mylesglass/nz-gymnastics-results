@@ -551,7 +551,7 @@
         </div>
       {/if}
 
-      <span class="text-xs text-base-content/50 ml-auto">
+      <span class="text-xs text-base-content/50 ml-1">
         Showing {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, filteredCount)} of {filteredCount} results
       </span>
 
