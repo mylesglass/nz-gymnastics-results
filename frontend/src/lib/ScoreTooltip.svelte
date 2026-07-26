@@ -51,7 +51,7 @@
         <span>D {row[`${prefix}-d`] ?? ""}</span>
         <span class="font-semibold">{row[`${prefix}-total`] ?? ""}</span>
         {#if row[`${prefix}-bonus`] != null}
-          <span class="text-success">+{row[`${prefix}-bonus`]}</span>
+          <span class="text-accent">+{row[`${prefix}-bonus`]}</span>
         {/if}
         {#if row[`${prefix}-rank`] != null}
           <span>Rank {row[`${prefix}-rank`]}</span>
@@ -92,7 +92,7 @@
         {/if}
 
         {#if row[`${prefix}-bonus`] != null}
-          <div class="flex justify-between gap-4 text-success">
+          <div class="flex justify-between gap-4 text-accent">
             <span class="font-semibold">Bonus</span><span
               >+{row[`${prefix}-bonus`]}</span
             >
