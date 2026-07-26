@@ -80,7 +80,15 @@
             <path d="M3 6h18v2H3V6Zm0 5h18v2H3v-2Zm0 5h18v2H3v-2Z" />
           </svg>
         </label>
-        <a href="/" class="btn btn-ghost text-lg sm:text-xl">🤸 NZ Gymnastics Results</a>
+        <a href="/" class="btn btn-ghost text-lg sm:text-xl">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="size-6">
+            <rect width="40" height="30" x="4" y="10" fill="none" stroke="currentColor" stroke-width="3" rx="4"/>
+            <path stroke="currentColor" stroke-width="3" stroke-linecap="round" d="M14 6v6m20-6v6"/>
+            <path stroke="currentColor" stroke-width="2" d="M4 20h40"/>
+            <circle cx="34" cy="28" r="5" fill="currentColor"/>
+          </svg>
+          NZ Gymnastics Results
+        </a>
       </div>
 
       {#if $page.url.pathname === "/events" || $page.url.pathname === "/results" || $page.url.pathname === "/rankings" || $page.url.pathname.startsWith("/gymnast/") || $page.url.pathname.startsWith("/club/")}
@@ -246,7 +254,15 @@
   <div class="drawer-side z-50">
     <label for="nav-drawer" class="drawer-overlay" aria-label="Close menu"></label>
     <ul class="menu bg-base-200 min-h-full w-72 p-4 gap-1 text-base-content">
-      <li class="menu-title text-lg mb-2">🤸 NZ Gymnastics Results</li>
+      <li class="menu-title text-lg mb-2">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="size-5">
+          <rect width="40" height="30" x="4" y="10" fill="none" stroke="currentColor" stroke-width="3" rx="4"/>
+          <path stroke="currentColor" stroke-width="3" stroke-linecap="round" d="M14 6v6m20-6v6"/>
+          <path stroke="currentColor" stroke-width="2" d="M4 20h40"/>
+          <circle cx="34" cy="28" r="5" fill="currentColor"/>
+        </svg>
+        NZ Gymnastics Results
+      </li>
       <li>
         <a href="/events" onclick={handleNavClick} class:active={active("/events")}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="M15.988 3.012A2.25 2.25 0 0 1 18 5.25v6.5A2.25 2.25 0 0 1 15.75 14H13.5v-3.379a3 3 0 0 0-.879-2.121l-2.121-2.121a3 3 0 0 0-2.121-.879H5.25a2.25 2.25 0 0 1 2.25-2.25h6.5a2.25 2.25 0 0 1 1.988 1.012ZM5.25 5.5a.75.75 0 0 0-.75.75v9.5c0 .414.336.75.75.75h1.125a.75.75 0 0 0 0-1.5H5.5v-1.5h.875a.75.75 0 0 0 0-1.5H5.5v-1.5h.875a.75.75 0 0 0 0-1.5H5.5V6.25a.75.75 0 0 0-.75-.75h-.5a.75.75 0 0 0 0 1.5h.5v1.5h-.5a.75.75 0 0 0 0 1.5h.5v1.5h-.5a.75.75 0 0 0 0 1.5h.5v1.5h-.5a.75.75 0 0 0 0 1.5H5.25a2.25 2.25 0 0 0 2.25 2.25h6.5A2.5 2.5 0 0 0 16 16.5V8.25a2.25 2.25 0 0 0-2.25-2.25h-3.379a1.5 1.5 0 0 1-1.06-.44L7.19 3.44a1.5 1.5 0 0 0-1.06-.44H5.25Z" clip-rule="evenodd" /></svg>
