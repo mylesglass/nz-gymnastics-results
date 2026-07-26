@@ -63,6 +63,5 @@ def invalidate(event_id: Optional[int] = None):
 
 def cache_headers() -> dict[str, str]:
     return {
-        "Cache-Control": "no-cache, must-revalidate",
         "ETag": str(_etag_version),
     }
