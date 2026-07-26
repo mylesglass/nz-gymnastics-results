@@ -2,7 +2,7 @@ import json
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, Header, UploadFile, Depends
+from fastapi import FastAPI, File, HTTPException, Header, Request, UploadFile, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
@@ -68,6 +68,30 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def add_cache_control(request: Request, call_next):
+    response: Response = await call_next(request)
+    path = request.url.path
+
+    if request.method == "GET" and (
+        path.startswith("/api/events")
+        or path.startswith("/api/results")
+        or path == "/api/stats"
+        or path == "/api/clubs"
+        or path == "/api/gymnasts"
+        or path == "/api/years"
+    ):
+        if not response.headers.get("Cache-Control"):
+            response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
+    elif (
+        path.startswith("/api/admin")
+        or request.method in ("POST", "PUT", "DELETE", "PATCH")
+    ):
+        response.headers["Cache-Control"] = "no-store, no-cache, private"
+
+    return response
 
 
 @app.get("/api/health")
