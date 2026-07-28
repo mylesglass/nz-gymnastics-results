@@ -49,7 +49,7 @@ _STEP_CONFIGS: list[dict] = [
         "steps": {"STEP 7", "STEP 8", "STEP 9", "STEP 10"},
         "disciplines": {"WAG"},
         "gnz_qualifying_score": 43.0,
-        "gnz_requires_two": False,
+        "gnz_requires_two": True,
         "gnz_requires_away": False,
         "wellington_qualifying_score": None,
         "selection": "wag_step_7_10",
