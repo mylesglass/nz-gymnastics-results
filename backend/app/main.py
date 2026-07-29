@@ -838,6 +838,12 @@ def apply_duplicate_fixes(
         session.close()
 
 
+@app.post("/api/admin/refresh-cache")
+def refresh_cache(_auth=Depends(require_role("admin"))):
+    invalidate()
+    return {"ok": True}
+
+
 def _find_similar_names(session, threshold: float = 0.85) -> list[dict]:
     import difflib
 

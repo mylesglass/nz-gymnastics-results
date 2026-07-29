@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getStats, checkDuplicates, fixDuplicates, applyFixes, getSuggestedMerges, mergeNames } from "$lib/api";
+  import { getStats, checkDuplicates, fixDuplicates, applyFixes, getSuggestedMerges, mergeNames, refreshCache } from "$lib/api";
   import type { DuplicateGroup, DuplicateInstance, SuggestedMerge } from "$lib/api";
 
   let stats = $state<{
@@ -28,6 +28,7 @@
   let mergesError = $state<string | null>(null);
   let showMerges = $state(false);
   let mergeToast = $state<string | null>(null);
+  let cacheToast = $state<string | null>(null);
   let declinedKeys = $state<Set<string>>(new Set());
 
   let toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -79,6 +80,18 @@
       merges = await getSuggestedMerges();
     }
     toastTimer = setTimeout(() => { mergeToast = null; }, 4000);
+  }
+
+  async function runRefresh() {
+    clearTimeout(toastTimer);
+    try {
+      await refreshCache();
+      stats = await getStats();
+      cacheToast = "Cache refreshed — all data is now fresh";
+    } catch (e) {
+      cacheToast = `Error: ${e}`;
+    }
+    toastTimer = setTimeout(() => { cacheToast = null; }, 4000);
   }
 
   function runDecline(m: SuggestedMerge) {
@@ -202,7 +215,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
       <a href="/admin/users" class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer">
         <div class="card-body">
           <h2 class="card-title">👥 User Management</h2>
@@ -215,6 +228,12 @@
           <p class="text-sm text-base-content/70">Upload a Scoreholder JSON file</p>
         </div>
       </a>
+      <button onclick={runRefresh} class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer text-left">
+        <div class="card-body">
+          <h2 class="card-title">🔄 Refresh Cache</h2>
+          <p class="text-sm text-base-content/70">Clear backend cache so all pages show the latest data</p>
+        </div>
+      </button>
     </div>
 
     <div class="card bg-base-200 border border-base-300">
@@ -406,6 +425,14 @@
   <div class="toast toast-bottom toast-end z-50">
     <div class="alert alert-success text-sm">
       <span>{mergeToast}</span>
+    </div>
+  </div>
+{/if}
+
+{#if cacheToast}
+  <div class="toast toast-bottom toast-start z-50">
+    <div class="alert alert-info text-sm">
+      <span>{cacheToast}</span>
     </div>
   </div>
 {/if}
