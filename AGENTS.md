@@ -24,7 +24,7 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   ├── database.py      # SQLite engine + session + migration
 │   │   ├── schemas.py       # Pydantic models (RankingRow, etc.)
 │   │   ├── auth.py          # JWT auth (bcrypt, HS256, role-based, seed_admin_user)
-│   │   ├── cache.py         # GranularTTLCache with per-key TTL + per-event prefix invalidation
+│   │   ├── cache.py         # GranularTTLCache with per-key TTL + per-event prefix invalidation, admin refresh-cache endpoint
 │   │   ├── parser.py        # Scoreholder JSON parser (~630 lines)
 │   │   ├── decoder.py       # Node-tree score field decoder
 │   │   ├── resolver.py      # ID chain resolver
@@ -245,3 +245,4 @@ docker compose -f docker-compose.prod.yml up --build -d
 - **`$effect` reactivity** — tracks all dependencies read inside it; avoid reading state the effect itself modifies.
 - **Production API proxy** — `hooks.server.ts` forwards `/api/*` from the frontend Node server to the backend container. `API_BASE` is always `""` (same-origin).
 - **Body size limit** — SvelteKit adapter-node defaults to 512KB. JSON uploads can be ~3.5MB. Set `BODY_SIZE_LIMIT=52428800` (bytes) in the frontend service env vars.
+- **Cache refresh** — `POST /api/admin/refresh-cache` clears the backend in-memory cache. Admin dashboard has a "Refresh Cache" button to ensure all pages show the latest data after uploads/edits.

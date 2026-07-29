@@ -84,6 +84,14 @@ export async function listEvents(): Promise<EventSummary[]> {
   return res.json();
 }
 
+export async function refreshCache(): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/admin/refresh-cache`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+}
+
 export async function getStats(): Promise<{
   total_events: number;
   total_gymnasts: number;
