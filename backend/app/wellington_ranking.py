@@ -111,6 +111,29 @@ def _is_wellington_qualified(all_events: list[dict], config: dict) -> bool:
     return any(e["score"] >= threshold for e in all_events)
 
 
+def _gnz_failure_reason(config: dict, all_events: list[dict]) -> str:
+    """Human-readable reason for GNZ qualifier failure."""
+    threshold = config.get("gnz_qualifying_score")
+    if threshold is None:
+        return ""
+    qualifying = [e for e in all_events if e["score"] >= threshold]
+    count = len(qualifying)
+    if config.get("gnz_requires_two", False):
+        msg = f"Has achieved GNZ {threshold:.3f} mark only {count} time(s) — needs 2"
+        if config.get("gnz_requires_away", False):
+            msg += " (one must be outside Wellington)"
+        return msg
+    return f"Has not achieved GNZ {threshold:.3f} mark"
+
+
+def _wgtn_failure_reason(config: dict) -> str:
+    """Human-readable reason for Wellington qualifier failure."""
+    threshold = config.get("wellington_qualifying_score")
+    if threshold is None:
+        return ""
+    return f"Has not achieved Wellington {threshold:.3f} mark"
+
+
 def _get_config(discipline: str, step: str) -> dict | None:
     for cfg in _STEP_CONFIGS:
         if discipline in cfg["disciplines"] and step in cfg["steps"]:
@@ -402,12 +425,20 @@ def compute_wellington_rankings(
             total = sum(scores)
             avg = total / len(scores)
 
-            # GNZ qualifier check (against ALL events)
-            if gnz_qualifier and not _is_gnz_qualified(all_events_list, config):
-                continue
+            # Always compute qualifier warnings regardless of toggle state
+            gnz_ok = _is_gnz_qualified(all_events_list, config)
+            wgtn_ok = _is_wellington_qualified(all_events_list, config)
 
-            # Wellington qualifier check (against ALL events)
-            if wellington_qualifier and not _is_wellington_qualified(all_events_list, config):
+            warnings: list[str] = []
+            if not gnz_ok:
+                warnings.append(_gnz_failure_reason(config, all_events_list))
+            if not wgtn_ok:
+                warnings.append(_wgtn_failure_reason(config))
+
+            # Filter when the corresponding toggle is ON
+            if gnz_qualifier and not gnz_ok:
+                continue
+            if wellington_qualifier and not wgtn_ok:
                 continue
 
             best_gnz_id = next(
@@ -428,6 +459,7 @@ def compute_wellington_rankings(
                 "apparatus": [s.get("apparatus", []) for s in selected],
                 "total": round(total, 3),
                 "average": round(avg, 3),
+                "warnings": warnings,
             })
 
         # 4. Filter to Wellington region only

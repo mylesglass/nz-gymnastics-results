@@ -46,7 +46,7 @@
       regional: ["MAG Wellington Champs", "Central Championships"],
       club: [],
       selection: "Best regional mark (1) + best two away marks (2, 3). Three marks averaged to rank.",
-      qual_note: "Qualification score TBC by Men's Technical Committee.",
+      qual_note: "Athletes must achieve 63.000 (Wellington) on one occasion at a regional event (Wellington Champs or Central Champs) and two away events.",
     },
   };
 
@@ -317,6 +317,7 @@
               <th class="text-right">{label}</th>
             {/each}
             <th class="text-right">Average</th>
+            <th class="w-8"></th>
           </tr>
         </thead>
         <tbody>
@@ -364,6 +365,20 @@
                 </td>
               {/each}
               <td class="text-right font-bold">{r.average.toFixed(3)}</td>
+              <td class="text-center w-8">
+                {#if r.warnings?.length}
+                  <span class="group/warn relative inline-block cursor-help">
+                    <span class="text-warning">⚠</span>
+                    <span
+                      class="invisible group-hover/warn:visible opacity-0 group-hover/warn:opacity-100 transition-opacity absolute right-full top-1/2 -translate-y-1/2 mr-2 z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2.5 text-xs pointer-events-none min-w-48 whitespace-normal"
+                    >
+                      {#each r.warnings as w}
+                        <div>{w}</div>
+                      {/each}
+                    </span>
+                  </span>
+                {/if}
+              </td>
             </tr>
           {/each}
         </tbody>
