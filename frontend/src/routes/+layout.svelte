@@ -73,7 +73,7 @@
     bind:checked={drawerOpen}
   />
   <div class="drawer-content flex flex-col min-h-screen">
-    <div class="navbar bg-base-200 shadow-sm flex-none relative z-30 overflow-visible">
+    <div class="navbar bg-base-200 shadow-sm flex-none relative z-50 overflow-visible">
       <div class="flex-1 gap-1 items-center">
         <label for="nav-drawer" class="btn btn-ghost btn-sm btn-square md:hidden" aria-label="Open menu">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-5 fill-current">
