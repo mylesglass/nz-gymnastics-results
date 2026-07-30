@@ -183,24 +183,10 @@
   let intentFilterMode = $state(true);
   let user = $state<{ role: string } | null>(null);
   let intents = $state<Set<string>>(new Set());
-  let intentLoading = $state(false);
 
   function switchDisc(d: string) {
     discipline = d;
     if (year) loadSteps();
-  }
-
-  async function handleIntentToggle(gnzId: string, current: boolean) {
-    if (!year || user?.role !== "admin") return;
-    intentLoading = true;
-    try {
-      await toggleIntent(gnzId, Number(year), !current);
-      await loadRankings();
-    } catch (e) {
-      console.error("intent toggle failed", e);
-    } finally {
-      intentLoading = false;
-    }
   }
 
   $effect(() => {
@@ -374,13 +360,11 @@
                     type="checkbox"
                     class="checkbox checkbox-xs checkbox-primary"
                     checked={r.intent_submitted}
-                    onclick={(e) => {
-                      e.preventDefault();
+                    onchange={() => {
                       const newVal = !r.intent_submitted;
                       r.intent_submitted = newVal;
-                      toggleIntent(r.gnz_id, Number(year), newVal).then(() => loadRankings()).catch((err) => {
+                      toggleIntent(r.gnz_id, Number(year), newVal).then(loadRankings).catch(() => {
                         r.intent_submitted = !newVal;
-                        console.error(err);
                       });
                     }}
                   />
