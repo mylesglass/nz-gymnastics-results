@@ -77,7 +77,7 @@ _STEP_CONFIGS: list[dict] = [
         "gnz_qualifying_score": None,
         "gnz_requires_two": False,
         "gnz_requires_away": False,
-        "wellington_qualifying_score": None,
+        "wellington_qualifying_score": 63.0,
         "selection": "mag_level_7_plus",
         "club_events": False,
         "away_required": False,
