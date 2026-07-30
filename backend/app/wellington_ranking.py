@@ -72,7 +72,7 @@ _STEP_CONFIGS: list[dict] = [
     {
         "key": "mag_level_7_plus",
         "label": "MAG Level 7+",
-        "steps": {"Level 7", "Level 8", "Level 9", "Senior Open"},
+        "steps": {"Level 7", "Level 8", "Level 9", "Senior Open", "U18"},
         "disciplines": {"MAG"},
         "gnz_qualifying_score": None,
         "gnz_requires_two": False,
