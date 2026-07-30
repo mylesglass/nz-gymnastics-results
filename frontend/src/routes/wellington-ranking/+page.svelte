@@ -328,12 +328,10 @@
             <tr class="hover:bg-base-300" class:border-l-4={configKey === 'wag_step_5_6' && i < 4} class:border-l-primary={configKey === 'wag_step_5_6' && i < 4}>
               <td class="font-bold text-lg">{r.rank}</td>
               <td class="text-center w-12">
-                {#if configKey === 'wag_step_5_6' && i < 4}
-                  <span class="badge badge-xs" style="background:#000000;color:#FFC72C;border:none">Team</span>
-                {:else if STEP7_CONFIGS.has(configKey) && i < 4}
-                  <span class="badge badge-xs" style="background:#000000;color:#FFC72C;border:none">1st Team</span>
+                {#if (configKey === 'wag_step_5_6' || STEP7_CONFIGS.has(configKey)) && i < 4}
+                  <span class="badge badge-xs" style="background:#000000;color:#FFC72C;border:none">1</span>
                 {:else if STEP7_CONFIGS.has(configKey) && i < 8}
-                  <span class="badge badge-xs" style="background:#FFC72C;color:#000000;border:none">2nd Team</span>
+                  <span class="badge badge-xs" style="background:#FFC72C;color:#000000;border:none">2</span>
                 {/if}
               </td>
               <td class="font-medium">
