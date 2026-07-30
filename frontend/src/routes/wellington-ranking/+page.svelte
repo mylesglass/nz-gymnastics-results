@@ -321,9 +321,14 @@
           </tr>
         </thead>
         <tbody>
-          {#each rankings as r}
-            <tr class="hover:bg-base-300">
-              <td class="font-bold text-lg">{r.rank}</td>
+          {#each rankings as r, i}
+            <tr class="hover:bg-base-300" class:border-l-4={configKey === 'wag_step_5_6' && i < 4} class:border-l-primary={configKey === 'wag_step_5_6' && i < 4}>
+              <td class="font-bold text-lg">
+                {r.rank}
+                {#if configKey === 'wag_step_5_6' && i < 4}
+                  <span class="badge badge-xs badge-primary ml-1">Team</span>
+                {/if}
+              </td>
               <td class="font-medium">
                 <a href="/gymnast/{r.gnz_id}" class="hover:link">{r.name}</a>
               </td>
