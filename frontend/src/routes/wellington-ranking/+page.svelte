@@ -190,14 +190,14 @@
     if (year) loadSteps();
   }
 
-  async function handleIntentToggle(gnzId: string, submitted: boolean) {
+  async function handleIntentToggle(gnzId: string, current: boolean) {
     if (!year || user?.role !== "admin") return;
     intentLoading = true;
     try {
-      await toggleIntent(gnzId, Number(year), !submitted);
+      await toggleIntent(gnzId, Number(year), !current);
       await loadRankings();
-    } catch {
-      // ignore
+    } catch (e) {
+      console.error("intent toggle failed", e);
     } finally {
       intentLoading = false;
     }
@@ -370,21 +370,22 @@
               <td>{r.club}</td>
               <td class="text-center w-10">
                 {#if user?.role === "admin"}
-                  <button
-                    class="cursor-pointer disabled:opacity-30 disabled:cursor-wait"
-                    disabled={intentLoading}
-                    onclick={() => handleIntentToggle(r.gnz_id, r.intent_submitted)}
-                  >
-                    {#if r.intent_submitted}
-                      <span class="text-success">✅</span>
-                    {:else}
-                      <span class="text-base-content/30">❌</span>
-                    {/if}
-                  </button>
-                {:else if r.intent_submitted}
-                  <span class="text-success">✅</span>
+                  <input
+                    type="checkbox"
+                    class="checkbox checkbox-xs checkbox-primary"
+                    checked={r.intent_submitted}
+                    onclick={(e) => {
+                      e.preventDefault();
+                      const newVal = !r.intent_submitted;
+                      r.intent_submitted = newVal;
+                      toggleIntent(r.gnz_id, Number(year), newVal).then(() => loadRankings()).catch((err) => {
+                        r.intent_submitted = !newVal;
+                        console.error(err);
+                      });
+                    }}
+                  />
                 {:else}
-                  <span class="text-base-content/30">❌</span>
+                  <input type="checkbox" class="checkbox checkbox-xs" checked={r.intent_submitted} disabled />
                 {/if}
               </td>
               {#each r.scores as score, i}
