@@ -50,6 +50,8 @@
     },
   };
 
+  const STEP7_CONFIGS = new Set(["wag_step_7_10", "mag_level_7_plus"]);
+
   const CATEGORY_LABELS: Record<string, string> = {
     regional: "Regional Best",
     club: "Club Best",
@@ -328,6 +330,10 @@
               <td class="text-center w-12">
                 {#if configKey === 'wag_step_5_6' && i < 4}
                   <span class="badge badge-xs" style="background:#000000;color:#FFC72C;border:none">Team</span>
+                {:else if STEP7_CONFIGS.has(configKey) && i < 4}
+                  <span class="badge badge-xs" style="background:#000000;color:#FFC72C;border:none">1st Team</span>
+                {:else if STEP7_CONFIGS.has(configKey) && i < 8}
+                  <span class="badge badge-xs" style="background:#FFC72C;color:#000000;border:none">2nd Team</span>
                 {/if}
               </td>
               <td class="font-medium">
