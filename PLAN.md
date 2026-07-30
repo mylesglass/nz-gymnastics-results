@@ -210,3 +210,4 @@
 ### Next Steps
 - [ ] Edit row functionality for admin
 - [ ] MAG Wellington ranking thresholds TBD
+- [ ] Look at not-admin logged in functionality 

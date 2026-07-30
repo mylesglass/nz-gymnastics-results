@@ -244,6 +244,7 @@ export interface WellingtonRankingRow {
   apparatus: ApparatusPass[][];
   total: number;
   average: number;
+  warnings: string[];
 }
 
 export interface WellingtonRankingResponse {
