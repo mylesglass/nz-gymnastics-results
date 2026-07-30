@@ -123,13 +123,13 @@ def _gnz_failure_reason(config: dict, all_events: list[dict]) -> str:
 
     if needs_two:
         if count < 2:
-            msg = f"Has achieved Gymnastics NZ qualifying mark {count} time(s) — needs 2"
+            msg = f"Has achieved Gymnastics NZ qualifying mark {threshold:.3f} {count} time(s) — needs 2"
             if needs_away:
                 msg += " (one must be outside Wellington)"
             return msg
         if needs_away and not any(_classify_event(e["event_name"]) == "away" for e in qualifying):
-            return f"Has achieved Gymnastics NZ qualifying mark {count} times but none outside Wellington — needs at least one away"
-    return f"Has not achieved Gymnastics NZ qualifying mark"
+            return f"Has achieved Gymnastics NZ qualifying mark {threshold:.3f} {count} times but none outside Wellington — needs at least one away"
+    return f"Has not achieved Gymnastics NZ qualifying mark {threshold:.3f}"
 
 
 def _wgtn_failure_reason(config: dict) -> str:
@@ -137,7 +137,7 @@ def _wgtn_failure_reason(config: dict) -> str:
     threshold = config.get("wellington_qualifying_score")
     if threshold is None:
         return ""
-    return f"Has not achieved Wellington qualifying mark"
+    return f"Has not achieved Wellington qualifying mark {threshold:.3f}"
 
 
 def _get_config(discipline: str, step: str) -> dict | None:
