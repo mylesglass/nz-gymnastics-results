@@ -310,6 +310,7 @@
         <thead>
           <tr>
             <th class="w-12">Rank</th>
+            <th class="w-12"></th>
             <th>Name</th>
             <th>GNZ ID</th>
             <th>Club</th>
@@ -323,10 +324,10 @@
         <tbody>
           {#each rankings as r, i}
             <tr class="hover:bg-base-300" class:border-l-4={configKey === 'wag_step_5_6' && i < 4} class:border-l-primary={configKey === 'wag_step_5_6' && i < 4}>
-              <td class="font-bold text-lg">
-                {r.rank}
+              <td class="font-bold text-lg">{r.rank}</td>
+              <td class="text-center w-12">
                 {#if configKey === 'wag_step_5_6' && i < 4}
-                  <span class="badge badge-xs badge-primary ml-1">Team</span>
+                  <span class="badge badge-xs" style="background:#000000;color:#FFC72C;border:none">Team</span>
                 {/if}
               </td>
               <td class="font-medium">
