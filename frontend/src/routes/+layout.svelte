@@ -142,7 +142,7 @@
             Clubs
           </a>
           {#if user}
-            <div class="dropdown dropdown-hover dropdown-end">
+            <div class="dropdown dropdown-hover dropdown-end" style="z-index: 100">
               <button
                 class="btn btn-sm {active('/rankings') || active('/wellington-ranking') ? 'btn-primary' : 'btn-ghost'}"
                 onclick={() => goto('/rankings')}
@@ -150,7 +150,7 @@
                 Rankings
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-3 fill-current opacity-60"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
               </button>
-              <ul class="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow z-50" style="z-index: 50">
+              <ul class="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow">
                 <li><a href="/rankings" class={active('/rankings') ? 'active' : ''}>National Rankings</a></li>
                 <li><a href="/wellington-ranking" class={active('/wellington-ranking') ? 'active' : ''}>Wellington Rankings</a></li>
               </ul>
