@@ -305,6 +305,7 @@ _SELECTORS = {
 def compute_wellington_rankings(
     year: int, discipline: str, step: str,
     gnz_qualifier: bool = True, wellington_qualifier: bool = True,
+    intents: set[str] | None = None, intent_filter: bool = True,
 ) -> dict:
     """Return ranking dict with keys ``rankings``, ``year``, ``step``, ``discipline``.
 
@@ -447,9 +448,14 @@ def compute_wellington_rankings(
             if wellington_qualifier and not wgtn_ok:
                 continue
 
+            # Intent check
             best_gnz_id = next(
                 (s["gnz_id"] for s in all_events_list if s["gnz_id"]), "",
             )
+            intent_submitted = intents is None or best_gnz_id in intents
+            if intent_filter and not intent_submitted:
+                continue
+
             best_club = next(
                 (s["club"] for s in all_events_list if s["club"]), "",
             )
@@ -466,6 +472,7 @@ def compute_wellington_rankings(
                 "total": round(total, 3),
                 "average": round(avg, 3),
                 "warnings": warnings,
+                "intent_submitted": intent_submitted,
             })
 
         # 4. Filter to Wellington region only

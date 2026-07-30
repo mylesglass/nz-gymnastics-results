@@ -166,6 +166,7 @@ class WellingtonRankingRow(BaseModel):
     total: float
     average: float
     warnings: list[str] = []
+    intent_submitted: bool = True
 
 
 class WellingtonRankingResponse(BaseModel):
@@ -216,3 +217,9 @@ class SuggestedMerge(BaseModel):
 class MergeNamesRequest(BaseModel):
     from_name: str
     to_name: str
+
+
+class IntentToggle(BaseModel):
+    gnz_id: str
+    year: int
+    submitted: bool
