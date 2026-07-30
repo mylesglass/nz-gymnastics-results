@@ -359,12 +359,10 @@
                   <input
                     type="checkbox"
                     class="checkbox checkbox-xs checkbox-primary"
-                    checked={r.intent_submitted}
+                    bind:checked={r.intent_submitted}
                     onchange={() => {
-                      const newVal = !r.intent_submitted;
-                      r.intent_submitted = newVal;
-                      toggleIntent(r.gnz_id, Number(year), newVal).then(loadRankings).catch(() => {
-                        r.intent_submitted = !newVal;
+                      toggleIntent(r.gnz_id, Number(year), r.intent_submitted).then(loadRankings).catch(() => {
+                        r.intent_submitted = !r.intent_submitted;
                       });
                     }}
                   />
