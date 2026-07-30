@@ -617,6 +617,7 @@ def get_wellington_rankings(
             apparatus=r.get("apparatus", []),
             total=r["total"],
             average=r["average"],
+            warnings=r["warnings"],
         )
         for r in result["rankings"]
     ]

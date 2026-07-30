@@ -118,11 +118,17 @@ def _gnz_failure_reason(config: dict, all_events: list[dict]) -> str:
         return ""
     qualifying = [e for e in all_events if e["score"] >= threshold]
     count = len(qualifying)
-    if config.get("gnz_requires_two", False):
-        msg = f"Has achieved GNZ {threshold:.3f} mark only {count} time(s) — needs 2"
-        if config.get("gnz_requires_away", False):
-            msg += " (one must be outside Wellington)"
-        return msg
+    needs_two = config.get("gnz_requires_two", False)
+    needs_away = config.get("gnz_requires_away", False)
+
+    if needs_two:
+        if count < 2:
+            msg = f"Has achieved GNZ {threshold:.3f} mark only {count} time(s) — needs 2"
+            if needs_away:
+                msg += " (one must be outside Wellington)"
+            return msg
+        if needs_away and not any(_classify_event(e["event_name"]) == "away" for e in qualifying):
+            return f"Has achieved GNZ {threshold:.3f} mark {count} times but none outside Wellington — needs at least one away"
     return f"Has not achieved GNZ {threshold:.3f} mark"
 
 

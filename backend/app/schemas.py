@@ -165,6 +165,7 @@ class WellingtonRankingRow(BaseModel):
     apparatus: list[list[ApparatusRow]] = []
     total: float
     average: float
+    warnings: list[str] = []
 
 
 class WellingtonRankingResponse(BaseModel):
