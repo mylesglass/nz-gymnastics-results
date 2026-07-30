@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Index, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, relationship
 
 
@@ -74,3 +74,16 @@ class LongScore(Base):
     date_created = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     event = relationship("Event", back_populates="scores")
+
+
+class WellingtonIntent(Base):
+    __tablename__ = "wellington_intents"
+
+    __table_args__ = (
+        UniqueConstraint("gnz_id", "year", name="uix_gnz_year"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    gnz_id = Column(String, nullable=False)
+    year = Column(Integer, nullable=False)
+    submitted_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

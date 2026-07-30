@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getWellingtonRankings, getRankingSteps, type WellingtonRankingRow } from "$lib/api";
+  import { getWellingtonRankings, getRankingSteps, getIntents, toggleIntent, type WellingtonRankingRow } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
+  import { currentUser } from "$lib/auth";
 
 
   const CSV_HEADERS: Record<string, string> = {
@@ -82,6 +83,7 @@
   let subYears: (() => void) | undefined;
 
   onMount(() => {
+    const unsubUser = currentUser.subscribe((v) => user = v);
     subYear = selectedYear.subscribe((v) => {
       year = v;
       if (v) loadSteps();
@@ -94,6 +96,7 @@
       }
     });
     return () => {
+      unsubUser();
       subYear?.();
       subYears?.();
     };
@@ -158,11 +161,15 @@
     loadingRankings = true;
     error = "";
     try {
-      const data = await getWellingtonRankings(Number(year), selectedStep, discipline, gnzQualifierMode, wgtnQualifierMode);
+      const [data, intentIds] = await Promise.all([
+        getWellingtonRankings(Number(year), selectedStep, discipline, gnzQualifierMode, wgtnQualifierMode, intentFilterMode),
+        getIntents(Number(year)),
+      ]);
       rankings = data.rankings;
       configKey = data.config_key;
       gnzScore = data.qualifying_score;
       wgtnScore = data.wellington_qualifying_score;
+      intents = new Set(intentIds);
     } catch (e) {
       error = "Failed to load rankings.";
       rankings = [];
@@ -173,10 +180,27 @@
 
   let gnzQualifierMode = $state(true);
   let wgtnQualifierMode = $state(true);
+  let intentFilterMode = $state(true);
+  let user = $state<{ role: string } | null>(null);
+  let intents = $state<Set<string>>(new Set());
+  let intentLoading = $state(false);
 
   function switchDisc(d: string) {
     discipline = d;
     if (year) loadSteps();
+  }
+
+  async function handleIntentToggle(gnzId: string, submitted: boolean) {
+    if (!year || user?.role !== "admin") return;
+    intentLoading = true;
+    try {
+      await toggleIntent(gnzId, Number(year), !submitted);
+      await loadRankings();
+    } catch {
+      // ignore
+    } finally {
+      intentLoading = false;
+    }
   }
 
   $effect(() => {
@@ -277,6 +301,10 @@
           <span class="label-text text-xs">Wellington Qualifier</span>
         </label>
       {/if}
+      <label class="label cursor-pointer gap-1">
+        <input type="checkbox" class="checkbox checkbox-xs" bind:checked={intentFilterMode} />
+        <span class="label-text text-xs">Intent</span>
+      </label>
 
       <button onclick={exportCSV} class="btn btn-primary btn-sm ml-auto" disabled={rankings.length === 0}>
         Export CSV
@@ -316,6 +344,7 @@
             <th>Name</th>
             <th>GNZ ID</th>
             <th>Club</th>
+            <th class="w-10"></th>
             {#each HEADER_LABELS[configKey] ?? ["Score 1", "Score 2", "Score 3"] as label}
               <th class="text-right">{label}</th>
             {/each}
@@ -339,6 +368,25 @@
               </td>
               <td class="text-base-content/60 text-xs">{r.gnz_id}</td>
               <td>{r.club}</td>
+              <td class="text-center w-10">
+                {#if user?.role === "admin"}
+                  <button
+                    class="cursor-pointer disabled:opacity-30 disabled:cursor-wait"
+                    disabled={intentLoading}
+                    onclick={() => handleIntentToggle(r.gnz_id, r.intent_submitted)}
+                  >
+                    {#if r.intent_submitted}
+                      <span class="text-success">✅</span>
+                    {:else}
+                      <span class="text-base-content/30">❌</span>
+                    {/if}
+                  </button>
+                {:else if r.intent_submitted}
+                  <span class="text-success">✅</span>
+                {:else}
+                  <span class="text-base-content/30">❌</span>
+                {/if}
+              </td>
               {#each r.scores as score, i}
                 <td class="text-right">
                   <span class="group/tip relative inline-block">

@@ -20,7 +20,7 @@ from app.auth import (
 )
 from app.cache import cache_headers, cached, invalidate
 from app.database import get_session, init_db
-from app.models import Event, LongScore, User
+from app.models import Event, LongScore, User, WellingtonIntent
 from app.parser import ParseError, _NAME_TO_CANONICAL, find_unknown_clubs, parse_json, reload_club_maps, validate_upload_structure
 from app.reconcile import reconcile_athletes
 from app.schemas import (
@@ -34,6 +34,7 @@ from app.schemas import (
     EventUpdate,
     FixDuplicatesResponse,
     GymnastItem,
+    IntentToggle,
     LoginRequest,
     MergeNamesRequest,
     RankingsResponse,
@@ -598,11 +599,24 @@ def get_wellington_rankings(
     discipline: str,
     gnz_qualifier: bool = True,
     wellington_qualifier: bool = True,
+    intent_filter: bool = True,
     _auth=Depends(require_role("admin", "member")),
 ):
+    session = get_session()
+    try:
+        intents = {
+            row.gnz_id
+            for row in session.query(WellingtonIntent.gnz_id).filter(
+                WellingtonIntent.year == year,
+            ).all()
+        }
+    finally:
+        session.close()
+
     result = compute_wellington_rankings(
         year, discipline, step,
         gnz_qualifier=gnz_qualifier, wellington_qualifier=wellington_qualifier,
+        intents=intents, intent_filter=intent_filter,
     )
     rankings = [
         WellingtonRankingRow(
@@ -618,6 +632,7 @@ def get_wellington_rankings(
             total=r["total"],
             average=r["average"],
             warnings=r["warnings"],
+            intent_submitted=r["intent_submitted"],
         )
         for r in result["rankings"]
     ]
@@ -630,6 +645,43 @@ def get_wellington_rankings(
         qualifying_score=result.get("gnz_qualifying_score"),
         wellington_qualifying_score=result.get("wellington_qualifying_score"),
     )
+
+
+@app.get("/api/wellington/intents")
+def get_intents(
+    year: int,
+    _auth=Depends(require_role("admin", "member")),
+):
+    session = get_session()
+    try:
+        rows = session.query(WellingtonIntent.gnz_id).filter(
+            WellingtonIntent.year == year,
+        ).all()
+        return {"gnz_ids": [row.gnz_id for row in rows]}
+    finally:
+        session.close()
+
+
+@app.post("/api/wellington/intent")
+def toggle_intent(
+    body: IntentToggle,
+    _auth=Depends(require_role("admin")),
+):
+    session = get_session()
+    try:
+        existing = session.query(WellingtonIntent).filter(
+            WellingtonIntent.gnz_id == body.gnz_id,
+            WellingtonIntent.year == body.year,
+        ).first()
+        if body.submitted and not existing:
+            session.add(WellingtonIntent(gnz_id=body.gnz_id, year=body.year))
+            session.commit()
+        elif not body.submitted and existing:
+            session.delete(existing)
+            session.commit()
+        return {"ok": True}
+    finally:
+        session.close()
 
 
 def _build_duplicate_groups(session) -> list[tuple[dict, list[dict]]]:
