@@ -39,7 +39,7 @@ def reload_club_maps() -> None:
 
 
 def find_unknown_clubs(data: dict) -> list[str]:
-    orgs = {org.get("orgId"): org["name"] for org in data.get("eventOrganizations", []) if "name" in org and org.get("orgId")}
+    orgs = {org["_id"]: org["name"] for org in data.get("eventOrganizations", []) if "name" in org and org.get("_id")}
 
     non_gfa_units = {
         u["_id"] for u in data.get("units", [])
@@ -50,9 +50,9 @@ def find_unknown_clubs(data: dict) -> list[str]:
         return []
 
     part_to_org = {
-        ep.get("participantId"): ep.get("orgId")
+        ep["_id"]: ep.get("organizationId")
         for ep in data.get("eventParticipants", [])
-        if ep.get("participantId") and ep.get("orgId")
+        if ep.get("_id") and ep.get("organizationId")
     }
 
     competitive_orgs = set()
