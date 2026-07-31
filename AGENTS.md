@@ -47,8 +47,9 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   │   ├── auth.ts             # JWT auth stores (currentUser, setToken, logout)
 │   │   │   ├── year.ts             # yearOptions store (selectedYear removed)
 │   │   │   ├── utils/debounce.ts   # Debounce helper for search inputs
-│   │   │   ├── regions.ts          # Region color palettes
+│   │   │   ├── regions.ts          # Region color palettes + gradient/text helpers
 │   │   │   ├── RegionBadge.svelte  # Region color badge component
+│   │   │   ├── NZRegionMap.svelte  # Interactive NZ SVG map (15 gym regions, theme-coloured)
 │   │   │   ├── WideResultsTable.svelte  # Shared results table (paginated, virtualized)
 │   │   │   ├── ScoreTooltip.svelte      # Apparatus score tooltip
 │   │   │   └── AATooltip.svelte         # AA score tooltip
@@ -67,8 +68,7 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   │   ├── events/[id]/+page.svelte # Event results
 │   │   │   ├── results/+page.server.ts # SSR load for all results
 │   │   │   ├── results/+page.svelte    # All-events results
-│   │   │   ├── clubs/+page.server.ts   # SSR load for club list
-│   │   │   ├── clubs/+page.svelte      # Club list
+│   │   │   ├── clubs/+page.svelte  # Interactive NZ map (map left, region box right)
 │   │   │   ├── club/[club]/+page.server.ts # SSR load for club results
 │   │   │   ├── club/[club]/+page.svelte # Club results
 │   │   │   ├── gymnasts/+page.server.ts # SSR load for gymnast list
@@ -257,3 +257,5 @@ docker compose -f docker-compose.prod.yml up --build -d
 - **SvelteKit CSRF disabled** — `csrf: { checkOrigin: false }` in `svelte.config.js`; all mutations go through the `/api` proxy to FastAPI which handles its own JWT auth. Still set `ORIGIN` env var in production for adapter-node URL generation.
 - **`fetchToken` must NOT be `$state`** — the stale-response guard counter in `wellington-ranking/+page.svelte` is a plain `let`. If made `$state`, incrementing it inside `loadRankings()` re-triggers the `$effect` → infinite API request loop.
 - **Inline edit** — `PATCH /api/admin/scores/gymnast` updates name/GNZ ID/club on all `long_scores` rows matching `(event_id, gymnast_name)`. Cache invalidation clears `wide-all`, `stats`, `gymnasts`, `clubs` prefixes. Frontend: Edit mode toggle makes name/GNZ ID/club cells editable inputs with per-row Save button. Known issue: table doesn't always feel reactive after save.
+- **/clubs NZ map** — `NZRegionMap.svelte` renders the `@svg-maps/new-zealand` package (17 Stats NZ region paths, CC-BY-4.0) in a `viewBox="0 0 525 989"` (Chatham Islands cropped out). 15 gym regions map to stats paths: `gis`+`hkb` → Hawkes Bay / Poverty Bay, `tas`+`nsn`+`mbh` → Top of the South; Auckland is split into Harbour/Auckland/Counties-Manukau and Canterbury into Canterbury/Aorangi via SVG `<clipPath>` rects. No regional colouring — regions use theme colours (`--color-base-300` fill, `--color-primary` on hover/active). Layout: map left (sticky), selected region's box right; clicking a map region shows only that region's box (toggle to clear).
+- **Svelte 5 snippet gotcha** — `{#snippet}` components must be invoked with `{@render RegionBox({...})}`, NOT `<RegionBox />` (throws `invalid_snippet_arguments`). Also avoid `class:ring-2` on snippet elements — Svelte parses the hyphen as an expression (`ring` undefined); use a plain `class` string instead.

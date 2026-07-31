@@ -154,7 +154,7 @@ frontend/                 # SvelteKit + Tailwind CSS v4 + DaisyUI v5
 │       ├── events/+page.svelte  # Event list (search, year filter, rename/delete)
 │       ├── events/[id]/+page.svelte  # Per-event results
 │       ├── results/+page.svelte      # All-events results
-│       ├── clubs/+page.svelte        # Club list (region-grouped)
+│       ├── clubs/+page.svelte        # Interactive NZ map (map left, region box right)
 │       ├── club/[club]/+page.svelte  # Club results across all events
 │       ├── gymnasts/+page.svelte     # Gymnast list (A-Z grouped)
 │       └── gymnast/[gnz_id]/+page.svelte  # Gymnast results across all events
