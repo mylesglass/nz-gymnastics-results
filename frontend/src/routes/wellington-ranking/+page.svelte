@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getWellingtonRankings, getRankingSteps, getIntents, toggleIntent, type WellingtonRankingRow } from "$lib/api";
+  import { getWellingtonRankings, getRankingSteps, getIntents, toggleIntent, type WellingtonRankingRow, type ApparatusSpecialistRow } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
   import { currentUser } from "$lib/auth";
 
@@ -74,6 +74,7 @@
   let steps = $state<string[]>([]);
   let selectedStep = $state("");
   let rankings = $state<WellingtonRankingRow[]>([]);
+  let specialists = $state<ApparatusSpecialistRow[]>([]);
   let years = $state<string[]>([]);
   let configKey = $state("");
   let gnzScore = $state<number | null>(null);
@@ -170,6 +171,7 @@
       ]);
       if (token !== fetchToken) return;
       rankings = data.rankings;
+      specialists = data.apparatus_specialists ?? [];
       configKey = data.config_key;
       gnzScore = data.qualifying_score;
       wgtnScore = data.wellington_qualifying_score;
@@ -423,6 +425,44 @@
                     </span>
                   </span>
                 {/if}
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
+  {/if}
+
+  {#if specialists.length > 0}
+    <h2 class="text-2xl font-bold mt-8 mb-1">Apparatus Specialists</h2>
+    <p class="text-base-content/70 mb-4">
+      STEP 8–10 athletes who submitted intent and reached 11.000 on two apparatus, but did not qualify via the All Around path.
+      Best score per apparatus across the season is shown.
+    </p>
+    <div class="overflow-x-auto">
+      <table class="table table-zebra">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>GNZ ID</th>
+            <th>Club</th>
+            <th class="text-right">Apparatus</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each specialists as s}
+            <tr class="hover:bg-base-300">
+              <td class="font-medium">
+                <a href="/gymnast/{s.gnz_id}" class="hover:link">{s.name}</a>
+              </td>
+              <td class="text-base-content/60 text-xs">{s.gnz_id}</td>
+              <td>{s.club}</td>
+              <td>
+                <div class="flex flex-wrap gap-1 justify-end">
+                  {#each s.apparatus as a}
+                    <span class="badge badge-outline badge-sm font-mono" style="border-color:#FFC72C;color:#000000">{a.app} {a.best.toFixed(3)}</span>
+                  {/each}
+                </div>
               </td>
             </tr>
           {/each}

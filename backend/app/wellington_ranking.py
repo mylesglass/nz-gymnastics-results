@@ -55,6 +55,9 @@ _STEP_CONFIGS: list[dict] = [
         "selection": "wag_step_7_10",
         "club_events": False,
         "away_required": False,
+        "specialist_steps": {"STEP 8", "STEP 9", "STEP 10"},
+        "apparatus_qualifying_score": 11.0,
+        "apparatus_qualifying_count": 2,
     },
     {
         "key": "mag_level_4_6",
@@ -315,7 +318,13 @@ def compute_wellington_rankings(
     """
     config = _get_config(discipline, step)
     if config is None:
-        return {"rankings": [], "year": year, "step": step, "discipline": discipline}
+        return {
+            "rankings": [],
+            "apparatus_specialists": [],
+            "year": year,
+            "step": step,
+            "discipline": discipline,
+        }
 
     session = get_session()
     try:
@@ -329,6 +338,7 @@ def compute_wellington_rankings(
         if not event_ids:
             return {
                 "rankings": [],
+                "apparatus_specialists": [],
                 "year": year,
                 "step": step,
                 "discipline": discipline,
@@ -376,6 +386,8 @@ def compute_wellington_rankings(
         gymnast_events: dict[str, dict[int, list[dict]]] = defaultdict(
             lambda: defaultdict(list),
         )
+        best_apparatus: dict[str, dict[str, float]] = defaultdict(dict)
+        gymnast_meta: dict[str, dict[str, str]] = {}
         for key, scores in raw_groups.items():
             name = key[0]
             event_id = key[3]
@@ -395,6 +407,20 @@ def compute_wellington_rankings(
                 }
                 for s in scores
             ]
+            for p in apparatus:
+                if p["total"] is None:
+                    continue
+                prev = best_apparatus[name].get(p["app"])
+                if prev is None or p["total"] > prev:
+                    best_apparatus[name][p["app"]] = p["total"]
+
+            if name not in gymnast_meta:
+                gymnast_meta[name] = {"gnz_id": key[1] or "", "club": key[2] or ""}
+            else:
+                if not gymnast_meta[name]["gnz_id"] and key[1]:
+                    gymnast_meta[name]["gnz_id"] = key[1]
+                if not gymnast_meta[name]["club"] and key[2]:
+                    gymnast_meta[name]["club"] = key[2]
 
             gymnast_events[name][event_id].append({
                 "score": comp_score,
@@ -497,8 +523,50 @@ def compute_wellington_rankings(
             else:
                 entry["rank_text"] = str(entry["rank"])
 
+        # 6. Apparatus specialists: STEP 8+ athletes with intent who did not
+        #    qualify via the All Around path but reached the apparatus score
+        #    threshold on two apparatus (best score per apparatus, all events).
+        apparatus_specialists = []
+        specialist_steps = config.get("specialist_steps")
+        if specialist_steps and step in specialist_steps:
+            app_threshold = config.get("apparatus_qualifying_score")
+            app_count = config.get("apparatus_qualifying_count", 2)
+            aa_names = {r["name"] for r in rankings}
+            for name, app_best in best_apparatus.items():
+                if name in aa_names:
+                    continue
+                meta = gymnast_meta.get(name, {"gnz_id": "", "club": ""})
+                gnz_id = meta["gnz_id"]
+                club = meta["club"]
+                if intents is not None and gnz_id not in intents:
+                    continue
+                qualifying = sorted(
+                    [
+                        {"app": app, "best": round(score, 3)}
+                        for app, score in app_best.items()
+                        if score >= app_threshold
+                    ],
+                    key=lambda x: (-x["best"], x["app"]),
+                )
+                if len(qualifying) < app_count:
+                    continue
+                region = _find_region(club)
+                if region != "Wellington":
+                    continue
+                apparatus_specialists.append({
+                    "name": name,
+                    "gnz_id": gnz_id,
+                    "club": club,
+                    "region": region,
+                    "apparatus": qualifying,
+                    "count": len(qualifying),
+                })
+
+            apparatus_specialists.sort(key=lambda x: (-x["count"], x["name"]))
+
         return {
             "rankings": rankings,
+            "apparatus_specialists": apparatus_specialists,
             "year": year,
             "step": step,
             "discipline": discipline,

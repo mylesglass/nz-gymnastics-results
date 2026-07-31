@@ -211,4 +211,5 @@
 - [ ] Edit row functionality for admin
 - [ ] MAG Wellington ranking thresholds TBD
 - [ ] Look at not-admin logged in functionality 
-- [ ] Apparatus Specialist Wellington Qualifying  Oka 
+- [ ] Apparatus Specialist Wellington Qualifying
+- [ ] International Divisions Wellington Qual
