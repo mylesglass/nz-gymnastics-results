@@ -5,6 +5,8 @@
   import ScoreTooltip from "./ScoreTooltip.svelte";
   import AATooltip from "./AATooltip.svelte";
   import { REGION_PALETTES } from "./regions";
+  import { currentUser } from "$lib/auth";
+  import { updateGymnast } from "$lib/api";
 
   interface TabData {
     columns: string[];
@@ -30,6 +32,7 @@
     download,
     empty,
     extraControls,
+    eventId,
   }: {
     loadData: () => Promise<LoadDataResult>;
     loadKey?: string;
@@ -38,6 +41,7 @@
     download?: Snippet<[DownloadArgs]>;
     empty?: Snippet;
     extraControls?: Snippet;
+    eventId?: number;
   } = $props();
 
   let loading = $state(true);
@@ -54,6 +58,68 @@
   let errorMessage = $state<string | null>(null);
   let errorRaw = $state<string | null>(null);
   let showErrorDetail = $state(false);
+
+  let user = $state<{ username: string; role: string } | null>(null);
+  let isAdmin = $derived(user?.role === "admin");
+
+  let editMode = $state(false);
+  let editValues = $state<Record<string, string>>({});
+  let editToast = $state<string | null>(null);
+  let toastTimer: ReturnType<typeof setTimeout> | undefined;
+
+  onMount(() => {
+    const unsub = currentUser.subscribe((v) => (user = v));
+    return unsub;
+  });
+
+  function editKey(rowIdx: number, col: string): string {
+    return `${rowIdx}:${col}`;
+  }
+
+  async function saveRow(rowIdx: number) {
+    const row = visibleRows[rowIdx];
+    if (!row) return;
+    const event_id = row["event_id"] ?? eventId;
+    if (!event_id) return;
+    const keys = ["name", "gnz-id", "club"] as const;
+    const patch: Record<string, string | number> = { event_id, current_name: String(row["name"]) };
+    let changed = false;
+    for (const col of keys) {
+      const ek = editKey(rowIdx, col);
+      if (ek in editValues && editValues[ek] !== String(row[col] ?? "")) {
+        if (col === "name") patch.new_name = editValues[ek];
+        else if (col === "gnz-id") patch.new_gnz_id = editValues[ek];
+        else if (col === "club") patch.new_club = editValues[ek];
+        changed = true;
+      }
+    }
+    if (!changed) return;
+    let toastMsg = "";
+    try {
+      const result = await updateGymnast(patch as any);
+      toastMsg = result.updated === 0
+        ? `No rows: current="${patch.current_name}" event=${patch.event_id}`
+        : `Updated ${result.updated} row${result.updated !== 1 ? "s" : ""}`;
+      const next = { ...editValues };
+      for (const col of keys) delete next[editKey(rowIdx, col)];
+      editValues = next;
+      await doLoad();
+    } catch (e) {
+      toastMsg = `Save failed: ${e}`;
+    }
+    if (toastMsg) {
+      editToast = toastMsg;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { editToast = null; }, 3000);
+    }
+  }
+
+  function toggleEditMode() {
+    editMode = !editMode;
+    if (!editMode) {
+      editValues = {};
+    }
+  }
 
   let metaColumns = $state<string[]>([]);
   let frontMeta = $state<string[]>([]);
@@ -278,43 +344,43 @@
   });
 
   let loaded = $state(false);
+  let reloadTick = $state(0);
 
-  $effect(() => {
-    void loadKey;
+  async function doLoad() {
     loaded = false;
     errorMessage = null;
     errorRaw = null;
     loading = true;
-    loadData()
-      .then((r) => {
-        title = r.title;
-        allData = r.tabs;
-        const keys = Object.keys(r.tabs);
-        if (keys.length > 0) {
-          activeTab = keys[0];
-          applyTab(keys[0]);
-        }
-      })
-      .catch((err) => {
-        allData = {};
-        const text = String(err);
-        errorRaw = text;
-        try {
-          const parsed = JSON.parse(err instanceof Error ? err.message : text);
-          if (parsed.detail) {
-            errorMessage = parsed.detail;
-          } else {
-            errorMessage = text;
-          }
-        } catch {
+    try {
+      const r = await loadData();
+      title = r.title;
+      allData = r.tabs;
+      const keys = Object.keys(r.tabs);
+      if (keys.length > 0) {
+        activeTab = keys[0];
+        applyTab(keys[0]);
+      }
+    } catch (err) {
+      allData = {};
+      const text = String(err);
+      errorRaw = text;
+      try {
+        const parsed = JSON.parse(err instanceof Error ? err.message : text);
+        if (parsed.detail) {
+          errorMessage = parsed.detail;
+        } else {
           errorMessage = text;
         }
-      })
-      .finally(() => {
-        loading = false;
-        loaded = true;
-      });
-  });
+      } catch {
+        errorMessage = text;
+      }
+    } finally {
+      loading = false;
+      loaded = true;
+    }
+  }
+
+  $effect(() => { void loadKey; void reloadTick; doLoad(); });
 
   $effect(() => {
     const el = theadEl;
@@ -562,6 +628,15 @@
           headerLabels: HEADER_LABELS,
         })}
       {/if}
+
+      {#if isAdmin}
+        <button
+          class="btn btn-xs {editMode ? 'btn-primary' : 'btn-ghost'}"
+          onclick={toggleEditMode}
+        >
+          {editMode ? "Done Editing" : "Edit"}
+        </button>
+      {/if}
     </div>
 
     {#if showDuplicateHeaders}
@@ -751,14 +826,29 @@
               </div>
             </th>
           {/each}
+          {#if editMode}
+            <th class="w-16"></th>
+          {/if}
         </tr>
       </thead>
       <tbody>
-        {#each visibleRows as row}
+        {#each visibleRows as row, rowIdx}
           <tr class="hover:bg-primary/15 transition-colors">
             {#each frontMeta as col}
               <td class="whitespace-nowrap py-1.5 {COL_MIN_CLASS[col] ?? ''}">
-                {#if col === "name" && row["gnz-id"]}
+                {#if editMode && (col === "name" || col === "gnz-id" || col === "club")}
+                  <input
+                    type="text"
+                    class="input input-xs input-bordered w-full min-w-24"
+                    value={editValues[editKey(rowIdx, col)] ?? row[col] ?? ""}
+                    oninput={(e) => {
+                      editValues = { ...editValues, [editKey(rowIdx, col)]: e.currentTarget.value };
+                    }}
+                    onkeydown={(e) => {
+                      if (e.key === "Enter") saveRow(rowIdx);
+                    }}
+                  />
+                {:else if col === "name" && row["gnz-id"]}
                   <a href={`/gymnast/${row["gnz-id"]}`} class="link link-hover"
                     >{row[col] ?? ""}</a
                   >
@@ -801,6 +891,11 @@
                 >
               {/if}
             {/each}
+            {#if editMode}
+              <td class="py-1.5">
+                <button class="btn btn-ghost btn-xs text-success" onclick={() => saveRow(rowIdx)}>Save</button>
+              </td>
+            {/if}
           </tr>
         {:else}
           <tr>
@@ -887,4 +982,12 @@
       {/each}
     </div>
   {/if}
+{/if}
+
+{#if editToast}
+  <div class="toast toast-bottom toast-end z-50">
+    <div class="alert alert-success text-sm">
+      <span>{editToast}</span>
+    </div>
+  </div>
 {/if}

@@ -1,5 +1,8 @@
 All bugs reported in this session are fixed. See `git log` for details.
 
+**Known issues:**
+- Inline edit (name/GNZ ID/club) saves to DB but frontend doesn't feel reactive — cache invalidation on `wide-all` works but the table may still show stale data after save. Needs investigation into the data reload path (`doLoad()` / `applyTab()`).
+
 **Previously fixed:**
 - Name suffix stripping: `(L#)`, `(STEP #)`, `(YI)`, `(SI)`, `(JI)`, `(SO)`, `(U/18)`, `(Male)` and nicknames like `(Sasha)` stripped at parse time
 - Youth vs Youth International normalization

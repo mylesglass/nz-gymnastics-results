@@ -382,3 +382,19 @@ export async function mergeNames(
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+export async function updateGymnast(data: {
+  event_id: number;
+  current_name: string;
+  new_name?: string;
+  new_gnz_id?: string;
+  new_club?: string;
+}): Promise<{ updated: number }> {
+  const res = await fetch(`${API_BASE}/api/admin/scores/gymnast`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
