@@ -42,7 +42,7 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   ├── src/
 │   │   ├── hooks.server.ts  # API proxy (/api → backend in production)
 │   │   ├── lib/
-│   │   │   ├── api.ts              # Typed fetch wrappers
+│   │   │   ├── api.ts              # Typed fetch wrappers (updateGymnast, etc.)
 │   │   │   ├── auth.ts             # JWT auth stores (currentUser, setToken, logout)
 │   │   │   ├── year.ts             # yearOptions store (selectedYear removed)
 │   │   │   ├── utils/debounce.ts   # Debounce helper for search inputs
@@ -246,3 +246,4 @@ docker compose -f docker-compose.prod.yml up --build -d
 - **Production API proxy** — `hooks.server.ts` forwards `/api/*` from the frontend Node server to the backend container. `API_BASE` is always `""` (same-origin).
 - **Body size limit** — SvelteKit adapter-node defaults to 512KB. JSON uploads can be ~3.5MB. Set `BODY_SIZE_LIMIT=52428800` (bytes) in the frontend service env vars.
 - **Cache refresh** — `POST /api/admin/refresh-cache` clears the backend in-memory cache. Admin dashboard has a "Refresh Cache" button to ensure all pages show the latest data after uploads/edits.
+- **Inline edit** — `PATCH /api/admin/scores/gymnast` updates name/GNZ ID/club on all `long_scores` rows matching `(event_id, gymnast_name)`. Cache invalidation clears `wide-all`, `stats`, `gymnasts`, `clubs` prefixes. Frontend: Edit mode toggle makes name/GNZ ID/club cells editable inputs with per-row Save button. Known issue: table doesn't always feel reactive after save.
