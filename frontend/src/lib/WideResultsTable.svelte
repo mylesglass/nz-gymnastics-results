@@ -309,14 +309,34 @@
       if (rt) rounds.add(String(rt));
     }
     eventOptions = [...events].sort();
-    stepOptions = [...steps].sort();
+    stepOptions = sortSteps([...steps]);
     clubOptions = [...clubs].sort();
     regionOptions = [...regions].sort();
     divisionOptions = [...divs].sort();
     roundOptions = [...rounds].sort();
   }
 
-  function appDisplayLabel(prefix: string): string {
+  function sortSteps(steps: string[]): string[] {
+  const stepOrder: Record<string, number> = {};
+  for (let i = 1; i <= 10; i++) stepOrder[`STEP ${i}`] = i;
+  stepOrder["Youth"] = 101;
+  stepOrder["Youth International"] = 102;
+  stepOrder["Junior"] = 103;
+  stepOrder["Junior International"] = 104;
+  stepOrder["Senior"] = 105;
+  stepOrder["Senior International"] = 106;
+  stepOrder["Senior Open"] = 107;
+  return [...steps].sort((a, b) => {
+    const oa = stepOrder[a];
+    const ob = stepOrder[b];
+    if (oa !== undefined && ob !== undefined) return oa - ob;
+    if (oa !== undefined) return -1;
+    if (ob !== undefined) return 1;
+    return a.localeCompare(b);
+  });
+}
+
+function appDisplayLabel(prefix: string): string {
     const labels: Record<string, string> = {
       vt: "VT",
       ub: "UB",
