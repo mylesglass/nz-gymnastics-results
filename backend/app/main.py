@@ -18,7 +18,7 @@ from app.auth import (
     seed_admin_user,
     verify_password,
 )
-from app.cache import cache_headers, cached, invalidate
+from app.cache import cache, cache_headers, cached, invalidate
 from app.database import get_session, init_db
 from app.models import Event, LongScore, User, WellingtonIntent
 from app.parser import ParseError, _NAME_TO_CANONICAL, find_unknown_clubs, parse_json, reload_club_maps, validate_upload_structure
@@ -33,6 +33,8 @@ from app.schemas import (
     EventResponse,
     EventUpdate,
     FixDuplicatesResponse,
+    GymnastEditRequest,
+    GymnastEditResponse,
     GymnastItem,
     IntentToggle,
     LoginRequest,
@@ -1021,6 +1023,47 @@ def merge_names(
             "ids_corrected": report["ids_corrected"],
             "conflicts": report.get("conflicts", []),
         }
+    finally:
+        session.close()
+
+
+@app.patch("/api/admin/scores/gymnast", response_model=GymnastEditResponse)
+def edit_gymnast_scores(
+    req: GymnastEditRequest,
+    _auth=Depends(require_role("admin")),
+):
+    if not any([req.new_name, req.new_gnz_id, req.new_club]):
+        raise HTTPException(400, "At least one field to update must be provided")
+
+    session = get_session()
+    try:
+        updates: dict = {}
+        if req.new_name is not None:
+            updates[LongScore.gymnast_name] = req.new_name
+        if req.new_gnz_id is not None:
+            updates[LongScore.gnz_id] = req.new_gnz_id
+        if req.new_club is not None:
+            updates[LongScore.club_name] = req.new_club
+
+        updated = (
+            session.query(LongScore)
+            .filter(
+                LongScore.event_id == req.event_id,
+                func.trim(func.lower(LongScore.gymnast_name))
+                == func.trim(func.lower(req.current_name)),
+            )
+            .update(updates, synchronize_session=False)
+        )
+
+        if updated:
+            session.commit()
+            cache.invalidate_prefix("wide-all")
+            cache.invalidate_prefix("stats")
+            cache.invalidate_prefix("gymnasts")
+            cache.invalidate_prefix("clubs")
+            invalidate(req.event_id)
+
+        return GymnastEditResponse(updated=updated)
     finally:
         session.close()
 

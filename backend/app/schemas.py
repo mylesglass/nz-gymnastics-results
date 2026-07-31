@@ -223,3 +223,15 @@ class IntentToggle(BaseModel):
     gnz_id: str
     year: int
     submitted: bool
+
+
+class GymnastEditRequest(BaseModel):
+    event_id: int
+    current_name: str
+    new_name: str | None = None
+    new_gnz_id: str | None = None
+    new_club: str | None = None
+
+
+class GymnastEditResponse(BaseModel):
+    updated: int

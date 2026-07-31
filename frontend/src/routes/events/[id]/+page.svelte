@@ -57,4 +57,4 @@
   </div>
 {/snippet}
 
-<WideResultsTable {loadData} {download} {empty} />
+<WideResultsTable {loadData} {download} {empty} eventId={Number($page.params.id)} />
