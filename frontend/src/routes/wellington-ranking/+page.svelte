@@ -156,8 +156,11 @@
     a.click();
   }
 
+  let fetchToken = $state(0);
+
   async function loadRankings() {
     if (!year || !selectedStep) return;
+    const token = ++fetchToken;
     loadingRankings = true;
     error = "";
     try {
@@ -165,6 +168,7 @@
         getWellingtonRankings(Number(year), selectedStep, discipline, gnzQualifierMode, wgtnQualifierMode, intentFilterMode),
         getIntents(Number(year)),
       ]);
+      if (token !== fetchToken) return;
       rankings = data.rankings;
       configKey = data.config_key;
       gnzScore = data.qualifying_score;
