@@ -15,3 +15,35 @@ export const REGION_PALETTES: Record<string, string[]> = {
   "Waikato":                 ["#000000", "#D32F2F", "#FFC72C"],
   "Wellington":              ["#000000", "#FFC72C", "#FFFFFF"],
 };
+
+export function textColor(hex: string): string {
+  let h = hex.replace("#", "");
+  let r = parseInt(h.substring(0, 2), 16);
+  let g = parseInt(h.substring(2, 4), 16);
+  let b = parseInt(h.substring(4, 6), 16);
+  return (r * 0.299 + g * 0.587 + b * 0.114) > 160 ? "#111" : "#fff";
+}
+
+export function gradientTextColor(colors: string[]): string {
+  if (!colors.length) return "#111";
+  const lum = (hex: string) => {
+    const h = hex.replace("#", "");
+    const r = parseInt(h.substring(0, 2), 16);
+    const g = parseInt(h.substring(2, 4), 16);
+    const b = parseInt(h.substring(4, 6), 16);
+    return r * 0.299 + g * 0.587 + b * 0.114;
+  };
+  // Pick the palette stop furthest from luminance 128 so heading stays readable
+  // regardless of where the gradient falls behind it.
+  const stop = colors.reduce((best, c) =>
+    Math.abs(lum(c) - 128) > Math.abs(lum(best) - 128) ? c : best
+  );
+  return lum(stop) > 160 ? "#111" : "#fff";
+}
+
+export function gradientBackground(colors: string[]): string {
+  if (!colors.length) return "linear-gradient(135deg, #e5e7eb, #9ca3af)";
+  const c0 = colors[0];
+  const c1 = colors[1] ?? colors[0];
+  return `linear-gradient(135deg, ${c0} 0%, ${c0} 40%, ${c1} 90%, ${c1} 100%)`;
+}
