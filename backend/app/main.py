@@ -23,6 +23,7 @@ from app.database import get_session, init_db
 from app.models import Event, LongScore, User, WellingtonIntent
 from app.parser import ParseError, _NAME_TO_CANONICAL, find_unknown_clubs, parse_json, reload_club_maps, validate_upload_structure
 from app.reconcile import reconcile_athletes
+from app.scoreholder import ScoreholderFetchError, fetch_event_json
 from app.schemas import (
     ApparatusSpecialistRow,
     ApplyFixItem,
@@ -37,6 +38,7 @@ from app.schemas import (
     GymnastEditRequest,
     GymnastEditResponse,
     GymnastItem,
+    ImportUrlRequest,
     IntentToggle,
     LoginRequest,
     MergeNamesRequest,
@@ -1096,6 +1098,10 @@ def upload_file(file: UploadFile = File(...), allow_unknown: str = None, _auth=D
     except json.JSONDecodeError as e:
         raise HTTPException(400, f"Invalid JSON: {e}")
 
+    return _ingest_event(data, allow_unknown)
+
+
+def _ingest_event(data: dict, allow_unknown: str | None) -> EventResponse:
     errors = validate_upload_structure(data)
     if errors:
         raise HTTPException(422, {"message": "Invalid upload structure", "errors": errors})
@@ -1196,6 +1202,17 @@ def upload_file(file: UploadFile = File(...), allow_unknown: str = None, _auth=D
         )
     finally:
         session.close()
+
+
+@app.post("/api/import-url", response_model=EventResponse)
+def import_from_url(req: ImportUrlRequest, _auth=Depends(require_role("admin"))):
+    if not req.url.strip():
+        raise HTTPException(400, "URL is required")
+    try:
+        data = fetch_event_json(req.url.strip())
+    except ScoreholderFetchError as e:
+        raise HTTPException(502, str(e))
+    return _ingest_event(data, "1" if req.allow_unknown else None)
 
 
 # ---------------------------------------------------------------------------

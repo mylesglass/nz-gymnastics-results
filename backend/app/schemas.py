@@ -105,6 +105,11 @@ class UploadValidationResponse(BaseModel):
     known_clubs: list[str]
 
 
+class ImportUrlRequest(BaseModel):
+    url: str
+    allow_unknown: bool = False
+
+
 class ConflictItem(BaseModel):
     name: str
     previous_ids: list[str]
