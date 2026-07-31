@@ -21,7 +21,7 @@ from app.auth import (
 from app.cache import cache, cache_headers, cached, invalidate
 from app.database import get_session, init_db
 from app.models import Event, LongScore, User, WellingtonIntent
-from app.parser import ParseError, _NAME_TO_CANONICAL, find_unknown_clubs, parse_json, reload_club_maps, validate_upload_structure
+from app.parser import ParseError, _NAME_TO_CANONICAL, find_unknown_clubs, parse_json, reload_club_maps, suggest_club_mapping, validate_upload_structure
 from app.reconcile import reconcile_athletes
 from app.scoreholder import ScoreholderFetchError, fetch_event_json
 from app.schemas import (
@@ -1113,6 +1113,7 @@ def _ingest_event(data: dict, allow_unknown: str | None) -> EventResponse:
             "message": "Unknown club names found",
             "unknown_clubs": unknown,
             "known_clubs": known,
+            "suggestions": suggest_club_mapping(unknown),
         })
 
     try:

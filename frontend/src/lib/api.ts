@@ -78,6 +78,7 @@ async function throwIfUploadError(res: Response): Promise<void> {
     err._clubConflict = true;
     err.unknown_clubs = detail.unknown_clubs;
     err.known_clubs = detail.known_clubs;
+    err.suggestions = detail.suggestions || {};
     throw err;
   }
   if (!res.ok) throw new Error(await res.text());

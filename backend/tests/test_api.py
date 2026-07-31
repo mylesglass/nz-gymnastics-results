@@ -143,10 +143,10 @@ class TestImportUrl:
         assert body["gymnast_count"] == 271
         assert body["id"] > 0
 
-    def _unknown_club_payload(self):
+    def _unknown_club_payload(self, org_name="Totally Unknown Club XYZ"):
         return {
             "events": [{"name": "Test Event", "startDate": "2026-01-01"}],
-            "eventOrganizations": [{"_id": "1", "name": "Totally Unknown Club XYZ"}],
+            "eventOrganizations": [{"_id": "1", "name": org_name}],
             "eventParticipants": [{"_id": "p1", "organizationId": "1"}],
             "performanceIndividuals": [{"participantId": "p1", "unitId": "u1"}],
             "performanceRules": [],
@@ -160,7 +160,17 @@ class TestImportUrl:
 
         resp = client.post("/api/import-url", json={"url": "https://scoreholder.com/en/events/66c6ae8a8026be8951720d23"})
         assert resp.status_code == 409
-        assert "Totally Unknown Club XYZ" in resp.json()["detail"]["unknown_clubs"]
+        detail = resp.json()["detail"]
+        assert "Totally Unknown Club XYZ" in detail["unknown_clubs"]
+        assert detail["suggestions"] == {}
+
+    def test_import_url_409_includes_suggestion(self, monkeypatch):
+        monkeypatch.setattr("app.main.fetch_event_json", lambda url: self._unknown_club_payload("Te Awamutu Gymsport"))
+
+        resp = client.post("/api/import-url", json={"url": "https://scoreholder.com/en/events/66c6ae8a8026be8951720d23"})
+        assert resp.status_code == 409
+        detail = resp.json()["detail"]
+        assert detail["suggestions"] == {"Te Awamutu Gymsport": "Te Awamutu Gymsports"}
 
     def test_import_url_allow_unknown_skips_409(self, monkeypatch):
         monkeypatch.setattr("app.main.fetch_event_json", lambda url: self._unknown_club_payload())
