@@ -200,6 +200,7 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
 - **AA score fallback**: `_build_wide_row` now computes AA score from apparatus totals when stored `aa_score` is NULL. This handles cases where the parser's round_type mismatch prevents AA lookup.
 - **resolver regex**: `resolve_level()` uses `r"level\s*(\d+)"` (zero-or-more whitespace) — consistent with STEP regex — to handle no-space variants like `"MAG Level3"`.
 - **Region enrichment**: Club→region lookup at pivot time via `clubs_and_regions.json`. Changes to lookup file require re-upload of events. Run `reconcile_clubs.py` after adding aliases to fix existing data.
+- **Unknown-club check fix**: `find_unknown_clubs()` was reading `orgId`/`participantId` fields that never exist in real Scoreholder files (real: `_id` on `eventOrganizations`, `_id`+`organizationId` on `eventParticipants`) — so it always returned `[]` and variant club names silently passed through. Fixed to use real field names; uploads now 409 with the club-mapping dialog. Regional teams (e.g. `Counties - Manukau`) are stored as club names and resolve to themselves; `Gymsport Manukau` retargets to `Counties - Manukau`.
 
 ## Docker
 - `docker compose up --build` starts both services
