@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from app.parser import _infer_event_discipline, _normalise_apparatus, _extract_division, parse_json, validate_upload_structure
+from app.parser import _infer_event_discipline, _normalise_apparatus, _extract_division, find_unknown_clubs, parse_json, validate_upload_structure
 
 HERE = Path(__file__).resolve().parent
 DATA_DIR_2025 = HERE.parent.parent / "data-collection" / "2025" / "json"
@@ -48,6 +48,30 @@ ALL_FILES = {
 
 # Full scan of every JSON in the 2025 dir
 ALL_2025_FILES = sorted(p.name for p in DATA_DIR_2025.glob("*.json"))
+
+
+class TestFindUnknownClubs:
+    def _payload(self, org_name):
+        return {
+            "events": [{"name": "Test Event", "startDate": "2026-01-01"}],
+            "eventOrganizations": [{"_id": "1", "name": org_name}],
+            "eventParticipants": [{"_id": "p1", "organizationId": "1"}],
+            "performanceIndividuals": [{"participantId": "p1", "unitId": "u1"}],
+            "performanceRules": [],
+            "performanceScores": [],
+            "performanceResultTables": [],
+            "units": [{"_id": "u1", "name": "WAG Level 1", "type": "performance"}],
+        }
+
+    def test_uses_real_field_names(self):
+        unknown = find_unknown_clubs(self._payload("Brand New Club XYZ"))
+        assert unknown == ["Brand New Club XYZ"]
+
+    def test_known_club_not_flagged(self):
+        assert find_unknown_clubs(self._payload("Capital Gymnastics")) == []
+
+    def test_region_team_not_flagged(self):
+        assert find_unknown_clubs(self._payload("Counties - Manukau")) == []
 
 
 class TestNormaliseApparatus:
