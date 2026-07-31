@@ -213,3 +213,5 @@
 - [ ] Look at not-admin logged in functionality 
 - [ ] Apparatus Specialist Wellington Qualifying
 - [ ] International Divisions Wellington Qual
+
+- [ ] Import from URL. Currently, I open up a scoreholder link in my browser, open developer tools, network tab, reload the page, then filter the network data with a search "json", then the only result left is a the competition data. I right click it and copy response, then paste it into a new file. I drag this into this application to upload the json. I'd love to be able to paste a URL and the application does the rest.
