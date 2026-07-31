@@ -114,6 +114,7 @@ export async function getAllWideResults(params?: {
   club?: string;
   year?: number;
 }): Promise<{
+  name?: string;
   wag?: { columns: string[]; rows: Record<string, unknown>[] };
   mag?: { columns: string[]; rows: Record<string, unknown>[] };
 }> {

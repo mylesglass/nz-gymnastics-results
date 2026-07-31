@@ -1316,9 +1316,23 @@ def _compute_wide_all(year: int | None, gnz_id: str | None, club: str | None) ->
         if year:
             query = query.filter(Event.year == year)
         event_ids = [r[0] for r in query.all()]
-        if not event_ids:
-            return {}
-        return pivot_to_wide_dict_multi(event_ids, session, gnz_id, club)
+        result = {}
+        if event_ids:
+            result = pivot_to_wide_dict_multi(event_ids, session, gnz_id, club)
+        if gnz_id and not result:
+            name_row = (
+                session.query(LongScore.gymnast_name)
+                .filter(
+                    LongScore.gnz_id == gnz_id,
+                    LongScore.gymnast_name.isnot(None),
+                    LongScore.gymnast_name != "",
+                )
+                .order_by(LongScore.id.desc())
+                .first()
+            )
+            if name_row:
+                result["name"] = name_row[0]
+        return result
     finally:
         session.close()
 

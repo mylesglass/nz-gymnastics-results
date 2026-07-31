@@ -7,6 +7,7 @@
 
   let filterYear = $state<string | null>(null);
   let ready = $state(false);
+  let gymnastFound = $state(false);
 
   onMount(() => {
     const unsub = selectedYear.subscribe((v) => (filterYear = v));
@@ -20,9 +21,11 @@
     const params: { gnz_id: string; year?: number } = { gnz_id: gnzId };
     if (filterYear) params.year = parseInt(filterYear);
     return getAllWideResults(params).then((r) => {
-      const name = r.wag?.rows[0]?.name || r.mag?.rows[0]?.name || gnzId;
+      const rowsExist = Boolean(r.wag?.rows?.length || r.mag?.rows?.length);
+      gymnastFound = rowsExist || Boolean(r.name);
+      const name = r.name || r.wag?.rows[0]?.name || r.mag?.rows[0]?.name;
       return {
-        title: name,
+        title: name || "Gymnast",
         tabs: {
           ...(r.wag ? { wag: r.wag } : {}),
           ...(r.mag ? { mag: r.mag } : {}),
@@ -68,9 +71,15 @@
 {/snippet}
 
 {#snippet empty()}
-  <div role="alert" class="alert alert-error mt-4">
-    <span>Gymnast not found</span>
-  </div>
+  {#if gymnastFound}
+    <div role="alert" class="alert alert-info mt-4">
+      <span>There are no results for {filterYear} — try another year.</span>
+    </div>
+  {:else}
+    <div role="alert" class="alert alert-error mt-4">
+      <span>Gymnast not found</span>
+    </div>
+  {/if}
 {/snippet}
 
 {#if ready}
