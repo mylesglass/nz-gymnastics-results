@@ -17,6 +17,7 @@
     "vite": "^6.3.0"
   },
   "dependencies": {
+    "@svg-maps/new-zealand": "^2.0.0",
     "@tailwindcss/vite": "^4.3.0",
     "daisyui": "^5.5.20",
     "tailwindcss": "^4.3.0"
