@@ -33,7 +33,7 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   ├── reconcile_clubs.py # Club name normalization script
 │   │   ├── validate_json.py # Batch validation CLI
 │   │   └── wellington_ranking.py # Wellington regional ranking computation
-│   ├── tests/               # pytest suite (129 pass, 87 skip)
+│   ├── tests/               # pytest suite (130 pass, 87 skip)
 │   └── pyproject.toml
 │
 ├── frontend/
@@ -72,11 +72,10 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   │   ├── club/[club]/+page.svelte # Club results
 │   │   │   ├── gymnasts/+page.server.ts # SSR load for gymnast list
 │   │   │   ├── gymnasts/+page.svelte   # Gymnast list with A-Z letter jump
-│   │   │   ├── gymnast/[gnz_id]/+page.server.ts # SSR load for gymnast results
-│   │   │   └── gymnast/[gnz_id]/+page.svelte # Gymnast results
+│   │   │   ├── gymnast/[gnz_id]/+page.svelte # Gymnast results (client-only, no server load)
 │   │   ├── app.css              # @import "tailwindcss"; @plugin "daisyui";
 │   │   └── app.html
-│   ├── svelte.config.js
+│   ├── svelte.config.js         # adapter-node; csrf: { checkOrigin: false }
 │   └── vite.config.ts          # tailwindcss() + sveltekit() plugins
 │
 └── data-collection/         # Reference JSON files for testing
@@ -175,7 +174,7 @@ let { label, count = 0 }: { label: string; count?: number } = $props();
 - All tests in `backend/tests/`, one file per module
 - **Run:** `cd backend && source .venv/bin/activate && pytest`
 - **Run single:** `pytest tests/test_parser.py -v`
-- **Stats:** 129 pass, 87 skip (skipped tests rely on data-collection JSON files not always present)
+- **Stats:** 130 pass, 87 skip (skipped tests rely on data-collection JSON files not always present)
 - Plain `assert` statements (no `unittest` methods)
 - `@pytest.mark.parametrize` for data-driven tests
 - Inline fixtures (no conftest.py) — SQLite `:memory:` or temp file
@@ -246,4 +245,11 @@ docker compose -f docker-compose.prod.yml up --build -d
 - **Production API proxy** — `hooks.server.ts` forwards `/api/*` from the frontend Node server to the backend container. `API_BASE` is always `""` (same-origin).
 - **Body size limit** — SvelteKit adapter-node defaults to 512KB. JSON uploads can be ~3.5MB. Set `BODY_SIZE_LIMIT=52428800` (bytes) in the frontend service env vars.
 - **Cache refresh** — `POST /api/admin/refresh-cache` clears the backend in-memory cache. Admin dashboard has a "Refresh Cache" button to ensure all pages show the latest data after uploads/edits.
+- **Browser cache** — ranking endpoints (`/api/rankings/*`) are excluded from the `Cache-Control: public, max-age=300` middleware so intent/qualifier toggles reflect immediately; other endpoints keep browser caching.
+- **Apparatus Specialists** — Wellington ranking fallback path for WAG STEP 8–10 (`wag_step_7_10` config: `specialist_steps`, `apparatus_qualifying_score: 11.0`, `apparatus_qualifying_count: 2`). Intent-submitted athletes NOT in the AA table who reach ≥11.000 on two distinct apparatus (best per apparatus across all eligible events, competition name tracked). Returned as `apparatus_specialists` in the ranking response; frontend renders below the main table with color-coded badges (VT primary / UB secondary / BB accent / FX info) + DaisyUI tooltips showing the competition.
+- **Wellington intent tracking** — `WellingtonIntent` model (`wellington_intents` table, unique `(gnz_id, year)`), `GET /api/wellington/intents`, `POST /api/wellington/intent` (admin). Admin checkbox column + Intent filter toggle on the ranking page; toggling calls `invalidate()`.
+- **Gymnast page no-results** — `_compute_wide_all` adds a top-level `name` (latest `gymnast_name` across all years for that `gnz_id`) when the year query returns no rows. Frontend shows the name in the heading + a polite "no results for {year}" info alert; "Gymnast not found" only when no name exists at all.
+- **Step dropdown ordering** — backend `ORDER BY level_category` is alphabetical (`STEP 1, STEP 10, STEP 2, ...`). Frontend re-sorts with `sortSteps()` (STEP 1–10 numerically, then Youth/Junior/Senior) in `rankings/+page.svelte` and `WideResultsTable.svelte`.
+- **SvelteKit CSRF disabled** — `csrf: { checkOrigin: false }` in `svelte.config.js`; all mutations go through the `/api` proxy to FastAPI which handles its own JWT auth. Still set `ORIGIN` env var in production for adapter-node URL generation.
+- **`fetchToken` must NOT be `$state`** — the stale-response guard counter in `wellington-ranking/+page.svelte` is a plain `let`. If made `$state`, incrementing it inside `loadRankings()` re-triggers the `$effect` → infinite API request loop.
 - **Inline edit** — `PATCH /api/admin/scores/gymnast` updates name/GNZ ID/club on all `long_scores` rows matching `(event_id, gymnast_name)`. Cache invalidation clears `wide-all`, `stats`, `gymnasts`, `clubs` prefixes. Frontend: Edit mode toggle makes name/GNZ ID/club cells editable inputs with per-row Save button. Known issue: table doesn't always feel reactive after save.
