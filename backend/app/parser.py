@@ -1,7 +1,9 @@
 """Parse Scoreholder JSON into long-format rows for SQLite storage."""
 
+import difflib
 import json
 import re
+import unicodedata
 from pathlib import Path
 
 from app.decoder import build_output_map, decode_public_outputs
@@ -65,6 +67,40 @@ def find_unknown_clubs(data: dict) -> list[str]:
 
     club_names = {orgs[oid] for oid in competitive_orgs}
     return sorted(c for c in club_names if c.lower().strip() not in _NAME_TO_CANONICAL)
+
+
+def _normalise_for_match(name: str) -> str:
+    """Lowercase, strip diacritics (macrons), and collapse whitespace."""
+    folded = unicodedata.normalize("NFD", name).encode("ascii", "ignore").decode("ascii")
+    return re.sub(r"\s+", " ", folded).strip().lower()
+
+
+def suggest_club_mapping(unknown_clubs: list[str], threshold: float = 0.9) -> dict[str, str]:
+    """Suggest a canonical club for each unknown club name.
+
+    Exact normalized matches against known aliases always win; otherwise a
+    fuzzy ratio above the threshold is required so genuinely new clubs aren't
+    mis-mapped.
+    """
+    known_keys = list(_NAME_TO_CANONICAL)
+    known_canonicals = sorted(set(_NAME_TO_CANONICAL.values()))
+
+    suggestions: dict[str, str] = {}
+    for unknown in unknown_clubs:
+        folded = _normalise_for_match(unknown)
+        canonical = _NAME_TO_CANONICAL.get(folded)
+        if canonical:
+            if canonical != unknown:
+                suggestions[unknown] = canonical
+            continue
+        best, best_score = None, 0.0
+        for candidate in known_keys + known_canonicals:
+            score = difflib.SequenceMatcher(None, folded, _normalise_for_match(candidate)).ratio()
+            if score > best_score:
+                best, best_score = candidate, score
+        if best_score >= threshold:
+            suggestions[unknown] = _NAME_TO_CANONICAL.get(best.lower(), best)
+    return suggestions
 
 
 def _normalise_club(club_name: str, is_nationals: bool) -> str:

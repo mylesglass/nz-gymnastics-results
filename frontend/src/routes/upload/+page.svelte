@@ -5,6 +5,7 @@
   import { currentUser, authConfigured } from "$lib/auth";
 
   type UploadSource = { kind: "file"; file: File } | { kind: "url"; url: string };
+  const KEEP_ORIGINAL = "__keep__";
 
   interface UploadItem {
     label: string;
@@ -76,14 +77,14 @@
           uploads = [...uploads];
         }
       } catch (err) {
-        const ce = err as Error & { _clubConflict?: boolean; unknown_clubs?: string[]; known_clubs?: string[] };
+        const ce = err as Error & { _clubConflict?: boolean; unknown_clubs?: string[]; known_clubs?: string[]; suggestions?: Record<string, string> };
         if (ce._clubConflict && ce.unknown_clubs && ce.known_clubs) {
           const idx = uploads.findIndex((u) => u.label === labelFor(source) && u.status === "uploading");
           if (idx !== -1) uploads.splice(idx, 1);
           uploading = false;
           remainingSources = sources.slice(i + 1);
           const mappings: Record<string, string> = {};
-          for (const u of ce.unknown_clubs) mappings[u] = ce.known_clubs[0] || u;
+          for (const u of ce.unknown_clubs) mappings[u] = ce.suggestions?.[u] || KEEP_ORIGINAL;
           clubMappings = mappings;
           clubDialog = { source, unknown: ce.unknown_clubs, known: ce.known_clubs };
           break;
@@ -141,8 +142,14 @@
 
   async function saveAndRetry() {
     if (!clubDialog) return;
+    const mapped: Record<string, string> = {};
+    let kept = 0;
+    for (const [unknown, target] of Object.entries(clubMappings)) {
+      if (target && target !== KEEP_ORIGINAL) mapped[unknown] = target;
+      else kept++;
+    }
     try {
-      await saveAliases(clubMappings);
+      if (Object.keys(mapped).length > 0) await saveAliases(mapped);
     } catch {
       // fall through — retry with the raw file anyway
     }
@@ -150,8 +157,30 @@
     const rest = remainingSources;
     remainingSources = [];
     clubDialog = null;
-    const sources = rest.length > 0 ? [source, ...rest] : [source];
-    await handleSources(sources);
+    uploading = true;
+    uploads = [...uploads, { label: labelFor(source), status: "uploading" }];
+    try {
+      const ev = await uploadSource(source, kept > 0);
+      const idx = uploads.findIndex((u) => u.label === labelFor(source) && u.status === "uploading");
+      if (idx !== -1) {
+        uploads[idx] = {
+          label: labelFor(source), status: "success", id: ev.id, name: ev.name,
+          gymnast_count: ev.gymnast_count, score_count: ev.score_count, club_count: ev.club_count,
+        };
+        uploads = [...uploads];
+      }
+    } catch (err) {
+      const idx = uploads.findIndex((u) => u.label === labelFor(source) && u.status === "uploading");
+      if (idx !== -1) {
+        uploads[idx] = { label: labelFor(source), status: "error", errorMessage: String(err) };
+        uploads = [...uploads];
+      }
+    } finally {
+      uploading = false;
+    }
+    if (rest.length > 0) {
+      await handleSources(rest);
+    }
   }
 
   async function skipUnknown() {
@@ -372,12 +401,13 @@
       <h3 class="text-lg font-bold mb-2">Unknown Club Names</h3>
       <p class="text-sm text-base-content/70 mb-4">
         Some clubs in this file aren't in the known club list.
-        Map each to an existing club or skip to keep the original names.
+        Map each to an existing club, or leave as "Keep original" to add it as a new club.
+        Close matches are pre-selected automatically.
       </p>
       <div class="space-y-3 max-h-80 overflow-y-auto">
         {#each clubDialog.unknown as unknown}
           <div>
-            <label class="text-sm font-medium block mb-1">"{unknown}" maps to:</label>
+            <label class="text-sm font-medium block mb-1">"{unknown}"</label>
             <select
               class="select select-bordered select-sm w-full"
               value={clubMappings[unknown]}
@@ -387,6 +417,7 @@
                 clubMappings = { ...clubMappings };
               }}
             >
+              <option value={KEEP_ORIGINAL}>Keep original name (add as new club)</option>
               {#each clubDialog.known as known}
                 <option value={known}>{known}</option>
               {/each}
@@ -396,7 +427,7 @@
       </div>
       <div class="flex justify-end gap-2 mt-6">
         <button class="btn btn-ghost btn-sm" onclick={() => (clubDialog = null)}>Cancel</button>
-        <button class="btn btn-ghost btn-sm" onclick={skipUnknown}>Skip (keep original)</button>
+        <button class="btn btn-ghost btn-sm" onclick={skipUnknown}>Keep all original</button>
         <button class="btn btn-primary btn-sm" onclick={saveAndRetry}>Save &amp; Retry</button>
       </div>
     </div>

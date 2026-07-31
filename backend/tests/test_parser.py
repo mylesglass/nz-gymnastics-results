@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from app.parser import _infer_event_discipline, _normalise_apparatus, _extract_division, find_unknown_clubs, parse_json, validate_upload_structure
+from app.parser import _infer_event_discipline, _normalise_apparatus, _extract_division, find_unknown_clubs, parse_json, suggest_club_mapping, validate_upload_structure
 
 HERE = Path(__file__).resolve().parent
 DATA_DIR_2025 = HERE.parent.parent / "data-collection" / "2025" / "json"
@@ -72,6 +72,26 @@ class TestFindUnknownClubs:
 
     def test_region_team_not_flagged(self):
         assert find_unknown_clubs(self._payload("Counties - Manukau")) == []
+
+
+class TestSuggestClubMapping:
+    def test_exact_normalized_match(self):
+        suggestions = suggest_club_mapping(["Waitākere Gymnastics Club"])
+        assert suggestions == {"Waitākere Gymnastics Club": "Waitakere Gymnastics Club"}
+
+    def test_fuzzy_match(self):
+        suggestions = suggest_club_mapping(["Te Awamutu Gymsport"])
+        assert suggestions["Te Awamutu Gymsport"] == "Te Awamutu Gymsports"
+
+    def test_known_club_returns_empty(self):
+        assert suggest_club_mapping(["Capital Gymnastics"]) == {}
+
+    def test_unrelated_name_not_matched(self):
+        assert suggest_club_mapping(["Aotearoa Academy"]) == {}
+
+    def test_mixed_batch(self):
+        suggestions = suggest_club_mapping(["Te Wero Gymnastics Club", "Brand New Club XYZ"])
+        assert suggestions == {"Te Wero Gymnastics Club": "Te Wero Gymnastics"}
 
 
 class TestNormaliseApparatus:
