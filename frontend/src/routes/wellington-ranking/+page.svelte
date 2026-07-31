@@ -209,6 +209,16 @@
       default: return "badge badge-ghost badge-xs";
     }
   }
+
+  function appBadgeClass(app: string): string {
+    switch (app) {
+      case "VT": return "badge-primary";
+      case "UB": return "badge-secondary";
+      case "BB": return "badge-accent";
+      case "FX": return "badge-info";
+      default: return "badge-neutral";
+    }
+  }
 </script>
 
 <svelte:head>
@@ -460,7 +470,14 @@
               <td>
                 <div class="flex flex-wrap gap-1 justify-end">
                   {#each s.apparatus as a}
-                    <span class="badge badge-outline badge-sm font-mono" style="border-color:#FFC72C;color:#000000">{a.app} {a.best.toFixed(3)}</span>
+                    <span class="group/app relative inline-block">
+                      <span class="badge badge-sm font-mono {appBadgeClass(a.app)} cursor-help">{a.app} {a.best.toFixed(3)}</span>
+                      <span
+                        class="invisible group-hover/app:visible opacity-0 group-hover/app:opacity-100 transition-opacity absolute right-full top-1/2 -translate-y-1/2 mr-2 z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2.5 text-xs pointer-events-none whitespace-normal max-w-56"
+                      >
+                        {a.event || "Unknown competition"}
+                      </span>
+                    </span>
                   {/each}
                 </div>
               </td>
