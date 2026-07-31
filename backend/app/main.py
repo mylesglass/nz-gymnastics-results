@@ -24,6 +24,7 @@ from app.models import Event, LongScore, User, WellingtonIntent
 from app.parser import ParseError, _NAME_TO_CANONICAL, find_unknown_clubs, parse_json, reload_club_maps, validate_upload_structure
 from app.reconcile import reconcile_athletes
 from app.schemas import (
+    ApparatusSpecialistRow,
     ApplyFixItem,
     ClubItem,
     ConflictItem,

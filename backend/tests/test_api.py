@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.models import Base
@@ -172,3 +172,65 @@ class TestExport:
     def test_export_404(self):
         resp = client.get("/api/events/999/export/csv")
         assert resp.status_code == 404
+
+
+class TestWellingtonRankings:
+    _DATA = HERE.parent.parent / "data-collection" / "2025" / "wellington-wag_2025.json"
+
+    def _upload(self):
+        if not self._DATA.exists():
+            pytest.skip("wellington-wag_2025.json not found")
+        with open(self._DATA, "rb") as f:
+            resp = client.post("/api/upload", files={"file": ("wellington-wag_2025.json", f, "application/json")})
+        assert resp.status_code == 200
+
+    def _specialist_candidates(self, step: str = "STEP 8") -> list[str]:
+        from collections import defaultdict
+
+        from app.database import SessionLocal
+        from app.models import LongScore
+
+        session = SessionLocal()
+        try:
+            rows = (
+                session.query(LongScore.gnz_id, LongScore.apparatus, func.max(LongScore.pass_final_score))
+                .filter(
+                    LongScore.level_category == step,
+                    LongScore.discipline == "WAG",
+                    LongScore.gnz_id.isnot(None),
+                    LongScore.gnz_id != "",
+                    LongScore.pass_final_score.isnot(None),
+                )
+                .group_by(LongScore.gnz_id, LongScore.apparatus)
+                .having(func.max(LongScore.pass_final_score) >= 11.0)
+                .all()
+            )
+            per_gymnast: dict[str, set[str]] = defaultdict(set)
+            for gnz_id, apparatus, _score in rows:
+                per_gymnast[gnz_id].add(apparatus)
+            return [g for g, apps in per_gymnast.items() if len(apps) >= 2]
+        finally:
+            session.close()
+
+    def test_apparatus_specialists_returned(self):
+        self._upload()
+        candidates = self._specialist_candidates()
+        assert len(candidates) >= 1, "no STEP 8 apparatus-specialist candidates in test data"
+
+        from app.database import SessionLocal
+        from app.models import WellingtonIntent
+
+        session = SessionLocal()
+        try:
+            for gnz_id in candidates:
+                session.add(WellingtonIntent(gnz_id=gnz_id, year=2025))
+            session.commit()
+        finally:
+            session.close()
+
+        resp = client.get("/api/rankings/wellington?year=2025&step=STEP 8&discipline=WAG")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "apparatus_specialists" in body
+        specialist_ids = [s["gnz_id"] for s in body["apparatus_specialists"]]
+        assert any(g in specialist_ids for g in candidates)
