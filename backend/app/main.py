@@ -82,7 +82,6 @@ async def add_cache_control(request: Request, call_next):
     if request.method == "GET" and (
         path.startswith("/api/events")
         or path.startswith("/api/results")
-        or path.startswith("/api/rankings")
         or path == "/api/stats"
         or path == "/api/clubs"
         or path == "/api/gymnasts"
@@ -679,6 +678,7 @@ def toggle_intent(
         elif not body.submitted and existing:
             session.delete(existing)
             session.commit()
+        invalidate()
         return {"ok": True}
     finally:
         session.close()
