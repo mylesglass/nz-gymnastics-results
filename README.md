@@ -83,7 +83,7 @@ source .venv/bin/activate
 pytest
 ```
 
-Runs 150 tests covering the decoder, resolver, parser, database models, transformer, reconciliation, club aliases, and API endpoints.
+Runs 156 tests covering the decoder, resolver, parser, database models, transformer, reconciliation, club aliases, and API endpoints.
 
 ## API Endpoints
 
@@ -129,7 +129,7 @@ backend/                  # Python FastAPI backend
 │   ├── reconcile.py      # Athlete ID reconciliation logic
 │   ├── scoreholder.py    # Fetch Scoreholder event JSON exports from public URLs
 │   └── validate_json.py  # Batch validation CLI
-└── tests/                # pytest suite (150 tests)
+└── tests/                # pytest suite (156 tests)
 
 frontend/                 # SvelteKit + Tailwind CSS v4 + DaisyUI v5
 ├── src/
