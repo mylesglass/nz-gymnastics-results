@@ -449,42 +449,35 @@
       STEP 8–10 athletes who submitted intent and reached 11.000 on two apparatus, but did not qualify via the All Around path.
       Best score per apparatus across the season is shown.
     </p>
-    <div class="overflow-x-auto">
-      <table class="table table-zebra">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>GNZ ID</th>
-            <th>Club</th>
-            <th class="text-right">Apparatus</th>
+    <table class="table table-zebra">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>GNZ ID</th>
+          <th>Club</th>
+          <th class="text-right">Apparatus</th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each specialists as s}
+          <tr class="hover:bg-base-300">
+            <td class="font-medium">
+              <a href="/gymnast/{s.gnz_id}" class="hover:link">{s.name}</a>
+            </td>
+            <td class="text-base-content/60 text-xs">{s.gnz_id}</td>
+            <td>{s.club}</td>
+            <td>
+              <div class="flex flex-wrap gap-1 justify-end">
+                {#each s.apparatus as a}
+                  <span class="tooltip tooltip-top" data-tip={a.event || "Unknown competition"}>
+                    <span class="badge badge-sm font-mono {appBadgeClass(a.app)}">{a.app} {a.best.toFixed(3)}</span>
+                  </span>
+                {/each}
+              </div>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {#each specialists as s}
-            <tr class="hover:bg-base-300">
-              <td class="font-medium">
-                <a href="/gymnast/{s.gnz_id}" class="hover:link">{s.name}</a>
-              </td>
-              <td class="text-base-content/60 text-xs">{s.gnz_id}</td>
-              <td>{s.club}</td>
-              <td>
-                <div class="flex flex-wrap gap-1 justify-end">
-                  {#each s.apparatus as a}
-                    <span class="group/app relative inline-block">
-                      <span class="badge badge-sm font-mono {appBadgeClass(a.app)} cursor-help">{a.app} {a.best.toFixed(3)}</span>
-                      <span
-                        class="invisible group-hover/app:visible opacity-0 group-hover/app:opacity-100 transition-opacity absolute right-full top-1/2 -translate-y-1/2 mr-2 z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2.5 text-xs pointer-events-none whitespace-normal max-w-56"
-                      >
-                        {a.event || "Unknown competition"}
-                      </span>
-                    </span>
-                  {/each}
-                </div>
-              </td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
-    </div>
+        {/each}
+      </tbody>
+    </table>
   {/if}
 </div>
