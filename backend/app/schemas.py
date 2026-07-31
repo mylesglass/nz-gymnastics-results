@@ -177,6 +177,16 @@ class WellingtonRankingResponse(BaseModel):
     config_key: str = ""
     qualifying_score: float | None = None
     wellington_qualifying_score: float | None = None
+    apparatus_specialists: list["ApparatusSpecialistRow"] = []
+
+
+class ApparatusSpecialistRow(BaseModel):
+    name: str
+    gnz_id: str
+    club: str | None
+    region: str = ""
+    apparatus: list[dict[str, float | str]] = []
+    count: int = 0
 
 
 class DuplicateInstance(BaseModel):

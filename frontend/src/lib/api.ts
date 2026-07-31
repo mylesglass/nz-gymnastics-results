@@ -249,6 +249,15 @@ export interface WellingtonRankingRow {
   intent_submitted: boolean;
 }
 
+export interface ApparatusSpecialistRow {
+  name: string;
+  gnz_id: string;
+  club: string | null;
+  region: string;
+  apparatus: { app: string; best: number }[];
+  count: number;
+}
+
 export interface WellingtonRankingResponse {
   year: number;
   step: string;
@@ -257,6 +266,7 @@ export interface WellingtonRankingResponse {
   config_key: string;
   qualifying_score: number | null;
   wellington_qualifying_score: number | null;
+  apparatus_specialists: ApparatusSpecialistRow[];
 }
 
 export async function getWellingtonRankings(

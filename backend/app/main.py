@@ -637,6 +637,17 @@ def get_wellington_rankings(
         )
         for r in result["rankings"]
     ]
+    specialists = [
+        ApparatusSpecialistRow(
+            name=r["name"],
+            gnz_id=r["gnz_id"],
+            club=r["club"],
+            region=r["region"],
+            apparatus=r.get("apparatus", []),
+            count=r.get("count", 0),
+        )
+        for r in result.get("apparatus_specialists", [])
+    ]
     return WellingtonRankingResponse(
         year=result["year"],
         step=result["step"],
@@ -645,6 +656,7 @@ def get_wellington_rankings(
         config_key=result.get("config_key", ""),
         qualifying_score=result.get("gnz_qualifying_score"),
         wellington_qualifying_score=result.get("wellington_qualifying_score"),
+        apparatus_specialists=specialists,
     )
 
 
