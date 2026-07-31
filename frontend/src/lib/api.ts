@@ -180,7 +180,7 @@ export async function updateEvent(
 }
 
 export async function listClubs(): Promise<
-  { name: string; gymnast_count: number; region: string | null }[]
+  { name: string; gymnast_count: number; region: string | null; is_region: boolean }[]
 > {
   const res = await fetch(`${API_BASE}/api/clubs`);
   if (!res.ok) throw new Error(await res.text());

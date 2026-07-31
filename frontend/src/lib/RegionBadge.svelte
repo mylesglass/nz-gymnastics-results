@@ -1,18 +1,11 @@
 <script lang="ts">
+  import { textColor } from "./regions";
   let { region, colors = [] }: { region: string; colors?: string[] } = $props();
 
   let c = $derived(colors.length ? colors : ["#888", "#888"]);
   let bg = $derived(c[0]);
   let ckA = $derived(c[0]);
   let ckB = $derived(c[1]);
-
-  function textColor(hex: string): string {
-    let h = hex.replace("#", "");
-    let r = parseInt(h.substring(0, 2), 16);
-    let g = parseInt(h.substring(2, 4), 16);
-    let b = parseInt(h.substring(4, 6), 16);
-    return (r * 0.299 + g * 0.587 + b * 0.114) > 160 ? "#111" : "#fff";
-  }
 </script>
 
 <span
