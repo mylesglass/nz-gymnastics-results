@@ -3,7 +3,8 @@
 A web application for parsing, storing, and viewing gymnastics competition results from Scoreholder JSON exports.
 
 ## Features
-- Upload Scoreholder JSON files and parse into a normalized database
+- Upload Scoreholder JSON files (drag-and-drop) or paste one/many Scoreholder event links to import directly
+- Parse into a normalized database, with automatic club-name/alias normalization
 - View results in a wide-format table with WAG/MAG tabs
 - Hover tooltips on apparatus scores showing full breakdown (D, E, N, Bonus, Rank)
 - Filter, sort, and search results by name/ID, STEP/Level, Club, Division, Round, Region — filters integrated into column headers
@@ -82,7 +83,7 @@ source .venv/bin/activate
 pytest
 ```
 
-Runs 251 tests covering the decoder, resolver, parser, database models, transformer, reconciliation, and API endpoints.
+Runs 150 tests covering the decoder, resolver, parser, database models, transformer, reconciliation, club aliases, and API endpoints.
 
 ## API Endpoints
 
@@ -100,6 +101,7 @@ Runs 251 tests covering the decoder, resolver, parser, database models, transfor
 | POST | `/api/auth/users/{id}/reset-password` | Reset user password (admin only) |
 | DELETE | `/api/auth/users/{id}` | Delete user (admin only) |
 | POST | `/api/upload` | Upload a Scoreholder JSON file (requires auth) |
+| POST | `/api/import-url` | Import an event from a Scoreholder link, e.g. `https://scoreholder.com/en/events/{id}` (requires auth) |
 | GET | `/api/events` | List all uploaded events |
 | GET | `/api/events/{id}/results` | Get results (long format) |
 | GET | `/api/events/{id}/results/wide` | Get results (wide format, WAG/MAG split) |
@@ -125,8 +127,9 @@ backend/                  # Python FastAPI backend
 │   ├── resolver.py       # ID chain resolver
 │   ├── transformer.py    # Pandas long→wide pivot + export + region enrichment
 │   ├── reconcile.py      # Athlete ID reconciliation logic
+│   ├── scoreholder.py    # Fetch Scoreholder event JSON exports from public URLs
 │   └── validate_json.py  # Batch validation CLI
-└── tests/                # pytest suite (251 tests)
+└── tests/                # pytest suite (150 tests)
 
 frontend/                 # SvelteKit + Tailwind CSS v4 + DaisyUI v5
 ├── src/
@@ -143,7 +146,7 @@ frontend/                 # SvelteKit + Tailwind CSS v4 + DaisyUI v5
 │   └── routes/
 │       ├── +layout.svelte       # Nav bar (year toggle, role-based links), footer (theme toggle)
 │       ├── +page.svelte         # Landing page (stats, role-based cards)
-│       ├── upload/+page.svelte  # JSON upload drop-zone (admin/uploader only in nav)
+│       ├── upload/+page.svelte  # JSON upload (drag-drop + import-from-URL textarea)
 │       ├── login/+page.svelte   # Username + password login form
 │       ├── admin/+page.svelte   # Admin dashboard (stats, reconcile card)
 │       ├── admin/users/+page.svelte  # User management (create, delete, reset password)
