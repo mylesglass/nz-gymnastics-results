@@ -156,7 +156,7 @@
     a.click();
   }
 
-  let fetchToken = $state(0);
+  let fetchToken = 0;
 
   async function loadRankings() {
     if (!year || !selectedStep) return;
