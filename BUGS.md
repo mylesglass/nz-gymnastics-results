@@ -4,6 +4,8 @@ All bugs reported in this session are fixed. See `git log` for details.
 - Inline edit (name/GNZ ID/club) saves to DB but frontend doesn't feel reactive — cache invalidation on `wide-all` works but the table may still show stale data after save. Needs investigation into the data reload path (`doLoad()` / `applyTab()`).
 
 **Previously fixed:**
+- `find_unknown_clubs()` read `orgId`/`participantId` fields that never exist in real Scoreholder exports (they use `_id` on `eventOrganizations`, `_id`+`organizationId` on `eventParticipants`) → always returned `[]`, so variant club names silently passed through uploads. Fixed to use real field names; uploads now 409 with the club-mapping dialog for genuinely unknown clubs
+- Club name variants (Waitākere, Counties Manakau, Easter Suburbs, Kataia, double-spaces, etc.) showing as separate clubs on `/clubs` — ~40 aliases added to `clubs_and_regions.json`, DB reconciled via `python -m app.reconcile_clubs` (50 names resolved, distinct clubs 126 → 80); `Gymsport Manukau` retargets to regional `Counties - Manukau`; Bay of Islands canonical renamed to plural
 - `fetchToken` in `wellington-ranking/+page.svelte` made `$state` caused infinite API request loop (incrementing it re-triggered the `$effect`); must stay a plain `let`
 - `ApparatusSpecialistRow` referenced in `main.py` but not imported → `NameError` 500 on `/api/rankings/wellington` for WAG STEP 8–10; fixed import + added endpoint regression test
 - Cross-site POST form submissions blocked on upload — SvelteKit default CSRF; fixed with `csrf: { checkOrigin: false }` in `svelte.config.js`
