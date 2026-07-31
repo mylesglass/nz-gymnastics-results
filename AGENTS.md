@@ -31,6 +31,7 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   ├── transformer.py   # Pandas long→wide pivot + CSV/XLSX export + region enrichment
 │   │   ├── reconcile.py     # Athlete ID reconciliation
 │   │   ├── reconcile_clubs.py # Club name normalization script
+│   │   ├── scoreholder.py   # Fetch Scoreholder event JSON exports from public URLs
 │   │   ├── validate_json.py # Batch validation CLI
 │   │   └── wellington_ranking.py # Wellington regional ranking computation
 │   ├── tests/               # pytest suite (130 pass, 87 skip)
@@ -54,7 +55,7 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   ├── routes/
 │   │   │   ├── +layout.svelte          # Nav, footer, theme toggle, year tabs via goto()
 │   │   │   ├── +page.svelte            # Landing page with stat cards
-│   │   │   ├── upload/+page.svelte     # JSON upload
+│   │   │   ├── upload/+page.svelte     # JSON upload (file drag-drop + import-from-URL)
 │   │   │   ├── login/+page.svelte      # Username+password login
 │   │   │   ├── admin/+page.svelte      # Admin dashboard
 │   │   │   ├── admin/users/+page.svelte # User management
@@ -174,7 +175,7 @@ let { label, count = 0 }: { label: string; count?: number } = $props();
 - All tests in `backend/tests/`, one file per module
 - **Run:** `cd backend && source .venv/bin/activate && pytest`
 - **Run single:** `pytest tests/test_parser.py -v`
-- **Stats:** 130 pass, 87 skip (skipped tests rely on data-collection JSON files not always present)
+- **Stats:** 150 pass, 87 skip (skipped tests rely on data-collection JSON files not always present)
 - Plain `assert` statements (no `unittest` methods)
 - `@pytest.mark.parametrize` for data-driven tests
 - Inline fixtures (no conftest.py) — SQLite `:memory:` or temp file
@@ -235,11 +236,13 @@ docker compose -f docker-compose.prod.yml up --build -d
 - **Division extraction** — heuristic text matching (UNDER/OVER/A/B) from competition node names.
 - **Numpy types in JSON** — pandas/numpy produce `numpy.int64`/`numpy.float64` that FastAPI's `jsonable_encoder` can't serialize; must convert in transformer.py.
 - **Auth** — JWT-based (bcrypt, HS256, 7-day expiry), role-based (admin/uploader). Admin seeded from env vars (`ADMIN_USERNAME`, `ADMIN_PASSWORD`, `ADMIN_ROLE`). JWT_SECRET auto-generated and persisted to `data/jwt_secret.txt`. When `ADMIN_PASSWORD` is unset, all endpoints are public.
+- **Import from URL** — `POST /api/import-url` (admin) takes `{url, allow_unknown}` and fetches the Scoreholder public export via `app/scoreholder.py`. The API form is `https://scoreholder.com/api/events/{id}?context=public` (NOT the old `?scope=PUBLIC`, which now 400s). It 307-redirects to a CloudFront cache URL. The response is always Brotli-compressed (`Content-Encoding: br`) regardless of `Accept-Encoding`, so httpx needs the `brotli` package installed. No Cloudflare challenge for plain browser-UA requests. Event ID extracted via `r"/events/([0-9a-f]{24})"`; fetch errors → 502; shares `_ingest_event()` with `POST /api/upload`.
 - **DB schema** — `events` table + `long_scores` table (one row per apparatus pass per gymnast) + `users` table (username, hashed_password, role).
 - **`new URL()` breaks** on relative paths in dev mode — use string concatenation in api.ts.
 - **Two JSON formats exist** — only the new format (`eventOrganizations`, `performanceRules`, etc.) is supported.
 - **Name cleaning** — `_NAME_LEVEL_SUFFIX` regex strips `(L#)`, `(STEP 10)`, `(YI)` from gymnast names at parse time.
 - **Region enrichment** — club→region lookup at pivot time via `clubs_and_regions.json`; changes require re-upload.
+- **Unknown-club check** — `find_unknown_clubs()` in parser.py reads Scoreholder's real field names (`_id` on `eventOrganizations`, `_id`+`organizationId` on `eventParticipants`). A past bug used `orgId`/`participantId` which never match real files, silently letting variant club names through — fixed; uploads now 409 with a mapping dialog for genuinely unknown clubs. Variants that map to a canonical should be added as aliases in `clubs_and_regions.json`, then `python -m app.reconcile_clubs` normalizes existing rows. Regional-team rows (e.g. `Counties - Manukau`) are stored as club names and resolve via the lookup to themselves; `Gymsport Manukau` retargets to `Counties - Manukau`.
 - **DaisyUI z-index** — `.dropdown-content` sets `z-index: 1` overriding Tailwind classes; use inline `style="z-index: 50"`.
 - **`$effect` reactivity** — tracks all dependencies read inside it; avoid reading state the effect itself modifies.
 - **Production API proxy** — `hooks.server.ts` forwards `/api/*` from the frontend Node server to the backend container. `API_BASE` is always `""` (same-origin).
