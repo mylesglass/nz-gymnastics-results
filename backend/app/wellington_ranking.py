@@ -386,7 +386,7 @@ def compute_wellington_rankings(
         gymnast_events: dict[str, dict[int, list[dict]]] = defaultdict(
             lambda: defaultdict(list),
         )
-        best_apparatus: dict[str, dict[str, float]] = defaultdict(dict)
+        best_apparatus: dict[str, dict[str, dict]] = defaultdict(dict)
         gymnast_meta: dict[str, dict[str, str]] = {}
         for key, scores in raw_groups.items():
             name = key[0]
@@ -411,8 +411,11 @@ def compute_wellington_rankings(
                 if p["total"] is None:
                     continue
                 prev = best_apparatus[name].get(p["app"])
-                if prev is None or p["total"] > prev:
-                    best_apparatus[name][p["app"]] = p["total"]
+                if prev is None or p["total"] > prev["score"]:
+                    best_apparatus[name][p["app"]] = {
+                        "score": p["total"],
+                        "event_name": key[4],
+                    }
 
             if name not in gymnast_meta:
                 gymnast_meta[name] = {"gnz_id": key[1] or "", "club": key[2] or ""}
@@ -542,9 +545,13 @@ def compute_wellington_rankings(
                     continue
                 qualifying = sorted(
                     [
-                        {"app": app, "best": round(score, 3)}
-                        for app, score in app_best.items()
-                        if score >= app_threshold
+                        {
+                            "app": app,
+                            "best": round(info["score"], 3),
+                            "event": info["event_name"],
+                        }
+                        for app, info in app_best.items()
+                        if info["score"] >= app_threshold
                     ],
                     key=lambda x: (-x["best"], x["app"]),
                 )

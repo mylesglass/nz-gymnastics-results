@@ -254,7 +254,7 @@ export interface ApparatusSpecialistRow {
   gnz_id: string;
   club: string | null;
   region: string;
-  apparatus: { app: string; best: number }[];
+  apparatus: { app: string; best: number; event: string }[];
   count: number;
 }
 
