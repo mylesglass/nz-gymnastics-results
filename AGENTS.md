@@ -175,7 +175,7 @@ let { label, count = 0 }: { label: string; count?: number } = $props();
 - All tests in `backend/tests/`, one file per module
 - **Run:** `cd backend && source .venv/bin/activate && pytest`
 - **Run single:** `pytest tests/test_parser.py -v`
-- **Stats:** 150 pass, 87 skip (skipped tests rely on data-collection JSON files not always present)
+- **Stats:** 156 pass, 87 skip (skipped tests rely on data-collection JSON files not always present)
 - Plain `assert` statements (no `unittest` methods)
 - `@pytest.mark.parametrize` for data-driven tests
 - Inline fixtures (no conftest.py) — SQLite `:memory:` or temp file
@@ -243,6 +243,7 @@ docker compose -f docker-compose.prod.yml up --build -d
 - **Name cleaning** — `_NAME_LEVEL_SUFFIX` regex strips `(L#)`, `(STEP 10)`, `(YI)` from gymnast names at parse time.
 - **Region enrichment** — club→region lookup at pivot time via `clubs_and_regions.json`; changes require re-upload.
 - **Unknown-club check** — `find_unknown_clubs()` in parser.py reads Scoreholder's real field names (`_id` on `eventOrganizations`, `_id`+`organizationId` on `eventParticipants`). A past bug used `orgId`/`participantId` which never match real files, silently letting variant club names through — fixed; uploads now 409 with a mapping dialog for genuinely unknown clubs. Variants that map to a canonical should be added as aliases in `clubs_and_regions.json`, then `python -m app.reconcile_clubs` normalizes existing rows. Regional-team rows (e.g. `Counties - Manukau`) are stored as club names and resolve via the lookup to themselves; `Gymsport Manukau` retargets to `Counties - Manukau`.
+- **Club-mapping suggestions** — the 409 unknown-club response includes `suggestions` from `suggest_club_mapping()` in parser.py: exact normalized match (diacritic/whitespace-folded) against the alias table wins, otherwise a fuzzy `difflib.SequenceMatcher` ratio ≥ 0.9. The upload dialog defaults each club to "Keep original name" (`KEEP_ORIGINAL` sentinel in `upload/+page.svelte`) and pre-selects a confident suggestion when present. `saveAndRetry()` persists only mapped clubs via `save_aliases` then re-uploads with `allow_unknown` if any were kept.
 - **DaisyUI z-index** — `.dropdown-content` sets `z-index: 1` overriding Tailwind classes; use inline `style="z-index: 50"`.
 - **`$effect` reactivity** — tracks all dependencies read inside it; avoid reading state the effect itself modifies.
 - **Production API proxy** — `hooks.server.ts` forwards `/api/*` from the frontend Node server to the backend container. `API_BASE` is always `""` (same-origin).
