@@ -25,14 +25,16 @@
           "Waimate Gymnastics Club",
           "Waimate Gymnastics",
           "Waimate",
-          "Waimate Gymnastic Club"
+          "Waimate Gymnastic Club",
+          "Waimate Gymsports"
         ]
       },
       {
         "name": "Twizel Gymnastics Club",
         "aliases": [
           "Twizel Gymnastics Club",
-          "Twizel GymSports"
+          "Twizel GymSports",
+          "Twizel Gymsports Club"
         ]
       }
     ],
@@ -47,7 +49,8 @@
           "Eastern Suburbs Gymnastics",
           "Eastern Suburbs Gym Club",
           "Easter Suburbs Gymnastics Club",
-          "Eastern Suburb Gymnastics Club"
+          "Eastern Suburb Gymnastics Club",
+          "ESGC"
         ]
       },
       {
@@ -55,7 +58,8 @@
         "aliases": [
           "Tri Star",
           "Tri Star Gymnastics",
-          "Tristar"
+          "Tristar",
+          "Tristar Gymnastics Club"
         ]
       },
       {
@@ -65,14 +69,8 @@
           "Waitakere Gymnastics",
           "Waitakere",
           "Waitākere Gymnastics",
-          "Waitākere Gymnastics Club"
-        ]
-      },
-      {
-        "name": "Delta Gymnastics",
-        "aliases": [
-          "Delta Gymnastics",
-          "Delta Gymnastics"
+          "Waitākere Gymnastics Club",
+          "Waitakere Gymnsatics Club"
         ]
       }
     ],
@@ -95,7 +93,9 @@
           "Impact Gymsport",
           "Impact Gymnastics",
           "IMPACT Gymnastics Academy",
-          "Impact GymSports Academy"
+          "Impact GymSports Academy",
+          "Impact Gymsport Academy Club",
+          "Impact Gym Sports"
         ]
       },
       {
@@ -120,7 +120,9 @@
           "Te Puke Gymnastics Club",
           "Te Puke Gym Sports",
           "Te Puke Gymsports and Parkour",
-          "Te Puke  Gymsports"
+          "Te Puke  Gymsports",
+          "Te Puke Gymsport Club",
+          "Te Puke Gym Sport"
         ]
       }
     ],
@@ -140,12 +142,12 @@
         ]
       },
       {
-        "name": "ICE Gymsports South Canterbury",
+        "name": "ICE Gymsports",
         "aliases": [
-          "ICE Gymsports South Canterbury",
           "ICE Gymnastics",
           "ICE Gymsports",
-          "ICE Gymsports North Canterbury"
+          "ICE Gymsports North Canterbury",
+          "ICE Gymsports South Canterbury"
         ]
       },
       {
@@ -161,7 +163,8 @@
         "aliases": [
           "West Melton Gymnastics Club",
           "West Melton Gymnastics",
-          "Westmelton Gymnastics"
+          "Westmelton Gymnastics",
+          "West Meltion Gymnastics Club"
         ]
       },
       {
@@ -180,7 +183,8 @@
         "name": "Dynamic Gymsports",
         "aliases": [
           "Dynamic Gymsports",
-          "Dynamic Gymnastic Sports"
+          "Dynamic Gymnastic Sports",
+          "Dynamic Gymnastics Club"
         ]
       }
     ],
@@ -193,7 +197,11 @@
           "Counties",
           "Counties Manukau",
           "Counties Gymnastics Club",
-          "Counties Manakau Gymnastics"
+          "Counties Manakau Gymnastics",
+          "Counties Gymsport Club",
+          "Counties Gymnastics",
+          "Counties Manukau Gymnastics Club",
+          "Counties Manukau Gymsport"
         ]
       },
       {
@@ -203,7 +211,8 @@
           "Franklin Gymnastics Club",
           "Franklin Gymsport",
           "Franklin Gymsports Club",
-          "Franklin"
+          "Franklin",
+          "Franklin Gymnastics"
         ]
       },
       {
@@ -236,7 +245,8 @@
           "Gisborne Gymastics Club",
           "Gisbourne Gymnastics Club",
           "Gisbourne Gym Club",
-          "Gisborne Gym Club"
+          "Gisborne Gym Club",
+          "Gisborne Gymsport Club"
         ]
       },
       {
@@ -290,7 +300,9 @@
           "Whanganui",
           "Whanganui Gym Club",
           "Whanganui Gymnastics Club",
-          "Whanganui  Boys & Girls Gym Club"
+          "Whanganui  Boys & Girls Gym Club",
+          "Wanganui",
+          "Whanganui Gymsports"
         ]
       },
       {
@@ -309,7 +321,8 @@
           "North Harbour Gymnastics",
           "NHG",
           "NHG Gymnastics Club",
-          "North Harbour"
+          "North Harbour",
+          "North Harbour Gymnastics Club"
         ]
       }
     ],
@@ -336,7 +349,8 @@
         "aliases": [
           "Kaitaia Gymnastic Club",
           "Kaitaia Gymnastics",
-          "Kataia Gymnastics Club"
+          "Kataia Gymnastics Club",
+          "Kaitia Gymnastics Club"
         ]
       },
       {
@@ -351,7 +365,10 @@
         "name": "Whangarei Academy of Gymnastics",
         "aliases": [
           "Whangarei Academy of Gymnastics",
-          "Whangarei"
+          "Whangarei",
+          "Whangarei Gymnastics",
+          "WAGS",
+          "Whangarei Academy Gym"
         ]
       },
       {
@@ -359,6 +376,13 @@
         "aliases": [
           "Bay of Islands Gymnastics Club",
           "Bay Of Island Gymnastics"
+        ]
+      },
+      {
+        "name": "Fantastic Gymnastics",
+        "aliases": [
+          "Fantastic Gymnastics",
+          "Fantastic Gymnastics Club"
         ]
       }
     ],
@@ -411,7 +435,9 @@
         "name": "College Street Gymnastics Club",
         "aliases": [
           "College Street Gymnastics Club",
-          "College Street Gymnastic Club"
+          "College Street Gymnastic Club",
+          "College Street",
+          "College Street CSGC"
         ]
       }
     ],
@@ -429,6 +455,13 @@
         "aliases": [
           "Queenstown Gymnastics Club",
           "Queenstown Gymnastics"
+        ]
+      },
+      {
+        "name": "Gore Gymnastics Club",
+        "aliases": [
+          "Gore Gymnastics Club",
+          "Gore Gymnastics"
         ]
       }
     ],
@@ -466,7 +499,8 @@
           "Gymnastics Nelson",
           "Gymnastics Nelson Inc",
           "Nelson Gymnastics",
-          "Gymastics Nelson"
+          "Gymastics Nelson",
+          "Nelson Gymnastics Club"
         ]
       }
     ],
@@ -477,7 +511,8 @@
           "Hamilton City Gymnastics",
           "Hamilton City Gymnastics Club",
           "Hamilton City",
-          "Hamilton"
+          "Hamilton",
+          "Hamilton City Gym Sports"
         ]
       },
       {
@@ -506,7 +541,8 @@
         "aliases": [
           "Piako",
           "Piako Gymnastics Club",
-          "Piako Gymnastics"
+          "Piako Gymnastics",
+          "Piako Gym Club"
         ]
       },
       {
@@ -516,7 +552,8 @@
           "Turn & Gymnastic Circle",
           "Turn and Gymnastics Circle",
           "Turn and Gymnastic Circle",
-          "T&GC"
+          "T&GC",
+          "Turn and Gymnastics Cirlce Club"
         ]
       },
       {
@@ -525,7 +562,9 @@
           "Te Awamutu Gymsports",
           "Te Awamutu",
           "Te Awamutu GymSports",
-          "Te Awamutu Gymnastics"
+          "Te Awamutu Gymnastics",
+          "Te Awamutu Gymsports Club",
+          "Te Awamutu Gym Sports"
         ]
       }
     ],
@@ -535,7 +574,9 @@
         "aliases": [
           "Capital Gymnastics",
           "Capital Gymnastics Club",
-          "Capital Gymsports"
+          "Capital Gymsports",
+          "Capital",
+          "Capital  Gymnastics"
         ]
       },
       {
@@ -560,13 +601,15 @@
         "aliases": [
           "Kapiti Gymnastics",
           "Kapiti Gymnastics Club",
-          "Kapiti"
+          "Kapiti",
+          "Kapiti Gymnastic Club"
         ]
       },
       {
         "name": "Onslow Gymnastics",
         "aliases": [
-          "Onslow Gymnastics Club"
+          "Onslow Gymnastics Club",
+          "Onslow"
         ]
       },
       {
@@ -574,7 +617,8 @@
         "aliases": [
           "Rimutaka Gymnastics Club",
           "Rimutaka Gymnastics",
-          "Rimutaka Gymsports"
+          "Rimutaka Gymsports",
+          "Rimutaka"
         ]
       },
       {
@@ -584,7 +628,9 @@
           "Twisters Tawa Gymnastics",
           "Twisters Gymnastics",
           "Twisters Gymnastics Club",
-          "Twisters"
+          "Twisters",
+          "Twisters Tawa",
+          "Twisters Tawa Gymnastic Club"
         ]
       }
     ]
@@ -735,11 +781,11 @@
       "region": "Canterbury"
     },
     "ice gymsports south canterbury": {
-      "name": "ICE Gymsports South Canterbury",
+      "name": "ICE Gymsports",
       "region": "Canterbury"
     },
     "ice gymnastics": {
-      "name": "ICE Gymsports South Canterbury",
+      "name": "ICE Gymsports",
       "region": "Canterbury"
     },
     "te wero gymnastics": {
@@ -1235,8 +1281,8 @@
       "region": ""
     },
     "ice gymsports": {
-      "name": "ICE Gymsports South Canterbury",
-      "region": ""
+      "name": "ICE Gymsports",
+      "region": "Canterbury"
     },
     "impact gymnastics academy": {
       "name": "Impact Gymsport Academy",
@@ -1259,8 +1305,8 @@
       "region": ""
     },
     "ice gymsports north canterbury": {
-      "name": "ICE Gymsports South Canterbury",
-      "region": ""
+      "name": "ICE Gymsports",
+      "region": "Canterbury"
     },
     "westmelton gymnastics": {
       "name": "West Melton Gymnastics Club",
@@ -1551,8 +1597,8 @@
       "region": "Aorangi"
     },
     "delta gymnastics": {
-      "name": "Delta Gymnastics",
-      "region": "Auckland"
+      "name": "Delta Gymnastics (Australia)",
+      "region": ""
     },
     "dynamic gymnastic sports": {
       "name": "Dynamic Gymsports",
@@ -1589,6 +1635,186 @@
     "hawkes bay / poverty bay": {
       "name": "Hawkes Bay / Poverty Bay",
       "region": "Hawkes Bay / Poverty Bay"
+    },
+    "dynamic gymnastics club": {
+      "name": "Dynamic Gymsports",
+      "region": "Canterbury"
+    },
+    "ice gymnastics sports north canterbury": {
+      "name": "ICE Gymsports South Canterbury",
+      "region": ""
+    },
+    "west meltion gymnastics club": {
+      "name": "West Melton Gymnastics Club",
+      "region": "Canterbury"
+    },
+    "counties gymsport club": {
+      "name": "Counties Manukau Gymnastics",
+      "region": "Counties - Manukau"
+    },
+    "gisborne gymsport club": {
+      "name": "Gisborne Gymnastics Club",
+      "region": "Hawkes Bay / Poverty Bay"
+    },
+    "impact gymsport academy club": {
+      "name": "Impact Gymsport Academy",
+      "region": "Bay of Plenty"
+    },
+    "te awamutu gymsports club": {
+      "name": "Te Awamutu Gymsports",
+      "region": "Waikato"
+    },
+    "te puke gymsport club": {
+      "name": "Te Puke Gymsport",
+      "region": "Bay of Plenty"
+    },
+    "turn and gymnastics cirlce club": {
+      "name": "Turn and Gymnastic Circle",
+      "region": "Waikato"
+    },
+    "kapiti gymnastic club": {
+      "name": "Kapiti Gymnastics",
+      "region": "Wellington"
+    },
+    "hawke's bay/poverty bay": {
+      "name": "Hawkes Bay / Poverty Bay",
+      "region": ""
+    },
+    "whangarei gymnastics": {
+      "name": "Whangarei Academy of Gymnastics",
+      "region": "Northland"
+    },
+    "counties gymnastics": {
+      "name": "Counties Manukau Gymnastics",
+      "region": "Counties - Manukau"
+    },
+    "capital": {
+      "name": "Capital Gymnastics",
+      "region": "Wellington"
+    },
+    "onslow": {
+      "name": "Onslow Gymnastics",
+      "region": "Wellington"
+    },
+    "rimutaka": {
+      "name": "Rimutaka Gymsports",
+      "region": "Wellington"
+    },
+    "wanganui": {
+      "name": "Whanganui Boys and Girls Gym Club",
+      "region": "Manawatu - Whanganui"
+    },
+    "esgc": {
+      "name": "Eastern Suburbs Gymnastics Club",
+      "region": "Auckland"
+    },
+    "wags": {
+      "name": "Whangarei Academy of Gymnastics",
+      "region": "Northland"
+    },
+    "waimate gymsports": {
+      "name": "Waimate Gymnastics",
+      "region": "Aorangi"
+    },
+    "impact gym sports": {
+      "name": "Impact Gymsport Academy",
+      "region": "Bay of Plenty"
+    },
+    "te awamutu gym sports": {
+      "name": "Te Awamutu Gymsports",
+      "region": "Waikato"
+    },
+    "counties manukau gymnastics club": {
+      "name": "Counties Manukau Gymnastics",
+      "region": "Counties - Manukau"
+    },
+    "north harbour gymnastics club": {
+      "name": "NHG Gymnastics",
+      "region": "Harbour"
+    },
+    "tristar gymnastics club": {
+      "name": "Tri Star Gymnastics",
+      "region": "Auckland"
+    },
+    "waitakere gymnsatics club": {
+      "name": "Waitakere Gymnastics Club",
+      "region": "Auckland"
+    },
+    "franklin gymnastics": {
+      "name": "Franklin Gymsports",
+      "region": "Counties - Manukau"
+    },
+    "kaitia gymnastics club": {
+      "name": "Kaitaia Gymnastics Club",
+      "region": "Northland"
+    },
+    "college street": {
+      "name": "College Street Gymnastics Club",
+      "region": "Otago"
+    },
+    "twisters tawa": {
+      "name": "Twisters Tawa Gymnastics Club",
+      "region": "Wellington"
+    },
+    "twizel gymsports club": {
+      "name": "Twizel Gymnastics Club",
+      "region": "Aorangi"
+    },
+    "hamilton city gym sports": {
+      "name": "Hamilton City Gymnastics",
+      "region": "Waikato"
+    },
+    "piako gym club": {
+      "name": "Piako Gymnastics Club",
+      "region": "Waikato"
+    },
+    "te puke gym sport": {
+      "name": "Te Puke Gymsport",
+      "region": "Bay of Plenty"
+    },
+    "whangarei academy gym": {
+      "name": "Whangarei Academy of Gymnastics",
+      "region": "Northland"
+    },
+    "nelson gymnastics club": {
+      "name": "Gymnastics Nelson",
+      "region": "Top of the South"
+    },
+    "twisters tawa gymnastic club": {
+      "name": "Twisters Tawa Gymnastics Club",
+      "region": "Wellington"
+    },
+    "whanganui gymsports": {
+      "name": "Whanganui Boys and Girls Gym Club",
+      "region": "Manawatu - Whanganui"
+    },
+    "college street csgc": {
+      "name": "College Street Gymnastics Club",
+      "region": "Otago"
+    },
+    "counties manukau gymsport": {
+      "name": "Counties Manukau Gymnastics",
+      "region": "Counties - Manukau"
+    },
+    "capital  gymnastics": {
+      "name": "Capital Gymnastics",
+      "region": "Wellington"
+    },
+    "gore gymnastics club": {
+      "name": "Gore Gymnastics Club",
+      "region": "Southland"
+    },
+    "gore gymnastics": {
+      "name": "Gore Gymnastics Club",
+      "region": "Southland"
+    },
+    "fantastic gymnastics": {
+      "name": "Fantastic Gymnastics",
+      "region": "Northland"
+    },
+    "fantastic gymnastics club": {
+      "name": "Fantastic Gymnastics",
+      "region": "Northland"
     }
   }
 }
