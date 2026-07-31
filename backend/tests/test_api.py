@@ -99,6 +99,76 @@ class TestUpload:
         assert len(resp.json()) == 1
 
 
+class TestImportUrl:
+    def _load_hve(self):
+        path = DATA_DIR / "hve-2026.json"
+        if not path.exists():
+            pytest.skip("hve-2026.json not found")
+        with open(path, "rb") as f:
+            return json.loads(f.read())
+
+    def test_empty_url_rejected(self, monkeypatch):
+        monkeypatch.setattr("app.main.fetch_event_json", lambda url: (_ for _ in ()).throw(AssertionError("should not fetch")))
+        resp = client.post("/api/import-url", json={"url": "   "})
+        assert resp.status_code == 400
+
+    def test_invalid_url_rejected(self, monkeypatch):
+        def fake(url):
+            from app.scoreholder import ScoreholderFetchError
+
+            raise ScoreholderFetchError("Could not find a Scoreholder event ID in the URL")
+
+        monkeypatch.setattr("app.main.fetch_event_json", fake)
+        resp = client.post("/api/import-url", json={"url": "https://example.com/foo"})
+        assert resp.status_code == 502
+        assert "event ID" in resp.json()["detail"]
+
+    def test_fetch_error_surfaces(self, monkeypatch):
+        from app.scoreholder import ScoreholderFetchError
+
+        monkeypatch.setattr("app.main.fetch_event_json", lambda url: (_ for _ in ()).throw(ScoreholderFetchError("Scoreholder event not found (404)")))
+        resp = client.post("/api/import-url", json={"url": "https://scoreholder.com/en/events/000000000000000000000000"})
+        assert resp.status_code == 502
+        assert resp.json()["detail"] == "Scoreholder event not found (404)"
+
+    def test_import_url_success(self, monkeypatch):
+        data = self._load_hve()
+        monkeypatch.setattr("app.main.fetch_event_json", lambda url: data)
+
+        resp = client.post("/api/import-url", json={"url": "https://scoreholder.com/en/events/66c6ae8a8026be8951720d23"})
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["name"] == "HVG Elementary Competition 2026"
+        assert body["discipline"] == "WAG+MAG"
+        assert body["gymnast_count"] == 271
+        assert body["id"] > 0
+
+    def _unknown_club_payload(self):
+        return {
+            "events": [{"name": "Test Event", "startDate": "2026-01-01"}],
+            "eventOrganizations": [{"_id": "1", "name": "Totally Unknown Club XYZ"}],
+            "eventParticipants": [{"_id": "p1", "organizationId": "1"}],
+            "performanceIndividuals": [{"participantId": "p1", "unitId": "u1"}],
+            "performanceRules": [],
+            "performanceScores": [],
+            "performanceResultTables": [],
+            "units": [{"_id": "u1", "name": "WAG Level 1", "type": "performance"}],
+        }
+
+    def test_import_url_unknown_clubs_409(self, monkeypatch):
+        monkeypatch.setattr("app.main.fetch_event_json", lambda url: self._unknown_club_payload())
+
+        resp = client.post("/api/import-url", json={"url": "https://scoreholder.com/en/events/66c6ae8a8026be8951720d23"})
+        assert resp.status_code == 409
+        assert "Totally Unknown Club XYZ" in resp.json()["detail"]["unknown_clubs"]
+
+    def test_import_url_allow_unknown_skips_409(self, monkeypatch):
+        monkeypatch.setattr("app.main.fetch_event_json", lambda url: self._unknown_club_payload())
+
+        resp = client.post("/api/import-url", json={"url": "https://scoreholder.com/en/events/66c6ae8a8026be8951720d23", "allow_unknown": True})
+        assert resp.status_code == 200
+
+
 class TestListEvents:
     def test_empty(self):
         resp = client.get("/api/events")

@@ -1,10 +1,13 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { uploadFile, saveAliases, checkAuthStatus } from "$lib/api";
+  import { uploadFile, importFromUrl, saveAliases, checkAuthStatus } from "$lib/api";
+  import type { EventSummary } from "$lib/api";
   import { currentUser, authConfigured } from "$lib/auth";
 
+  type UploadSource = { kind: "file"; file: File } | { kind: "url"; url: string };
+
   interface UploadItem {
-    file: string;
+    label: string;
     status: "uploading" | "success" | "error";
     id?: number;
     name?: string;
@@ -20,11 +23,12 @@
   let uploading = $state(false);
   let loggedIn = $state(false);
   let authCfg = $state(false);
+  let urlInput = $state("");
 
   // Club mapping dialog state
-  let clubDialog = $state<{ file: File; unknown: string[]; known: string[] } | null>(null);
+  let clubDialog = $state<{ source: UploadSource; unknown: string[]; known: string[] } | null>(null);
   let clubMappings = $state<Record<string, string>>({});
-  let remainingFiles = $state<File[]>([]);
+  let remainingSources = $state<UploadSource[]>([]);
 
   onMount(() => {
     checkAuthStatus()
@@ -38,22 +42,30 @@
     };
   });
 
-  async function handleFiles(fileList: FileList | File[]) {
-    const files = Array.from(fileList).filter((f) => f.name.endsWith(".json"));
-    if (files.length === 0) return;
+  function labelFor(source: UploadSource): string {
+    return source.kind === "file" ? source.file.name : source.url;
+  }
+
+  async function uploadSource(source: UploadSource, allowUnknown = false): Promise<EventSummary> {
+    return source.kind === "file" ? uploadFile(source.file, allowUnknown) : importFromUrl(source.url, allowUnknown);
+  }
+
+  async function handleSources(sources: UploadSource[]) {
+    if (sources.length === 0) return;
 
     uploading = true;
     uploads = [];
 
-    for (const file of files) {
-      uploads = [...uploads, { file: file.name, status: "uploading" }];
+    for (let i = 0; i < sources.length; i++) {
+      const source = sources[i];
+      uploads = [...uploads, { label: labelFor(source), status: "uploading" }];
 
       try {
-        const ev = await uploadFile(file);
-        const idx = uploads.findIndex((u) => u.file === file.name && u.status === "uploading");
+        const ev = await uploadSource(source);
+        const idx = uploads.findIndex((u) => u.label === labelFor(source) && u.status === "uploading");
         if (idx !== -1) {
           uploads[idx] = {
-            file: file.name,
+            label: labelFor(source),
             status: "success",
             id: ev.id,
             name: ev.name,
@@ -66,14 +78,14 @@
       } catch (err) {
         const ce = err as Error & { _clubConflict?: boolean; unknown_clubs?: string[]; known_clubs?: string[] };
         if (ce._clubConflict && ce.unknown_clubs && ce.known_clubs) {
-          const idx = uploads.findIndex((u) => u.file === file.name && u.status === "uploading");
+          const idx = uploads.findIndex((u) => u.label === labelFor(source) && u.status === "uploading");
           if (idx !== -1) uploads.splice(idx, 1);
           uploading = false;
-          remainingFiles = files.slice(i + 1);
+          remainingSources = sources.slice(i + 1);
           const mappings: Record<string, string> = {};
           for (const u of ce.unknown_clubs) mappings[u] = ce.known_clubs[0] || u;
           clubMappings = mappings;
-          clubDialog = { file, unknown: ce.unknown_clubs, known: ce.known_clubs };
+          clubDialog = { source, unknown: ce.unknown_clubs, known: ce.known_clubs };
           break;
         }
         const text = String(err);
@@ -94,10 +106,10 @@
           const msg = err instanceof Error ? err.message : text;
           errorMessage = msg || text;
         }
-        const idx = uploads.findIndex((u) => u.file === file.name && u.status === "uploading");
+        const idx = uploads.findIndex((u) => u.label === labelFor(source) && u.status === "uploading");
         if (idx !== -1) {
           uploads[idx] = {
-            file: file.name,
+            label: labelFor(source),
             status: "error",
             errorMessage: errorMessage ?? undefined,
             errorDetails,
@@ -111,6 +123,22 @@
     uploading = false;
   }
 
+  function handleFiles(fileList: FileList | File[]) {
+    const files = Array.from(fileList).filter((f) => f.name.endsWith(".json"));
+    if (files.length === 0) return;
+    handleSources(files.map((file) => ({ kind: "file" as const, file })));
+  }
+
+  async function handleUrl() {
+    const urls = urlInput
+      .split(/\r?\n/)
+      .map((u) => u.trim())
+      .filter((u) => u.length > 0);
+    if (urls.length === 0) return;
+    urlInput = "";
+    await handleSources(urls.map((url) => ({ kind: "url" as const, url })));
+  }
+
   async function saveAndRetry() {
     if (!clubDialog) return;
     try {
@@ -118,43 +146,43 @@
     } catch {
       // fall through — retry with the raw file anyway
     }
-    const file = clubDialog.file;
-    const rest = remainingFiles;
-    remainingFiles = [];
+    const source = clubDialog.source;
+    const rest = remainingSources;
+    remainingSources = [];
     clubDialog = null;
-    const files = rest.length > 0 ? [file, ...rest] : [file];
-    await handleFiles(files);
+    const sources = rest.length > 0 ? [source, ...rest] : [source];
+    await handleSources(sources);
   }
 
   async function skipUnknown() {
     if (!clubDialog) return;
-    const file = clubDialog.file;
-    const rest = remainingFiles;
-    remainingFiles = [];
+    const source = clubDialog.source;
+    const rest = remainingSources;
+    remainingSources = [];
     clubDialog = null;
     uploading = true;
-    uploads = [...uploads, { file: file.name, status: "uploading" }];
+    uploads = [...uploads, { label: labelFor(source), status: "uploading" }];
     try {
-      const ev = await uploadFile(file, true);
-      const idx = uploads.findIndex((u) => u.file === file.name && u.status === "uploading");
+      const ev = await uploadSource(source, true);
+      const idx = uploads.findIndex((u) => u.label === labelFor(source) && u.status === "uploading");
       if (idx !== -1) {
         uploads[idx] = {
-          file: file.name, status: "success", id: ev.id, name: ev.name,
+          label: labelFor(source), status: "success", id: ev.id, name: ev.name,
           gymnast_count: ev.gymnast_count, score_count: ev.score_count, club_count: ev.club_count,
         };
         uploads = [...uploads];
       }
     } catch (err) {
-      const idx = uploads.findIndex((u) => u.file === file.name && u.status === "uploading");
+      const idx = uploads.findIndex((u) => u.label === labelFor(source) && u.status === "uploading");
       if (idx !== -1) {
-        uploads[idx] = { file: file.name, status: "error", errorMessage: String(err) };
+        uploads[idx] = { label: labelFor(source), status: "error", errorMessage: String(err) };
         uploads = [...uploads];
       }
     } finally {
       uploading = false;
     }
     if (rest.length > 0) {
-      await handleFiles(rest);
+      await handleSources(rest);
     }
   }
 
@@ -219,6 +247,39 @@
       {/if}
     </div>
 
+    <div class="divider text-base-content/40">or</div>
+
+    <div class="card bg-base-200/50">
+      <div class="card-body p-6">
+        <div class="flex flex-col gap-2">
+          <label for="scoreholder-url" class="text-sm font-medium">Import from Scoreholder links</label>
+          <textarea
+            id="scoreholder-url"
+            class="textarea textarea-bordered w-full font-mono text-sm"
+            rows="3"
+            placeholder={"Paste one or more links, one per line\nhttps://scoreholder.com/en/events/..."}
+            bind:value={urlInput}
+            onkeydown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
+                handleUrl();
+              }
+            }}
+          ></textarea>
+          <div class="flex items-center gap-2">
+            <button class="btn btn-primary" onclick={handleUrl} disabled={!urlInput.trim() || uploading}>
+              Import
+            </button>
+            {#if urlInput.trim()}
+              <span class="text-xs text-base-content/50">
+                {urlInput.split(/\r?\n/).map((u) => u.trim()).filter((u) => u.length > 0).length} link(s)
+              </span>
+            {/if}
+          </div>
+        </div>
+      </div>
+    </div>
+
     {#if uploads.length > 0}
       <div class="mt-6 space-y-3">
         {#each uploads as item}
@@ -226,7 +287,7 @@
             <div class="card bg-base-200 border border-base-300">
               <div class="card-body p-4 flex-row items-center gap-3">
                 <span class="loading loading-spinner loading-sm text-primary"></span>
-                <span class="font-medium">{item.file}</span>
+                <span class="font-medium">{item.label}</span>
                 <span class="text-base-content/50 text-sm ml-auto">Uploading...</span>
               </div>
             </div>
@@ -235,7 +296,7 @@
               <div class="card-body p-4">
                 <div class="flex items-center gap-3">
                   <span class="text-success text-xl">&#10003;</span>
-                  <span class="font-medium">{item.file}</span>
+                  <span class="font-medium">{item.label}</span>
                   <span class="text-sm text-base-content/50 ml-auto">Imported</span>
                 </div>
                 <div class="mt-1 text-sm">
@@ -271,7 +332,7 @@
               <div class="flex flex-col gap-1 w-full">
                 <div class="flex items-center gap-2">
                   <span class="text-lg">&#10007;</span>
-                  <span class="font-medium">{item.file}</span>
+                  <span class="font-medium">{item.label}</span>
                 </div>
                 <span class="text-sm">{item.errorMessage}</span>
                 {#if item.errorDetails && item.errorDetails.length > 0}

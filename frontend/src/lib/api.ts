@@ -56,6 +56,21 @@ export async function uploadFile(file: File, allowUnknown = false): Promise<Even
     body: form,
     headers: authHeaders(),
   });
+  await throwIfUploadError(res);
+  return res.json();
+}
+
+export async function importFromUrl(url: string, allowUnknown = false): Promise<EventSummary> {
+  const res = await fetch(`${API_BASE}/api/import-url`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ url, allow_unknown: allowUnknown }),
+  });
+  await throwIfUploadError(res);
+  return res.json();
+}
+
+async function throwIfUploadError(res: Response): Promise<void> {
   if (res.status === 409) {
     const body = await res.json();
     const detail = body.detail || body;
@@ -66,7 +81,6 @@ export async function uploadFile(file: File, allowUnknown = false): Promise<Even
     throw err;
   }
   if (!res.ok) throw new Error(await res.text());
-  return res.json();
 }
 
 export async function saveAliases(aliases: Record<string, string>): Promise<void> {
