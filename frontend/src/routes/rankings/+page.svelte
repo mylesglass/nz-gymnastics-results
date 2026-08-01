@@ -4,6 +4,7 @@
   import { selectedYear, yearOptions } from "$lib/year";
   import RegionBadge from "$lib/RegionBadge.svelte";
   import { REGION_PALETTES } from "$lib/regions";
+  import ExportMenu from "$lib/ExportMenu.svelte";
 
   const CSV_HEADERS: Record<string, string> = {
     rank: "Rank", name: "Name", gnz_id: "GNZ ID", club: "Club",
@@ -12,6 +13,8 @@
     score2: "Score 2", comp2: "Competition 2",
     total: "Total", average: "Average",
   };
+
+  const EXPORT_KEYS = ["rank", "name", "gnz_id", "club", "region", "score1", "comp1", "score2", "comp2", "total", "average"];
 
   let loading = $state(true);
   let error = $state("");
@@ -79,22 +82,13 @@
 
   let loadingRankings = $state(false);
 
-  function exportCSV() {
-    const rows = rankings.map((r) => ({
-      rank: r.rank, name: r.name, gnz_id: r.gnz_id, club: r.club ?? "", region: r.region,
-      score1: r.scores[0]?.toFixed(3) ?? "", comp1: r.competitions[0] ?? "",
-      score2: r.scores[1]?.toFixed(3) ?? "", comp2: r.competitions[1] ?? "",
-      total: r.total.toFixed(3),
-      average: (r.total / r.scores.length).toFixed(3),
-    }));
-    const keys = ["rank", "name", "gnz_id", "club", "region", "score1", "comp1", "score2", "comp2", "total", "average"];
-    const header = keys.map((k) => CSV_HEADERS[k]).join(",");
-    const csv = header + "\n" + rows.map((r) => keys.map((k) => `"${String(r[k as keyof typeof r]).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const a = document.createElement("a");
-    a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
-    a.download = `rankings-${year}-${selectedStep}-${discipline}.csv`;
-    a.click();
-  }
+  let exportRows = $derived(rankings.map((r) => ({
+    rank: r.rank, name: r.name, gnz_id: r.gnz_id, club: r.club ?? "", region: r.region,
+    score1: r.scores[0]?.toFixed(3) ?? "", comp1: r.competitions[0] ?? "",
+    score2: r.scores[1]?.toFixed(3) ?? "", comp2: r.competitions[1] ?? "",
+    total: r.total.toFixed(3),
+    average: (r.total / r.scores.length).toFixed(3),
+  })));
 
   async function loadRankings() {
     if (!year || !selectedStep) return;
@@ -156,9 +150,9 @@
         <span class="label-text text-sm">Exclude non-qualifiers</span>
       </label>
 
-      <button onclick={exportCSV} class="btn btn-primary btn-sm ml-auto" disabled={rankings.length === 0}>
-        Export CSV
-      </button>
+      {#if rankings.length > 0}
+        <ExportMenu columns={EXPORT_KEYS} rows={exportRows} headerLabels={CSV_HEADERS} title={`National Rankings ${year} ${discipline} ${selectedStep}`} filename={`National Rankings ${year} ${discipline} ${selectedStep}`} />
+      {/if}
     {:else if year}
       <span class="text-sm text-base-content/50">No STEP levels available</span>
     {/if}

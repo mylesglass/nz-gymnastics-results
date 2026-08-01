@@ -306,7 +306,7 @@
         ]
       },
       {
-        "name": "Wanganui / Manawatu",
+        "name": "Manawatu - Whanganui",
         "aliases": [
           "Wanganui / Manawatu",
           "Wanganui/Manawatu"
@@ -969,7 +969,7 @@
       "region": "Counties - Manukau"
     },
     "wanganui / manawatu": {
-      "name": "Wanganui / Manawatu",
+      "name": "Manawatu - Whanganui",
       "region": "Manawatu - Whanganui"
     },
     "bay of island gymnastics club": {
@@ -1565,7 +1565,7 @@
       "region": "Northland"
     },
     "wanganui/manawatu": {
-      "name": "Wanganui / Manawatu",
+      "name": "Manawatu - Whanganui",
       "region": "Manawatu - Whanganui"
     },
     "college street gymnastic club": {

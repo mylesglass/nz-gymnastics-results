@@ -128,6 +128,7 @@ Core logic:
 - `ScoreTooltip.svelte` — DaisyUI dropdown hover card showing D, E, N, Bonus, Rank for each apparatus
 - `AATooltip.svelte` — DaisyUI dropdown-hover tooltip showing AA score, rank, and summed D/E/N across all apparatus
 - `MultiSelect.svelte` — DaisyUI dropdown with checkboxes, Clear button, `min-w-48` buttons
+- `ExportMenu.svelte` — DaisyUI export dropdown (CSV/XLSX/PDF); `export.ts` builds files, XLSX honors `colFormat` (hidden columns + widths), PDF renders table-like columns with header + page numbers, libraries lazy-loaded
 
 **Routes:**
 - `/` — Landing page: stats cards, role-based grid (Upload card hidden for non-admins)
@@ -156,7 +157,7 @@ Core logic:
 - Column widths synced between duplicate sticky headers and main table via JS measurement + ResizeObserver
 - Name cells link to `/gymnast/[gnz_id]`, club cells link to `/club/[club]`
 - Horizontal scroll synced between duplicate headers and main table
-- Client-side CSV export via download snippet
+- Client-side CSV/XLSX/PDF export via `export.ts` + `ExportMenu.svelte` (SheetJS + jsPDF lazy-loaded; XLSX supports hidden columns and widths via `colFormat`)
 - Row hover highlight (`hover:bg-base-300 transition-colors`), `py-1.5` vertical padding
 - `whitespace-nowrap` on apparatus score cells
 - `truncate max-w-56` on event_name column

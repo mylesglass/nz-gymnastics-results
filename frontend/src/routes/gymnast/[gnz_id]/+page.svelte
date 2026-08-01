@@ -4,10 +4,12 @@
   import { getAllWideResults } from "$lib/api";
   import { selectedYear } from "$lib/year";
   import WideResultsTable from "$lib/WideResultsTable.svelte";
+  import ExportMenu from "$lib/ExportMenu.svelte";
 
   let filterYear = $state<string | null>(null);
   let ready = $state(false);
   let gymnastFound = $state(false);
+  let gymnastName = $state("");
 
   onMount(() => {
     const unsub = selectedYear.subscribe((v) => (filterYear = v));
@@ -24,6 +26,7 @@
       const rowsExist = Boolean(r.wag?.rows?.length || r.mag?.rows?.length);
       gymnastFound = rowsExist || Boolean(r.name);
       const name = r.name || r.wag?.rows[0]?.name || r.mag?.rows[0]?.name;
+      gymnastName = name || "";
       return {
         title: name || "Gymnast",
         tabs: {
@@ -33,41 +36,14 @@
       };
     });
   }
-
-  function exportCSV(columns: string[], rows: Record<string, unknown>[], headerLabels: Record<string, string>) {
-    const header = columns.map((c) => headerLabels[c] ?? c);
-    const lines = [
-      header.join(","),
-      ...rows.map((r) =>
-        columns
-          .map((c) => {
-            const v = r[c];
-            const s = v == null ? "" : String(v);
-            return s.includes(",") || s.includes('"') || s.includes("\n")
-              ? `"${s.replace(/"/g, '""')}"`
-              : s;
-          })
-          .join(","),
-      ),
-    ];
-    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${$page.params.gnz_id || "gymnast"}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
 </script>
 
 <svelte:head>
   <title>Gymnast — NZ Gymnastics Results</title>
 </svelte:head>
 
-{#snippet download({columns, rows, headerLabels})}
-  <button onclick={() => exportCSV(columns, rows, headerLabels)} class="btn btn-primary btn-sm ml-auto">
-    Download CSV
-  </button>
+{#snippet download({columns, rows, headerLabels, pdfColumns, colFormat})}
+  <ExportMenu {columns} {rows} {headerLabels} {pdfColumns} {colFormat} title={gymnastName ? `${gymnastName} Results` : "Gymnast Results"} filename={gymnastName ? `${gymnastName} Results` : `gymnast-${$page.params.gnz_id || "unknown"}`} />
 {/snippet}
 
 {#snippet empty()}

@@ -3,6 +3,7 @@
   import { getWellingtonRankings, getRankingSteps, getIntents, toggleIntent, type WellingtonRankingRow, type ApparatusSpecialistRow } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
   import { currentUser } from "$lib/auth";
+  import ExportMenu from "$lib/ExportMenu.svelte";
 
 
   const CSV_HEADERS: Record<string, string> = {
@@ -13,6 +14,12 @@
     score3: "Score 3", comp3: "Competition 3", cat3: "Category 3",
     total: "Total", average: "Average",
   };
+
+  const EXPORT_KEYS = ["rank", "name", "gnz_id", "club", "region",
+    "score1", "comp1", "cat1",
+    "score2", "comp2", "cat2",
+    "score3", "comp3", "cat3",
+    "total", "average"];
 
   const CONFIG_INFO: Record<string, {
     title: string;
@@ -131,31 +138,18 @@
 
   let loadingRankings = $state(false);
 
-  function exportCSV() {
-    const rows = rankings.map((r) => {
-      const obj: Record<string, string> = {
-        rank: r.rank, name: r.name, gnz_id: r.gnz_id, club: r.club ?? "", region: r.region,
-        total: r.total.toFixed(3), average: r.average.toFixed(3),
-      };
-      for (let i = 0; i < 3; i++) {
-        obj[`score${i + 1}`] = r.scores[i]?.toFixed(3) ?? "";
-        obj[`comp${i + 1}`] = r.competitions[i] ?? "";
-        obj[`cat${i + 1}`] = CATEGORY_LABELS[r.categories[i]] ?? r.categories[i] ?? "";
-      }
-      return obj;
-    });
-    const keys = ["rank", "name", "gnz_id", "club", "region",
-      "score1", "comp1", "cat1",
-      "score2", "comp2", "cat2",
-      "score3", "comp3", "cat3",
-      "total", "average"];
-    const header = keys.map((k) => CSV_HEADERS[k]).join(",");
-    const csv = header + "\n" + rows.map((r) => keys.map((k) => `"${String(r[k]).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const a = document.createElement("a");
-    a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
-    a.download = `wellington-ranking-${year}-${selectedStep}-${discipline}.csv`;
-    a.click();
-  }
+  let exportRows = $derived(rankings.map((r) => {
+    const obj: Record<string, string> = {
+      rank: r.rank, name: r.name, gnz_id: r.gnz_id, club: r.club ?? "", region: r.region,
+      total: r.total.toFixed(3), average: r.average.toFixed(3),
+    };
+    for (let i = 0; i < 3; i++) {
+      obj[`score${i + 1}`] = r.scores[i]?.toFixed(3) ?? "";
+      obj[`comp${i + 1}`] = r.competitions[i] ?? "";
+      obj[`cat${i + 1}`] = CATEGORY_LABELS[r.categories[i]] ?? r.categories[i] ?? "";
+    }
+    return obj;
+  }));
 
   let fetchToken = 0;
 
@@ -308,9 +302,9 @@
         <span class="label-text text-xs">Intent</span>
       </label>
 
-      <button onclick={exportCSV} class="btn btn-primary btn-sm ml-auto" disabled={rankings.length === 0}>
-        Export CSV
-      </button>
+      {#if rankings.length > 0}
+        <ExportMenu columns={EXPORT_KEYS} rows={exportRows} headerLabels={CSV_HEADERS} title={`Wellington Rankings ${year} ${discipline} ${selectedStep}`} filename={`Wellington Rankings ${year} ${discipline} ${selectedStep}`} />
+      {/if}
     {:else if year}
       <span class="text-sm text-base-content/50">No STEP levels available</span>
     {/if}

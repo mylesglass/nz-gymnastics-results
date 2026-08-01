@@ -24,3 +24,7 @@ All bugs reported in this session are fixed. See `git log` for details.
 - "MAG Level3" (no space) not normalized to "Level 3" (resolver regex fix)
 - Club name duplicates: 10+ missing aliases added to clubs_and_regions.json
 - Next page button immediately reset to page 1 (page-reset effect tracking currentPage)
+- ICE Gymsports North/South Canterbury normalized to "ICE Gymsports" (aliases added to clubs_and_regions.json, DB reconciled — no North/South variants remain)
+- "Wanganui / Manawatu" club on `/clubs` renamed to "Manawatu - Whanganui" — it was the Manawatu - Whanganui provincial team, stored under the wrong name. Canonical name + aliases updated in clubs_and_regions.json, 306 DB rows reconciled (now 495 rows as one team, shown as the Provincial Team pill next to the header)
+
+**To do:**

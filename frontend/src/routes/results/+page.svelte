@@ -3,6 +3,7 @@
   import { getAllWideResults } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
   import WideResultsTable from "$lib/WideResultsTable.svelte";
+  import ExportMenu from "$lib/ExportMenu.svelte";
 
   let filterYear = $state<string | null>(null);
   let ready = $state(false);
@@ -30,41 +31,14 @@
       },
     }));
   }
-
-  function exportCSV(columns: string[], rows: Record<string, unknown>[], headerLabels: Record<string, string>) {
-    const header = columns.map((c) => headerLabels[c] ?? c);
-    const lines = [
-      header.join(","),
-      ...rows.map((r) =>
-        columns
-          .map((c) => {
-            const v = r[c];
-            const s = v == null ? "" : String(v);
-            return s.includes(",") || s.includes('"') || s.includes("\n")
-              ? `"${s.replace(/"/g, '""')}"`
-              : s;
-          })
-          .join(","),
-      ),
-    ];
-    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "all-results.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-  }
 </script>
 
 <svelte:head>
   <title>All Results — NZ Gymnastics Results</title>
 </svelte:head>
 
-{#snippet download({columns, rows, headerLabels})}
-  <button onclick={() => exportCSV(columns, rows, headerLabels)} class="btn btn-primary btn-sm ml-auto">
-    Download CSV
-  </button>
+{#snippet download({columns, rows, headerLabels, pdfColumns, colFormat})}
+  <ExportMenu {columns} {rows} {headerLabels} {pdfColumns} {colFormat} title={filterYear ? `All Results ${filterYear}` : "All Results"} filename={filterYear ? `All Results ${filterYear}` : "All Results"} />
 {/snippet}
 
 {#snippet empty()}

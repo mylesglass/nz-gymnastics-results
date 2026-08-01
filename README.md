@@ -21,7 +21,7 @@ community but designed to be adaptable for any gymnastics organisation. 🥇
 ### 🏆 Rankings & exports
 - **National Rankings** by discipline and level category
 - **Wellington Regional Rankings** with intent tracking, qualifier toggles, and apparatus specialist detection for WAG steps 8–10
-- **Export** to CSV and XLSX with all columns including per‑pass vault data
+- **Export** to CSV, XLSX, or PDF from a single dropdown — full detail in CSV/XLSX (with configurable hidden columns and widths), table-friendly layout in PDF with a header and page numbers
 
 ### 🎨 UI
 - Light / dark **theme toggle** with 30+ themes, persisted in `localStorage`

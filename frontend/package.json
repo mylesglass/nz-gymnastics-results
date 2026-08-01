@@ -20,6 +20,9 @@
     "@svg-maps/new-zealand": "^2.0.0",
     "@tailwindcss/vite": "^4.3.0",
     "daisyui": "^5.5.20",
-    "tailwindcss": "^4.3.0"
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
+    "tailwindcss": "^4.3.0",
+    "xlsx": "^0.18.5"
   }
 }

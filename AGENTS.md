@@ -52,7 +52,9 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   │   ├── NZRegionMap.svelte  # Interactive NZ SVG map (15 gym regions, theme-coloured)
 │   │   │   ├── WideResultsTable.svelte  # Shared results table (paginated, virtualized)
 │   │   │   ├── ScoreTooltip.svelte      # Apparatus score tooltip
-│   │   │   └── AATooltip.svelte         # AA score tooltip
+│   │   │   ├── AATooltip.svelte         # AA score tooltip
+│   │   │   ├── ExportMenu.svelte        # CSV/XLSX/PDF export dropdown
+│   │   │   └── export.ts                # Export builders (CSV, XLSX, PDF) + slugifyFilename + ColFormat/PdfColumn types
 │   │   ├── routes/
 │   │   │   ├── +layout.svelte          # Nav, footer, theme toggle, year tabs via goto()
 │   │   │   ├── +page.svelte            # Landing page with stat cards
@@ -259,3 +261,5 @@ docker compose -f docker-compose.prod.yml up --build -d
 - **Inline edit** — `PATCH /api/admin/scores/gymnast` updates name/GNZ ID/club on all `long_scores` rows matching `(event_id, gymnast_name)`. Cache invalidation clears `wide-all`, `stats`, `gymnasts`, `clubs` prefixes. Frontend: Edit mode toggle makes name/GNZ ID/club cells editable inputs with per-row Save button. Known issue: table doesn't always feel reactive after save.
 - **/clubs NZ map** — `NZRegionMap.svelte` renders the `@svg-maps/new-zealand` package (17 Stats NZ region paths, CC-BY-4.0) in a `viewBox="0 0 525 989"` (Chatham Islands cropped out). 15 gym regions map to stats paths: `gis`+`hkb` → Hawkes Bay / Poverty Bay, `tas`+`nsn`+`mbh` → Top of the South; Auckland is split into Harbour/Auckland/Counties-Manukau and Canterbury into Canterbury/Aorangi via SVG `<clipPath>` rects. No regional colouring — regions use theme colours (`--color-base-300` fill, `--color-primary` on hover/active). Layout: map left (sticky), selected region's box right; clicking a map region shows only that region's box (toggle to clear).
 - **Svelte 5 snippet gotcha** — `{#snippet}` components must be invoked with `{@render RegionBox({...})}`, NOT `<RegionBox />` (throws `invalid_snippet_arguments`). Also avoid `class:ring-2` on snippet elements — Svelte parses the hyphen as an expression (`ring` undefined); use a plain `class` string instead.
+- **Client-side exports** — all result/ranking pages use `ExportMenu.svelte` + `export.ts` for CSV/XLSX/PDF. SheetJS (`xlsx`) and jsPDF are lazy-loaded via dynamic `import()` so they don't bloat the entry bundle. XLSX honors a `colFormat` map (hidden columns + `wch` widths) computed in `WideResultsTable.svelte` — it hides `region`, per-pass vault columns (`vt-1-*`, `vt-2-*`), and all `*-bonus` columns, and widens name/club (30) and event_name (45). PDF exports render a condensed table (one column per apparatus showing `D / Total`, matching the frontend) with a title header and `Page X of Y` footer. CSV/XLSX keep every raw column (minus hidden ones); PDF uses `pdfColumns`. `slugifyFilename()` (in export.ts) kebab-cases download names.
+- **SheetJS advisories** — `npm audit` flags prototype pollution/ReDoS in `xlsx` 0.18.5, but only for *parsing* untrusted files; the app only *writes* XLSX, so risk is negligible.

@@ -7,6 +7,7 @@
   import { REGION_PALETTES } from "./regions";
   import { currentUser } from "$lib/auth";
   import { updateGymnast } from "$lib/api";
+  import type { ColFormat, PdfColumn } from "./export";
 
   interface TabData {
     columns: string[];
@@ -22,6 +23,8 @@
     columns: string[];
     rows: Record<string, unknown>[];
     headerLabels: Record<string, string>;
+    pdfColumns?: PdfColumn[];
+    colFormat?: Record<string, ColFormat>;
   }
 
   let {
@@ -478,6 +481,54 @@ function appDisplayLabel(prefix: string): string {
     sortCol = null;
   }
 
+  let pdfColumns = $derived.by<PdfColumn[]>(() => {
+    const cols: PdfColumn[] = [];
+    for (const c of frontMeta) {
+      cols.push({
+        key: c,
+        label: HEADER_LABELS[c] ?? c,
+        value: (r: Record<string, unknown>) => r[c] ?? "",
+      });
+    }
+    for (const prefix of apparatusPrefixes) {
+      cols.push({
+        key: `${prefix}-total`,
+        label: appDisplayLabel(prefix),
+        value: (r: Record<string, unknown>) =>
+          r[`${prefix}-d`] != null ? `${r[`${prefix}-d`]} / ${r[`${prefix}-total`] ?? "DNS"}` : (r[`${prefix}-total`] ?? "DNS"),
+        align: "right",
+      });
+    }
+    for (const c of backMeta) {
+      cols.push({
+        key: c,
+        label: HEADER_LABELS[c] ?? c,
+        value: (r: Record<string, unknown>) => r[c] ?? "",
+        align: c === "aa-score" ? "right" : undefined,
+      });
+    }
+    return cols;
+  });
+
+  const XLSX_WIDE_COLS: Record<string, number> = {
+    name: 30,
+    club: 30,
+    event_name: 45,
+  };
+
+  let colFormat = $derived.by<Record<string, ColFormat>>(() => {
+    const fmt: Record<string, ColFormat> = {};
+    for (const c of columns) {
+      if (c === "region" || /^vt-\d-/.test(c) || /-bonus$/.test(c)) {
+        fmt[c] = { hidden: true };
+      }
+      if (XLSX_WIDE_COLS[c]) {
+        fmt[c] = { ...fmt[c], wch: XLSX_WIDE_COLS[c] };
+      }
+    }
+    return fmt;
+  });
+
   let pageSize = $state(50);
   let currentPage = $state(1);
 
@@ -646,6 +697,8 @@ function appDisplayLabel(prefix: string): string {
           columns,
           rows: filteredRows,
           headerLabels: HEADER_LABELS,
+          pdfColumns,
+          colFormat,
         })}
       {/if}
 

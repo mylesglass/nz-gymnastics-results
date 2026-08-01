@@ -186,12 +186,13 @@
 - [x] "Quick Fix" and "Apply Selected Fixes" buttons
 - **Files:** `backend/app/main.py`, `backend/app/schemas.py`, `frontend/src/routes/admin/+page.svelte`, `frontend/src/lib/api.ts`
 
-### STEP 22: Import JSON from URL
-- [ ] New `POST /api/upload/from-url` endpoint accepting `{ url: str }` — fetches JSON via `urllib.request`, validates, parses, stores
-- [ ] Frontend: URL input field on upload page alongside drag-and-drop area, same success/error UX
-- [ ] Handle timeouts, invalid URLs, non-JSON responses gracefully
-- [ ] Reuse existing club mapping dialog for unknown clubs
-- **Files:** `backend/app/main.py`, `frontend/src/routes/upload/+page.svelte`, `frontend/src/lib/api.ts`
+### STEP 22: Import JSON from URL ✅
+- [x] `POST /api/import-url` endpoint (admin) accepting `{ url, allow_unknown }` — fetches the Scoreholder public export via `app/scoreholder.py`, validates, parses, stores
+- [x] Frontend: URL input field on upload page alongside drag-and-drop area, same success/error UX
+- [x] Handles timeouts, invalid URLs, fetch errors (502), non-JSON responses gracefully
+- [x] Reuses the club mapping dialog for unknown clubs (`allow_unknown` retry path)
+- [x] Handles Scoreholder 307 redirect + Brotli (`Content-Encoding: br`) compression
+- **Files:** `backend/app/main.py`, `backend/app/scoreholder.py`, `frontend/src/routes/upload/+page.svelte`, `frontend/src/lib/api.ts`
 
 ### Minor Polish
 - [x] RegionBadge component — 2x2 checkerboard (primary+secondary) + primary fill + whitespace-nowrap
@@ -209,8 +210,30 @@
 
 ### Next Steps
 - [ ] Edit row functionality for admin
-- [ ] MAG Wellington ranking thresholds TBD
-- [ ] Look at not-admin logged in functionality 
-- [ ] Apparatus Specialist Wellington Qualifying
+  - Inline edit of gymnast name / GNZ ID / club already saves to DB, but the results table doesn't feel reactive after save — needs investigation into the data reload path (`doLoad()` / `applyTab()`). Cache invalidation on `wide-all` works but the frontend may still show stale rows.
+  - **Files:** `frontend/src/lib/WideResultsTable.svelte`, `frontend/src/lib/api.ts`, cache invalidation in `backend/app/main.py`
+- [x] MAG Wellington ranking thresholds
+  - MAG per-step-range qualifying scores configured in the Wellington ranking module.
+- [ ] Look at not-admin logged in functionality
+  - Audit what a `member`-role user sees: which pages/routes are accessible, what actions are allowed vs admin-only. Define the intended member experience (rankings browsing, Wellington page, club/event viewing) and ensure Upload/Admin/Users are properly gated.
+  - **Files:** route-level guards, `frontend/src/lib/auth.ts`, nav visibility in `+layout.svelte`
+- [x] Apparatus Specialist Wellington Qualifying
+  - WAG STEP 8-10 fallback: athletes not in the AA table who reach ≥11.000 on two distinct apparatus are returned as `apparatus_specialists` (best per apparatus across eligible events, competition name tracked). May need MAG support and/or expansion to other STEP ranges.
+  - **Files:** `backend/app/wellington_ranking.py`, `frontend/src/routes/wellington-ranking/+page.svelte`
 - [ ] International Divisions Wellington Qual
-- [ ] Order /clubs by region i.e. Northland at the top, Southland at the bottom
+  - Define how international-division gymnasts qualify for Wellington events. Separate thresholds/table vs merged into the existing rankings — needs domain input.
+  - **Files:** `backend/app/wellington_ranking.py`
+- [x] Order /clubs by region (Northland → Southland)
+  - Club listings sorted geographically by region in latitude order (Northland at top, Southland at bottom) rather than alphabetically.
+  - **Files:** `frontend/src/routes/clubs/+page.svelte`, region ordering helper in `frontend/src/lib/regions.ts`
+- [x] Put provincial teams next to header, separate from clubs
+  - Distinguish regional/provincial teams (e.g. `Counties - Manukau`) from regular clubs on the /clubs page — show them next to the region header rather than mixed into the club list.
+  - **Files:** `frontend/src/routes/clubs/+page.svelte`
+- [x] xlsx format export
+  - Client-side CSV/XLSX/PDF export dropdown on all result/ranking pages. `frontend/src/lib/export.ts` builds CSV, XLSX (SheetJS `xlsx`), and PDF (jsPDF + autotable); `ExportMenu.svelte` is the shared dropdown. Libraries lazy-loaded via dynamic `import()` so they only download on first export click. Backend `/api/events/{id}/export/csv|xlsx` endpoints unchanged.
+  - XLSX honors a `colFormat` map: hides `region`, per-pass vault cols (`vt-1-*`, `vt-2-*`) and all `*-bonus`, widens name/club (30) + event_name (45). PDF renders the table view (one column per apparatus, D/Total), with title header + `Page X of Y` footer. Filenames are descriptive and kebab-cased via `slugifyFilename()`.
+  - **Files:** `frontend/src/lib/export.ts`, `frontend/src/lib/ExportMenu.svelte`, the 4 `WideResultsTable` pages + `rankings` + `wellington-ranking`
+- [ ] a11y
+  - Accessibility audit: keyboard navigation, screen-reader labels, contrast ratios, focus management across tables, tooltips, dropdowns, and the NZ map.
+  - **Files:** table components, tooltips, nav, `NZRegionMap.svelte`
+- [ ] Index remix: update index page, combine stats with badeges, add Patch notes, streamline, add animation? 

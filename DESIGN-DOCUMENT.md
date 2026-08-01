@@ -117,11 +117,11 @@ Region enrichment at pivot time via `_find_region()` lookup in `clubs_and_region
 ## 8. Frontend Architecture
 - SvelteKit 5 with Svelte 5 runes (`$state`, `$effect`, `$derived`).
 - Tailwind CSS v4 via Vite plugin; DaisyUI v5 via `@plugin "daisyui"`.
-- Shared components: WideResultsTable (main table), ScoreTooltip (apparatus hover), AATooltip (AA score tooltip), MultiSelect (filter dropdowns).
+- Shared components: WideResultsTable (main table), ScoreTooltip (apparatus hover), AATooltip (AA score tooltip), MultiSelect (filter dropdowns), ExportMenu (CSV/XLSX/PDF export dropdown).
 - Global stores: year toggle (`selectedYear`), auth state (`currentUser`).
 - Nav: logo, year toggle, role-based links, user badge dropdown or login.
 - Theme toggle in footer. Dark theme via `data-theme` attribute persisted in localStorage.
-- Client-side CSV export. No frontend tests yet.
+- Client-side export via `frontend/src/lib/export.ts` + `ExportMenu.svelte` (CSV/XLSX/PDF, SheetJS + jsPDF lazy-loaded). No frontend tests yet.
 
 ## Additional Resources:
 - `data-collection/data-structure-analysis` contains analysed JSON files with structural insights.
