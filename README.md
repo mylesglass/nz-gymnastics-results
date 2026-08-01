@@ -1,41 +1,41 @@
-# NZ Gymnastics Results
+# 🏅 NZ Gymnastics Results
 
 A web application for parsing, storing, and viewing gymnastics competition results from
 [Scoreholder](https://scoreholder.com) JSON exports. Built for the New Zealand gymnastics
-community but designed to be adaptable for any gymnastics organisation.
+community but designed to be adaptable for any gymnastics organisation. 🥇
 
-## Features
+## ✨ Features
 
-### Data ingestion
+### 📥 Data ingestion
 - **Upload** Scoreholder event JSON files via drag-and-drop from the web UI
 - **Import from URL** — paste one or many Scoreholder public event links to import directly without downloading files
 - **Automatic club normalisation** — resolves name variants to canonical clubs via a configurable alias table (`clubs_and_regions.json`)
 
-### Results & browsing
+### 📊 Results & browsing
 - **Wide-format results table** with WAG (Women's Artistic Gymnastics) and MAG (Men's Artistic Gymnastics) tabs
 - **Rich score tooltips** on apparatus scores showing full breakdown (D‑score, E‑score, neutral deductions, bonus, rank)
-- **Interactive NZ map** on the Clubs page — click any of the 15 gymnastics regions to see its clubs, each highlighted with its own colour palette
+- **Interactive NZ map** on the Clubs page — click any of the 15 gymnastics regions to see its clubs, each highlighted with its own colour palette 🗺️
 - **Club & gymnast profiles** — view all results for a single club or gymnast across all events (clickable table cells)
 - **All-events results** view, grouped by gymnast, with configurable year filter
 
-### Rankings & exports
+### 🏆 Rankings & exports
 - **National Rankings** by discipline and level category
 - **Wellington Regional Rankings** with intent tracking, qualifier toggles, and apparatus specialist detection for WAG steps 8–10
 - **Export** to CSV and XLSX with all columns including per‑pass vault data
 
-### UI
+### 🎨 UI
 - Light / dark **theme toggle** with 30+ themes, persisted in `localStorage`
 - **Responsive design** — works on desktop, tablet, and mobile
 - **Year filter** in the nav bar that applies across all data pages
 - Sticky column headers and scroll-sync for long tables
 
-### Authentication & admin
+### 🔐 Authentication & admin
 - **JWT-based authentication** with bcrypt-hashed passwords and HS256 tokens (7-day expiry)
 - **Admin dashboard** with statistics, cache refresh, and user management
 - **Inline editing** of gymnast name / GNZ ID / club directly on event and all‑results tables
 - **Athlete ID reconciliation** to unify duplicate GNZ IDs across events
 
-## Tech Stack
+## 🧰 Tech Stack
 
 | Layer      | Technology                                              |
 |------------|---------------------------------------------------------|
@@ -43,7 +43,7 @@ community but designed to be adaptable for any gymnastics organisation.
 | **Frontend** | [SvelteKit 5](https://svelte.dev), Tailwind CSS v4, [DaisyUI v5](https://daisyui.com) |
 | **Infra**    | [Docker Compose](https://docs.docker.com/compose/) for both dev and production |
 
-## Quick Start (Docker)
+## 🚀 Quick Start (Docker)
 
 The fastest way to get running — works immediately, no Python or Node.js required.
 
@@ -56,12 +56,12 @@ cd nz-gymnastics-results
 docker compose up --build
 ```
 
-Open **http://localhost:5173** in your browser.
+Open **http://localhost:5173** in your browser. 🎉
 
 The first frontend build takes ~7 minutes; subsequent builds are instant thanks to Docker
 layer caching.
 
-### Authentication (optional)
+### 🔑 Authentication (optional)
 
 By default, the API runs with authentication disabled — all endpoints are public.
 To enable login protection, set these environment variables for the backend service:
@@ -75,9 +75,9 @@ To enable login protection, set these environment variables for the backend serv
 If `JWT_SECRET` is unset it will be auto-generated and persisted to `data/jwt_secret.txt`.
 When `ADMIN_PASSWORD` is unset, **all API endpoints are public** (ideal for local or trusted deployments).
 
-## Development (faster iteration)
+## 🛠️ Development (faster iteration)
 
-### Backend
+### 🐍 Backend
 
 ```bash
 cd backend
@@ -89,7 +89,7 @@ uvicorn app.main:app --reload --port 8000
 
 The API is served at **http://localhost:8000**.
 
-### Frontend
+### ⚡ Frontend
 
 ```bash
 cd frontend
@@ -106,7 +106,7 @@ A convenience script launches both in one command:
 ./.dev.sh
 ```
 
-## Production Deployment
+## 🌍 Production Deployment
 
 A production‑ready Docker Compose file is provided (`docker-compose.prod.yml`).
 It uses a multi‑stage frontend build (`Dockerfile.prod`, adapter‑node) and expects to
@@ -128,7 +128,7 @@ ORIGIN=https://scores.mylessglass.com ADMIN_PASSWORD=*** \
 The production setup proxies `/api` requests from the frontend Node server to the
 backend container via `hooks.server.ts` — no direct public access to the API.
 
-## The data model
+## 🗄️ The data model
 
 Scoreholder JSON exports flatten everything into reference‑based arrays.
 The backend normalises this into two database tables:
@@ -140,7 +140,7 @@ From there, the `transformer.py` pivots the long format into a wide table (one r
 gymnast, one column per apparatus) and enriches each row with the gymnast's region via
 club lookup.
 
-### Club & region lookup
+### 🏛️ Club & region lookup
 
 Every club name that appears in uploaded data is resolved to a canonical name and a
 region through `clubs_and_regions.json` in the backend directory. The file defines:
@@ -160,12 +160,12 @@ python -m app.reconcile_clubs
 
 This re‑normalises all existing database rows to the updated aliases.
 
-## API endpoints
+## 🌐 API endpoints
 
 All routes live under `/api`. Role requirements are checked via JWT (write endpoints
 are admin‑only unless configured otherwise).
 
-### Public
+### 👀 Public
 
 | Method | Path                              | Description                                        |
 |--------|-----------------------------------|----------------------------------------------------|
@@ -183,7 +183,7 @@ are admin‑only unless configured otherwise).
 | GET    | `/api/events/{id}/export/csv`     | Download event results as CSV                      |
 | GET    | `/api/events/{id}/export/xlsx`    | Download event results as XLSX                     |
 
-### Auth
+### 🔒 Auth
 
 | Method | Path                                       | Description                |
 |--------|--------------------------------------------|----------------------------|
@@ -193,7 +193,7 @@ are admin‑only unless configured otherwise).
 | POST   | `/api/auth/users/{id}/reset-password`      | Reset a user's password (admin) |
 | DELETE | `/api/auth/users/{id}`                     | Delete a user (admin)      |
 
-### Write / admin
+### ✏️ Write / admin
 
 | Method  | Path                                | Description                                      |
 |---------|-------------------------------------|--------------------------------------------------|
@@ -205,14 +205,14 @@ are admin‑only unless configured otherwise).
 | POST    | `/api/admin/reconcile-athletes`     | Reconcile duplicate GNZ IDs                      |
 | POST    | `/api/admin/refresh-cache`          | Clear the in‑memory cache                        |
 
-### Wellington intents
+### 🎯 Wellington intents
 
 | Method  | Path                         | Description                           |
 |---------|------------------------------|---------------------------------------|
 | GET     | `/api/wellington/intents`    | List intent‑submitted gymnasts        |
 | POST    | `/api/wellington/intent`     | Set intent for a gymnast (admin)      |
 
-## Testing
+## 🧪 Testing
 
 ```bash
 cd backend
@@ -224,7 +224,7 @@ Runs 156 tests covering the decoder, resolver, parser, database models, transfor
 reconciliation, club aliases, and API endpoints. 87 further tests are conditionally
 skipped when the reference data‑collection JSON files are not present.
 
-## Project structure
+## 📁 Project structure
 
 ```
 .
@@ -296,7 +296,7 @@ skipped when the reference data‑collection JSON files are not present.
 │   └── static/
 ```
 
-## Guidance for adapting the system
+## 🧭 Guidance for adapting the system
 
 If you want to repurpose this application for your own gymnastics organisation, the
 key files to customise are:
@@ -312,7 +312,13 @@ key files to customise are:
 The parser expects Scoreholder's current JSON format — if Scoreholder changes its
 export schema you would need to update `backend/app/parser.py`.
 
-## License
+## 📜 License
 
 This project is open‑source. See individual files for third‑party license details
 (the NZ map SVG is CC‑BY‑4.0, DaisyUI is MIT, etc.).
+
+---
+
+<p align="center">
+  Made with ❤️ for the NZ gymnastics community · <a href="https://github.com/mylesglass/nz-gymnastics-results">GitHub</a> · <a href="https://ko-fi.com/mylesglass">Ko‑fi</a>
+</p>
