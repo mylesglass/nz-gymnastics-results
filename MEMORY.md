@@ -131,7 +131,7 @@ Core logic:
 - `ExportMenu.svelte` — DaisyUI export dropdown (CSV/XLSX/PDF); `export.ts` builds files, XLSX honors `colFormat` (hidden columns + widths), PDF renders table-like columns with header + page numbers, libraries lazy-loaded
 
 **Routes:**
-- `/` — Landing page: stats cards, role-based grid (Upload card hidden for non-admins)
+- `/` — Landing page: nav cards with live stat badges, "What's new" section from `static/patch_notes.json` (fetched, all entries in a scrollable list)
 - `/upload` — Drag-and-drop JSON upload, club mapping dialog, rich success card (gymnast/score/club counts)
 - `/login` — Username + password form, redirects to `/`
 - `/admin` — Admin dashboard (stats, user management, unified athlete ID reconciliation card with per-instance dropdowns, Quick Fix + Apply Selected buttons)
@@ -230,8 +230,5 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
   - Admin/write (POST/PUT/DELETE/PATCH) → `no-store, no-cache, private`
 - Individual endpoint `cache_headers()` now only sets the ETag (removed Cache-Control).
 
-## Open Questions / Next Potential Areas
-- [ ] Mobile-responsive table improvements (column overflow on small screens)
-- [ ] Fuzzy name matching — detect nicknames/spelling variations (e.g. "Liz" → "Elizabeth")
-- [ ] Conflict resolution UI — admin dashboard to manually pick the correct ID for ambiguous names
-- [ ] GNZ ID audit log — track when and why an ID was changed for a gymnast
+## Docs Convention
+- Whenever updating project docs (MEMORY/README/PLAN/DESIGN-DOCUMENT/BUGS) for a notable user-facing change, also prepend a matching entry to `frontend/static/patch_notes.json` (full history, newest first; landing page shows all entries in a scrollable section).

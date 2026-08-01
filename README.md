@@ -279,7 +279,7 @@ skipped when the reference data‑collection JSON files are not present.
 │   │   │   └── AATooltip.svelte             # All‑around score tooltip
 │   │   └── routes/
 │   │       ├── +layout.svelte               # Nav bar, theme toggle, year tabs
-│   │       ├── +page.svelte                 # Landing page with aggregate stats
+│   │       ├── +page.svelte                 # Landing page: nav cards with stat badges, What's new
 │   │       ├── upload/+page.svelte          # JSON upload + import‑from‑URL
 │   │       ├── login/+page.svelte           # Username + password login
 │   │       ├── admin/+page.svelte           # Admin dashboard
@@ -294,6 +294,7 @@ skipped when the reference data‑collection JSON files are not present.
 │   │       ├── gymnasts/+page.svelte        # Gymnast list (A‑Z grouped)
 │   │       └── gymnast/[gnz_id]/+page.svelte # Gymnast results
 │   └── static/
+│       └── patch_notes.json                 # Full update history (scrollable What's new section)
 ```
 
 ## 🧭 Guidance for adapting the system

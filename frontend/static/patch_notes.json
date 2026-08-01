@@ -1,0 +1,258 @@
+[
+  {
+    "date": "2 Aug 2026",
+    "entries": [
+      {
+        "title": "Full update history on the landing page",
+        "items": [
+          "'What's new' now shows the entire patch-note history in a scrollable section instead of only the latest few entries."
+        ]
+      }
+    ]
+  },
+  {
+    "date": "1 Aug 2026",
+    "entries": [
+      {
+        "title": "Export to CSV, XLSX & PDF",
+        "items": [
+          "One dropdown on every results and rankings page — download CSV, Excel, or a printable PDF.",
+          "XLSX keeps full per-pass detail with tidy column widths; PDF mirrors the on-screen table with a header and page numbers."
+        ]
+      },
+      {
+        "title": "Interactive NZ map for clubs",
+        "items": [
+          "Explore clubs on a clickable map of 15 gymnastics regions with theme colours and smooth panel transitions.",
+          "Provincial teams sit next to their region header, separate from regular clubs."
+        ]
+      },
+      {
+        "title": "Smarter uploads from URLs",
+        "items": [
+          "Paste a Scoreholder event link to import it directly — no need to download and upload the JSON file.",
+          "Unknown clubs are flagged with suggested mappings (exact + fuzzy matches) you can accept or keep as-is."
+        ]
+      },
+      {
+        "title": "Landing page remix",
+        "items": [
+          "Live stat counts now sit as badges on each nav card; the separate stats row is gone.",
+          "Added a 'What's new' section fed from patch notes, with a subtle on-load reveal that respects reduced-motion."
+        ]
+      }
+    ]
+  },
+  {
+    "date": "31 Jul 2026",
+    "entries": [
+      {
+        "title": "Wellington rankings: intent tracking & team badges",
+        "items": [
+          "Admins can mark which gymnasts intend to compete at Wellington events; a filter shows only those athletes.",
+          "Top-4 (1st Team) and 5–8 (2nd Team) badges highlight the strongest WAG STEP 7+ athletes.",
+          "Qualifier warning tooltips explain why an athlete did or didn't qualify.",
+          "Apparatus specialists (WAG STEP 8–10) who hit the qualifying mark on two apparatus now appear with colour-coded badges and competition tooltips."
+        ]
+      },
+      {
+        "title": "Inline editing in results tables",
+        "items": [
+          "Admins can fix a gymnast's name, GNZ ID, or club right in the results table with a per-row save."
+        ]
+      },
+      {
+        "title": "WAG STEP 7–10 qualification tightened",
+        "items": [
+          "Now requires two GNZ-qualifying scores from different competitions (was a single score).",
+          "MAG Level 7+ Wellington qualifying threshold set to 63.0."
+        ]
+      }
+    ]
+  },
+  {
+    "date": "29 Jul 2026",
+    "entries": [
+      {
+        "title": "Admin cache refresh",
+        "items": [
+          "New Refresh Cache button on the admin dashboard instantly clears the backend cache after uploads or edits.",
+          "Ranking endpoints no longer browser-cached so intent and qualifier toggles reflect immediately."
+        ]
+      }
+    ]
+  },
+  {
+    "date": "26 Jul 2026",
+    "entries": [
+      {
+        "title": "Wellington regional rankings",
+        "items": [
+          "Regional rankings for WAG STEP 5–6 and 7–10 with GNZ + Wellington dual-qualifier filters.",
+          "Distinct-event enforcement, per-step-range selection rules, and a dedicated rankings page with WAG/MAG tabs."
+        ]
+      },
+      {
+        "title": "Faster pages",
+        "items": [
+          "Backend caching refactored with per-key TTLs and per-event invalidation; database indexes and SQLite PRAGMA tuning.",
+          "Optimised HTTP Cache-Control headers (public + stale-while-revalidate on reads, no-store on writes).",
+          "Pagination and debounced search in the results table."
+        ]
+      },
+      {
+        "title": "Browsing polish",
+        "items": [
+          "Gymnasts page gains letter-jump navigation, live search, and tidier name/ID/club layout.",
+          "Visual hierarchy improvements, new scoreboard logo/favicon, and regional colour differentiation."
+        ]
+      }
+    ]
+  },
+  {
+    "date": "25 Jul 2026",
+    "entries": [
+      {
+        "title": "National season rankings",
+        "items": [
+          "Season rankings per discipline and STEP: best 2 competitions per gymnast (Nationals excluded), summed total, ties marked 'T'.",
+          "Region quota and qualifier filters let you focus on qualifying marks.",
+          "Gymnasts with only partial apparatus passes get a computed All-Around aggregate."
+        ]
+      },
+      {
+        "title": "Nationals flag on events",
+        "items": [
+          "Admins can mark an event as a Nationals competition, which excludes it from season rankings."
+        ]
+      },
+      {
+        "title": "Athlete ID reconciliation & duplicate resolution",
+        "items": [
+          "Admin dashboard groups athletes by name with per-instance GNZ ID dropdowns and confidence-based auto-fix.",
+          "Suggested merges detect similar names (e.g. nicknames/spelling variants) with one-click merge."
+        ]
+      },
+      {
+        "title": "Region badges & colours",
+        "items": [
+          "Each of the 15 gymnastics regions gets its own NZ-sports-inspired colour palette and a checkerboard badge.",
+          "Region column added to wide results tables (enriched from club lookup, filterable)."
+        ]
+      },
+      {
+        "title": "Cleaner names & production deployment",
+        "items": [
+          "Automatic name cleanup at import: diacritics normalised, trailing (L#) / (STEP 10) / (YI) suffixes stripped, metadata removed.",
+          "Production Docker Compose with multi-stage frontend build and /api proxying through the frontend server."
+        ]
+      }
+    ]
+  },
+  {
+    "date": "24 Jul 2026",
+    "entries": [
+      {
+        "title": "Accounts & role-based access",
+        "items": [
+          "Username + password login with JWT tokens and admin/member roles.",
+          "Admin user management (create accounts, reset passwords, delete).",
+          "Upload, Admin, and Rankings links are gated by role.",
+          "Global year selector in the nav bar applied across all data pages."
+        ]
+      }
+    ]
+  },
+  {
+    "date": "23 Jul 2026",
+    "entries": [
+      {
+        "title": "Club mapping on upload",
+        "items": [
+          "When a file references a club we don't recognise, a dialog lets you map it to a known club or keep the original name.",
+          "Round-type parsing fixed: 'Qualification' suffix stripped, Day 2 classified correctly, individual scores skipped in All-around PRTs."
+        ]
+      }
+    ]
+  },
+  {
+    "date": "15 Jul 2026",
+    "entries": [
+      {
+        "title": "Multi-file upload & faster results",
+        "items": [
+          "Drag-and-drop supports multiple files with a per-file status queue.",
+          "In-memory cache for wide pivots plus Cache-Control/ETag headers on read endpoints.",
+          "CSV/XLSX exports include per-pass vault and bonus columns."
+        ]
+      }
+    ]
+  },
+  {
+    "date": "22 Jun 2026",
+    "entries": [
+      {
+        "title": "Division & round fixes",
+        "items": [
+          "Division falls back to the unit name when the level is missing; GfA levels filtered out.",
+          "Day 2 round-type collision fixed; discipline derived from apparatus in competition node trees."
+        ]
+      }
+    ]
+  },
+  {
+    "date": "8 Jun 2026",
+    "entries": [
+      {
+        "title": "Gymnast & club browsing",
+        "items": [
+          "New gymnasts list page (searchable, grouped A–Z) and clubs list page grouped by region.",
+          "Year selectors on gymnast and club result pages; stats cards link through to events, results, and clubs."
+        ]
+      }
+    ]
+  },
+  {
+    "date": "7 Jun 2026",
+    "entries": [
+      {
+        "title": "Upload, events, and protected writes",
+        "items": [
+          "Landing page redesigned; upload moved to its own page.",
+          "Event search, sortable columns, delete, and rename.",
+          "Password-based auth with a login page protecting write routes.",
+          "Filtered CSV export on the event detail page (exports only the currently filtered rows)."
+        ]
+      }
+    ]
+  },
+  {
+    "date": "5 Jun 2026",
+    "entries": [
+      {
+        "title": "Wide results, tooltips, and export expansion",
+        "items": [
+          "Tailwind + DaisyUI restyle with dark theme and a sticky nav.",
+          "Per-apparatus score tooltips (D/E/N/bonus/rank) and an All-Around tooltip.",
+          "Per-pass vault columns with level-aware aggregation (STEP 6/7 average, high-level best/avg).",
+          "WAG/MAG tabs split results by discipline; DNS/DNF handled; bonus propagated across passes.",
+          "All-results view across every event."
+        ]
+      }
+    ]
+  },
+  {
+    "date": "4 Jun 2026",
+    "entries": [
+      {
+        "title": "NZ Gymnastics Results launches",
+        "items": [
+          "Backend parses Scoreholder JSON exports into a normalised SQLite database.",
+          "FastAPI endpoints for upload, events, results, and CSV/XLSX export.",
+          "SvelteKit frontend with a drag-and-drop upload page and events/results browsing.",
+          "Docker Compose for easy local development."
+        ]
+      }
+    ]
+  }
+]

@@ -57,7 +57,7 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   │   └── export.ts                # Export builders (CSV, XLSX, PDF) + slugifyFilename + ColFormat/PdfColumn types
 │   │   ├── routes/
 │   │   │   ├── +layout.svelte          # Nav, footer, theme toggle, year tabs via goto()
-│   │   │   ├── +page.svelte            # Landing page with stat cards
+│   │   │   ├── +page.svelte            # Landing page (nav cards w/ stat badges, What's new from patch_notes.json)
 │   │   │   ├── upload/+page.svelte     # JSON upload (file drag-drop + import-from-URL)
 │   │   │   ├── login/+page.svelte      # Username+password login
 │   │   │   ├── admin/+page.svelte      # Admin dashboard
@@ -76,6 +76,8 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   │   ├── gymnasts/+page.server.ts # SSR load for gymnast list
 │   │   │   ├── gymnasts/+page.svelte   # Gymnast list with A-Z letter jump
 │   │   │   ├── gymnast/[gnz_id]/+page.svelte # Gymnast results (client-only, no server load)
+│   │   ├── static/
+│   │   │   └── patch_notes.json  # Full update history; landing page shows all in a scrollable section
 │   │   ├── app.css              # @import "tailwindcss"; @plugin "daisyui";
 │   │   └── app.html
 │   ├── svelte.config.js         # adapter-node; csrf: { checkOrigin: false }
@@ -188,6 +190,12 @@ let { label, count = 0 }: { label: string; count?: number } = $props();
 ### Frontend
 - No frontend tests currently
 - Verify with `cd frontend && npm run build`
+
+## Documentation Conventions
+
+- Whenever updating project docs (MEMORY.md, README.md, PLAN.md, DESIGN-DOCUMENT.md, BUGS.md) for a **notable user-facing change**, also prepend a matching entry to `frontend/static/patch_notes.json`.
+- The file is the full history, newest date group first. The landing page fetches it and renders everything in a scrollable "What's new" section, so additions are always visible without a frontend change.
+- Patch-note entry shape: `{ "date": "<Day Mon YYYY>", "entries": [{ "title": "...", "items": ["..."] }] }`. Group multiple updates from the same date under one `date` key.
 
 ## Development Commands
 

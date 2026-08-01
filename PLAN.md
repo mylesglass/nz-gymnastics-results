@@ -122,7 +122,7 @@
 ### STEP 15: Feature Polishing ✅
 - [x] Event page — discipline badges (daisyUI `badge-primary`/`badge-secondary`), clickable rows with `goto()`, remove View button column
 - [x] AA Tooltip — new `AATooltip.svelte` component with summed D/E/N across apparatus; integrated into `aa-score` column
-- [ ] Show equals in rankings — backend: append "T" to tied rank values (attempted, reverted — needs correct approach)
+- [x] Show equals in rankings — backend appends "T" to tied rank values via `rank_text` (`T{rank}` when total equals a neighbour); surfaced as `RankingRow.rank`
 
 ### STEP 16: Athlete ID Reconciliation ✅
 - [x] Create `backend/app/reconcile.py` — name-based ID unification logic
@@ -206,7 +206,7 @@
 - [x] `GET /api/rankings/wellington` endpoint (auth: member+)
 - [x] Wellington Rankings page with WAG/MAG tabs, STEP selector, qualifier toggles, CSV export, apparatus tooltips
 - [x] Rankings nav dropdown with National Rankings / Wellington Rankings
-- [x] Config: WAG STEP 5-6 (GNZ 50.0 2×+away, Wgtn 53.0), WAG STEP 7-10 (GNZ 43.0 1×), MAG TBD
+- [x] Config: WAG STEP 5-6 (GNZ 50.0 2×+away, Wgtn 53.0), WAG STEP 7-10 (GNZ 43.0 1×), MAG Level 4-6 (Wgtn 58.0), MAG Level 7+ (Wgtn 63.0)
 
 ### Next Steps
 - [ ] Edit row functionality for admin
@@ -224,8 +224,8 @@
   - Define how international-division gymnasts qualify for Wellington events. Separate thresholds/table vs merged into the existing rankings — needs domain input.
   - **Files:** `backend/app/wellington_ranking.py`
 - [x] Order /clubs by region (Northland → Southland)
-  - Club listings sorted geographically by region in latitude order (Northland at top, Southland at bottom) rather than alphabetically.
-  - **Files:** `frontend/src/routes/clubs/+page.svelte`, region ordering helper in `frontend/src/lib/regions.ts`
+  - Superseded by the interactive NZ map redesign: regions are selected geographically on the map, so a separate latitudinal list ordering is no longer needed. Clubs are grouped by region (`grouped` derived) and rendered per-region in the `RegionBox` snippet.
+  - **Files:** `frontend/src/routes/clubs/+page.svelte`, `frontend/src/lib/NZRegionMap.svelte`
 - [x] Put provincial teams next to header, separate from clubs
   - Distinguish regional/provincial teams (e.g. `Counties - Manukau`) from regular clubs on the /clubs page — show them next to the region header rather than mixed into the club list.
   - **Files:** `frontend/src/routes/clubs/+page.svelte`
@@ -236,4 +236,9 @@
 - [ ] a11y
   - Accessibility audit: keyboard navigation, screen-reader labels, contrast ratios, focus management across tables, tooltips, dropdowns, and the NZ map.
   - **Files:** table components, tooltips, nav, `NZRegionMap.svelte`
-- [ ] Index remix: update index page, combine stats with badeges, add Patch notes, streamline, add animation? 
+- [x] Index remix: update index page, combine stats with badges, add Patch notes, streamline, add animation?
+  - Live stat counts moved onto the nav cards as badges (Events/Gymnasts/Scores/Clubs), separate stats row removed. Added a "What's new" patch-notes section driven by `frontend/static/patch_notes.json` (full history, newest first; the page fetches it and renders everything in a scrollable list). Feature cards kept but copy tightened (CSV/XLSX/PDF). Subtle staggered fade/fly on-load reveal, gated on `prefers-reduced-motion`.
+  - **Files:** `frontend/src/routes/+page.svelte`, `frontend/static/patch_notes.json`
+- [ ] Vetical sticky alphabet searcher on Gymnasts page.
+- [ ] Rethink how Year Selector works
+- [ ] Event page Nationals badge shoudl show next to name, not discipline, also use accent badge
