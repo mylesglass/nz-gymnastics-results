@@ -1,8 +1,9 @@
 <script lang="ts">
+  import { fade } from "svelte/transition";
   import { onMount } from "svelte";
   import { listClubs } from "$lib/api";
   import NZRegionMap from "$lib/NZRegionMap.svelte";
-  import { REGION_PALETTES, gradientBackground, gradientTextColor, textColor } from "$lib/regions";
+  import { REGION_PALETTES, gradientBackground, gradientTextColor, headingColor, textColor } from "$lib/regions";
 
   let clubs = $state<{ name: string; gymnast_count: number; region: string | null; is_region: boolean }[]>([]);
   let loading = $state(true);
@@ -71,7 +72,9 @@
       <!-- Map on the left -->
       <div class="card bg-base-200/60 border border-base-300 shadow-lg overflow-hidden w-full lg:sticky lg:top-4">
         <div class="card-body p-6">
-          <NZRegionMap {active} onSelect={selectRegion} />
+          <div class="overflow-hidden rounded-box" style="aspect-ratio: 525 / 692.3">
+            <NZRegionMap {active} onSelect={selectRegion} />
+          </div>
           <p class="text-center text-xs text-base-content/60 mt-3">
             {active ? `Showing ${active} — click again to clear` : "Click a region on the map to see its clubs"}
           </p>
@@ -81,8 +84,11 @@
       <!-- Region box on the right -->
       <div class="mt-6 lg:mt-0">
         {#if active && grouped[active]?.length}
-          {@const regionClubs = grouped[active]}
-          {@render RegionBox({ region: active, regionClubs, active, onselect: selectRegion })}
+          {#key active}
+            <div in:fade={{ duration: 250 }}>
+              {@render RegionBox({ region: active, regionClubs: grouped[active], active, onselect: selectRegion })}
+            </div>
+          {/key}
         {:else}
           <div class="card bg-base-200 border border-base-300">
             <div class="card-body items-center text-center text-base-content/50 py-16">
@@ -90,32 +96,32 @@
             </div>
           </div>
         {/if}
-
-        <!-- Other -->
-        {#if (grouped["Other"] ?? []).length}
-          {@const otherClubs = grouped["Other"]}
-          <div class="mt-6">
-            <div class="flex items-center gap-2 mb-3">
-              <h2 class="text-2xl font-bold">Other</h2>
-              <span class="text-xs text-base-content/50">({otherClubs.length} club(s))</span>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {#each otherClubs as club}
-                <a
-                  href="/club/{encodeURIComponent(club.name)}"
-                  class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer"
-                >
-                  <div class="card-body py-3 px-4 flex-row items-center justify-between">
-                    <span class="font-medium text-sm">{club.name}</span>
-                    <span class="text-xs text-base-content/50">{club.gymnast_count} gymnasts</span>
-                  </div>
-                </a>
-              {/each}
-            </div>
-          </div>
-        {/if}
       </div>
     </div>
+
+    <!-- Other -->
+    {#if (grouped["Other"] ?? []).length}
+      {@const otherClubs = grouped["Other"]}
+      <div class="mt-8 mb-8">
+        <div class="flex items-center gap-2 mb-3">
+          <h2 class="text-2xl font-bold">Other</h2>
+          <span class="text-xs text-base-content/50">({otherClubs.length} club(s))</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          {#each otherClubs as club}
+            <a
+              href="/club/{encodeURIComponent(club.name)}"
+              class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer"
+            >
+              <div class="card-body py-3 px-4 flex-row items-center justify-between">
+                <span class="font-medium text-sm">{club.name}</span>
+                <span class="text-xs text-base-content/50">{club.gymnast_count} gymnasts</span>
+              </div>
+            </a>
+          {/each}
+        </div>
+      </div>
+    {/if}
   {/if}
 </div>
 
@@ -124,16 +130,17 @@
   {@const palette = REGION_PALETTES[region] ?? []}
   {@const bg = gradientBackground(palette)}
   {@const fg = gradientTextColor(palette)}
-  {@const headingColor = palette[1] ?? fg}
+  {@const headingCol = headingColor(palette)}
+  {@const regionColor = palette[0] ?? fg}
+  {@const hoverBg = `color-mix(in srgb, ${regionColor} 25%, transparent)`}
   {@const pillBg = fg === "#fff" ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.5)"}
   {@const pillBorder = fg === "#fff" ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.15)"}
-  {@const isActive = active === region}
   <div
     id="region-{slug(region)}"
     class="card rounded-box overflow-hidden transition-shadow cursor-pointer"
     role="button"
     tabindex="0"
-    style="background: {bg}; color: {fg}; box-shadow: {isActive ? '0 0 0 3px rgba(255,255,255,0.6)' : 'none'};"
+    style="background: {bg}; color: {fg};"
     onclick={() => onselect(region)}
     onkeydown={(e) => {
       if (e.key === "Enter" || e.key === " ") onselect(region);
@@ -142,14 +149,14 @@
     <div class="card-body p-5">
       <div class="flex flex-wrap items-center gap-3 mb-4">
         <div class="flex-1 min-w-0">
-          <h3 class="text-2xl font-bold leading-tight" style="color: {headingColor}">{region}</h3>
-          <p class="text-sm opacity-80" style="color: {headingColor}">{regionClubs.filter((c) => !c.is_region).length} club(s)</p>
+          <h3 class="text-2xl font-bold leading-tight" style="color: {headingCol}">{region}</h3>
+          <p class="text-sm opacity-80" style="color: {headingCol}">{regionClubs.filter((c) => !c.is_region).length} club(s)</p>
         </div>
         {#if team}
           <a
             href="/club/{encodeURIComponent(team.name)}"
-            class="card hover:scale-[1.02] backdrop-blur-sm border transition-all cursor-pointer"
-            style="background: {pillBg}; border-color: {pillBorder};"
+            class="card backdrop-blur-sm border transition-colors cursor-pointer"
+            style="--bg: {pillBg}; --hover-bg: {hoverBg}; border-color: {pillBorder};"
             onclick={(e) => e.stopPropagation()}
           >
             <div class="card-body py-2 px-3 flex-row items-center gap-2">
@@ -170,8 +177,8 @@
         {#each regionClubs.filter((c) => !c.is_region) as club}
           <a
             href="/club/{encodeURIComponent(club.name)}"
-            class="card hover:scale-[1.02] backdrop-blur-sm border transition-all cursor-pointer"
-            style="background: {pillBg}; border-color: {pillBorder}; color: {fg};"
+            class="card backdrop-blur-sm border transition-colors cursor-pointer"
+            style="--bg: {pillBg}; --hover-bg: {hoverBg}; border-color: {pillBorder}; color: {fg};"
           >
             <div class="card-body py-2 px-3 flex-row items-center justify-between">
               <span class="font-medium text-sm" style="color: {fg}">{club.name}</span>
@@ -183,3 +190,12 @@
     </div>
   </div>
 {/snippet}
+
+<style>
+  .card[style*="--hover-bg"] {
+    background: var(--bg);
+  }
+  .card[style*="--hover-bg"]:hover {
+    background: var(--hover-bg);
+  }
+</style>
