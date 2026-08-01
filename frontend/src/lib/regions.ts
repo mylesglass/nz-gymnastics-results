@@ -47,3 +47,21 @@ export function gradientBackground(colors: string[]): string {
   const c1 = colors[1] ?? colors[0];
   return `linear-gradient(135deg, ${c0} 0%, ${c0} 40%, ${c1} 90%, ${c1} 100%)`;
 }
+
+function luminance(hex: string): number {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return r * 0.299 + g * 0.587 + b * 0.114;
+}
+
+// Prefer the palette's secondary colour for headings, but fall back to the
+// contrast-derived text colour when it doesn't contrast with the primary.
+export function headingColor(colors: string[]): string {
+  if (colors.length < 2) return gradientTextColor(colors);
+  const a = luminance(colors[0]);
+  const b = luminance(colors[1]);
+  if (Math.abs(a - b) < 50) return gradientTextColor(colors);
+  return colors[1];
+}

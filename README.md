@@ -1,57 +1,81 @@
 # NZ Gymnastics Results
 
-A web application for parsing, storing, and viewing gymnastics competition results from Scoreholder JSON exports.
+A web application for parsing, storing, and viewing gymnastics competition results from
+[Scoreholder](https://scoreholder.com) JSON exports. Built for the New Zealand gymnastics
+community but designed to be adaptable for any gymnastics organisation.
 
 ## Features
-- Upload Scoreholder JSON files (drag-and-drop) or paste one/many Scoreholder event links to import directly
-- Parse into a normalized database, with automatic club-name/alias normalization
-- View results in a wide-format table with WAG/MAG tabs
-- Hover tooltips on apparatus scores showing full breakdown (D, E, N, Bonus, Rank)
-- Filter, sort, and search results by name/ID, STEP/Level, Club, Division, Round, Region — filters integrated into column headers
-- View results for a single gymnast or club across all events (clickable table cells)
-- Export to CSV and XLSX (all columns including per-pass vault data)
-- Light/dark theme toggle
-- Responsive column sizing with configurable per-column min-widths
-- Sticky duplicate header with scroll-sync for long tables
-- Supports both WAG (Women's Artistic Gymnastics) and MAG (Men's Artistic Gymnastics)
-- Role-based JWT authentication with user management (admin/uploader roles); write operations protected by role
-- Athlete ID reconciliation to unify duplicate GNZ IDs across events
-- Global year toggle in nav to filter results across all pages
-- Footer with GitHub link and Ko-fi donation support
+
+### Data ingestion
+- **Upload** Scoreholder event JSON files via drag-and-drop from the web UI
+- **Import from URL** — paste one or many Scoreholder public event links to import directly without downloading files
+- **Automatic club normalisation** — resolves name variants to canonical clubs via a configurable alias table (`clubs_and_regions.json`)
+
+### Results & browsing
+- **Wide-format results table** with WAG (Women's Artistic Gymnastics) and MAG (Men's Artistic Gymnastics) tabs
+- **Rich score tooltips** on apparatus scores showing full breakdown (D‑score, E‑score, neutral deductions, bonus, rank)
+- **Interactive NZ map** on the Clubs page — click any of the 15 gymnastics regions to see its clubs, each highlighted with its own colour palette
+- **Club & gymnast profiles** — view all results for a single club or gymnast across all events (clickable table cells)
+- **All-events results** view, grouped by gymnast, with configurable year filter
+
+### Rankings & exports
+- **National Rankings** by discipline and level category
+- **Wellington Regional Rankings** with intent tracking, qualifier toggles, and apparatus specialist detection for WAG steps 8–10
+- **Export** to CSV and XLSX with all columns including per‑pass vault data
+
+### UI
+- Light / dark **theme toggle** with 30+ themes, persisted in `localStorage`
+- **Responsive design** — works on desktop, tablet, and mobile
+- **Year filter** in the nav bar that applies across all data pages
+- Sticky column headers and scroll-sync for long tables
+
+### Authentication & admin
+- **JWT-based authentication** with bcrypt-hashed passwords and HS256 tokens (7-day expiry)
+- **Admin dashboard** with statistics, cache refresh, and user management
+- **Inline editing** of gymnast name / GNZ ID / club directly on event and all‑results tables
+- **Athlete ID reconciliation** to unify duplicate GNZ IDs across events
 
 ## Tech Stack
-- **Backend:** Python, FastAPI, SQLAlchemy, SQLite, Pandas, bcrypt, PyJWT
-- **Frontend:** SvelteKit 5, Tailwind CSS v4, DaisyUI v5 (dark theme)
-- **Infrastructure:** Docker Compose
 
-## Quick Start (no dependencies needed)
+| Layer      | Technology                                              |
+|------------|---------------------------------------------------------|
+| **Backend**  | Python 3.12+, [FastAPI](https://fastapi.tiangolo.com), SQLAlchemy, SQLite, Pandas |
+| **Frontend** | [SvelteKit 5](https://svelte.dev), Tailwind CSS v4, [DaisyUI v5](https://daisyui.com) |
+| **Infra**    | [Docker Compose](https://docs.docker.com/compose/) for both dev and production |
+
+## Quick Start (Docker)
+
+The fastest way to get running — works immediately, no Python or Node.js required.
 
 ```bash
+# Clone the repository
+git clone https://github.com/mylesglass/nz-gymnastics-results.git
+cd nz-gymnastics-results
+
+# Start both services (backend API + frontend)
 docker compose up --build
 ```
 
-Then open http://localhost:5173
+Open **http://localhost:5173** in your browser.
 
-**Note:** The first `npm install` inside the frontend container takes ~7 minutes. Subsequent builds are instant due to Docker layer caching.
+The first frontend build takes ~7 minutes; subsequent builds are instant thanks to Docker
+layer caching.
 
-Once running, upload a JSON file via the web UI and view results.
+### Authentication (optional)
 
-### Dev Workflow (VS Code)
+By default, the API runs with authentication disabled — all endpoints are public.
+To enable login protection, set these environment variables for the backend service:
 
-A convenience script and VS Code tasks are provided to start both services in separate terminal panels:
+| Variable         | Purpose                         |
+|------------------|---------------------------------|
+| `JWT_SECRET`     | Signing key for JWT tokens      |
+| `ADMIN_USERNAME` | Initial admin account username  |
+| `ADMIN_PASSWORD` | Initial admin account password  |
 
-```bash
-.dev.sh     # starts backend + frontend concurrently
-```
-
-In VS Code, press **Ctrl+Shift+B** to launch the "Dev Environment" task, which opens dedicated terminal panels for the backend and frontend (configured in `.vscode/tasks.json`).
+If `JWT_SECRET` is unset it will be auto-generated and persisted to `data/jwt_secret.txt`.
+When `ADMIN_PASSWORD` is unset, **all API endpoints are public** (ideal for local or trusted deployments).
 
 ## Development (faster iteration)
-
-### Prerequisites
-- Python 3.12+
-- Node.js 20+
-- npm (comes with Node)
 
 ### Backend
 
@@ -63,7 +87,7 @@ pip install -e ".[dev]"
 uvicorn app.main:app --reload --port 8000
 ```
 
-The API is served at http://localhost:8000.
+The API is served at **http://localhost:8000**.
 
 ### Frontend
 
@@ -73,7 +97,120 @@ npm install
 npm run dev
 ```
 
-The UI is served at http://localhost:5173. In dev mode, Vite proxies `/api/*` requests to the backend.
+The UI is served at **http://localhost:5173**. The Vite dev server proxies `/api/*`
+requests to `http://localhost:8000`.
+
+A convenience script launches both in one command:
+
+```bash
+./.dev.sh
+```
+
+## Production Deployment
+
+A production‑ready Docker Compose file is provided (`docker-compose.prod.yml`).
+It uses a multi‑stage frontend build (`Dockerfile.prod`, adapter‑node) and expects to
+connect to an external Docker network named `yams_default` (shared with an Nginx Proxy
+Manager container).
+
+```bash
+# Example command — adjust env vars as needed
+ORIGIN=https://scores.mylessglass.com ADMIN_PASSWORD=*** \
+  docker compose -f docker-compose.prod.yml up --build -d
+```
+
+| Variable           | Purpose                                                        |
+|--------------------|----------------------------------------------------------------|
+| `ORIGIN`           | Public URL of the frontend (required for adapter‑node CSRF)    |
+| `ADMIN_PASSWORD`   | Password for the seeded admin user                             |
+| `BODY_SIZE_LIMIT`  | Max upload size in bytes (default `52428800` = 50MB)           |
+
+The production setup proxies `/api` requests from the frontend Node server to the
+backend container via `hooks.server.ts` — no direct public access to the API.
+
+## The data model
+
+Scoreholder JSON exports flatten everything into reference‑based arrays.
+The backend normalises this into two database tables:
+
+- **`events`** — one row per uploaded event (name, discipline, date)
+- **`long_scores`** — one row per apparatus pass per gymnast (D score, E score, neutral deductions, rank, etc.)
+
+From there, the `transformer.py` pivots the long format into a wide table (one row per
+gymnast, one column per apparatus) and enriches each row with the gymnast's region via
+club lookup.
+
+### Club & region lookup
+
+Every club name that appears in uploaded data is resolved to a canonical name and a
+region through `clubs_and_regions.json` in the backend directory. The file defines:
+
+- **canonical clubs** grouped by gymnastics region
+- **aliases** for each club (so variants like "Counties", "Counties Manukau", and
+  "Counties Manukau Gymnastics Club" all map to the same canonical)
+- **region colour palettes** used on the frontend NZ map and club listings
+
+To add or correct a mapping, edit `clubs_and_regions.json` and then run:
+
+```bash
+cd backend
+source .venv/bin/activate
+python -m app.reconcile_clubs
+```
+
+This re‑normalises all existing database rows to the updated aliases.
+
+## API endpoints
+
+All routes live under `/api`. Role requirements are checked via JWT (write endpoints
+are admin‑only unless configured otherwise).
+
+### Public
+
+| Method | Path                              | Description                                        |
+|--------|-----------------------------------|----------------------------------------------------|
+| GET    | `/api/health`                     | Health check                                       |
+| GET    | `/api/stats`                      | Aggregate statistics (event / gymnast / club counts) |
+| GET    | `/api/years`                      | List all years with events                         |
+| GET    | `/api/clubs`                      | List all clubs with gymnast counts and region       |
+| GET    | `/api/gymnasts`                   | List all gymnasts with GNZ ID and club              |
+| GET    | `/api/rankings`                   | National rankings (WAG / MAG, all levels)          |
+| GET    | `/api/rankings/wellington`        | Wellington regional rankings                       |
+| GET    | `/api/events`                     | List all uploaded events                           |
+| GET    | `/api/events/{id}/results`        | Single event results (long format)                 |
+| GET    | `/api/events/{id}/results/wide`   | Single event results (wide format, WAG / MAG split) |
+| GET    | `/api/results/wide-all`           | All‑events results (filters: `gnz_id`, `club`, `year`, `region`) |
+| GET    | `/api/events/{id}/export/csv`     | Download event results as CSV                      |
+| GET    | `/api/events/{id}/export/xlsx`    | Download event results as XLSX                     |
+
+### Auth
+
+| Method | Path                                       | Description                |
+|--------|--------------------------------------------|----------------------------|
+| POST   | `/api/auth/login`                          | Log in (returns JWT)       |
+| POST   | `/api/auth/register`                       | Register a new user (admin) |
+| GET    | `/api/auth/users`                          | List users (admin)         |
+| POST   | `/api/auth/users/{id}/reset-password`      | Reset a user's password (admin) |
+| DELETE | `/api/auth/users/{id}`                     | Delete a user (admin)      |
+
+### Write / admin
+
+| Method  | Path                                | Description                                      |
+|---------|-------------------------------------|--------------------------------------------------|
+| POST    | `/api/upload`                       | Upload a Scoreholder JSON file                   |
+| POST    | `/api/import-url`                   | Import from a Scoreholder public URL             |
+| PATCH   | `/api/events/{id}`                  | Rename an event                                  |
+| DELETE  | `/api/events/{id}`                  | Delete an event and its scores                   |
+| PATCH   | `/api/admin/scores/gymnast`         | Update name / GNZ ID / club on scores            |
+| POST    | `/api/admin/reconcile-athletes`     | Reconcile duplicate GNZ IDs                      |
+| POST    | `/api/admin/refresh-cache`          | Clear the in‑memory cache                        |
+
+### Wellington intents
+
+| Method  | Path                         | Description                           |
+|---------|------------------------------|---------------------------------------|
+| GET     | `/api/wellington/intents`    | List intent‑submitted gymnasts        |
+| POST    | `/api/wellington/intent`     | Set intent for a gymnast (admin)      |
 
 ## Testing
 
@@ -83,83 +220,99 @@ source .venv/bin/activate
 pytest
 ```
 
-Runs 156 tests covering the decoder, resolver, parser, database models, transformer, reconciliation, club aliases, and API endpoints.
+Runs 156 tests covering the decoder, resolver, parser, database models, transformer,
+reconciliation, club aliases, and API endpoints. 87 further tests are conditionally
+skipped when the reference data‑collection JSON files are not present.
 
-## API Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/health` | Health check |
-| GET | `/api/stats` | Aggregate statistics (event/gymnast/score/club counts) |
-| GET | `/api/years` | List all years with events |
-| GET | `/api/clubs` | List all clubs with gymnast counts and region mapping |
-| GET | `/api/gymnasts` | List all gymnasts with GNZ ID and club |
-| GET | `/api/rankings` | Rankings (member+ placeholder) |
-| POST | `/api/auth/login` | JWT login (username + password) |
-| POST | `/api/auth/register` | Register new user (admin only) |
-| GET | `/api/auth/users` | List users (admin only) |
-| POST | `/api/auth/users/{id}/reset-password` | Reset user password (admin only) |
-| DELETE | `/api/auth/users/{id}` | Delete user (admin only) |
-| POST | `/api/upload` | Upload a Scoreholder JSON file (requires auth) |
-| POST | `/api/import-url` | Import an event from a Scoreholder link, e.g. `https://scoreholder.com/en/events/{id}` (requires auth) |
-| GET | `/api/events` | List all uploaded events |
-| GET | `/api/events/{id}/results` | Get results (long format) |
-| GET | `/api/events/{id}/results/wide` | Get results (wide format, WAG/MAG split) |
-| GET | `/api/results/wide-all` | Get results across all events (filters: `?gnz_id=`, `?club=`, `?year=`, `?region=`) |
-| GET | `/api/events/{id}/export/csv` | Download results as CSV |
-| GET | `/api/events/{id}/export/xlsx` | Download results as XLSX |
-| PATCH | `/api/events/{id}` | Rename an event (requires auth) |
-| DELETE | `/api/events/{id}` | Delete an event and its scores (requires auth) |
-| POST | `/api/admin/reconcile-athletes` | Reconcile duplicate GNZ IDs (admin only) |
-
-## Project Structure
+## Project structure
 
 ```
-backend/                  # Python FastAPI backend
-├── app/
-│   ├── main.py           # FastAPI app + endpoints
-│   ├── models.py         # SQLAlchemy ORM models (Event, LongScore, User)
-│   ├── database.py       # SQLite engine + session
-│   ├── schemas.py        # Pydantic models
-│   ├── auth.py           # JWT auth (bcrypt, HS256, role-based, seed_admin_user)
-│   ├── parser.py         # Scoreholder JSON parser
-│   ├── decoder.py        # Node-tree score field decoder
-│   ├── resolver.py       # ID chain resolver
-│   ├── transformer.py    # Pandas long→wide pivot + export + region enrichment
-│   ├── reconcile.py      # Athlete ID reconciliation logic
-│   ├── scoreholder.py    # Fetch Scoreholder event JSON exports from public URLs
-│   └── validate_json.py  # Batch validation CLI
-└── tests/                # pytest suite (156 tests)
-
-frontend/                 # SvelteKit + Tailwind CSS v4 + DaisyUI v5
-├── src/
-│   ├── lib/
-│   │   ├── api.ts              # Typed API client
-│   │   ├── auth.ts             # JWT auth stores (currentUser, setToken, logout)
-│   │   ├── year.ts             # Global year toggle store
-│   │   ├── ScoreTooltip.svelte # Apparatus score tooltip
-│   │   ├── AATooltip.svelte    # All-Around score tooltip (D/E/N sum)
-│   │   ├── MultiSelect.svelte  # Multi-select dropdown
-│   │   └── WideResultsTable.svelte # Shared results table (filters, sort, export, sticky header)
-│   ├── app.css              # @import "tailwindcss"; @plugin "daisyui";
-│   ├── app.html             # Inline theme script (flash prevention)
-│   └── routes/
-│       ├── +layout.svelte       # Nav bar (year toggle, role-based links), footer (theme toggle)
-│       ├── +page.svelte         # Landing page (stats, role-based cards)
-│       ├── upload/+page.svelte  # JSON upload (drag-drop + import-from-URL textarea)
-│       ├── login/+page.svelte   # Username + password login form
-│       ├── admin/+page.svelte   # Admin dashboard (stats, reconcile card)
-│       ├── admin/users/+page.svelte  # User management (create, delete, reset password)
-│       ├── rankings/+page.svelte     # Rankings placeholder (member+)
-│       ├── events/+page.svelte  # Event list (search, year filter, rename/delete)
-│       ├── events/[id]/+page.svelte  # Per-event results
-│       ├── results/+page.svelte      # All-events results
-│       ├── clubs/+page.svelte        # Interactive NZ map (map left, region box right)
-│       ├── club/[club]/+page.svelte  # Club results across all events
-│       ├── gymnasts/+page.svelte     # Gymnast list (A-Z grouped)
-│       └── gymnast/[gnz_id]/+page.svelte  # Gymnast results across all events
-├── svelte.config.js
-├── vite.config.ts        # tailwindcss() + sveltekit() plugins
-├── package.json
-└── Dockerfile
+.
+├── .dev.sh                       # Start backend + frontend concurrently
+├── docker-compose.yml            # Dev Docker Compose
+├── docker-compose.prod.yml       # Production Docker Compose
+│
+├── data-collection/               # Reference Scoreholder JSON exports (for testing)
+│
+├── backend/
+│   ├── Dockerfile
+│   ├── pyproject.toml
+│   ├── clubs_and_regions.json     # Canonical club names, aliases, regions, colours
+│   ├── app/
+│   │   ├── main.py                # FastAPI routes + all endpoint logic
+│   │   ├── models.py              # SQLAlchemy models (Event, LongScore, User)
+│   │   ├── database.py            # SQLite engine, session, migration
+│   │   ├── schemas.py             # Pydantic models
+│   │   ├── auth.py                # JWT auth (bcrypt, HS256, admin seeding)
+│   │   ├── cache.py               # Granular TTL cache with per‑event prefix invalidation
+│   │   ├── parser.py              # Scoreholder JSON parser (~630 lines)
+│   │   ├── decoder.py             # Node‑tree score field decoder
+│   │   ├── resolver.py            # ID‑chain resolver for the flat Scoreholder model
+│   │   ├── transformer.py         # Pandas long→wide pivot + CSV / XLSX export + region enrichment
+│   │   ├── reconcile.py           # Athlete GNZ ID reconciliation
+│   │   ├── reconcile_clubs.py     # Club name normalisation script
+│   │   ├── scoreholder.py         # Fetch Scoreholder public export JSON from URLs
+│   │   ├── validate_json.py       # Batch validation CLI
+│   │   └── wellington_ranking.py  # Wellington regional ranking computation
+│   └── tests/
+│
+├── frontend/
+│   ├── Dockerfile
+│   ├── Dockerfile.prod            # Multi‑stage production build (adapter‑node)
+│   ├── package.json
+│   ├── svelte.config.js
+│   ├── vite.config.ts
+│   ├── src/
+│   │   ├── hooks.server.ts        # /api proxy → backend in production
+│   │   ├── app.css                # @import "tailwindcss"; @plugin "daisyui"
+│   │   ├── app.html
+│   │   ├── lib/
+│   │   │   ├── api.ts                       # Typed fetch wrappers for every endpoint
+│   │   │   ├── auth.ts                      # JWT auth store (currentUser, setToken, logout)
+│   │   │   ├── year.ts                      # Global year filter store
+│   │   │   ├── regions.ts                   # Region colour palettes + gradient helpers
+│   │   │   ├── RegionBadge.svelte           # Inline region colour chip
+│   │   │   ├── NZRegionMap.svelte           # Interactive SVG map of NZ (15 gym regions)
+│   │   │   ├── WideResultsTable.svelte      # Shared results table (paginated, virtualised)
+│   │   │   ├── MultiSelect.svelte           # Multi‑select dropdown
+│   │   │   ├── ScoreTooltip.svelte          # Apparatus score breakdown tooltip
+│   │   │   └── AATooltip.svelte             # All‑around score tooltip
+│   │   └── routes/
+│   │       ├── +layout.svelte               # Nav bar, theme toggle, year tabs
+│   │       ├── +page.svelte                 # Landing page with aggregate stats
+│   │       ├── upload/+page.svelte          # JSON upload + import‑from‑URL
+│   │       ├── login/+page.svelte           # Username + password login
+│   │       ├── admin/+page.svelte           # Admin dashboard
+│   │       ├── admin/users/+page.svelte     # User management
+│   │       ├── rankings/+page.svelte        # National rankings (member+)
+│   │       ├── wellington-ranking/+page.svelte  # Wellington rankings
+│   │       ├── events/+page.svelte          # Event list (search / rename / delete)
+│   │       ├── events/[id]/+page.svelte     # Per‑event results
+│   │       ├── results/+page.svelte         # All‑events results
+│   │       ├── clubs/+page.svelte           # Interactive NZ map + region club directory
+│   │       ├── club/[club]/+page.svelte     # Club results
+│   │       ├── gymnasts/+page.svelte        # Gymnast list (A‑Z grouped)
+│   │       └── gymnast/[gnz_id]/+page.svelte # Gymnast results
+│   └── static/
 ```
+
+## Guidance for adapting the system
+
+If you want to repurpose this application for your own gymnastics organisation, the
+key files to customise are:
+
+| File                              | What to change                                                  |
+|-----------------------------------|-----------------------------------------------------------------|
+| `backend/clubs_and_regions.json`  | Your region names, canonical clubs, aliases, and colour palettes |
+| `frontend/src/lib/regions.ts`     | Same colour palettes and region config (must match the JSON)     |
+| `frontend/src/lib/NZRegionMap.svelte` | Replace the SVG map source with your own geography           |
+| `docker-compose.yml` / `.prod.yml`   | Container names, ports, environment variables               |
+| `backend/app/wellington_ranking.py`  | Replace or remove with your own ranking logic               |
+
+The parser expects Scoreholder's current JSON format — if Scoreholder changes its
+export schema you would need to update `backend/app/parser.py`.
+
+## License
+
+This project is open‑source. See individual files for third‑party license details
+(the NZ map SVG is CC‑BY‑4.0, DaisyUI is MIT, etc.).

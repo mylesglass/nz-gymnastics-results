@@ -1,5 +1,6 @@
 <script lang="ts">
   import mapData from "@svg-maps/new-zealand";
+  import { REGION_PALETTES } from "./regions";
 
   let {
     active = null,
@@ -39,6 +40,15 @@
 
   const CLIP_CONFIGS = REGION_CONFIGS.filter((c) => c.clip);
   const CLIP_ID_BY_NAME = new Map(CLIP_CONFIGS.map((c, i) => [c.name, `nz-clip-${i}`]));
+  const CHECKER_BY_NAME = new Map(REGION_CONFIGS.map((c, i) => [c.name, `url(#nz-checker-${i})`]));
+
+  function regionPrimary(name: string): string {
+    return REGION_PALETTES[name]?.[0] ?? "var(--color-primary)";
+  }
+
+  function regionSecondary(name: string): string {
+    return REGION_PALETTES[name]?.[1] ?? regionPrimary(name);
+  }
 </script>
 
 <svg
@@ -53,23 +63,37 @@
         <rect x={c.clip.x} y={c.clip.y} width={c.clip.w} height={c.clip.h} />
       </clipPath>
     {/each}
+
+    {#each REGION_CONFIGS as c, i}
+      {@const p = regionPrimary(c.name)}
+      {@const s = regionSecondary(c.name)}
+      <pattern id="nz-checker-{i}" width="20" height="20" patternUnits="userSpaceOnUse">
+        <rect width="10" height="10" fill={p} />
+        <rect x="10" y="10" width="10" height="10" fill={p} />
+        <rect x="10" width="10" height="10" fill={s} />
+        <rect y="10" width="10" height="10" fill={s} />
+      </pattern>
+    {/each}
   </defs>
 
   {#each NEUTRAL_IDS as id}
     {#if paths.has(id)}
-      <path d={paths.get(id)} class="nz-neutral" stroke-linejoin="round" />
+      <path d={paths.get(id)} class="nz-neutral" />
     {/if}
   {/each}
 
   {#each REGION_CONFIGS as c}
     {@const clipId = CLIP_ID_BY_NAME.get(c.name) ?? null}
     {@const isActive = active === c.name}
+    {@const regionColor = regionPrimary(c.name)}
+    {@const checker = CHECKER_BY_NAME.get(c.name) ?? "var(--color-primary)"}
     <g
       role="button"
       tabindex="0"
       aria-label={c.name}
       class="nz-region"
       class:nz-active={isActive}
+      style="--region-color: {regionColor}; --checker: {checker};"
       onclick={() => onSelect(c.name)}
       onkeydown={(e) => {
         if (e.key === "Enter" || e.key === " ") onSelect(c.name);
@@ -87,35 +111,37 @@
 
 <style>
   .nz-region {
-    fill: var(--color-base-300);
+    fill: var(--color-accent);
     stroke: var(--color-base-content);
-    stroke-opacity: 0.35;
+    stroke-opacity: 0.12;
     stroke-width: 0.6;
     stroke-linejoin: round;
-    transition: fill 0.2s ease, opacity 0.2s ease;
+    transition: fill 0.3s ease, opacity 0.3s ease, stroke 0.3s ease;
     cursor: pointer;
     opacity: 0.85;
   }
   .nz-region:hover {
-    fill: var(--color-primary);
+    fill: var(--checker, var(--region-color, var(--color-primary)));
+    stroke: var(--region-color, var(--color-primary));
+    stroke-opacity: 0.5;
     opacity: 1;
   }
   .nz-active {
-    fill: var(--color-primary);
-    stroke: var(--color-primary-content);
-    stroke-opacity: 1;
-    stroke-width: 0.8;
+    fill: var(--checker, var(--region-color, var(--color-primary)));
+    stroke: var(--region-color, var(--color-primary));
+    stroke-opacity: 0.5;
     opacity: 1;
   }
   .nz-neutral {
-    fill: var(--color-base-200);
+    fill: var(--color-accent);
+    opacity: 0.5;
     stroke: var(--color-base-content);
-    stroke-opacity: 0.35;
+    stroke-opacity: 0.12;
     stroke-width: 0.6;
     stroke-linejoin: round;
   }
+  .nz-region:focus,
   .nz-region:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: -2px;
+    outline: none;
   }
 </style>
