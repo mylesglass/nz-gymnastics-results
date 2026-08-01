@@ -141,7 +141,7 @@ Core logic:
 - `/events/[id]` — Per-event results (thin wrapper around `WideResultsTable`)
 - `/results` — All events results (thin wrapper around `WideResultsTable`, adds Event filter column)
 - `/gymnast/[gnz_id]` — Individual gymnast results across all events
-- `/gymnasts` — Gymnast list (A-Z grouped, live search, GNZ ID shown subtly, ⚠ for multi-ID, comma-separated clubs for multi-club)
+- `/gymnasts` — Gymnast list (A-Z grouped, live search, GNZ ID shown subtly, ⚠ for multi-ID, comma-separated clubs for multi-club). Sticky header: search box + alphabet jump bar inline, active-letter highlight on scroll, collapsing title, "Back to top" button once scrolled
 - `/club/[club]` — Club results across all events
 - `/clubs` — Club list (region-grouped)
 

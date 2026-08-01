@@ -74,7 +74,7 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   │   ├── club/[club]/+page.server.ts # SSR load for club results
 │   │   │   ├── club/[club]/+page.svelte # Club results
 │   │   │   ├── gymnasts/+page.server.ts # SSR load for gymnast list
-│   │   │   ├── gymnasts/+page.svelte   # Gymnast list with A-Z letter jump
+│   │   │   ├── gymnasts/+page.svelte   # Gymnast list (A-Z jump, sticky header w/ search, back-to-top)
 │   │   │   ├── gymnast/[gnz_id]/+page.svelte # Gymnast results (client-only, no server load)
 │   │   ├── static/
 │   │   │   └── patch_notes.json  # Full update history; landing page shows all in a scrollable section

@@ -3,6 +3,15 @@
     "date": "2 Aug 2026",
     "entries": [
       {
+        "title": "Gymnast browsing upgrades",
+        "items": [
+          "Gymnasts page: sticky header with the search box and alphabet jump bar inline, so both stay visible while scrolling.",
+          "The alphabet bar highlights the section you're currently viewing, and a 'Back to top' button appears once you scroll.",
+          "Home-page stat badges and Wellington apparatus-specialist badges now use the default text style (no monospace).",
+          "Events list: the 'Nationals' badge now sits next to the event name in accent styling instead of the Discipline column."
+        ]
+      },
+      {
         "title": "Full update history on the landing page",
         "items": [
           "'What's new' now shows the entire patch-note history in a scrollable section instead of only the latest few entries."

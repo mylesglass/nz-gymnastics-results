@@ -186,26 +186,24 @@
                 class="font-medium cursor-pointer hover:link"
                 onclick={() => goto(`/events/${ev.id}`)}
               >
-                {ev.name}
+                <span class="inline-flex items-center gap-2">
+                  {ev.name}
+                  {#if ev.is_national}
+                    <span class="badge badge-accent badge-sm whitespace-nowrap">Nationals</span>
+                  {/if}
+                </span>
               </td>
               <td>{ev.year ?? ""}</td>
               <td>{ev.start_date}</td>
               <td>
                 {#if ev.discipline === "WAG"}
-                  <div class="flex gap-1 items-center">
-                    <span class="badge badge-primary badge-sm">WAG</span>
-                    {#if ev.is_national}<span class="badge badge-ghost badge-sm">Nationals</span>{/if}
-                  </div>
+                  <span class="badge badge-primary badge-sm">WAG</span>
                 {:else if ev.discipline === "MAG"}
-                  <div class="flex gap-1 items-center">
-                    <span class="badge badge-secondary badge-sm">MAG</span>
-                    {#if ev.is_national}<span class="badge badge-ghost badge-sm">Nationals</span>{/if}
-                  </div>
+                  <span class="badge badge-secondary badge-sm">MAG</span>
                 {:else}
                   <div class="flex gap-1 items-center">
                     <span class="badge badge-primary badge-sm">WAG</span>
                     <span class="badge badge-secondary badge-sm">MAG</span>
-                    {#if ev.is_national}<span class="badge badge-ghost badge-sm">Nationals</span>{/if}
                   </div>
                 {/if}
               </td>

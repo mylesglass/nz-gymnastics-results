@@ -464,7 +464,7 @@
               <div class="flex flex-wrap gap-1 justify-end">
                 {#each s.apparatus as a}
                   <span class="tooltip tooltip-top" data-tip={a.event || "Unknown competition"}>
-                    <span class="badge badge-sm font-mono {appBadgeClass(a.app)}">{a.app} {a.best.toFixed(3)}</span>
+                    <span class="badge badge-sm {appBadgeClass(a.app)}">{a.app} {a.best.toFixed(3)}</span>
                   </span>
                 {/each}
               </div>

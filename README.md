@@ -291,7 +291,7 @@ skipped when the reference data‑collection JSON files are not present.
 │   │       ├── results/+page.svelte         # All‑events results
 │   │       ├── clubs/+page.svelte           # Interactive NZ map + region club directory
 │   │       ├── club/[club]/+page.svelte     # Club results
-│   │       ├── gymnasts/+page.svelte        # Gymnast list (A‑Z grouped)
+│   │       ├── gymnasts/+page.svelte        # Gymnast list (A‑Z grouped, sticky header)
 │   │       └── gymnast/[gnz_id]/+page.svelte # Gymnast results
 │   └── static/
 │       └── patch_notes.json                 # Full update history (scrollable What's new section)

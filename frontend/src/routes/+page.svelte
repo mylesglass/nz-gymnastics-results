@@ -53,7 +53,7 @@
     >
       <div class="card-body items-center text-center py-6">
         {#if stats}
-          <span class="badge badge-primary badge-sm absolute top-3 right-3 font-mono">{stats.total_events}</span>
+          <span class="badge badge-primary badge-sm absolute top-3 right-3">{stats.total_events}</span>
         {/if}
         <span class="text-3xl mb-1">📋</span>
         <h2 class="card-title text-base">Events</h2>
@@ -66,7 +66,7 @@
     >
       <div class="card-body items-center text-center py-6">
         {#if stats}
-          <span class="badge badge-accent badge-sm absolute top-3 right-3 font-mono">{stats.total_scores.toLocaleString()}</span>
+          <span class="badge badge-accent badge-sm absolute top-3 right-3">{stats.total_scores.toLocaleString()}</span>
         {/if}
         <span class="text-3xl mb-1">🏆</span>
         <h2 class="card-title text-base">Results</h2>
@@ -79,7 +79,7 @@
     >
       <div class="card-body items-center text-center py-6">
         {#if stats}
-          <span class="badge badge-secondary badge-sm absolute top-3 right-3 font-mono">{stats.total_gymnasts.toLocaleString()}</span>
+          <span class="badge badge-secondary badge-sm absolute top-3 right-3">{stats.total_gymnasts.toLocaleString()}</span>
         {/if}
         <span class="text-3xl mb-1">🤸</span>
         <h2 class="card-title text-base">Gymnasts</h2>
@@ -92,7 +92,7 @@
     >
       <div class="card-body items-center text-center py-6">
         {#if stats}
-          <span class="badge badge-info badge-sm absolute top-3 right-3 font-mono">{stats.total_clubs}</span>
+          <span class="badge badge-info badge-sm absolute top-3 right-3">{stats.total_clubs}</span>
         {/if}
         <span class="text-3xl mb-1">🏛️</span>
         <h2 class="card-title text-base">Clubs</h2>
