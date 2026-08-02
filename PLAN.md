@@ -208,6 +208,28 @@
 - [x] Rankings nav dropdown with National Rankings / Wellington Rankings
 - [x] Config: WAG STEP 5-6 (GNZ 50.0 2×+away, Wgtn 53.0), WAG STEP 7-10 (GNZ 43.0 1×), MAG Level 4-6 (Wgtn 58.0), MAG Level 7+ (Wgtn 63.0)
 
+### STEP 24: Accessibility (a11y) 🔄 In Progress
+- [ ] **Tier 1 — High-value quick wins**
+  - [ ] Layout/nav: skip-to-content link + `id="main"`; wrap navbar + mobile drawer in `<nav>`; `aria-current="page"` on active nav links; mobile hamburger `<label>` → `<button aria-expanded aria-controls>` (`+layout.svelte:78`)
+  - [ ] Landing page: route both `in:fly` animations through reduced-motion-aware `reveal()`; init `motion` synchronously from `matchMedia` (`+page.svelte:42,73`)
+  - [ ] Upload: dropzone `onclick`+`onkeydown` → `fileInput.click()`; `aria-label` on file input; keep input reachable (`upload/+page.svelte:258-277`)
+  - [ ] NZ map: remove `role="img"` from root `<svg>`; visible focus indicator replacing `outline:none`; `aria-pressed` on active region; single name source (`NZRegionMap.svelte:73,102,122,170`)
+  - [ ] Tables: keyboard sort on apparatus `<th>`s; `aria-sort` on active column; `aria-label` on `« »`/filter triggers; `aria-expanded` + Escape on filter menus (`WideResultsTable.svelte`)
+  - [ ] Tooltips: `role="tooltip"`/`aria-describedby`; fix `AATooltip` `role="menu"` misuse; keyboard+focus open for `ScoreTooltip`/`AATooltip`; make wellington/rankings hover-only tooltips reachable
+  - [ ] Labels/live regions: login, user modals, edit-event, step/page-size/"Correct ID" selects, intent checkboxes, table search; `role="status"`/`aria-live` on admin toasts, edit toast, upload status; `role="alert"` on rankings/wellington errors; `aria-label` on icon-only buttons; events clickable `<td>` → real link
+  - [ ] Contrast quick wins: `text-base-content/40–60` bumps; `ScoreTooltip` header `opacity-70`
+- [ ] **Tier 2 — Dialogs, tabs, map focus**
+  - [ ] New shared `frontend/src/lib/Dialog.svelte` — `role="dialog"`, `aria-modal`, labelled heading, initial-focus move, focus trap, Escape close, focus restore, backdrop click
+  - [ ] Migrate all 5 modals to `Dialog.svelte` (upload club dialog, add/reset/delete user, edit/delete event)
+  - [ ] Tabs: remove `role="tab"` from radio year selector + WAG/MAG radios (native `checked` announced); rankings/Wellington button tabs → `aria-selected` + arrow keys or `aria-pressed` buttons
+  - [ ] Map→card: `aria-live` announcement + focus move on region select; accordion `aria-expanded`/`aria-controls`; stop nesting links inside `role="button"` card
+  - [ ] Filter dropdowns: focus into menu on open, focus return, Escape
+- [ ] **Tier 3 — Contrast + polish**
+  - [ ] `RegionBadge` palette contrast validation; map boundary stroke on hover/active
+  - [ ] `aria-hidden` on decorative emojis; heading-order fix on landing; patch-notes scroll region `tabindex`; table `<caption>`/`scope="col"`; `aria-hidden` on sticky dup header; drawer focus management
+- [ ] **Verification:** Lighthouse baseline before/after in `a11y-reports/` (gitignored-→ tracked, committed per tier); target accessibility ≥ 90; `cd frontend && npm run build` after each tier; manual keyboard tab-through
+- **Files:** `+layout.svelte`, `+page.svelte`, `upload/+page.svelte`, `NZRegionMap.svelte`, `WideResultsTable.svelte`, `ScoreTooltip.svelte`, `AATooltip.svelte`, `Dialog.svelte` (new), `regions.ts`, `RegionBadge.svelte`, all form/dialog pages
+
 ### Next Steps
 - [ ] Edit row functionality for admin
   - Inline edit of gymnast name / GNZ ID / club already saves to DB, but the results table doesn't feel reactive after save — needs investigation into the data reload path (`doLoad()` / `applyTab()`). Cache invalidation on `wide-all` works but the frontend may still show stale rows.
@@ -233,12 +255,10 @@
   - Client-side CSV/XLSX/PDF export dropdown on all result/ranking pages. `frontend/src/lib/export.ts` builds CSV, XLSX (SheetJS `xlsx`), and PDF (jsPDF + autotable); `ExportMenu.svelte` is the shared dropdown. Libraries lazy-loaded via dynamic `import()` so they only download on first export click. Backend `/api/events/{id}/export/csv|xlsx` endpoints unchanged.
   - XLSX honors a `colFormat` map: hides `region`, per-pass vault cols (`vt-1-*`, `vt-2-*`) and all `*-bonus`, widens name/club (30) + event_name (45). PDF renders the table view (one column per apparatus, D/Total), with title header + `Page X of Y` footer. Filenames are descriptive and kebab-cased via `slugifyFilename()`.
   - **Files:** `frontend/src/lib/export.ts`, `frontend/src/lib/ExportMenu.svelte`, the 4 `WideResultsTable` pages + `rankings` + `wellington-ranking`
-- [ ] a11y
-  - Accessibility audit: keyboard navigation, screen-reader labels, contrast ratios, focus management across tables, tooltips, dropdowns, and the NZ map.
-  - **Files:** table components, tooltips, nav, `NZRegionMap.svelte`
+- [ ] a11y — see **STEP 24** (tiered plan with Lighthouse baseline/comparison; tracked reports in `a11y-reports/`)
 - [x] Index remix: update index page, combine stats with badges, add Patch notes, streamline, add animation?
   - Live stat counts moved onto the nav cards as badges (Events/Gymnasts/Scores/Clubs), separate stats row removed. Added a "What's new" patch-notes section driven by `frontend/static/patch_notes.json` (full history, newest first; the page fetches it and renders everything in a scrollable list). Feature cards kept but copy tightened (CSV/XLSX/PDF). Subtle staggered fade/fly on-load reveal, gated on `prefers-reduced-motion`.
   - **Files:** `frontend/src/routes/+page.svelte`, `frontend/static/patch_notes.json`
-- [ ] Vetical sticky alphabet searcher on Gymnasts page.
+- [x] Vetical sticky alphabet searcher on Gymnasts page.
 - [ ] Rethink how Year Selector works
-- [ ] Event page Nationals badge shoudl show next to name, not discipline, also use accent badge
+- [x] Event page Nationals badge should show next to name, not discipline, also use accent badge
