@@ -46,7 +46,31 @@
     </p>
   </div>
 
-  <div in:fly={{ y: 14, duration: 450, delay: 100 }} class="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <div in:reveal={{ delay: 100 }} class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+    <div class="text-center">
+      <span class="text-2xl mb-1 block">🤸</span>
+      <h3 class="font-semibold text-sm">WAG &amp; MAG</h3>
+      <p class="text-xs text-base-content/70">
+        Complete results for both disciplines with per-apparatus breakdowns, vault aggregation, and AA totals.
+      </p>
+    </div>
+    <div class="text-center">
+      <span class="text-2xl mb-1 block">📥</span>
+      <h3 class="font-semibold text-sm">Export &amp; Share</h3>
+      <p class="text-xs text-base-content/70">
+        Download CSV, XLSX, or PDF with one click, or share links to gymnast and club profile pages.
+      </p>
+    </div>
+    <div class="text-center">
+      <span class="text-2xl mb-1 block">🔍</span>
+      <h3 class="font-semibold text-sm">Smart Filtering</h3>
+      <p class="text-xs text-base-content/70">
+        Filter by year, level, club, region, division, or round type with column-header dropdowns.
+      </p>
+    </div>
+  </div>
+
+  <div in:fly={{ y: 14, duration: 450, delay: 200 }} class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
     <a
       href="/events"
       class="card bg-base-200 hover:bg-base-300 border border-base-300 hover:border-base-content/20 hover:-translate-y-1 hover:shadow-lg transition-all cursor-pointer group"
@@ -99,36 +123,6 @@
         <p class="text-xs text-base-content/70">Explore clubs and their competition results</p>
       </div>
     </a>
-  </div>
-
-  <div in:reveal={{ delay: 200 }} class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 mb-8">
-    <div class="card bg-base-200 border border-base-300 border-t-4 border-t-primary">
-      <div class="card-body items-center text-center py-6">
-        <span class="text-3xl mb-2">🤸</span>
-        <h3 class="card-title text-sm">WAG &amp; MAG</h3>
-        <p class="text-xs text-base-content/70">
-          Complete results for both disciplines with per-apparatus breakdowns, vault aggregation, and AA totals.
-        </p>
-      </div>
-    </div>
-    <div class="card bg-base-200 border border-base-300 border-t-4 border-t-secondary">
-      <div class="card-body items-center text-center py-6">
-        <span class="text-3xl mb-2">📥</span>
-        <h3 class="card-title text-sm">Export &amp; Share</h3>
-        <p class="text-xs text-base-content/70">
-          Download CSV, XLSX, or PDF with one click, or share links to gymnast and club profile pages.
-        </p>
-      </div>
-    </div>
-    <div class="card bg-base-200 border border-base-300 border-t-4 border-t-accent">
-      <div class="card-body items-center text-center py-6">
-        <span class="text-3xl mb-2">🔍</span>
-        <h3 class="card-title text-sm">Smart Filtering</h3>
-        <p class="text-xs text-base-content/70">
-          Filter by year, level, club, region, division, or round type with column-header dropdowns.
-        </p>
-      </div>
-    </div>
   </div>
 
   <div in:reveal={{ delay: 300 }} class="card bg-base-200 border border-base-300 mt-12 mb-8">

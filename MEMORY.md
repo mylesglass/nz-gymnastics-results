@@ -124,14 +124,15 @@ Core logic:
 **Shared components:**
 - `WideResultsTable.svelte` — encapsulate all table rendering, filtering, sorting, sticky headers, scroll sync, duplicate header column width alignment, region column with colored dots, truncated event names. Used by all result pages.
 - `RegionBadge.svelte` — region pill with 2x2 checkerboard (primary+secondary colors) on primary fill, `whitespace-nowrap`, used in rankings and clubs pages
-- `regions.ts` — `REGION_PALETTES` constant mapping 15 NZ regions to 2-3 hex colors (NZ sports team inspired)
+- `NZRegionMap.svelte` — interactive SVG map of 15 regions; hovered/selected regions fill with a scrolling checker pattern (each region has its own CSS-var-driven direction + duration; seamless loop, respects `prefers-reduced-motion`)
+- `regions.ts` — `REGION_PALETTES` constant mapping 15 NZ regions to 2-3 hex colors (NZ sports team inspired), plus `REGION_ORDER` (north→south) and gradient/text/heading color helpers
 - `ScoreTooltip.svelte` — DaisyUI dropdown hover card showing D, E, N, Bonus, Rank for each apparatus
 - `AATooltip.svelte` — DaisyUI dropdown-hover tooltip showing AA score, rank, and summed D/E/N across all apparatus
 - `MultiSelect.svelte` — DaisyUI dropdown with checkboxes, Clear button, `min-w-48` buttons
 - `ExportMenu.svelte` — DaisyUI export dropdown (CSV/XLSX/PDF); `export.ts` builds files, XLSX honors `colFormat` (hidden columns + widths), PDF renders table-like columns with header + page numbers, libraries lazy-loaded
 
 **Routes:**
-- `/` — Landing page: nav cards with live stat badges, "What's new" section from `static/patch_notes.json` (fetched, all entries in a scrollable list)
+- `/` — Landing page: three plain info items (WAG & MAG, Export & Share, Smart Filtering) above clickable nav cards with live stat badges; "What's new" section from `static/patch_notes.json` (fetched, all entries in a scrollable list)
 - `/upload` — Drag-and-drop JSON upload, club mapping dialog, rich success card (gymnast/score/club counts)
 - `/login` — Username + password form, redirects to `/`
 - `/admin` — Admin dashboard (stats, user management, unified athlete ID reconciliation card with per-instance dropdowns, Quick Fix + Apply Selected buttons)
@@ -143,7 +144,7 @@ Core logic:
 - `/gymnast/[gnz_id]` — Individual gymnast results across all events
 - `/gymnasts` — Gymnast list (A-Z grouped, live search, GNZ ID shown subtly, ⚠ for multi-ID, comma-separated clubs for multi-club). Sticky header: search box + alphabet jump bar inline, active-letter highlight on scroll, collapsing title, "Back to top" button once scrolled
 - `/club/[club]` — Club results across all events
-- `/clubs` — Club list (region-grouped)
+- `/clubs` — Club list: desktop has the interactive NZ map (sticky left) + selected region box (right); mobile (`<lg`) replaces the map with a collapsible accordion of region cards (tap to expand, one open at a time), listed north→south via `REGION_ORDER`
 
 **Shared stores:**
 - `src/lib/year.ts` — `selectedYear` and `yearOptions` stores populated from `GET /api/years`; used globally in nav toggle

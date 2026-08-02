@@ -3,6 +3,15 @@
     "date": "2 Aug 2026",
     "entries": [
       {
+        "title": "Home, clubs & NZ map polish",
+        "items": [
+          "Landing page: the three info items (WAG & MAG, Export & Share, Smart Filtering) moved above the clickable nav cards and stripped of card styling, so the links clearly read as links.",
+          "Wellington Rankings: removed the coloured top border on the qualification-protocol card.",
+          "NZ map: hovering or selecting a region sets its checker pattern scrolling diagonally — each region has its own direction and speed.",
+          "Clubs page on mobile: the map is replaced by a collapsible accordion of the region cards (tap to expand), listed north to south."
+        ]
+      },
+      {
         "title": "Gymnast browsing upgrades",
         "items": [
           "Gymnasts page: sticky header with the search box and alphabet jump bar inline, so both stay visible while scrolling.",

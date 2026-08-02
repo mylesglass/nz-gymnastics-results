@@ -224,8 +224,8 @@
   - Define how international-division gymnasts qualify for Wellington events. Separate thresholds/table vs merged into the existing rankings — needs domain input.
   - **Files:** `backend/app/wellington_ranking.py`
 - [x] Order /clubs by region (Northland → Southland)
-  - Superseded by the interactive NZ map redesign: regions are selected geographically on the map, so a separate latitudinal list ordering is no longer needed. Clubs are grouped by region (`grouped` derived) and rendered per-region in the `RegionBox` snippet.
-  - **Files:** `frontend/src/routes/clubs/+page.svelte`, `frontend/src/lib/NZRegionMap.svelte`
+  - Desktop uses the interactive NZ map (geographic selection). Mobile replaced the map with a collapsible accordion of the region cards, so a latitudinal ordering is needed again — `REGION_ORDER` in `frontend/src/lib/regions.ts` drives the `grouped` sort on `/clubs` (north→south, "Other" last). Rendered via the shared `RegionCard` snippet.
+  - **Files:** `frontend/src/routes/clubs/+page.svelte`, `frontend/src/lib/regions.ts`
 - [x] Put provincial teams next to header, separate from clubs
   - Distinguish regional/provincial teams (e.g. `Counties - Manukau`) from regular clubs on the /clubs page — show them next to the region header rather than mixed into the club list.
   - **Files:** `frontend/src/routes/clubs/+page.svelte`

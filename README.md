@@ -14,7 +14,7 @@ community but designed to be adaptable for any gymnastics organisation. 🥇
 ### 📊 Results & browsing
 - **Wide-format results table** with WAG (Women's Artistic Gymnastics) and MAG (Men's Artistic Gymnastics) tabs
 - **Rich score tooltips** on apparatus scores showing full breakdown (D‑score, E‑score, neutral deductions, bonus, rank)
-- **Interactive NZ map** on the Clubs page — click any of the 15 gymnastics regions to see its clubs, each highlighted with its own colour palette 🗺️
+- **Interactive NZ map** on the Clubs page — click any of the 15 gymnastics regions to see its clubs (hover/select animates a scrolling checker), with a collapsible north‑to‑south region accordion on mobile 🗺️
 - **Club & gymnast profiles** — view all results for a single club or gymnast across all events (clickable table cells)
 - **All-events results** view, grouped by gymnast, with configurable year filter
 
@@ -270,16 +270,16 @@ skipped when the reference data‑collection JSON files are not present.
 │   │   │   ├── api.ts                       # Typed fetch wrappers for every endpoint
 │   │   │   ├── auth.ts                      # JWT auth store (currentUser, setToken, logout)
 │   │   │   ├── year.ts                      # Global year filter store
-│   │   │   ├── regions.ts                   # Region colour palettes + gradient helpers
+│   │   │   ├── regions.ts                   # Region colour palettes + REGION_ORDER + gradient helpers
 │   │   │   ├── RegionBadge.svelte           # Inline region colour chip
-│   │   │   ├── NZRegionMap.svelte           # Interactive SVG map of NZ (15 gym regions)
+│   │   │   ├── NZRegionMap.svelte           # Interactive SVG map of NZ (animated checker on hover/select)
 │   │   │   ├── WideResultsTable.svelte      # Shared results table (paginated, virtualised)
 │   │   │   ├── MultiSelect.svelte           # Multi‑select dropdown
 │   │   │   ├── ScoreTooltip.svelte          # Apparatus score breakdown tooltip
 │   │   │   └── AATooltip.svelte             # All‑around score tooltip
 │   │   └── routes/
 │   │       ├── +layout.svelte               # Nav bar, theme toggle, year tabs
-│   │       ├── +page.svelte                 # Landing page: nav cards with stat badges, What's new
+│   │       ├── +page.svelte                 # Landing page: info items above nav cards w/ stat badges, What's new
 │   │       ├── upload/+page.svelte          # JSON upload + import‑from‑URL
 │   │       ├── login/+page.svelte           # Username + password login
 │   │       ├── admin/+page.svelte           # Admin dashboard
@@ -289,7 +289,7 @@ skipped when the reference data‑collection JSON files are not present.
 │   │       ├── events/+page.svelte          # Event list (search / rename / delete)
 │   │       ├── events/[id]/+page.svelte     # Per‑event results
 │   │       ├── results/+page.svelte         # All‑events results
-│   │       ├── clubs/+page.svelte           # Interactive NZ map + region club directory
+│   │       ├── clubs/+page.svelte           # Interactive NZ map (desktop) / region accordion (mobile)
 │   │       ├── club/[club]/+page.svelte     # Club results
 │   │       ├── gymnasts/+page.svelte        # Gymnast list (A‑Z grouped, sticky header)
 │   │       └── gymnast/[gnz_id]/+page.svelte # Gymnast results

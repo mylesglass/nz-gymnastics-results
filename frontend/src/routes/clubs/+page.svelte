@@ -3,7 +3,7 @@
   import { onMount } from "svelte";
   import { listClubs } from "$lib/api";
   import NZRegionMap from "$lib/NZRegionMap.svelte";
-  import { REGION_PALETTES, gradientBackground, gradientTextColor, headingColor, textColor } from "$lib/regions";
+  import { REGION_PALETTES, REGION_ORDER, gradientBackground, gradientTextColor, headingColor, textColor } from "$lib/regions";
 
   let clubs = $state<{ name: string; gymnast_count: number; region: string | null; is_region: boolean }[]>([]);
   let loading = $state(true);
@@ -26,14 +26,21 @@
       if (!g[key]) g[key] = [];
       g[key].push(c);
     }
+    const rank = new Map(REGION_ORDER.map((r, i) => [r, i]));
     const sorted: Record<string, typeof clubs> = {};
-    for (const k of Object.keys(g).sort((a, b) => (a === "Other" ? 1 : b === "Other" ? -1 : a.localeCompare(b)))) {
+    for (const k of Object.keys(g).sort((a, b) => {
+      if (a === "Other") return 1;
+      if (b === "Other") return -1;
+      const ra = rank.get(a) ?? Number.MAX_SAFE_INTEGER;
+      const rb = rank.get(b) ?? Number.MAX_SAFE_INTEGER;
+      return ra - rb || a.localeCompare(b);
+    })) {
       sorted[k] = g[k];
     }
     return sorted;
   });
 
-  const REGIONS = Object.keys(grouped).filter((r) => r !== "Other");
+  let REGIONS = $derived(Object.keys(grouped).filter((r) => r !== "Other"));
 
   function provTeam(regionClubs: typeof clubs) {
     return regionClubs.find((c) => c.is_region);
@@ -49,6 +56,12 @@
       return;
     }
     active = name;
+  }
+
+  let mobileOpen = $state<string | null>(null);
+
+  function toggleMobile(name: string) {
+    mobileOpen = mobileOpen === name ? null : name;
   }
 </script>
 
@@ -70,7 +83,7 @@
   {:else}
     <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-8 lg:items-start">
       <!-- Map on the left -->
-      <div class="card bg-base-200/60 border border-base-300 shadow-lg overflow-hidden w-full lg:sticky lg:top-4">
+      <div class="card bg-base-200/60 border border-base-300 shadow-lg overflow-hidden w-full hidden lg:block lg:sticky lg:top-4">
         <div class="card-body p-6">
           <div class="overflow-hidden rounded-box" style="aspect-ratio: 525 / 692.3">
             <NZRegionMap {active} onSelect={selectRegion} />
@@ -82,11 +95,11 @@
       </div>
 
       <!-- Region box on the right -->
-      <div class="mt-6 lg:mt-0">
+      <div class="mt-6 lg:mt-0 hidden lg:block">
         {#if active && grouped[active]?.length}
           {#key active}
             <div in:fade={{ duration: 250 }}>
-              {@render RegionBox({ region: active, regionClubs: grouped[active], active, onselect: selectRegion })}
+              {@render RegionCard({ region: active, regionClubs: grouped[active], oncardclick: selectRegion })}
             </div>
           {/key}
         {:else}
@@ -96,6 +109,19 @@
             </div>
           </div>
         {/if}
+      </div>
+    </div>
+
+    <!-- Mobile region list -->
+    <div class="lg:hidden mt-4 mb-8">
+      <div class="flex items-baseline gap-2 mb-3">
+        <h2 class="text-xl font-bold">Regions</h2>
+        <span class="text-xs text-base-content/50">Tap a region to expand its clubs</span>
+      </div>
+      <div class="space-y-3">
+        {#each REGIONS as region}
+          {@render RegionCard({ region, regionClubs: grouped[region], expandable: true, open: mobileOpen === region, oncardclick: toggleMobile })}
+        {/each}
       </div>
     </div>
 
@@ -125,7 +151,7 @@
   {/if}
 </div>
 
-{#snippet RegionBox({ region, regionClubs, active, onselect }: { region: string; regionClubs: typeof clubs; active: string | null; onselect: (r: string) => void })}
+{#snippet RegionCard({ region, regionClubs, expandable = false, open = true, oncardclick }: { region: string; regionClubs: typeof clubs; expandable?: boolean; open?: boolean; oncardclick: (r: string) => void })}
   {@const team = provTeam(regionClubs)}
   {@const palette = REGION_PALETTES[region] ?? []}
   {@const bg = gradientBackground(palette)}
@@ -141,9 +167,9 @@
     role="button"
     tabindex="0"
     style="background: {bg}; color: {fg};"
-    onclick={() => onselect(region)}
+    onclick={() => oncardclick(region)}
     onkeydown={(e) => {
-      if (e.key === "Enter" || e.key === " ") onselect(region);
+      if (e.key === "Enter" || e.key === " ") oncardclick(region);
     }}
   >
     <div class="card-body p-5">
@@ -172,21 +198,34 @@
             </div>
           </a>
         {/if}
-      </div>
-      <div class="grid grid-cols-1 gap-2">
-        {#each regionClubs.filter((c) => !c.is_region) as club}
-          <a
-            href="/club/{encodeURIComponent(club.name)}"
-            class="card backdrop-blur-sm border transition-colors cursor-pointer"
-            style="--bg: {pillBg}; --hover-bg: {hoverBg}; border-color: {pillBorder}; color: {fg};"
+        {#if expandable}
+          <span
+            class="transition-transform duration-200 shrink-0"
+            class:rotate-180={open}
+            aria-hidden="true"
           >
-            <div class="card-body py-2 px-3 flex-row items-center justify-between">
-              <span class="font-medium text-sm" style="color: {fg}">{club.name}</span>
-              <span class="text-xs opacity-70">{club.gymnast_count} gymnasts</span>
-            </div>
-          </a>
-        {/each}
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" class="fill-current">
+              <path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z" />
+            </svg>
+          </span>
+        {/if}
       </div>
+      {#if open}
+        <div class="grid grid-cols-1 gap-2">
+          {#each regionClubs.filter((c) => !c.is_region) as club}
+            <a
+              href="/club/{encodeURIComponent(club.name)}"
+              class="card backdrop-blur-sm border transition-colors cursor-pointer"
+              style="--bg: {pillBg}; --hover-bg: {hoverBg}; border-color: {pillBorder}; color: {fg};"
+            >
+              <div class="card-body py-2 px-3 flex-row items-center justify-between">
+                <span class="font-medium text-sm" style="color: {fg}">{club.name}</span>
+                <span class="text-xs opacity-70">{club.gymnast_count} gymnasts</span>
+              </div>
+            </a>
+          {/each}
+        </div>
+      {/if}
     </div>
   </div>
 {/snippet}

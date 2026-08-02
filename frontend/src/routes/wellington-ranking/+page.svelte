@@ -235,7 +235,7 @@
 
   {#if configKey && CONFIG_INFO[configKey]}
     {@const info = CONFIG_INFO[configKey]}
-    <div class="card bg-base-200 border border-base-300 border-t-4 border-t-info mb-6">
+    <div class="card bg-base-200 border border-base-300 mb-6">
       <div class="card-body py-4">
         <div class="flex items-start gap-3">
           <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="size-6 shrink-0 mt-0.5 fill-info">

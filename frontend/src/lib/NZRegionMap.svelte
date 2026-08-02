@@ -49,6 +49,23 @@
   function regionSecondary(name: string): string {
     return REGION_PALETTES[name]?.[1] ?? regionPrimary(name);
   }
+
+  const SCROLL_DIRECTIONS: [number, number][] = [
+    [-80, -20], [-80, 20], [80, -20], [80, 20],
+    [-20, -80], [-20, 80], [20, -80], [20, 80],
+    [-80, 0], [80, 0], [0, -80], [0, 80],
+  ];
+
+  function pick(i: number, n: number): number {
+    let h = i + 1;
+    h = (h * 9301 + 49297) % 233280;
+    return h % n;
+  }
+
+  function scrollFor(i: number): { x: number; y: number; duration: number } {
+    const [x, y] = SCROLL_DIRECTIONS[pick(i, SCROLL_DIRECTIONS.length)];
+    return { x, y, duration: 3 + pick(i, 5) };
+  }
 </script>
 
 <svg
@@ -63,17 +80,6 @@
         <rect x={c.clip.x} y={c.clip.y} width={c.clip.w} height={c.clip.h} />
       </clipPath>
     {/each}
-
-    {#each REGION_CONFIGS as c, i}
-      {@const p = regionPrimary(c.name)}
-      {@const s = regionSecondary(c.name)}
-      <pattern id="nz-checker-{i}" width="20" height="20" patternUnits="userSpaceOnUse">
-        <rect width="10" height="10" fill={p} />
-        <rect x="10" y="10" width="10" height="10" fill={p} />
-        <rect x="10" width="10" height="10" fill={s} />
-        <rect y="10" width="10" height="10" fill={s} />
-      </pattern>
-    {/each}
   </defs>
 
   {#each NEUTRAL_IDS as id}
@@ -82,23 +88,32 @@
     {/if}
   {/each}
 
-  {#each REGION_CONFIGS as c}
+  {#each REGION_CONFIGS as c, i}
     {@const clipId = CLIP_ID_BY_NAME.get(c.name) ?? null}
     {@const isActive = active === c.name}
     {@const regionColor = regionPrimary(c.name)}
     {@const checker = CHECKER_BY_NAME.get(c.name) ?? "var(--color-primary)"}
+    {@const p = regionPrimary(c.name)}
+    {@const s = regionSecondary(c.name)}
+    {@const scroll = scrollFor(i)}
     <g
       role="button"
       tabindex="0"
       aria-label={c.name}
       class="nz-region"
       class:nz-active={isActive}
-      style="--region-color: {regionColor}; --checker: {checker};"
+      style="--region-color: {regionColor}; --checker: {checker}; --scroll-x: {scroll.x}px; --scroll-y: {scroll.y}px; --scroll-duration: {scroll.duration}s;"
       onclick={() => onSelect(c.name)}
       onkeydown={(e) => {
         if (e.key === "Enter" || e.key === " ") onSelect(c.name);
       }}
     >
+      <pattern id="nz-checker-{i}" width="20" height="20" patternUnits="userSpaceOnUse">
+        <rect width="10" height="10" fill={p} />
+        <rect x="10" y="10" width="10" height="10" fill={p} />
+        <rect x="10" width="10" height="10" fill={s} />
+        <rect y="10" width="10" height="10" fill={s} />
+      </pattern>
       {#each c.ids as id}
         {#if paths.has(id)}
           <path d={paths.get(id)} clip-path={clipId ? `url(#${clipId})` : undefined} />
@@ -122,15 +137,27 @@
   }
   .nz-region:hover {
     fill: var(--checker, var(--region-color, var(--color-primary)));
-    stroke: var(--region-color, var(--color-primary));
-    stroke-opacity: 0.5;
+    stroke: none;
     opacity: 1;
   }
   .nz-active {
     fill: var(--checker, var(--region-color, var(--color-primary)));
-    stroke: var(--region-color, var(--color-primary));
-    stroke-opacity: 0.5;
+    stroke: none;
     opacity: 1;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .nz-region:hover pattern,
+    .nz-active pattern {
+      animation: nz-checker-scroll var(--scroll-duration, 4s) linear infinite;
+    }
+  }
+  @keyframes nz-checker-scroll {
+    from {
+      transform: translate(0, 0);
+    }
+    to {
+      transform: translate(var(--scroll-x, -80px), var(--scroll-y, -20px));
+    }
   }
   .nz-neutral {
     fill: var(--color-accent);

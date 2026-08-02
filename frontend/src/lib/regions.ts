@@ -16,6 +16,24 @@ export const REGION_PALETTES: Record<string, string[]> = {
   "Wellington":              ["#000000", "#FFC72C", "#FFFFFF"],
 };
 
+export const REGION_ORDER: string[] = [
+  "Northland",
+  "Harbour",
+  "Auckland",
+  "Counties - Manukau",
+  "Waikato",
+  "Bay of Plenty",
+  "Taranaki",
+  "Hawkes Bay / Poverty Bay",
+  "Manawatu - Whanganui",
+  "Wellington",
+  "Top of the South",
+  "Canterbury",
+  "Aorangi",
+  "Otago",
+  "Southland",
+];
+
 export function textColor(hex: string): string {
   let h = hex.replace("#", "");
   let r = parseInt(h.substring(0, 2), 16);
