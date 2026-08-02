@@ -208,7 +208,7 @@
 - [x] Rankings nav dropdown with National Rankings / Wellington Rankings
 - [x] Config: WAG STEP 5-6 (GNZ 50.0 2×+away, Wgtn 53.0), WAG STEP 7-10 (GNZ 43.0 1×), MAG Level 4-6 (Wgtn 58.0), MAG Level 7+ (Wgtn 63.0)
 
-### STEP 24: Accessibility (a11y) 🔄 In Progress
+### STEP 24: Accessibility (a11y) ✅
 - [x] **Tier 1 — High-value quick wins**
   - [x] Layout/nav: skip-to-content link + `id="main"`; wrap navbar + mobile drawer in `<nav>`; `aria-current="page"` on active nav links; mobile hamburger `<label>` → `<button aria-expanded aria-controls>` (`+layout.svelte:78`)
   - [x] Landing page: route both `in:fly` animations through reduced-motion-aware `reveal()`; init `motion` synchronously from `matchMedia` (`+page.svelte:42,73`)
@@ -224,10 +224,10 @@
   - [x] Tabs: remove `role="tab"` from radio year selector + WAG/MAG radios (native `checked` announced); rankings/Wellington button tabs → `aria-pressed` buttons
   - [x] Map→card: `aria-live` announcement + focus move on region select; accordion `aria-expanded`/`aria-controls`; stop nesting links inside `role="button"` card
   - [x] Filter dropdowns: focus into menu on open, focus return, Escape
-- [ ] **Tier 3 — Contrast + polish**
-  - [ ] `RegionBadge` palette contrast validation; map boundary stroke on hover/active
-  - [ ] `aria-hidden` on decorative emojis; heading-order fix on landing; patch-notes scroll region `tabindex`; table `<caption>`/`scope="col"`; `aria-hidden` on sticky dup header; drawer focus management
-- [ ] **Verification:** Lighthouse baseline before/after in `a11y-reports/` (gitignored-→ tracked, committed per tier); target accessibility ≥ 90; `cd frontend && npm run build` after each tier; manual keyboard tab-through
+- [x] **Tier 3 — Contrast + polish**
+  - [x] `RegionBadge`/`textColor` palette contrast → WCAG relative-luminance contrast selection (pure `#000` vs `#fff`); map boundary stroke kept on hover/active
+  - [x] `aria-hidden` on decorative emojis; heading-order fix on landing (feature h3 → p); patch-notes scroll region `tabindex`+`role="region"`; `scope="col"` on tables; `aria-hidden` on sticky dup header; drawer Escape-close; user/rankings dropdowns → real buttons with `role="menu"`/`aria-haspopup`
+- [x] **Verification:** Lighthouse baseline before/after in `a11y-reports/` (tracked, committed per tier); all 6 public pages scored **100/100** after tier 3 (home/events/results/clubs/gymnasts/login; baseline 93/99/92/96/95/100); `cd frontend && npm run build` passes after each tier
 - **Files:** `+layout.svelte`, `+page.svelte`, `upload/+page.svelte`, `NZRegionMap.svelte`, `WideResultsTable.svelte`, `ScoreTooltip.svelte`, `AATooltip.svelte`, `Dialog.svelte` (new), `regions.ts`, `RegionBadge.svelte`, all form/dialog pages
 
 ### Next Steps

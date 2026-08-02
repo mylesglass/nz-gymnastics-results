@@ -34,29 +34,38 @@ export const REGION_ORDER: string[] = [
   "Southland",
 ];
 
+function srgbLuminance(hex: string): number {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16) / 255;
+  const g = parseInt(h.substring(2, 4), 16) / 255;
+  const b = parseInt(h.substring(4, 6), 16) / 255;
+  const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
+function contrast(a: number, b: number): number {
+  const [hi, lo] = a > b ? [a, b] : [b, a];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+// Pick black or white text (whichever gives the higher WCAG contrast ratio)
+// against the given background hex. Pure black (#000) rather than #111 so
+// mid-tone greens/blues (e.g. #008751) clear the 4.5:1 AA bar.
 export function textColor(hex: string): string {
-  let h = hex.replace("#", "");
-  let r = parseInt(h.substring(0, 2), 16);
-  let g = parseInt(h.substring(2, 4), 16);
-  let b = parseInt(h.substring(4, 6), 16);
-  return (r * 0.299 + g * 0.587 + b * 0.114) > 160 ? "#111" : "#fff";
+  const bg = srgbLuminance(hex);
+  const white = contrast(bg, 1);
+  const black = contrast(bg, 0);
+  return black > white ? "#000" : "#fff";
 }
 
 export function gradientTextColor(colors: string[]): string {
-  if (!colors.length) return "#111";
-  const lum = (hex: string) => {
-    const h = hex.replace("#", "");
-    const r = parseInt(h.substring(0, 2), 16);
-    const g = parseInt(h.substring(2, 4), 16);
-    const b = parseInt(h.substring(4, 6), 16);
-    return r * 0.299 + g * 0.587 + b * 0.114;
-  };
-  // Pick the palette stop furthest from luminance 128 so heading stays readable
-  // regardless of where the gradient falls behind it.
+  if (!colors.length) return "#000";
+  // Pick the palette stop furthest from luminance 0.5 so heading stays
+  // readable regardless of where the gradient falls behind it.
   const stop = colors.reduce((best, c) =>
-    Math.abs(lum(c) - 128) > Math.abs(lum(best) - 128) ? c : best
+    Math.abs(srgbLuminance(c) - 0.5) > Math.abs(srgbLuminance(best) - 0.5) ? c : best
   );
-  return lum(stop) > 160 ? "#111" : "#fff";
+  return textColor(stop);
 }
 
 export function gradientBackground(colors: string[]): string {
@@ -66,20 +75,12 @@ export function gradientBackground(colors: string[]): string {
   return `linear-gradient(135deg, ${c0} 0%, ${c0} 40%, ${c1} 90%, ${c1} 100%)`;
 }
 
-function luminance(hex: string): number {
-  const h = hex.replace("#", "");
-  const r = parseInt(h.substring(0, 2), 16);
-  const g = parseInt(h.substring(2, 4), 16);
-  const b = parseInt(h.substring(4, 6), 16);
-  return r * 0.299 + g * 0.587 + b * 0.114;
-}
-
 // Prefer the palette's secondary colour for headings, but fall back to the
 // contrast-derived text colour when it doesn't contrast with the primary.
 export function headingColor(colors: string[]): string {
   if (colors.length < 2) return gradientTextColor(colors);
-  const a = luminance(colors[0]);
-  const b = luminance(colors[1]);
-  if (Math.abs(a - b) < 50) return gradientTextColor(colors);
+  const a = srgbLuminance(colors[0]);
+  const b = srgbLuminance(colors[1]);
+  if (Math.abs(a - b) < 0.2) return gradientTextColor(colors);
   return colors[1];
 }

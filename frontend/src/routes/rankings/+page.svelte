@@ -231,7 +231,7 @@
                 </td>
               {/each}
               {#if r.scores.length < 2}
-                <td class="text-right text-base-content/60">—</td>
+                <td class="text-right text-base-content/70">—</td>
               {/if}
               <td class="text-right font-semibold">{r.total.toFixed(3)}</td>
               <td class="text-right text-base-content/70">{(r.total / r.scores.length).toFixed(3)}</td>

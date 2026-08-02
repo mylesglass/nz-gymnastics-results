@@ -179,7 +179,7 @@
                 {/if}
               </td>
               <td><span class={roleBadge(u.role)}>{u.role}</span></td>
-              <td class="text-sm text-base-content/60">{new Date(u.created_at).toLocaleDateString()}</td>
+              <td class="text-sm text-base-content/70">{new Date(u.created_at).toLocaleDateString()}</td>
               <td>
                 <div class="flex gap-1">
                   <button

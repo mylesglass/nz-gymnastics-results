@@ -198,19 +198,19 @@
   {:else}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
       <div class="stat bg-base-200 rounded-box">
-        <div class="stat-title text-base-content/60 text-xs">Events</div>
+        <div class="stat-title text-base-content/70 text-xs">Events</div>
         <div class="stat-value text-2xl">{stats?.total_events ?? "—"}</div>
       </div>
       <div class="stat bg-base-200 rounded-box">
-        <div class="stat-title text-base-content/60 text-xs">Gymnasts</div>
+        <div class="stat-title text-base-content/70 text-xs">Gymnasts</div>
         <div class="stat-value text-2xl">{(stats?.total_gymnasts ?? 0).toLocaleString()}</div>
       </div>
       <div class="stat bg-base-200 rounded-box">
-        <div class="stat-title text-base-content/60 text-xs">Scores</div>
+        <div class="stat-title text-base-content/70 text-xs">Scores</div>
         <div class="stat-value text-2xl">{(stats?.total_scores ?? 0).toLocaleString()}</div>
       </div>
       <div class="stat bg-base-200 rounded-box">
-        <div class="stat-title text-base-content/60 text-xs">Clubs</div>
+        <div class="stat-title text-base-content/70 text-xs">Clubs</div>
         <div class="stat-value text-2xl">{stats?.total_clubs ?? "—"}</div>
       </div>
     </div>
@@ -342,7 +342,7 @@
             </button>
           </div>
         {:else}
-          <p class="text-sm text-base-content/60">No ID inconsistencies found. All gymnasts have consistent GNZ IDs.</p>
+          <p class="text-sm text-base-content/70">No ID inconsistencies found. All gymnasts have consistent GNZ IDs.</p>
         {/if}
       </div>
     </div>
@@ -414,9 +414,9 @@
             </div>
           {/if}
         {:else if merges.length > 0 && visibleMerges.length === 0}
-          <p class="text-sm text-base-content/60">All suggestions dismissed. Refresh the page to see new suggestions.</p>
+          <p class="text-sm text-base-content/70">All suggestions dismissed. Refresh the page to see new suggestions.</p>
         {:else}
-          <p class="text-sm text-base-content/60">No similar name pairs found.</p>
+          <p class="text-sm text-base-content/70">No similar name pairs found.</p>
         {/if}
       </div>
     </div>

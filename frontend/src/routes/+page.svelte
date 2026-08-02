@@ -132,7 +132,7 @@
         <div class="space-y-5 max-h-96 overflow-y-auto pr-2 -mr-2" tabindex="0" role="region" aria-label="Patch notes">
           {#each patchNotes as group}
             <div>
-              <h3 class="text-sm font-semibold text-primary mb-2">{group.date}</h3>
+              <h3 class="text-sm font-semibold text-base-content mb-2">{group.date}</h3>
               <ul class="space-y-3 text-sm text-base-content/80">
                 {#each group.entries as entry}
                   <li class="border-l-2 border-base-300 pl-4">

@@ -221,7 +221,7 @@
               <td>
                 <button
                   class="btn btn-ghost btn-xs"
-                  title="Edit"
+                  aria-label={`Edit ${ev.name}`}
                   onclick={() => startEdit(ev)}
                 >
                   <svg

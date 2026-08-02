@@ -139,12 +139,16 @@
   }
   .nz-region:hover {
     fill: var(--checker, var(--region-color, var(--color-primary)));
-    stroke: none;
+    stroke: var(--color-base-content);
+    stroke-opacity: 0.5;
+    stroke-width: 0.8;
     opacity: 1;
   }
   .nz-active {
     fill: var(--checker, var(--region-color, var(--color-primary)));
-    stroke: none;
+    stroke: var(--color-base-content);
+    stroke-opacity: 0.5;
+    stroke-width: 0.8;
     opacity: 1;
   }
   @media (prefers-reduced-motion: no-preference) {

@@ -736,7 +736,7 @@ function appDisplayLabel(prefix: string): string {
                     <button
                       type="button"
                       onclick={() => toggleSort(col)}
-                      class="hover:text-primary text-xs font-bold"
+                      class="hover:text-primary text-xs font-bold min-h-6"
                     >
                       {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
                       {#if sortCol === col}<span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>{/if}
@@ -745,7 +745,7 @@ function appDisplayLabel(prefix: string): string {
                       <button
                         type="button"
                         onclick={(e) => toggleDropdown(col, e)}
-                        class="btn btn-ghost btn-xs px-0.5 min-h-0 h-5"
+                        class="btn btn-ghost btn-xs px-1 h-6 min-w-6"
                         aria-label={`Filter ${col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}`}
                         aria-haspopup="dialog"
                         aria-expanded={openDropdown === col}
@@ -790,7 +790,7 @@ function appDisplayLabel(prefix: string): string {
                     <button
                       type="button"
                       onclick={() => toggleSort(col)}
-                      class="hover:text-primary text-xs font-bold"
+                      class="hover:text-primary text-xs font-bold min-h-6"
                     >
                       {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
                       {#if sortCol === col}<span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>{/if}
@@ -799,7 +799,7 @@ function appDisplayLabel(prefix: string): string {
                       <button
                         type="button"
                         onclick={(e) => toggleDropdown(col, e)}
-                        class="btn btn-ghost btn-xs px-0.5 min-h-0 h-5"
+                        class="btn btn-ghost btn-xs px-1 h-6 min-w-6"
                         aria-label={`Filter ${col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}`}
                         aria-haspopup="dialog"
                         aria-expanded={openDropdown === col}
@@ -843,7 +843,7 @@ function appDisplayLabel(prefix: string): string {
                 <button
                   type="button"
                   onclick={() => toggleSort(col)}
-                  class="hover:text-primary text-xs font-bold"
+                  class="hover:text-primary text-xs font-bold min-h-6"
                 >
                   {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
                   {#if sortCol === col}
@@ -857,7 +857,7 @@ function appDisplayLabel(prefix: string): string {
                     onkeydown={(e) => {
                       if (e.key === "Escape") { e.preventDefault(); openDropdown = null; }
                     }}
-                    class="btn btn-ghost btn-xs px-0.5 min-h-0 h-5"
+                    class="btn btn-ghost btn-xs px-1 h-6 min-w-6"
                     aria-label={`Filter ${col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}`}
                     aria-haspopup="dialog"
                     aria-expanded={openDropdown === col}
@@ -909,7 +909,7 @@ function appDisplayLabel(prefix: string): string {
                 <button
                   type="button"
                   onclick={() => toggleSort(col)}
-                  class="hover:text-primary text-xs font-bold"
+                  class="hover:text-primary text-xs font-bold min-h-6"
                 >
                   {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
                   {#if sortCol === col}
@@ -923,7 +923,7 @@ function appDisplayLabel(prefix: string): string {
                     onkeydown={(e) => {
                       if (e.key === "Escape") { e.preventDefault(); openDropdown = null; }
                     }}
-                    class="btn btn-ghost btn-xs px-0.5 min-h-0 h-5"
+                    class="btn btn-ghost btn-xs px-1 h-6 min-w-6"
                     aria-label={`Filter ${col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}`}
                     aria-haspopup="dialog"
                     aria-expanded={openDropdown === col}

@@ -170,14 +170,16 @@
             <div class="dropdown dropdown-hover dropdown-end" style="z-index: 100">
               <button
                 class="btn btn-sm {active('/rankings') || active('/wellington-ranking') ? 'btn-primary' : 'btn-ghost'}"
+                aria-haspopup="menu"
+                aria-expanded={false}
                 onclick={() => goto('/rankings')}
               >
                 Rankings
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-3 fill-current opacity-60"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-3 fill-current opacity-60" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
               </button>
-              <ul class="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow">
-                <li><a href="/rankings" class={active('/rankings') ? 'active' : ''}>National Rankings</a></li>
-                <li><a href="/wellington-ranking" class={active('/wellington-ranking') ? 'active' : ''}>Wellington Rankings</a></li>
+              <ul role="menu" aria-label="Rankings" class="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow">
+                <li role="none"><a role="menuitem" href="/rankings" class={active('/rankings') ? 'active' : ''}>National Rankings</a></li>
+                <li role="none"><a role="menuitem" href="/wellington-ranking" class={active('/wellington-ranking') ? 'active' : ''}>Wellington Rankings</a></li>
               </ul>
             </div>
           {/if}
@@ -200,14 +202,19 @@
         {#if authCfg}
           {#if user}
             <div class="dropdown dropdown-end">
-              <div tabindex="0" role="button" class="badge badge-primary badge-sm gap-1 px-3 py-3 cursor-pointer hover:opacity-80 transition-opacity select-none">
+              <button
+                type="button"
+                class="badge badge-primary badge-sm gap-1 px-3 py-3 cursor-pointer hover:opacity-80 transition-opacity select-none"
+                aria-haspopup="menu"
+                aria-expanded={false}
+              >
                 {user.username}
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-3 fill-current opacity-60"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
-              </div>
-              <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box w-44 p-2 shadow" style="z-index: 50">
-                <li><span class="text-xs text-base-content/70 px-3 py-1">{user.role}</span></li>
-                <li class="border-t border-base-300 mt-1 pt-1">
-                  <button onclick={() => { logout(); goto("/"); }}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-3 fill-current opacity-60" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
+              </button>
+              <ul tabindex="0" role="menu" aria-label="User menu" class="dropdown-content menu bg-base-100 rounded-box w-44 p-2 shadow" style="z-index: 50">
+                <li role="none"><span class="text-xs text-base-content/70 px-3 py-1">{user.role}</span></li>
+                <li role="none" class="border-t border-base-300 mt-1 pt-1">
+                  <button role="menuitem" onclick={() => { logout(); goto("/"); }}>
                     Logout
                   </button>
                 </li>
