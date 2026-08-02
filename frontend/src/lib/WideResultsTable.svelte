@@ -657,12 +657,11 @@ function appDisplayLabel(prefix: string): string {
     </h1>
 
     <div class="flex flex-wrap items-center gap-1 pb-1">
-      <div role="tablist" class="tabs tabs-box tabs-xs">
+      <div class="tabs tabs-box tabs-xs" aria-label="Discipline">
         {#each Object.keys(allData) as tab}
           <input
             type="radio"
             name={discTabsName}
-            role="tab"
             class="tab {tab === 'wag' ? 'checked:bg-primary checked:text-primary-content' : 'checked:bg-secondary checked:text-secondary-content'}"
             aria-label={tab.toUpperCase()}
             checked={activeTab === tab}

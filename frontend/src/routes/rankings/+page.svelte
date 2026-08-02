@@ -129,9 +129,9 @@
   <p class="text-base-content/70 mb-6">Season rankings — top 2 All Around scores per gymnast (excludes Nationals).</p>
 
   <div class="flex flex-wrap items-center gap-3 mb-6">
-    <div role="tablist" aria-label="Discipline" class="tabs tabs-box">
-      <button role="tab" aria-selected={discipline === 'WAG'} class="tab tab-sm {discipline === 'WAG' ? 'bg-primary text-primary-content rounded-lg' : ''}" onclick={() => switchDisc('WAG')}>WAG</button>
-      <button role="tab" aria-selected={discipline === 'MAG'} class="tab tab-sm {discipline === 'MAG' ? 'bg-secondary text-secondary-content rounded-lg' : ''}" onclick={() => switchDisc('MAG')}>MAG</button>
+    <div class="tabs tabs-box" aria-label="Discipline">
+      <button type="button" aria-pressed={discipline === 'WAG'} class="tab tab-sm {discipline === 'WAG' ? 'bg-primary text-primary-content rounded-lg' : ''}" onclick={() => switchDisc('WAG')}>WAG</button>
+      <button type="button" aria-pressed={discipline === 'MAG'} class="tab tab-sm {discipline === 'MAG' ? 'bg-secondary text-secondary-content rounded-lg' : ''}" onclick={() => switchDisc('MAG')}>MAG</button>
     </div>
 
     {#if steps.length > 0}

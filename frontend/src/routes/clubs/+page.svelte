@@ -63,6 +63,14 @@
   function toggleMobile(name: string) {
     mobileOpen = mobileOpen === name ? null : name;
   }
+
+  let desktopCardEl: HTMLElement | undefined = $state();
+
+  $effect(() => {
+    if (active && desktopCardEl) {
+      desktopCardEl.focus({ preventScroll: true });
+    }
+  });
 </script>
 
 <svelte:head>
@@ -95,11 +103,13 @@
       </div>
 
       <!-- Region box on the right -->
-      <div class="mt-6 lg:mt-0 hidden lg:block">
+      <div class="mt-6 lg:mt-0 hidden lg:block" role="status" aria-live="polite">
         {#if active && grouped[active]?.length}
           {#key active}
             <div in:fade={{ duration: 250 }}>
-              {@render RegionCard({ region: active, regionClubs: grouped[active], oncardclick: selectRegion })}
+              <div tabindex="-1" bind:this={desktopCardEl} class="outline-none">
+                {@render RegionCard({ region: active, regionClubs: grouped[active], oncardclick: selectRegion })}
+              </div>
             </div>
           {/key}
         {:else}

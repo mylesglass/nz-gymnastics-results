@@ -3,6 +3,7 @@
   import { uploadFile, importFromUrl, saveAliases, checkAuthStatus } from "$lib/api";
   import type { EventSummary } from "$lib/api";
   import { currentUser, authConfigured } from "$lib/auth";
+  import Dialog from "$lib/Dialog.svelte";
 
   type UploadSource = { kind: "file"; file: File } | { kind: "url"; url: string };
   const KEEP_ORIGINAL = "__keep__";
@@ -246,6 +247,10 @@
       browse(e);
     }
   }
+
+  function slugId(name: string): string {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 40) || "unknown";
+  }
 </script>
 
 <svelte:head>
@@ -419,20 +424,18 @@
 </div>
 
 {#if clubDialog}
-  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onclick={() => (clubDialog = null)}>
-    <div class="bg-base-100 rounded-box shadow-xl p-6 w-full max-w-lg mx-4" onclick={(e) => e.stopPropagation()}>
-      <h3 class="text-lg font-bold mb-2">Unknown Club Names</h3>
-      <p class="text-sm text-base-content/70 mb-4">
-        Some clubs in this file aren't in the known club list.
-        Map each to an existing club, or leave as "Keep original" to add it as a new club.
-        Close matches are pre-selected automatically.
-      </p>
+  <Dialog title="Unknown Club Names" onClose={() => (clubDialog = null)} maxWidth="max-w-lg">
+    <p class="text-sm text-base-content/70 mb-4">
+      Some clubs in this file aren't in the known club list.
+      Map each to an existing club, or leave as "Keep original" to add it as a new club.
+      Close matches are pre-selected automatically.
+    </p>
       <div class="space-y-3 max-h-80 overflow-y-auto">
         {#each clubDialog.unknown as unknown}
           <div>
-            <label class="text-sm font-medium block mb-1">"{unknown}"</label>
+            <label for="club-map-{slugId(unknown)}" class="text-sm font-medium block mb-1">"{unknown}"</label>
             <select
+              id="club-map-{slugId(unknown)}"
               class="select select-bordered select-sm w-full"
               value={clubMappings[unknown]}
               onchange={(e) => {
@@ -454,6 +457,5 @@
         <button class="btn btn-ghost btn-sm" onclick={skipUnknown}>Keep all original</button>
         <button class="btn btn-primary btn-sm" onclick={saveAndRetry}>Save &amp; Retry</button>
       </div>
-    </div>
-  </div>
+  </Dialog>
 {/if}

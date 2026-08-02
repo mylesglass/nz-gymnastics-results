@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { getToken } from "$lib/auth";
+  import Dialog from "$lib/Dialog.svelte";
 
   interface User {
     id: number;
@@ -209,110 +210,96 @@
 
 <!-- Add User Modal -->
 {#if showAdd}
-  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onclick={() => (showAdd = false)}>
-    <div class="bg-base-100 rounded-box shadow-xl p-6 w-full max-w-md mx-4" onclick={(e) => e.stopPropagation()}>
-      <h3 class="text-lg font-bold mb-4">Add User</h3>
-      <div class="flex flex-col gap-3">
-        <label for="add-username" class="sr-only">Username</label>
-        <input
-          id="add-username"
-          type="text"
-          class="input input-bordered w-full"
-          placeholder="Username"
-          bind:value={newUsername}
-          autofocus
-        />
-        <label for="add-password" class="sr-only">Password</label>
-        <input
-          id="add-password"
-          type="password"
-          class="input input-bordered w-full"
-          placeholder="Password"
-          bind:value={newPassword}
-        />
-        <label for="add-role" class="sr-only">Role</label>
-        <select id="add-role" class="select select-bordered w-full" bind:value={newRole}>
-          <option value="member">Member</option>
-          <option value="admin">Admin</option>
-        </select>
-        {#if addError}
-          <div role="alert" class="alert alert-error py-2">
-            <span class="text-sm">{addError}</span>
-          </div>
-        {/if}
-      </div>
-      <div class="flex justify-end gap-2 mt-4">
-        <button class="btn btn-ghost btn-sm" onclick={() => (showAdd = false)}>Cancel</button>
-        <button
-          class="btn btn-primary btn-sm"
-          onclick={submitAdd}
-          disabled={adding || !newUsername.trim() || !newPassword.trim()}
-        >
-          {adding ? "Adding..." : "Add User"}
-        </button>
-      </div>
+  <Dialog title="Add User" onClose={() => (showAdd = false)}>
+    <div class="flex flex-col gap-3">
+      <label for="add-username" class="sr-only">Username</label>
+      <input
+        id="add-username"
+        type="text"
+        class="input input-bordered w-full"
+        placeholder="Username"
+        bind:value={newUsername}
+      />
+      <label for="add-password" class="sr-only">Password</label>
+      <input
+        id="add-password"
+        type="password"
+        class="input input-bordered w-full"
+        placeholder="Password"
+        bind:value={newPassword}
+      />
+      <label for="add-role" class="sr-only">Role</label>
+      <select id="add-role" class="select select-bordered w-full" bind:value={newRole}>
+        <option value="member">Member</option>
+        <option value="admin">Admin</option>
+      </select>
+      {#if addError}
+        <div role="alert" class="alert alert-error py-2">
+          <span class="text-sm">{addError}</span>
+        </div>
+      {/if}
     </div>
-  </div>
+    <div class="flex justify-end gap-2 mt-4">
+      <button class="btn btn-ghost btn-sm" onclick={() => (showAdd = false)}>Cancel</button>
+      <button
+        class="btn btn-primary btn-sm"
+        onclick={submitAdd}
+        disabled={adding || !newUsername.trim() || !newPassword.trim()}
+      >
+        {adding ? "Adding..." : "Add User"}
+      </button>
+    </div>
+  </Dialog>
 {/if}
 
 <!-- Reset Password Modal -->
 {#if resetTarget}
-  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onclick={() => (resetTarget = null)}>
-    <div class="bg-base-100 rounded-box shadow-xl p-6 w-full max-w-md mx-4" onclick={(e) => e.stopPropagation()}>
-      <h3 class="text-lg font-bold mb-2">Reset Password</h3>
-      <p class="text-sm text-base-content/70 mb-4">
-        New password for <strong>{resetTarget.username}</strong>
-      </p>
-      <label for="reset-password" class="sr-only">New password</label>
-      <input
-        id="reset-password"
-        type="password"
-        class="input input-bordered w-full"
-        placeholder="New password"
-        bind:value={resetPassword}
-        autofocus
-      />
-      {#if resetError}
-        <div role="alert" class="alert alert-error py-2 mt-2">
-          <span class="text-sm">{resetError}</span>
-        </div>
-      {/if}
-      <div class="flex justify-end gap-2 mt-4">
-        <button class="btn btn-ghost btn-sm" onclick={() => (resetTarget = null)}>Cancel</button>
-        <button
-          class="btn btn-primary btn-sm"
-          onclick={submitReset}
-          disabled={resetting || !resetPassword.trim()}
-        >
-          {resetting ? "Resetting..." : "Reset Password"}
-        </button>
+  <Dialog title="Reset Password" onClose={() => (resetTarget = null)}>
+    <p class="text-sm text-base-content/70 mb-4">
+      New password for <strong>{resetTarget.username}</strong>
+    </p>
+    <label for="reset-password" class="sr-only">New password</label>
+    <input
+      id="reset-password"
+      type="password"
+      class="input input-bordered w-full"
+      placeholder="New password"
+      bind:value={resetPassword}
+    />
+    {#if resetError}
+      <div role="alert" class="alert alert-error py-2 mt-2">
+        <span class="text-sm">{resetError}</span>
       </div>
+    {/if}
+    <div class="flex justify-end gap-2 mt-4">
+      <button class="btn btn-ghost btn-sm" onclick={() => (resetTarget = null)}>Cancel</button>
+      <button
+        class="btn btn-primary btn-sm"
+        onclick={submitReset}
+        disabled={resetting || !resetPassword.trim()}
+      >
+        {resetting ? "Resetting..." : "Reset Password"}
+      </button>
     </div>
-  </div>
+  </Dialog>
 {/if}
 
 <!-- Delete Confirmation Modal -->
 {#if deleteTarget}
-  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onclick={() => (deleteTarget = null)}>
-    <div class="bg-base-100 rounded-box shadow-xl p-6 w-full max-w-md mx-4" onclick={(e) => e.stopPropagation()}>
-      <h3 class="text-lg font-bold mb-2">Delete User</h3>
-      <p class="text-base-content/70">
-        Are you sure you want to delete <strong>"{deleteTarget.username}"</strong>?
-        This cannot be undone.
-      </p>
-      <div class="flex justify-end gap-2 mt-4">
-        <button class="btn btn-ghost btn-sm" onclick={() => (deleteTarget = null)}>Cancel</button>
-        <button
-          class="btn btn-error btn-sm"
-          onclick={confirmDelete}
-          disabled={deleting}
-        >
-          {deleting ? "Deleting..." : "Delete"}
-        </button>
-      </div>
+  <Dialog title="Delete User" onClose={() => (deleteTarget = null)}>
+    <p class="text-base-content/70">
+      Are you sure you want to delete <strong>"{deleteTarget.username}"</strong>?
+      This cannot be undone.
+    </p>
+    <div class="flex justify-end gap-2 mt-4">
+      <button class="btn btn-ghost btn-sm" onclick={() => (deleteTarget = null)}>Cancel</button>
+      <button
+        class="btn btn-error btn-sm"
+        onclick={confirmDelete}
+        disabled={deleting}
+      >
+        {deleting ? "Deleting..." : "Delete"}
+      </button>
     </div>
-  </div>
+  </Dialog>
 {/if}

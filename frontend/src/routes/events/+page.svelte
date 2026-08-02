@@ -3,6 +3,7 @@
   import { listEvents, deleteEvent, updateEvent, type EventSummary } from "$lib/api";
   import { currentUser } from "$lib/auth";
   import { selectedYear } from "$lib/year";
+  import Dialog from "$lib/Dialog.svelte";
 
   let events = $state<EventSummary[]>([]);
   let loading = $state(true);
@@ -245,70 +246,64 @@
 
 <!-- Edit modal -->
 {#if editTarget}
-  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onclick={cancelEdit}>
-    <div class="bg-base-100 rounded-box shadow-xl p-6 w-full max-w-md mx-4" onclick={(e) => e.stopPropagation()}>
-      {#if showDeleteConfirm}
-        <h3 class="text-lg font-bold mb-2">Delete Event</h3>
-        <p class="text-base-content/70">
-          Are you sure you want to delete <strong>"{editTarget.name}"</strong>?
-          This cannot be undone.
-        </p>
-        <div class="flex justify-end gap-2 mt-4">
-          <button class="btn btn-ghost btn-sm" onclick={() => (showDeleteConfirm = false)}>Cancel</button>
+  <Dialog title={showDeleteConfirm ? "Delete Event" : "Edit Event"} onClose={cancelEdit}>
+    {#if showDeleteConfirm}
+      <p class="text-base-content/70">
+        Are you sure you want to delete <strong>"{editTarget.name}"</strong>?
+        This cannot be undone.
+      </p>
+      <div class="flex justify-end gap-2 mt-4">
+        <button class="btn btn-ghost btn-sm" onclick={() => (showDeleteConfirm = false)}>Cancel</button>
+        <button
+          class="btn btn-error btn-sm"
+          onclick={confirmEditDelete}
+          disabled={editDeleting}
+        >
+          {editDeleting ? "Deleting..." : "Delete"}
+        </button>
+      </div>
+    {:else}
+      <label for="edit-event-name" class="sr-only">Event name</label>
+      <input
+        id="edit-event-name"
+        type="text"
+        class="input input-bordered w-full"
+        bind:value={editName}
+        onkeydown={(e) => {
+          if (e.key === "Enter") submitEdit();
+          if (e.key === "Escape") cancelEdit();
+        }}
+      />
+      <label class="flex items-start gap-3 mt-4 cursor-pointer">
+        <input type="checkbox" class="checkbox checkbox-sm mt-0.5" bind:checked={editNational} />
+        <div>
+          <div class="flex items-center gap-1.5 font-medium text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 48 48" fill="currentColor" class="size-4" aria-hidden="true">
+              <path fill-rule="evenodd" d="M12 7a1 1 0 0 1 1-1h22a1 1 0 0 1 1 1v1h5a1 1 0 0 1 1 1v6a5 5 0 0 1-5 5h-1.683A12.02 12.02 0 0 1 26 27.834V34h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H16a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h6v-6.166A12.02 12.02 0 0 1 12.683 20H11a5 5 0 0 1-5-5V9a1 1 0 0 1 1-1h5zm24 9v-6h4v5a3 3 0 0 1-3 3h-1zm-24-6H8v5a3 3 0 0 0 3 3h1z" clip-rule="evenodd" />
+            </svg>
+            National Event
+          </div>
+          <p class="text-xs text-base-content/70 mt-0.5">excluded from ranking lists</p>
+        </div>
+      </label>
+      <div class="flex justify-between items-center mt-6">
+        <button
+          class="btn btn-error btn-sm"
+          onclick={() => (showDeleteConfirm = true)}
+        >
+          Delete event
+        </button>
+        <div class="flex gap-2">
+          <button class="btn btn-ghost btn-sm" onclick={cancelEdit}>Cancel</button>
           <button
-            class="btn btn-error btn-sm"
-            onclick={confirmEditDelete}
-            disabled={editDeleting}
+            class="btn btn-primary btn-sm"
+            onclick={submitEdit}
+            disabled={editSaving || !editName.trim()}
           >
-            {editDeleting ? "Deleting..." : "Delete"}
+            {editSaving ? "Saving..." : "Save"}
           </button>
         </div>
-      {:else}
-        <h3 class="text-lg font-bold mb-4">Edit Event</h3>
-        <label for="edit-event-name" class="sr-only">Event name</label>
-        <input
-          id="edit-event-name"
-          type="text"
-          class="input input-bordered w-full"
-          bind:value={editName}
-          onkeydown={(e) => {
-            if (e.key === "Enter") submitEdit();
-            if (e.key === "Escape") cancelEdit();
-          }}
-          autofocus
-        />
-        <label class="flex items-start gap-3 mt-4 cursor-pointer">
-          <input type="checkbox" class="checkbox checkbox-sm mt-0.5" bind:checked={editNational} />
-          <div>
-            <div class="flex items-center gap-1.5 font-medium text-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 48 48" fill="currentColor" class="size-4">
-                <path fill-rule="evenodd" d="M12 7a1 1 0 0 1 1-1h22a1 1 0 0 1 1 1v1h5a1 1 0 0 1 1 1v6a5 5 0 0 1-5 5h-1.683A12.02 12.02 0 0 1 26 27.834V34h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H16a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h6v-6.166A12.02 12.02 0 0 1 12.683 20H11a5 5 0 0 1-5-5V9a1 1 0 0 1 1-1h5zm24 9v-6h4v5a3 3 0 0 1-3 3h-1zm-24-6H8v5a3 3 0 0 0 3 3h1z" clip-rule="evenodd" />
-              </svg>
-              National Event
-            </div>
-            <p class="text-xs text-base-content/70 mt-0.5">excluded from ranking lists</p>
-          </div>
-        </label>
-        <div class="flex justify-between items-center mt-6">
-          <button
-            class="btn btn-error btn-sm"
-            onclick={() => (showDeleteConfirm = true)}
-          >
-            Delete event
-          </button>
-          <div class="flex gap-2">
-            <button class="btn btn-ghost btn-sm" onclick={cancelEdit}>Cancel</button>
-            <button
-              class="btn btn-primary btn-sm"
-              onclick={submitEdit}
-              disabled={editSaving || !editName.trim()}
-            >
-              {editSaving ? "Saving..." : "Save"}
-            </button>
-          </div>
-        </div>
-      {/if}
-    </div>
-  </div>
+      </div>
+    {/if}
+  </Dialog>
 {/if}

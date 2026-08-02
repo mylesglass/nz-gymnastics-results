@@ -218,12 +218,12 @@
   - [x] Tooltips: `role="tooltip"`/`aria-describedby`; fix `AATooltip` `role="menu"` misuse; keyboard+focus open for `ScoreTooltip`/`AATooltip`; make wellington/rankings hover-only tooltips reachable
   - [x] Labels/live regions: login, user modals, edit-event, step/page-size/"Correct ID" selects, intent checkboxes, table search; `role="status"`/`aria-live` on admin toasts, edit toast, upload status; `role="alert"` on rankings/wellington errors; `aria-label` on icon-only buttons; events clickable `<td>` → real link
   - [x] Contrast quick wins: `text-base-content/40–60` bumps; `ScoreTooltip` header `opacity-70`
-- [ ] **Tier 2 — Dialogs, tabs, map focus**
-  - [ ] New shared `frontend/src/lib/Dialog.svelte` — `role="dialog"`, `aria-modal`, labelled heading, initial-focus move, focus trap, Escape close, focus restore, backdrop click
-  - [ ] Migrate all 5 modals to `Dialog.svelte` (upload club dialog, add/reset/delete user, edit/delete event)
-  - [ ] Tabs: remove `role="tab"` from radio year selector + WAG/MAG radios (native `checked` announced); rankings/Wellington button tabs → `aria-selected` + arrow keys or `aria-pressed` buttons
-  - [ ] Map→card: `aria-live` announcement + focus move on region select; accordion `aria-expanded`/`aria-controls`; stop nesting links inside `role="button"` card
-  - [ ] Filter dropdowns: focus into menu on open, focus return, Escape
+- [x] **Tier 2 — Dialogs, tabs, map focus**
+  - [x] New shared `frontend/src/lib/Dialog.svelte` — `role="dialog"`, `aria-modal`, labelled heading, initial-focus move, focus trap, Escape close, focus restore, backdrop click
+  - [x] Migrate all 5 modals to `Dialog.svelte` (upload club dialog, add/reset/delete user, edit/delete event)
+  - [x] Tabs: remove `role="tab"` from radio year selector + WAG/MAG radios (native `checked` announced); rankings/Wellington button tabs → `aria-pressed` buttons
+  - [x] Map→card: `aria-live` announcement + focus move on region select; accordion `aria-expanded`/`aria-controls`; stop nesting links inside `role="button"` card
+  - [x] Filter dropdowns: focus into menu on open, focus return, Escape
 - [ ] **Tier 3 — Contrast + polish**
   - [ ] `RegionBadge` palette contrast validation; map boundary stroke on hover/active
   - [ ] `aria-hidden` on decorative emojis; heading-order fix on landing; patch-notes scroll region `tabindex`; table `<caption>`/`scope="col"`; `aria-hidden` on sticky dup header; drawer focus management

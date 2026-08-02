@@ -113,12 +113,11 @@
 
       {#if $page.url.pathname === "/events" || $page.url.pathname === "/results" || $page.url.pathname === "/rankings" || $page.url.pathname === "/wellington-ranking" || $page.url.pathname.startsWith("/gymnast/") || $page.url.pathname.startsWith("/club/")}
       <div class="flex-none">
-        <div role="tablist" class="tabs tabs-box tabs-xs">
+        <div class="tabs tabs-box tabs-xs" aria-label="Year filter">
           {#each years as yr}
             <input
               type="radio"
               name="year_tabs"
-              role="tab"
               class="tab checked:bg-secondary checked:text-secondary-content"
               aria-label={yr}
               checked={selYear === yr}
@@ -128,7 +127,6 @@
           <input
             type="radio"
             name="year_tabs"
-            role="tab"
             class="tab checked:bg-secondary checked:text-secondary-content"
             aria-label="All"
             checked={selYear === null}
@@ -337,12 +335,11 @@
       {#if $page.url.pathname === "/events" || $page.url.pathname === "/results" || $page.url.pathname === "/rankings" || $page.url.pathname === "/wellington-ranking" || $page.url.pathname.startsWith("/gymnast/") || $page.url.pathname.startsWith("/club/")}
       <li class="menu-title mt-4"><span>Year</span></li>
       <li>
-        <div role="tablist" class="tabs tabs-box tabs-xs mt-1">
+        <div class="tabs tabs-box tabs-xs mt-1" aria-label="Year filter">
           {#each years as yr}
             <input
               type="radio"
               name="drawer_year"
-              role="tab"
               class="tab checked:bg-secondary checked:text-secondary-content"
               aria-label={yr}
               checked={selYear === yr}
@@ -352,7 +349,6 @@
           <input
             type="radio"
             name="drawer_year"
-            role="tab"
             class="tab checked:bg-secondary checked:text-secondary-content"
             aria-label="All"
             checked={selYear === null}
