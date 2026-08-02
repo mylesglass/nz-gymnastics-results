@@ -280,14 +280,16 @@
                         {#if i === 0}
                           <td class="font-medium align-top" rowspan={d.instances.length}>{d.name}</td>
                         {/if}
-                        <td class="text-xs">{inst.club}<br><span class="text-base-content/50">{inst.level_category}</span></td>
+                        <td class="text-xs">{inst.club}<br><span class="text-base-content/70">{inst.level_category}</span></td>
                         <td class="text-xs">
                           {#each Object.entries(inst.id_counts) as [id, cnt], j}
-                            {j > 0 ? ", " : ""}<a href="/gymnast/{id}" class="link link-hover">{id}</a><span class="text-base-content/50"> ({cnt})</span>
+                            {j > 0 ? ", " : ""}<a href="/gymnast/{id}" class="link link-hover">{id}</a><span class="text-base-content/70"> ({cnt})</span>
                           {/each}
                         </td>
                         <td>
+                          <label for="fix-id-{instanceKey(inst, d.name)}" class="sr-only">Correct ID</label>
                           <select
+                            id="fix-id-{instanceKey(inst, d.name)}"
                             class="select select-bordered select-xs w-28"
                             bind:value={selections[instanceKey(inst, d.name)]}
                           >
@@ -359,7 +361,7 @@
             <span>{mergesError}</span>
           </div>
         {:else if visibleMerges.length > 0}
-          <button class="btn btn-ghost btn-xs self-start mb-2" onclick={() => (showMerges = !showMerges)}>
+          <button class="btn btn-ghost btn-xs self-start mb-2" onclick={() => (showMerges = !showMerges)} aria-expanded={showMerges}>
             {showMerges ? "Hide" : "View"} {visibleMerges.length} suggestions
           </button>
           {#if showMerges}
@@ -377,8 +379,8 @@
                 <tbody>
                   {#each visibleMerges as m}
                     <tr>
-                      <td class="font-medium">{m.name_a}<span class="text-xs text-base-content/50 ml-1">({m.rows_a})</span></td>
-                      <td class="font-medium">{m.name_b}<span class="text-xs text-base-content/50 ml-1">({m.rows_b})</span></td>
+                      <td class="font-medium">{m.name_a}<span class="text-xs text-base-content/70 ml-1">({m.rows_a})</span></td>
+                      <td class="font-medium">{m.name_b}<span class="text-xs text-base-content/70 ml-1">({m.rows_b})</span></td>
                       <td>{m.score.toFixed(2)}</td>
                       <td class="text-xs">
                         {#each m.gnz_ids_a as id, i}{i > 0 ? ", " : ""}<a href="/gymnast/{id}" class="link link-hover">{id}</a>{/each}
@@ -422,7 +424,7 @@
 </div>
 
 {#if mergeToast}
-  <div class="toast toast-bottom toast-end z-50">
+  <div class="toast toast-bottom toast-end z-50" role="status">
     <div class="alert alert-success text-sm">
       <span>{mergeToast}</span>
     </div>
@@ -430,7 +432,7 @@
 {/if}
 
 {#if cacheToast}
-  <div class="toast toast-bottom toast-start z-50">
+  <div class="toast toast-bottom toast-start z-50" role="status">
     <div class="alert alert-info text-sm">
       <span>{cacheToast}</span>
     </div>

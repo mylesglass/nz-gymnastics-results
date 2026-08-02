@@ -167,7 +167,7 @@
       <div class="mb-6 scroll-mt-[140px]" id="letter-{letter}">
         <div class="flex items-center gap-2 mb-2">
           <span class="text-lg font-bold">{letter}</span>
-          <span class="text-xs text-base-content/50">({letterGymnasts.length})</span>
+          <span class="text-xs text-base-content/70">({letterGymnasts.length})</span>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-1">
           {#each letterGymnasts as gr}
@@ -184,7 +184,7 @@
               </span>
               <span class="text-xs leading-snug mt-0.5">
                 {#each (gr.alt_clubs.length > 0 ? [gr.club, ...gr.alt_clubs].filter(Boolean) : gr.club ? [gr.club] : []) as clubName, i}
-                  <span class="{clubName === gr.club ? 'text-base-content/50' : 'text-base-content/40'}">{i > 0 ? ", " : ""}{clubName}</span>
+                  <span class="{clubName === gr.club ? 'text-base-content/70' : 'text-base-content/60'}">{i > 0 ? ", " : ""}{clubName}</span>
                 {:else}
                   <span class="text-base-content/30">—</span>
                 {/each}

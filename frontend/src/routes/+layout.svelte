@@ -31,10 +31,18 @@
     const unsub2 = authConfigured.subscribe((v) => (authCfg = v));
     const unsub3 = selectedYear.subscribe((v) => (selYear = v));
     const unsub4 = yearOptions.subscribe((v) => (years = v));
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && drawerOpen) {
+        drawerOpen = false;
+        document.getElementById("nav-menu-button")?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
     listYears()
       .then((r) => yearOptions.set(r.years.map(String)))
       .catch(() => {});
     return () => {
+      document.removeEventListener("keydown", onKey);
       unsub1();
       unsub2();
       unsub3();
@@ -70,16 +78,31 @@
     id="nav-drawer"
     type="checkbox"
     class="drawer-toggle"
+    aria-label="Toggle navigation menu"
     bind:checked={drawerOpen}
   />
   <div class="drawer-content flex flex-col min-h-screen">
-    <div class="navbar bg-base-200 shadow-sm flex-none relative z-50 overflow-visible">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:btn focus:btn-primary focus:btn-sm"
+    >
+      Skip to content
+    </a>
+    <nav class="navbar bg-base-200 shadow-sm flex-none relative z-50 overflow-visible" aria-label="Main navigation">
       <div class="flex-1 gap-1 items-center">
-        <label for="nav-drawer" class="btn btn-ghost btn-sm btn-square md:hidden" aria-label="Open menu">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-5 fill-current">
+        <button
+          id="nav-menu-button"
+          type="button"
+          class="btn btn-ghost btn-sm btn-square md:hidden"
+          aria-label="Open menu"
+          aria-expanded={drawerOpen}
+          aria-controls="nav-drawer"
+          onclick={() => (drawerOpen = !drawerOpen)}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-5 fill-current" aria-hidden="true">
             <path d="M3 6h18v2H3V6Zm0 5h18v2H3v-2Zm0 5h18v2H3v-2Z" />
           </svg>
-        </label>
+        </button>
         <a href="/" class="btn btn-ghost text-lg sm:text-xl">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-6 text-primary">
             <path fill="currentColor" d="M8 22h5v-4H6v2q0 .825.588 1.413T8 22m7 0h5q.825 0 1.413-.587T22 20v-2h-7zM2 18V4q0-.825.588-1.412T4 2h14v2H4v14zm4-2h7v-4H6zm9 0h7v-4h-7zm-9-6h16V8q0-.825-.587-1.412T20 6H8q-.825 0-1.412.588T6 8z"/>
@@ -120,24 +143,28 @@
           <a
             href="/events"
             class="btn btn-sm {active('/events') ? 'btn-primary' : 'btn-ghost'}"
+            aria-current={active("/events") ? "page" : undefined}
           >
             Events
           </a>
           <a
             href="/results"
             class="btn btn-sm {active('/results') ? 'btn-primary' : 'btn-ghost'}"
+            aria-current={active("/results") ? "page" : undefined}
           >
             Results
           </a>
           <a
             href="/gymnasts"
             class="btn btn-sm {active('/gymnasts') || currentPath.startsWith('/gymnast/') ? 'btn-primary' : 'btn-ghost'}"
+            aria-current={active("/gymnasts") || currentPath.startsWith("/gymnast/") ? "page" : undefined}
           >
             Gymnasts
           </a>
           <a
             href="/clubs"
             class="btn btn-sm {active('/clubs') || currentPath.startsWith('/club/') ? 'btn-primary' : 'btn-ghost'}"
+            aria-current={active("/clubs") || currentPath.startsWith("/club/") ? "page" : undefined}
           >
             Clubs
           </a>
@@ -180,7 +207,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-3 fill-current opacity-60"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
               </div>
               <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box w-44 p-2 shadow" style="z-index: 50">
-                <li><span class="text-xs text-base-content/60 px-3 py-1">{user.role}</span></li>
+                <li><span class="text-xs text-base-content/70 px-3 py-1">{user.role}</span></li>
                 <li class="border-t border-base-300 mt-1 pt-1">
                   <button onclick={() => { logout(); goto("/"); }}>
                     Logout
@@ -193,9 +220,9 @@
           {/if}
         {/if}
       </div>
-    </div>
+    </nav>
 
-    <main class="mx-auto grow shrink-0 basis-auto w-full max-w-full px-4 pt-6">
+    <main id="main" class="mx-auto grow shrink-0 basis-auto w-full max-w-full px-4 pt-6">
       {@render children()}
     </main>
 
@@ -225,13 +252,13 @@
             ☕ Support on Ko-fi
           </a>
         </div>
-        <p class="text-xs text-base-content/60 mt-3">
+        <p class="text-xs text-base-content/70 mt-3">
           If this has saved you time, consider donating to cover development costs.
         </p>
       </div>
       <div class="flex justify-end mt-4">
         <div class="dropdown dropdown-top dropdown-end">
-          <button class="btn btn-ghost btn-xs gap-2" aria-label="Select theme">
+          <button class="btn btn-ghost btn-xs gap-2" aria-label={`Select theme, current: ${theme}`}>
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="size-4 fill-current">
               <path d="M11 22q-.825 0-1.412-.587T9 20v-4H6q-.825 0-1.412-.587T4 14V7q0-1.65 1.175-2.825T8 3h12v11q0 .825-.587 1.413T18 16h-3v4q0 .825-.587 1.413T13 22zM6 10h12V5h-1v4h-2V5h-1v2h-2V5H8q-.825 0-1.412.588T6 7z"/>
             </svg>
@@ -257,7 +284,8 @@
 
   <div class="drawer-side z-50">
     <label for="nav-drawer" class="drawer-overlay" aria-label="Close menu"></label>
-    <ul class="menu bg-base-200 min-h-full w-72 p-4 gap-1 text-base-content">
+    <nav aria-label="Mobile menu" class="h-full">
+      <ul class="menu bg-base-200 min-h-full w-72 p-4 gap-1 text-base-content">
       <li class="menu-title text-lg mb-2">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-5 -ml-1 text-primary">
           <path fill="currentColor" d="M8 22h5v-4H6v2q0 .825.588 1.413T8 22m7 0h5q.825 0 1.413-.587T22 20v-2h-7zM2 18V4q0-.825.588-1.412T4 2h14v2H4v14zm4-2h7v-4H6zm9 0h7v-4h-7zm-9-6h16V8q0-.825-.587-1.412T20 6H8q-.825 0-1.412.588T6 8z"/>
@@ -265,25 +293,25 @@
         NZ Gymnastics Results
       </li>
       <li>
-        <a href="/events" onclick={handleNavClick} class:active={active("/events")}>
+        <a href="/events" onclick={handleNavClick} class:active={active("/events")} aria-current={active("/events") ? "page" : undefined}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="M15.988 3.012A2.25 2.25 0 0 1 18 5.25v6.5A2.25 2.25 0 0 1 15.75 14H13.5v-3.379a3 3 0 0 0-.879-2.121l-2.121-2.121a3 3 0 0 0-2.121-.879H5.25a2.25 2.25 0 0 1 2.25-2.25h6.5a2.25 2.25 0 0 1 1.988 1.012ZM5.25 5.5a.75.75 0 0 0-.75.75v9.5c0 .414.336.75.75.75h1.125a.75.75 0 0 0 0-1.5H5.5v-1.5h.875a.75.75 0 0 0 0-1.5H5.5v-1.5h.875a.75.75 0 0 0 0-1.5H5.5V6.25a.75.75 0 0 0-.75-.75h-.5a.75.75 0 0 0 0 1.5h.5v1.5h-.5a.75.75 0 0 0 0 1.5h.5v1.5h-.5a.75.75 0 0 0 0 1.5h.5v1.5h-.5a.75.75 0 0 0 0 1.5H5.25a2.25 2.25 0 0 0 2.25 2.25h6.5A2.5 2.5 0 0 0 16 16.5V8.25a2.25 2.25 0 0 0-2.25-2.25h-3.379a1.5 1.5 0 0 1-1.06-.44L7.19 3.44a1.5 1.5 0 0 0-1.06-.44H5.25Z" clip-rule="evenodd" /></svg>
           Events
         </a>
       </li>
       <li>
-        <a href="/results" onclick={handleNavClick} class:active={active("/results")}>
+        <a href="/results" onclick={handleNavClick} class:active={active("/results")} aria-current={active("/results") ? "page" : undefined}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clip-rule="evenodd" /></svg>
           Results
         </a>
       </li>
       <li>
-        <a href="/gymnasts" onclick={handleNavClick} class:active={active("/gymnasts") || currentPath.startsWith("/gymnast/")}>
+        <a href="/gymnasts" onclick={handleNavClick} class:active={active("/gymnasts") || currentPath.startsWith("/gymnast/")} aria-current={active("/gymnasts") || currentPath.startsWith("/gymnast/") ? "page" : undefined}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path d="M10 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.465 14.493a1.23 1.23 0 0 0 .41 1.412A9.957 9.957 0 0 0 10 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 0 0-13.074.003Z" /></svg>
           Gymnasts
         </a>
       </li>
       <li>
-        <a href="/clubs" onclick={handleNavClick} class:active={active("/clubs") || currentPath.startsWith("/club/")}>
+        <a href="/clubs" onclick={handleNavClick} class:active={active("/clubs") || currentPath.startsWith("/club/")} aria-current={active("/clubs") || currentPath.startsWith("/club/") ? "page" : undefined}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="m3.528 2.47 5.5 5.5a.75.75 0 0 1 0 1.06l-5.5 5.5a.75.75 0 0 1-1.06-1.06L7.44 8.5 2.47 3.53a.75.75 0 0 1 1.06-1.06Z" clip-rule="evenodd" /><path fill-rule="evenodd" d="m9.528 2.47 5.5 5.5a.75.75 0 0 1 0 1.06l-5.5 5.5a.75.75 0 0 1-1.06-1.06L13.44 8.5 8.47 3.53a.75.75 0 0 1 1.06-1.06Z" clip-rule="evenodd" /></svg>
           Clubs
         </a>
@@ -398,5 +426,6 @@
         </details>
       </li>
     </ul>
+    </nav>
   </div>
 </div>

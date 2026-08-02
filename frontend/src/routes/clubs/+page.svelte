@@ -88,7 +88,7 @@
           <div class="overflow-hidden rounded-box" style="aspect-ratio: 525 / 692.3">
             <NZRegionMap {active} onSelect={selectRegion} />
           </div>
-          <p class="text-center text-xs text-base-content/60 mt-3">
+          <p class="text-center text-xs text-base-content/70 mt-3" role="status" aria-live="polite">
             {active ? `Showing ${active} — click again to clear` : "Click a region on the map to see its clubs"}
           </p>
         </div>
@@ -104,7 +104,7 @@
           {/key}
         {:else}
           <div class="card bg-base-200 border border-base-300">
-            <div class="card-body items-center text-center text-base-content/50 py-16">
+            <div class="card-body items-center text-center text-base-content/70 py-16">
               <p class="text-sm">Select a region on the map</p>
             </div>
           </div>
@@ -116,7 +116,7 @@
     <div class="lg:hidden mt-4 mb-8">
       <div class="flex items-baseline gap-2 mb-3">
         <h2 class="text-xl font-bold">Regions</h2>
-        <span class="text-xs text-base-content/50">Tap a region to expand its clubs</span>
+        <span class="text-xs text-base-content/70">Tap a region to expand its clubs</span>
       </div>
       <div class="space-y-3">
         {#each REGIONS as region}
@@ -131,7 +131,7 @@
       <div class="mt-8 mb-8">
         <div class="flex items-center gap-2 mb-3">
           <h2 class="text-2xl font-bold">Other</h2>
-          <span class="text-xs text-base-content/50">({otherClubs.length} club(s))</span>
+          <span class="text-xs text-base-content/70">({otherClubs.length} club(s))</span>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
           {#each otherClubs as club}
@@ -141,7 +141,7 @@
             >
               <div class="card-body py-3 px-4 flex-row items-center justify-between">
                 <span class="font-medium text-sm">{club.name}</span>
-                <span class="text-xs text-base-content/50">{club.gymnast_count} gymnasts</span>
+                <span class="text-xs text-base-content/70">{club.gymnast_count} gymnasts</span>
               </div>
             </a>
           {/each}
@@ -163,16 +163,23 @@
   {@const pillBorder = fg === "#fff" ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.15)"}
   <div
     id="region-{slug(region)}"
-    class="card rounded-box overflow-hidden transition-shadow cursor-pointer"
-    role="button"
-    tabindex="0"
+    class="card rounded-box overflow-hidden transition-shadow"
     style="background: {bg}; color: {fg};"
-    onclick={() => oncardclick(region)}
-    onkeydown={(e) => {
-      if (e.key === "Enter" || e.key === " ") oncardclick(region);
-    }}
   >
-    <div class="card-body p-5">
+    <div
+      class="card-body p-5"
+      role={expandable ? "button" : undefined}
+      tabindex={expandable ? 0 : undefined}
+      aria-expanded={expandable ? open : undefined}
+      aria-controls={expandable ? `region-panel-${slug(region)}` : undefined}
+      onclick={expandable ? () => oncardclick(region) : undefined}
+      onkeydown={expandable ? (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          oncardclick(region);
+        }
+      } : undefined}
+    >
       <div class="flex flex-wrap items-center gap-3 mb-4">
         <div class="flex-1 min-w-0">
           <h3 class="text-2xl font-bold leading-tight" style="color: {headingCol}">{region}</h3>
@@ -183,7 +190,6 @@
             href="/club/{encodeURIComponent(team.name)}"
             class="card backdrop-blur-sm border transition-colors cursor-pointer"
             style="--bg: {pillBg}; --hover-bg: {hoverBg}; border-color: {pillBorder};"
-            onclick={(e) => e.stopPropagation()}
           >
             <div class="card-body py-2 px-3 flex-row items-center gap-2">
               <span class="text-left">
@@ -211,7 +217,7 @@
         {/if}
       </div>
       {#if open}
-        <div class="grid grid-cols-1 gap-2">
+        <div id="region-panel-{slug(region)}" class="grid grid-cols-1 gap-2">
           {#each regionClubs.filter((c) => !c.is_region) as club}
             <a
               href="/club/{encodeURIComponent(club.name)}"

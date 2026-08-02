@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { goto } from "$app/navigation";
   import { listEvents, deleteEvent, updateEvent, type EventSummary } from "$lib/api";
   import { currentUser } from "$lib/auth";
   import { selectedYear } from "$lib/year";
@@ -139,13 +138,15 @@
     </div>
   {:else}
     <div class="flex flex-wrap items-center gap-2 mb-3">
+      <label for="events-search" class="sr-only">Search events</label>
       <input
+        id="events-search"
         type="search"
         placeholder="Search events..."
         class="input input-bordered input-sm"
         bind:value={searchQuery}
       />
-      <span class="text-xs text-base-content/50">
+      <span class="text-xs text-base-content/70">
         {filteredEvents.length} of {events.length}
       </span>
     </div>
@@ -154,44 +155,51 @@
       <table class="table table-zebra table-pin-rows">
         <thead>
           <tr>
-            <th class="cursor-pointer hover:text-primary" onclick={() => toggleSort("name")}>
-              Name
-              {#if sortCol === "name"}<span class="ml-1 text-xs">{sortAsc ? "▲" : "▼"}</span>{/if}
+            <th scope="col" aria-sort={sortCol === "name" ? (sortAsc ? "ascending" : "descending") : "none"}>
+              <button type="button" class="cursor-pointer hover:text-primary uppercase" onclick={() => toggleSort("name")}>
+                Name
+                {#if sortCol === "name"}<span class="ml-1 text-xs" aria-hidden="true">{sortAsc ? "▲" : "▼"}</span>{/if}
+              </button>
             </th>
-            <th class="cursor-pointer hover:text-primary" onclick={() => toggleSort("year")}>
-              Year
-              {#if sortCol === "year"}<span class="ml-1 text-xs">{sortAsc ? "▲" : "▼"}</span>{/if}
+            <th scope="col" aria-sort={sortCol === "year" ? (sortAsc ? "ascending" : "descending") : "none"}>
+              <button type="button" class="cursor-pointer hover:text-primary uppercase" onclick={() => toggleSort("year")}>
+                Year
+                {#if sortCol === "year"}<span class="ml-1 text-xs" aria-hidden="true">{sortAsc ? "▲" : "▼"}</span>{/if}
+              </button>
             </th>
-            <th class="cursor-pointer hover:text-primary" onclick={() => toggleSort("start_date")}>
-              Date
-              {#if sortCol === "start_date"}<span class="ml-1 text-xs">{sortAsc ? "▲" : "▼"}</span>{/if}
+            <th scope="col" aria-sort={sortCol === "start_date" ? (sortAsc ? "ascending" : "descending") : "none"}>
+              <button type="button" class="cursor-pointer hover:text-primary uppercase" onclick={() => toggleSort("start_date")}>
+                Date
+                {#if sortCol === "start_date"}<span class="ml-1 text-xs" aria-hidden="true">{sortAsc ? "▲" : "▼"}</span>{/if}
+              </button>
             </th>
-            <th class="cursor-pointer hover:text-primary" onclick={() => toggleSort("discipline")}>
-              Discipline
-              {#if sortCol === "discipline"}<span class="ml-1 text-xs">{sortAsc ? "▲" : "▼"}</span>{/if}
+            <th scope="col" aria-sort={sortCol === "discipline" ? (sortAsc ? "ascending" : "descending") : "none"}>
+              <button type="button" class="cursor-pointer hover:text-primary uppercase" onclick={() => toggleSort("discipline")}>
+                Discipline
+                {#if sortCol === "discipline"}<span class="ml-1 text-xs" aria-hidden="true">{sortAsc ? "▲" : "▼"}</span>{/if}
+              </button>
             </th>
-            <th class="text-right cursor-pointer hover:text-primary" onclick={() => toggleSort("gymnast_count")}>
-              Gymnasts
-              {#if sortCol === "gymnast_count"}<span class="ml-1 text-xs">{sortAsc ? "▲" : "▼"}</span>{/if}
+            <th scope="col" class="text-right" aria-sort={sortCol === "gymnast_count" ? (sortAsc ? "ascending" : "descending") : "none"}>
+              <button type="button" class="cursor-pointer hover:text-primary uppercase" onclick={() => toggleSort("gymnast_count")}>
+                Gymnasts
+                {#if sortCol === "gymnast_count"}<span class="ml-1 text-xs" aria-hidden="true">{sortAsc ? "▲" : "▼"}</span>{/if}
+              </button>
             </th>
             {#if loggedIn}
-              <th class="w-20"></th>
+              <th scope="col" class="w-20"></th>
             {/if}
           </tr>
         </thead>
         <tbody>
           {#each filteredEvents as ev}
             <tr>
-              <td
-                class="font-medium cursor-pointer hover:link"
-                onclick={() => goto(`/events/${ev.id}`)}
-              >
-                <span class="inline-flex items-center gap-2">
+              <td class="font-medium">
+                <a href={`/events/${ev.id}`} class="hover:link inline-flex items-center gap-2">
                   {ev.name}
                   {#if ev.is_national}
                     <span class="badge badge-accent badge-sm whitespace-nowrap">Nationals</span>
                   {/if}
-                </span>
+                </a>
               </td>
               <td>{ev.year ?? ""}</td>
               <td>{ev.start_date}</td>
@@ -258,7 +266,9 @@
         </div>
       {:else}
         <h3 class="text-lg font-bold mb-4">Edit Event</h3>
+        <label for="edit-event-name" class="sr-only">Event name</label>
         <input
+          id="edit-event-name"
           type="text"
           class="input input-bordered w-full"
           bind:value={editName}
@@ -277,7 +287,7 @@
               </svg>
               National Event
             </div>
-            <p class="text-xs text-base-content/50 mt-0.5">excluded from ranking lists</p>
+            <p class="text-xs text-base-content/70 mt-0.5">excluded from ranking lists</p>
           </div>
         </label>
         <div class="flex justify-between items-center mt-6">

@@ -43,7 +43,7 @@
     tabindex="0"
   >
     {#if options.length === 0}
-      <p class="text-xs text-base-content/50 px-1 py-2">No options</p>
+      <p class="text-xs text-base-content/70 px-1 py-2">No options</p>
     {:else}
       <div class="flex justify-between items-center mb-1 px-1">
         <span class="text-xs font-semibold">{label}</span>

@@ -12,6 +12,14 @@
   let patchNotes = $state<{ date: string; entries: { title: string; items: string[] }[] }[]>([]);
   let motion = $state(true);
 
+  function reveal(
+    node: Element,
+    params: { delay?: number; dist?: number } = {}
+  ): ReturnType<typeof fly> {
+    if (!motion) return fade(node, { duration: 0 });
+    return fly(node, { y: params.dist ?? 12, duration: 400, delay: params.delay ?? 0 });
+  }
+
   onMount(() => {
     motion = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     getStats()
@@ -24,14 +32,6 @@
       })
       .catch(() => {});
   });
-
-  function reveal(
-    node: Element,
-    params: { delay?: number; dist?: number } = {}
-  ): ReturnType<typeof fly> {
-    if (!motion) return fade(node, { duration: 0 });
-    return fly(node, { y: params.dist ?? 12, duration: 400, delay: params.delay ?? 0 });
-  }
 </script>
 
 <svelte:head>
@@ -39,7 +39,7 @@
 </svelte:head>
 
 <div class="max-w-6xl mx-auto">
-  <div in:fly={{ y: -10, duration: 450 }} class="text-center mb-12 mt-4">
+  <div in:reveal={{ dist: -10, delay: 0 }} class="text-center mb-12 mt-4">
     <h1 class="text-4xl font-bold mb-3">NZ Gymnastics Results</h1>
     <p class="text-lg text-base-content/70 max-w-2xl mx-auto">
       Search, browse, and share New Zealand Artistic Gymnastics competition results.
@@ -48,29 +48,29 @@
 
   <div in:reveal={{ delay: 100 }} class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
     <div class="text-center">
-      <span class="text-2xl mb-1 block">🤸</span>
-      <h3 class="font-semibold text-sm">WAG &amp; MAG</h3>
+      <span class="text-2xl mb-1 block" aria-hidden="true">🤸</span>
+      <p class="font-semibold text-sm">WAG &amp; MAG</p>
       <p class="text-xs text-base-content/70">
         Complete results for both disciplines with per-apparatus breakdowns, vault aggregation, and AA totals.
       </p>
     </div>
     <div class="text-center">
-      <span class="text-2xl mb-1 block">📥</span>
-      <h3 class="font-semibold text-sm">Export &amp; Share</h3>
+      <span class="text-2xl mb-1 block" aria-hidden="true">📥</span>
+      <p class="font-semibold text-sm">Export &amp; Share</p>
       <p class="text-xs text-base-content/70">
         Download CSV, XLSX, or PDF with one click, or share links to gymnast and club profile pages.
       </p>
     </div>
     <div class="text-center">
-      <span class="text-2xl mb-1 block">🔍</span>
-      <h3 class="font-semibold text-sm">Smart Filtering</h3>
+      <span class="text-2xl mb-1 block" aria-hidden="true">🔍</span>
+      <p class="font-semibold text-sm">Smart Filtering</p>
       <p class="text-xs text-base-content/70">
         Filter by year, level, club, region, division, or round type with column-header dropdowns.
       </p>
     </div>
   </div>
 
-  <div in:fly={{ y: 14, duration: 450, delay: 200 }} class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+  <div in:reveal={{ dist: 14, delay: 200 }} class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
     <a
       href="/events"
       class="card bg-base-200 hover:bg-base-300 border border-base-300 hover:border-base-content/20 hover:-translate-y-1 hover:shadow-lg transition-all cursor-pointer group"
@@ -79,7 +79,7 @@
         {#if stats}
           <span class="badge badge-primary badge-sm absolute top-3 right-3">{stats.total_events}</span>
         {/if}
-        <span class="text-3xl mb-1">📋</span>
+        <span class="text-3xl mb-1" aria-hidden="true">📋</span>
         <h2 class="card-title text-base">Events</h2>
         <p class="text-xs text-base-content/70">Browse competitions by name, year, or discipline</p>
       </div>
@@ -92,7 +92,7 @@
         {#if stats}
           <span class="badge badge-accent badge-sm absolute top-3 right-3">{stats.total_scores.toLocaleString()}</span>
         {/if}
-        <span class="text-3xl mb-1">🏆</span>
+        <span class="text-3xl mb-1" aria-hidden="true">🏆</span>
         <h2 class="card-title text-base">Results</h2>
         <p class="text-xs text-base-content/70">View all scores across every event in one place</p>
       </div>
@@ -105,7 +105,7 @@
         {#if stats}
           <span class="badge badge-secondary badge-sm absolute top-3 right-3">{stats.total_gymnasts.toLocaleString()}</span>
         {/if}
-        <span class="text-3xl mb-1">🤸</span>
+        <span class="text-3xl mb-1" aria-hidden="true">🤸</span>
         <h2 class="card-title text-base">Gymnasts</h2>
         <p class="text-xs text-base-content/70">Look up gymnast profiles and history across events</p>
       </div>
@@ -118,7 +118,7 @@
         {#if stats}
           <span class="badge badge-info badge-sm absolute top-3 right-3">{stats.total_clubs}</span>
         {/if}
-        <span class="text-3xl mb-1">🏛️</span>
+        <span class="text-3xl mb-1" aria-hidden="true">🏛️</span>
         <h2 class="card-title text-base">Clubs</h2>
         <p class="text-xs text-base-content/70">Explore clubs and their competition results</p>
       </div>
@@ -129,7 +129,7 @@
     <div class="card-body p-6">
       <h2 class="text-xl font-bold mb-5">What's new</h2>
       {#if patchNotes.length}
-        <div class="space-y-5 max-h-96 overflow-y-auto pr-2 -mr-2">
+        <div class="space-y-5 max-h-96 overflow-y-auto pr-2 -mr-2" tabindex="0" role="region" aria-label="Patch notes">
           {#each patchNotes as group}
             <div>
               <h3 class="text-sm font-semibold text-primary mb-2">{group.date}</h3>
@@ -149,7 +149,7 @@
           {/each}
         </div>
       {:else}
-        <p class="text-xs text-base-content/50">Patch notes unavailable.</p>
+        <p class="text-xs text-base-content/70">Patch notes unavailable.</p>
       {/if}
     </div>
   </div>

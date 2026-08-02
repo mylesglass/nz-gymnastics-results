@@ -25,6 +25,7 @@
   let loggedIn = $state(false);
   let authCfg = $state(false);
   let urlInput = $state("");
+  let fileInput: HTMLInputElement | undefined = $state();
 
   // Club mapping dialog state
   let clubDialog = $state<{ source: UploadSource; unknown: string[]; known: string[] } | null>(null);
@@ -233,6 +234,18 @@
       input.value = "";
     }
   }
+
+  function browse(e?: MouseEvent | KeyboardEvent) {
+    if (e) e.preventDefault();
+    fileInput?.click();
+  }
+
+  function onDropzoneKeydown(e: KeyboardEvent) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      browse(e);
+    }
+  }
 </script>
 
 <svelte:head>
@@ -256,9 +269,12 @@
     </div>
   {:else}
     <div
-      class="card border-2 border-dashed border-base-content/30 hover:border-primary bg-base-200/50 hover:bg-base-200 cursor-pointer transition-all p-12 text-center"
+      class="card border-2 border-dashed border-base-content/30 hover:border-primary bg-base-200/50 hover:bg-base-200 cursor-pointer transition-all p-12 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       role="button"
       tabindex="0"
+      aria-label="Choose Scoreholder JSON files"
+      onclick={browse}
+      onkeydown={onDropzoneKeydown}
       ondrop={ondrop}
       ondragover={ondragover}
     >
@@ -271,12 +287,20 @@
         <div class="flex flex-col items-center gap-3">
           <span class="text-4xl">📄</span>
           <p class="text-base-content/70">Drop Scoreholder JSON files here, or click to browse</p>
-          <input type="file" accept=".json" multiple onchange={onfileinput} hidden />
+          <input
+            type="file"
+            accept=".json"
+            multiple
+            onchange={onfileinput}
+            bind:this={fileInput}
+            class="sr-only"
+            aria-label="Choose Scoreholder JSON files"
+          />
         </div>
       {/if}
     </div>
 
-    <div class="divider text-base-content/40">or</div>
+    <div class="divider text-base-content/60">or</div>
 
     <div class="card bg-base-200/50">
       <div class="card-body p-6">
@@ -300,7 +324,7 @@
               Import
             </button>
             {#if urlInput.trim()}
-              <span class="text-xs text-base-content/50">
+              <span class="text-xs text-base-content/70">
                 {urlInput.split(/\r?\n/).map((u) => u.trim()).filter((u) => u.length > 0).length} link(s)
               </span>
             {/if}
@@ -310,34 +334,34 @@
     </div>
 
     {#if uploads.length > 0}
-      <div class="mt-6 space-y-3">
+      <div class="mt-6 space-y-3" role="status" aria-live="polite">
         {#each uploads as item}
           {#if item.status === "uploading"}
             <div class="card bg-base-200 border border-base-300">
               <div class="card-body p-4 flex-row items-center gap-3">
-                <span class="loading loading-spinner loading-sm text-primary"></span>
+                <span class="loading loading-spinner loading-sm text-primary" aria-hidden="true"></span>
                 <span class="font-medium">{item.label}</span>
-                <span class="text-base-content/50 text-sm ml-auto">Uploading...</span>
+                <span class="text-base-content/70 text-sm ml-auto">Uploading...</span>
               </div>
             </div>
           {:else if item.status === "success"}
             <div class="card bg-base-200 border border-success/30">
               <div class="card-body p-4">
                 <div class="flex items-center gap-3">
-                  <span class="text-success text-xl">&#10003;</span>
+                  <span class="text-success text-xl" aria-hidden="true">&#10003;</span>
                   <span class="font-medium">{item.label}</span>
-                  <span class="text-sm text-base-content/50 ml-auto">Imported</span>
+                  <span class="text-sm text-base-content/70 ml-auto">Imported</span>
                 </div>
                 <div class="mt-1 text-sm">
                   <strong>{item.name}</strong>
-                  <span class="text-base-content/50 mx-2">&middot;</span>
+                  <span class="text-base-content/70 mx-2">&middot;</span>
                   <span>{item.gymnast_count} gymnasts</span>
                   {#if item.score_count != null}
-                    <span class="text-base-content/50 mx-2">&middot;</span>
+                    <span class="text-base-content/70 mx-2">&middot;</span>
                     <span>{item.score_count} scores</span>
                   {/if}
                   {#if item.club_count != null}
-                    <span class="text-base-content/50 mx-2">&middot;</span>
+                    <span class="text-base-content/70 mx-2">&middot;</span>
                     <span>{item.club_count} clubs</span>
                   {/if}
                   {#if item.names_unified && item.names_unified > 0}
@@ -357,10 +381,10 @@
               </div>
             </div>
           {:else if item.status === "error"}
-            <div class="alert alert-error">
+            <div class="alert alert-error" role="alert">
               <div class="flex flex-col gap-1 w-full">
                 <div class="flex items-center gap-2">
-                  <span class="text-lg">&#10007;</span>
+                  <span class="text-lg" aria-hidden="true">&#10007;</span>
                   <span class="font-medium">{item.label}</span>
                 </div>
                 <span class="text-sm">{item.errorMessage}</span>
@@ -388,7 +412,7 @@
       </div>
     {/if}
 
-    <p class="text-center text-base-content/50 mt-8">
+    <p class="text-center text-base-content/70 mt-8">
       Already uploaded an event? <a href="/events" class="link link-primary">Browse events</a>
     </p>
   {/if}

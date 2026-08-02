@@ -162,10 +162,10 @@
       <table class="table table-zebra">
         <thead>
           <tr>
-            <th>Username</th>
-            <th>Role</th>
-            <th>Created</th>
-            <th class="w-40"></th>
+            <th scope="col">Username</th>
+            <th scope="col">Role</th>
+            <th scope="col">Created</th>
+            <th scope="col" class="w-40">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -174,7 +174,7 @@
               <td class="font-medium">
                 {u.username}
                 {#if u.username === currentUsername}
-                  <span class="text-xs text-base-content/50 ml-1">(you)</span>
+                  <span class="text-xs text-base-content/70 ml-1">(you)</span>
                 {/if}
               </td>
               <td><span class={roleBadge(u.role)}>{u.role}</span></td>
@@ -183,18 +183,18 @@
                 <div class="flex gap-1">
                   <button
                     class="btn btn-ghost btn-xs"
-                    title="Reset password"
+                    aria-label={`Reset password for ${u.username}`}
                     onclick={() => { resetTarget = u; resetPassword = ""; resetError = null; }}
                   >
-                    🔑
+                    <span aria-hidden="true">🔑</span>
                   </button>
                   {#if u.username !== currentUsername}
                     <button
                       class="btn btn-ghost btn-xs text-error"
-                      title="Delete user"
+                      aria-label={`Delete user ${u.username}`}
                       onclick={() => { deleteTarget = u; }}
                     >
-                      🗑️
+                      <span aria-hidden="true">🗑️</span>
                     </button>
                   {/if}
                 </div>
@@ -214,20 +214,25 @@
     <div class="bg-base-100 rounded-box shadow-xl p-6 w-full max-w-md mx-4" onclick={(e) => e.stopPropagation()}>
       <h3 class="text-lg font-bold mb-4">Add User</h3>
       <div class="flex flex-col gap-3">
+        <label for="add-username" class="sr-only">Username</label>
         <input
+          id="add-username"
           type="text"
           class="input input-bordered w-full"
           placeholder="Username"
           bind:value={newUsername}
           autofocus
         />
+        <label for="add-password" class="sr-only">Password</label>
         <input
+          id="add-password"
           type="password"
           class="input input-bordered w-full"
           placeholder="Password"
           bind:value={newPassword}
         />
-        <select class="select select-bordered w-full" bind:value={newRole}>
+        <label for="add-role" class="sr-only">Role</label>
+        <select id="add-role" class="select select-bordered w-full" bind:value={newRole}>
           <option value="member">Member</option>
           <option value="admin">Admin</option>
         </select>
@@ -260,7 +265,9 @@
       <p class="text-sm text-base-content/70 mb-4">
         New password for <strong>{resetTarget.username}</strong>
       </p>
+      <label for="reset-password" class="sr-only">New password</label>
       <input
+        id="reset-password"
         type="password"
         class="input input-bordered w-full"
         placeholder="New password"

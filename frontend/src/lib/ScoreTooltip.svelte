@@ -1,4 +1,9 @@
 <script lang="ts">
+  let uid: number;
+  {
+    uid = Math.floor(Math.random() * 1e9);
+  }
+
   let {
     row,
     prefix,
@@ -19,18 +24,25 @@
     hb: "Horizontal Bar",
   };
   let appLabel = $derived(APP_LABELS[prefix] ?? prefix.toUpperCase());
+  let tipContentId = $derived(`score-tip-content-${prefix}-${uid}`);
 </script>
 
 {#if hasMulti}
   <div class="dropdown dropdown-hover {isLast ? 'dropdown-left' : 'dropdown-right'}">
-    <div class="cursor-pointer border-b border-dotted border-base-content/30 hover:border-base-content/60 leading-tight" tabindex="0">
-      {row[`${prefix}-d`] ?? ""} / {row[`${prefix}-total`] ?? "DNS"}
-    </div>
-    <div
-      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs min-w-64"
-      tabindex="0"
+    <button
+      type="button"
+      class="cursor-pointer border-b border-dotted border-base-content/40 hover:border-base-content/70 leading-tight"
+      aria-label={`${row[`${prefix}-d`] ?? ""} / ${row[`${prefix}-total`] ?? "DNS"}, ${appLabel} score for ${row.name}`}
+      aria-describedby={tipContentId}
     >
-      <div class="text-[0.65rem] opacity-70 mb-1 text-left">
+      {row[`${prefix}-d`] ?? ""} / {row[`${prefix}-total`] ?? "DNS"}
+    </button>
+    <div
+      id={tipContentId}
+      role="tooltip"
+      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs min-w-64"
+    >
+      <div class="text-xs mb-1 text-left text-neutral-content/90">
         {row.name} - {appLabel}
       </div>
       <div class="divider my-1"></div>
@@ -61,14 +73,20 @@
   </div>
 {:else}
   <div class="dropdown dropdown-hover {isLast ? 'dropdown-left' : 'dropdown-right'}">
-    <div class="cursor-pointer border-b border-dotted border-base-content/30 hover:border-base-content/60 leading-tight" tabindex="0">
-      {row[`${prefix}-d`] ?? ""} / {row[`${prefix}-total`] ?? "DNS"}
-    </div>
-    <div
-      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs min-w-36"
-      tabindex="0"
+    <button
+      type="button"
+      class="cursor-pointer border-b border-dotted border-base-content/40 hover:border-base-content/70 leading-tight"
+      aria-label={`${row[`${prefix}-d`] ?? ""} / ${row[`${prefix}-total`] ?? "DNS"}, ${appLabel} score for ${row.name}`}
+      aria-describedby={tipContentId}
     >
-      <div class="text-[0.65rem] opacity-70 mb-1 text-left">
+      {row[`${prefix}-d`] ?? ""} / {row[`${prefix}-total`] ?? "DNS"}
+    </button>
+    <div
+      id={tipContentId}
+      role="tooltip"
+      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs min-w-36"
+    >
+      <div class="text-xs mb-1 text-left text-neutral-content/90">
         {row.name} - {appLabel}
       </div>
 

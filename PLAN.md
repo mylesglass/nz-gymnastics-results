@@ -209,15 +209,15 @@
 - [x] Config: WAG STEP 5-6 (GNZ 50.0 2×+away, Wgtn 53.0), WAG STEP 7-10 (GNZ 43.0 1×), MAG Level 4-6 (Wgtn 58.0), MAG Level 7+ (Wgtn 63.0)
 
 ### STEP 24: Accessibility (a11y) 🔄 In Progress
-- [ ] **Tier 1 — High-value quick wins**
-  - [ ] Layout/nav: skip-to-content link + `id="main"`; wrap navbar + mobile drawer in `<nav>`; `aria-current="page"` on active nav links; mobile hamburger `<label>` → `<button aria-expanded aria-controls>` (`+layout.svelte:78`)
-  - [ ] Landing page: route both `in:fly` animations through reduced-motion-aware `reveal()`; init `motion` synchronously from `matchMedia` (`+page.svelte:42,73`)
-  - [ ] Upload: dropzone `onclick`+`onkeydown` → `fileInput.click()`; `aria-label` on file input; keep input reachable (`upload/+page.svelte:258-277`)
-  - [ ] NZ map: remove `role="img"` from root `<svg>`; visible focus indicator replacing `outline:none`; `aria-pressed` on active region; single name source (`NZRegionMap.svelte:73,102,122,170`)
-  - [ ] Tables: keyboard sort on apparatus `<th>`s; `aria-sort` on active column; `aria-label` on `« »`/filter triggers; `aria-expanded` + Escape on filter menus (`WideResultsTable.svelte`)
-  - [ ] Tooltips: `role="tooltip"`/`aria-describedby`; fix `AATooltip` `role="menu"` misuse; keyboard+focus open for `ScoreTooltip`/`AATooltip`; make wellington/rankings hover-only tooltips reachable
-  - [ ] Labels/live regions: login, user modals, edit-event, step/page-size/"Correct ID" selects, intent checkboxes, table search; `role="status"`/`aria-live` on admin toasts, edit toast, upload status; `role="alert"` on rankings/wellington errors; `aria-label` on icon-only buttons; events clickable `<td>` → real link
-  - [ ] Contrast quick wins: `text-base-content/40–60` bumps; `ScoreTooltip` header `opacity-70`
+- [x] **Tier 1 — High-value quick wins**
+  - [x] Layout/nav: skip-to-content link + `id="main"`; wrap navbar + mobile drawer in `<nav>`; `aria-current="page"` on active nav links; mobile hamburger `<label>` → `<button aria-expanded aria-controls>` (`+layout.svelte:78`)
+  - [x] Landing page: route both `in:fly` animations through reduced-motion-aware `reveal()`; init `motion` synchronously from `matchMedia` (`+page.svelte:42,73`)
+  - [x] Upload: dropzone `onclick`+`onkeydown` → `fileInput.click()`; `aria-label` on file input; keep input reachable (`upload/+page.svelte:258-277`)
+  - [x] NZ map: remove `role="img"` from root `<svg>`; visible focus indicator replacing `outline:none`; `aria-pressed` on active region; single name source (`NZRegionMap.svelte:73,102,122,170`)
+  - [x] Tables: keyboard sort on apparatus `<th>`s; `aria-sort` on active column; `aria-label` on `« »`/filter triggers; `aria-expanded` + Escape on filter menus (`WideResultsTable.svelte`)
+  - [x] Tooltips: `role="tooltip"`/`aria-describedby`; fix `AATooltip` `role="menu"` misuse; keyboard+focus open for `ScoreTooltip`/`AATooltip`; make wellington/rankings hover-only tooltips reachable
+  - [x] Labels/live regions: login, user modals, edit-event, step/page-size/"Correct ID" selects, intent checkboxes, table search; `role="status"`/`aria-live` on admin toasts, edit toast, upload status; `role="alert"` on rankings/wellington errors; `aria-label` on icon-only buttons; events clickable `<td>` → real link
+  - [x] Contrast quick wins: `text-base-content/40–60` bumps; `ScoreTooltip` header `opacity-70`
 - [ ] **Tier 2 — Dialogs, tabs, map focus**
   - [ ] New shared `frontend/src/lib/Dialog.svelte` — `role="dialog"`, `aria-modal`, labelled heading, initial-focus move, focus trap, Escape close, focus restore, backdrop click
   - [ ] Migrate all 5 modals to `Dialog.svelte` (upload club dialog, add/reset/delete user, edit/delete event)

@@ -129,13 +129,14 @@
   <p class="text-base-content/70 mb-6">Season rankings — top 2 All Around scores per gymnast (excludes Nationals).</p>
 
   <div class="flex flex-wrap items-center gap-3 mb-6">
-    <div role="tablist" class="tabs tabs-box">
-      <button role="tab" class="tab tab-sm {discipline === 'WAG' ? 'bg-primary text-primary-content rounded-lg' : ''}" onclick={() => switchDisc('WAG')}>WAG</button>
-      <button role="tab" class="tab tab-sm {discipline === 'MAG' ? 'bg-secondary text-secondary-content rounded-lg' : ''}" onclick={() => switchDisc('MAG')}>MAG</button>
+    <div role="tablist" aria-label="Discipline" class="tabs tabs-box">
+      <button role="tab" aria-selected={discipline === 'WAG'} class="tab tab-sm {discipline === 'WAG' ? 'bg-primary text-primary-content rounded-lg' : ''}" onclick={() => switchDisc('WAG')}>WAG</button>
+      <button role="tab" aria-selected={discipline === 'MAG'} class="tab tab-sm {discipline === 'MAG' ? 'bg-secondary text-secondary-content rounded-lg' : ''}" onclick={() => switchDisc('MAG')}>MAG</button>
     </div>
 
     {#if steps.length > 0}
-      <select class="select select-bordered select-sm" bind:value={selectedStep}>
+      <label for="rank-step" class="sr-only">Step</label>
+      <select id="rank-step" class="select select-bordered select-sm" bind:value={selectedStep}>
         {#each steps as s}
           <option value={s}>{s}</option>
         {/each}
@@ -154,11 +155,11 @@
         <ExportMenu columns={EXPORT_KEYS} rows={exportRows} headerLabels={CSV_HEADERS} title={`National Rankings ${year} ${discipline} ${selectedStep}`} filename={`National Rankings ${year} ${discipline} ${selectedStep}`} />
       {/if}
     {:else if year}
-      <span class="text-sm text-base-content/50">No STEP levels available</span>
+      <span class="text-sm text-base-content/70">No STEP levels available</span>
     {/if}
 
     {#if !year}
-      <span class="text-sm text-base-content/50">Select a year from the nav</span>
+      <span class="text-sm text-base-content/70">Select a year from the nav</span>
     {/if}
   </div>
 
@@ -169,7 +170,7 @@
   {:else if error}
     <div class="card bg-base-200">
       <div class="card-body items-center text-center py-12">
-        <p class="text-error">{error}</p>
+        <p class="text-error" role="alert">{error}</p>
       </div>
     </div>
   {:else if rankings.length === 0}
@@ -183,15 +184,15 @@
       <table class="table table-zebra">
         <thead>
           <tr>
-            <th class="w-12">Rank</th>
-            <th>Name</th>
-            <th>GNZ ID</th>
-            <th>Club</th>
-            <th>Region</th>
-            <th class="text-right">Score 1</th>
-            <th class="text-right">Score 2</th>
-            <th class="text-right">Total</th>
-            <th class="text-right">Average</th>
+            <th scope="col" class="w-12">Rank</th>
+            <th scope="col">Name</th>
+            <th scope="col">GNZ ID</th>
+            <th scope="col">Club</th>
+            <th scope="col">Region</th>
+            <th scope="col" class="text-right">Score 1</th>
+            <th scope="col" class="text-right">Score 2</th>
+            <th scope="col" class="text-right">Total</th>
+            <th scope="col" class="text-right">Average</th>
           </tr>
         </thead>
         <tbody>
@@ -201,7 +202,7 @@
               <td class="font-medium">
                 <a href="/gymnast/{r.gnz_id}" class="hover:link">{r.name}</a>
               </td>
-              <td class="text-base-content/60 text-xs">{r.gnz_id}</td>
+              <td class="text-base-content/70 text-xs">{r.gnz_id}</td>
               <td>{r.club}</td>
               <td>
                 {#if r.region}
@@ -211,12 +212,18 @@
               {#each r.scores as score, i}
                 <td class="text-right">
                   <div class="dropdown dropdown-hover dropdown-top">
-                    <div class="cursor-pointer font-mono" tabindex="0">
+                    <button
+                      type="button"
+                      class="cursor-pointer font-mono"
+                      aria-label={`Score ${i + 1} for ${r.name}`}
+                      aria-describedby={`rank-comp-${r.gnz_id}-${i}`}
+                    >
                       {score.toFixed(3)}
-                    </div>
+                    </button>
                     <div
+                      id={`rank-comp-${r.gnz_id}-${i}`}
+                      role="tooltip"
                       class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs whitespace-nowrap"
-                      tabindex="0"
                     >
                       {r.competitions[i] || "Unknown competition"}
                     </div>
@@ -224,7 +231,7 @@
                 </td>
               {/each}
               {#if r.scores.length < 2}
-                <td class="text-right text-base-content/40">—</td>
+                <td class="text-right text-base-content/60">—</td>
               {/if}
               <td class="text-right font-semibold">{r.total.toFixed(3)}</td>
               <td class="text-right text-base-content/70">{(r.total / r.scores.length).toFixed(3)}</td>

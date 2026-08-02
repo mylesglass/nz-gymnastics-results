@@ -70,8 +70,7 @@
 
 <svg
   viewBox="0 0 525 989"
-  role="img"
-  aria-label="Map of New Zealand"
+  aria-label="Map of New Zealand with selectable regions"
   class="w-full h-auto"
 >
   <defs>
@@ -100,12 +99,16 @@
       role="button"
       tabindex="0"
       aria-label={c.name}
+      aria-pressed={isActive}
       class="nz-region"
       class:nz-active={isActive}
       style="--region-color: {regionColor}; --checker: {checker}; --scroll-x: {scroll.x}px; --scroll-y: {scroll.y}px; --scroll-duration: {scroll.duration}s;"
       onclick={() => onSelect(c.name)}
       onkeydown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onSelect(c.name);
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect(c.name);
+        }
       }}
     >
       <pattern id="nz-checker-{i}" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -119,7 +122,6 @@
           <path d={paths.get(id)} clip-path={clipId ? `url(#${clipId})` : undefined} />
         {/if}
       {/each}
-      <title>{c.name}</title>
     </g>
   {/each}
 </svg>
@@ -167,8 +169,11 @@
     stroke-width: 0.6;
     stroke-linejoin: round;
   }
-  .nz-region:focus,
   .nz-region:focus-visible {
-    outline: none;
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+    stroke: var(--color-base-content);
+    stroke-opacity: 0.8;
+    stroke-width: 1.5;
   }
 </style>

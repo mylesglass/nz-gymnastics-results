@@ -275,13 +275,14 @@
   {/if}
 
   <div class="flex flex-wrap items-center gap-3 mb-6">
-    <div role="tablist" class="tabs tabs-box">
-      <button role="tab" class="tab tab-sm {discipline === 'WAG' ? 'bg-primary text-primary-content rounded-lg' : ''}" onclick={() => switchDisc('WAG')}>WAG</button>
-      <button role="tab" class="tab tab-sm {discipline === 'MAG' ? 'bg-secondary text-secondary-content rounded-lg' : ''}" onclick={() => switchDisc('MAG')}>MAG</button>
+    <div role="tablist" aria-label="Discipline" class="tabs tabs-box">
+      <button role="tab" aria-selected={discipline === 'WAG'} class="tab tab-sm {discipline === 'WAG' ? 'bg-primary text-primary-content rounded-lg' : ''}" onclick={() => switchDisc('WAG')}>WAG</button>
+      <button role="tab" aria-selected={discipline === 'MAG'} class="tab tab-sm {discipline === 'MAG' ? 'bg-secondary text-secondary-content rounded-lg' : ''}" onclick={() => switchDisc('MAG')}>MAG</button>
     </div>
 
     {#if steps.length > 0}
-      <select class="select select-bordered select-sm" bind:value={selectedStep}>
+      <label for="wgtn-step" class="sr-only">Step</label>
+      <select id="wgtn-step" class="select select-bordered select-sm" bind:value={selectedStep}>
         {#each steps as s}
           <option value={s}>{s}</option>
         {/each}
@@ -306,11 +307,11 @@
         <ExportMenu columns={EXPORT_KEYS} rows={exportRows} headerLabels={CSV_HEADERS} title={`Wellington Rankings ${year} ${discipline} ${selectedStep}`} filename={`Wellington Rankings ${year} ${discipline} ${selectedStep}`} />
       {/if}
     {:else if year}
-      <span class="text-sm text-base-content/50">No STEP levels available</span>
+      <span class="text-sm text-base-content/70">No STEP levels available</span>
     {/if}
 
     {#if !year}
-      <span class="text-sm text-base-content/50">Select a year from the nav</span>
+      <span class="text-sm text-base-content/70">Select a year from the nav</span>
     {/if}
   </div>
 
@@ -321,7 +322,7 @@
   {:else if error}
     <div class="card bg-base-200">
       <div class="card-body items-center text-center py-12">
-        <p class="text-error">{error}</p>
+        <p class="text-error" role="alert">{error}</p>
       </div>
     </div>
   {:else if rankings.length === 0}
@@ -335,17 +336,17 @@
       <table class="table table-zebra">
         <thead>
           <tr>
-            <th class="w-12">Rank</th>
-            <th class="w-12"></th>
-            <th>Name</th>
-            <th>GNZ ID</th>
-            <th>Club</th>
-            <th class="w-10"></th>
+            <th scope="col" class="w-12">Rank</th>
+            <th scope="col" class="w-12"></th>
+            <th scope="col">Name</th>
+            <th scope="col">GNZ ID</th>
+            <th scope="col">Club</th>
+            <th scope="col" class="w-10">Intent</th>
             {#each HEADER_LABELS[configKey] ?? ["Score 1", "Score 2", "Score 3"] as label}
-              <th class="text-right">{label}</th>
+              <th scope="col" class="text-right">{label}</th>
             {/each}
-            <th class="text-right">Average</th>
-            <th class="w-8"></th>
+            <th scope="col" class="text-right">Average</th>
+            <th scope="col" class="w-8"></th>
           </tr>
         </thead>
         <tbody>
@@ -362,13 +363,14 @@
               <td class="font-medium">
                 <a href="/gymnast/{r.gnz_id}" class="hover:link">{r.name}</a>
               </td>
-              <td class="text-base-content/60 text-xs">{r.gnz_id}</td>
+              <td class="text-base-content/70 text-xs">{r.gnz_id}</td>
               <td>{r.club}</td>
               <td class="text-center w-10">
                 {#if user?.role === "admin"}
                   <input
                     type="checkbox"
                     class="checkbox checkbox-xs checkbox-primary"
+                    aria-label={`Intent submitted for ${r.name}`}
                     bind:checked={r.intent_submitted}
                     onchange={() => {
                       toggleIntent(r.gnz_id, Number(year), r.intent_submitted).then(loadRankings).catch(() => {
@@ -377,39 +379,44 @@
                     }}
                   />
                 {:else}
-                  <input type="checkbox" class="checkbox checkbox-xs" checked={r.intent_submitted} disabled />
+                  <input type="checkbox" class="checkbox checkbox-xs" checked={r.intent_submitted} disabled aria-label={`Intent submitted for ${r.name}`} />
                 {/if}
               </td>
               {#each r.scores as score, i}
                 <td class="text-right">
-                  <span class="group/tip relative inline-block">
-                    <span
-                      class="cursor-pointer font-mono border-b border-dotted border-base-content/30 hover:border-base-content/60 leading-tight"
+                  <span class="dropdown dropdown-hover dropdown-right">
+                    <button
+                      type="button"
+                      class="cursor-pointer font-mono border-b border-dotted border-base-content/40 hover:border-base-content/70 leading-tight"
+                      aria-label={`Score ${i + 1} for ${r.name}`}
+                      aria-describedby={`wgtn-comp-${r.gnz_id}-${i}`}
                     >
                       {score.toFixed(3)}
-                    </span>
+                    </button>
                     <span
-                      class="invisible group-hover/tip:visible opacity-0 group-hover/tip:opacity-100 transition-opacity absolute left-full top-1/2 -translate-y-1/2 ml-1 z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2.5 text-xs pointer-events-none min-w-44"
+                      id={`wgtn-comp-${r.gnz_id}-${i}`}
+                      role="tooltip"
+                      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2.5 text-xs min-w-44"
                     >
-                      <div class="font-medium text-xs truncate max-w-48 mb-1">{r.competitions[i] || "Unknown competition"}</div>
-                      <div>
+                      <span class="block font-medium text-xs truncate max-w-48 mb-1">{r.competitions[i] || "Unknown competition"}</span>
+                      <span>
                         <span class={catBadge(r.categories[i])}>
                           {(HEADER_LABELS[configKey] ?? [])[i] ?? CATEGORY_LABELS[r.categories[i]] ?? r.categories[i]}
                         </span>
-                      </div>
+                      </span>
                       {#if r.apparatus?.[i]?.length}
-                        <div class="divider my-1"></div>
+                        <span class="divider my-1"></span>
                         {#each r.apparatus[i] as pass}
-                          <div class="flex justify-between leading-tight gap-4">
+                          <span class="flex justify-between leading-tight gap-4">
                             <span class="font-semibold">{pass.app}</span>
                             <span>{pass.total?.toFixed(3) ?? "DNS"}</span>
-                          </div>
+                          </span>
                         {/each}
-                        <div class="divider my-0.5"></div>
-                        <div class="flex justify-between font-semibold">
+                        <span class="divider my-0.5"></span>
+                        <span class="flex justify-between font-semibold">
                           <span>AA</span>
                           <span>{score.toFixed(3)}</span>
-                        </div>
+                        </span>
                       {/if}
                     </span>
                   </span>
@@ -418,13 +425,22 @@
               <td class="text-right font-bold">{r.average.toFixed(3)}</td>
               <td class="text-center w-8">
                 {#if r.warnings?.length}
-                  <span class="group/warn relative inline-block cursor-help">
-                    <span class="text-warning">⚠</span>
+                  <span class="dropdown dropdown-hover dropdown-left">
+                    <button
+                      type="button"
+                      class="cursor-help"
+                      aria-label={`Warnings for ${r.name}`}
+                      aria-describedby={`wgtn-warn-${r.gnz_id}`}
+                    >
+                      <span class="text-warning" aria-hidden="true">⚠</span>
+                    </button>
                     <span
-                      class="invisible group-hover/warn:visible opacity-0 group-hover/warn:opacity-100 transition-opacity absolute right-full top-1/2 -translate-y-1/2 mr-2 z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2.5 text-xs pointer-events-none min-w-48 whitespace-normal"
+                      id={`wgtn-warn-${r.gnz_id}`}
+                      role="tooltip"
+                      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2.5 text-xs min-w-48 whitespace-normal"
                     >
                       {#each r.warnings as w}
-                        <div>{w}</div>
+                        <span class="block">{w}</span>
                       {/each}
                     </span>
                   </span>
@@ -446,10 +462,10 @@
     <table class="table table-zebra">
       <thead>
         <tr>
-          <th>Name</th>
-          <th>GNZ ID</th>
-          <th>Club</th>
-          <th class="text-right">Apparatus</th>
+          <th scope="col">Name</th>
+          <th scope="col">GNZ ID</th>
+          <th scope="col">Club</th>
+          <th scope="col" class="text-right">Apparatus</th>
         </tr>
       </thead>
       <tbody>
@@ -458,14 +474,19 @@
             <td class="font-medium">
               <a href="/gymnast/{s.gnz_id}" class="hover:link">{s.name}</a>
             </td>
-            <td class="text-base-content/60 text-xs">{s.gnz_id}</td>
+            <td class="text-base-content/70 text-xs">{s.gnz_id}</td>
             <td>{s.club}</td>
             <td>
               <div class="flex flex-wrap gap-1 justify-end">
                 {#each s.apparatus as a}
-                  <span class="tooltip tooltip-top" data-tip={a.event || "Unknown competition"}>
+                  <button
+                    type="button"
+                    class="tooltip tooltip-top cursor-help"
+                    data-tip={a.event || "Unknown competition"}
+                    aria-label={`${a.app} ${a.best.toFixed(3)}, best at ${a.event || "unknown competition"}`}
+                  >
                     <span class="badge badge-sm {appBadgeClass(a.app)}">{a.app} {a.best.toFixed(3)}</span>
-                  </span>
+                  </button>
                 {/each}
               </div>
             </td>

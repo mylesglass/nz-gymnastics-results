@@ -51,15 +51,26 @@
         </div>
       {:else}
         <div class="flex flex-col gap-4">
+          <label for="login-username" class="sr-only">Username</label>
           <input
+            id="login-username"
             type="text"
+            name="username"
+            autocomplete="username"
             class="input input-bordered w-full"
             placeholder="Username"
             bind:value={username}
+            onkeydown={(e) => {
+              if (e.key === "Enter") handleSubmit();
+            }}
             autofocus
           />
+          <label for="login-password" class="sr-only">Password</label>
           <input
+            id="login-password"
             type="password"
+            name="password"
+            autocomplete="current-password"
             class="input input-bordered w-full"
             placeholder="Password"
             bind:value={password}

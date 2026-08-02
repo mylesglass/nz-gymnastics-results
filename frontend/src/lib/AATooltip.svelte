@@ -1,4 +1,9 @@
 <script lang="ts">
+  let uid: number;
+  {
+    uid = Math.floor(Math.random() * 1e9);
+  }
+
   let {
     row,
     prefixes,
@@ -23,18 +28,24 @@
   let totalN = $derived(sum("n"));
   let appCount = $derived(competedCount("e"));
   let eDeductions = $derived(appCount * 10 - totalE);
+  let tipContentId = $derived(`aa-tip-content-${uid}`);
 </script>
 
 <div class="dropdown dropdown-hover dropdown-left">
-  <div class="cursor-pointer" role="button" tabindex="0">
-    {row["aa-score"] ?? ""}
-  </div>
-  <div
-    class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs min-w-44"
-    role="menu"
-    tabindex="0"
+  <button
+    type="button"
+    class="cursor-pointer"
+    aria-label={`${row["aa-score"] ?? ""}, all around score for ${row.name}`}
+    aria-describedby={tipContentId}
   >
-    <div class="text-[0.65rem] opacity-70 mb-1 text-left">
+    {row["aa-score"] ?? ""}
+  </button>
+  <div
+    id={tipContentId}
+    role="tooltip"
+    class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs min-w-44"
+  >
+    <div class="text-xs mb-1 text-left text-neutral-content/90">
       {row.name} - All Around
     </div>
     <div class="divider my-1"></div>

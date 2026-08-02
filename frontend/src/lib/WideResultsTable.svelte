@@ -160,6 +160,13 @@
   let openDropdown = $state<string | null>(null);
   let openDropdownX = $state(0);
   let openDropdownY = $state(0);
+  let openDropdownEl: HTMLDivElement | undefined = $state();
+
+  $effect(() => {
+    if (openDropdown && openDropdownEl) {
+      openDropdownEl.focus();
+    }
+  });
 
   const BASE_LABELS: Record<string, string> = {
     "gnz-id": "ID",
@@ -611,18 +618,19 @@ function appDisplayLabel(prefix: string): string {
 {:else if Object.keys(allData).length === 0}
   <h1 class="text-3xl font-bold mb-2">{title || "Results"}</h1>
   {#if errorMessage}
-    <div class="alert alert-error mt-4">
+    <div class="alert alert-error mt-4" role="alert">
       <div class="flex flex-col gap-2 w-full">
         <span>{errorMessage}</span>
         {#if errorRaw}
           <button
             class="btn btn-ghost btn-xs self-start"
             onclick={() => (showErrorDetail = !showErrorDetail)}
+            aria-expanded={showErrorDetail}
           >
             {showErrorDetail ? "Hide details" : "Show details"}
           </button>
           {#if showErrorDetail}
-            <pre class="text-xs opacity-60 whitespace-pre-wrap max-h-48 overflow-y-auto bg-base-300 p-2 rounded">{errorRaw}</pre>
+            <pre class="text-xs opacity-80 whitespace-pre-wrap max-h-48 overflow-y-auto bg-base-300 p-2 rounded">{errorRaw}</pre>
           {/if}
         {/if}
       </div>
@@ -667,11 +675,12 @@ function appDisplayLabel(prefix: string): string {
       {/if}
 
       <label class="input input-bordered input-xs flex items-center gap-1 w-64">
-        <span class="text-base-content/50 text-xs">🔍</span>
+        <span class="text-base-content/60 text-xs" aria-hidden="true">🔍</span>
         <input
           type="text"
           class="grow text-xs w-12"
           placeholder="Search name or ID"
+          aria-label="Search name or ID"
           bind:value={rawSearchInput}
         />
       </label>
@@ -680,15 +689,17 @@ function appDisplayLabel(prefix: string): string {
         <div class="join ml-1">
           <button class="btn btn-xs join-item" disabled={currentPage <= 1}
             onclick={() => { if (currentPage > 1) currentPage--; }}
+            aria-label="Previous page"
           >«</button>
-          <button class="btn btn-xs join-item no-animation">{currentPage}/{totalPages}</button>
+          <button class="btn btn-xs join-item no-animation" aria-current="page">{currentPage}/{totalPages}</button>
           <button class="btn btn-xs join-item" disabled={currentPage >= totalPages}
             onclick={() => { if (currentPage < totalPages) currentPage++; }}
+            aria-label="Next page"
           >»</button>
         </div>
       {/if}
 
-      <span class="text-xs text-base-content/50 ml-1">
+      <span class="text-xs text-base-content/70 ml-1" role="status">
         Showing {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, filteredCount)} of {filteredCount} results
       </span>
 
@@ -717,13 +728,14 @@ function appDisplayLabel(prefix: string): string {
         class="border-t border-base-300 overflow-x-auto"
         bind:this={dupScrollEl}
       >
-        <table class="table table-xs min-w-full">
+        <table class="table table-xs min-w-full" aria-hidden="true">
           <thead>
             <tr>
               {#each frontMeta as col, i}
-                <th class={COL_MIN_CLASS[col] ?? ""} style={thStyle(i, col)}>
+                <th scope="col" class={COL_MIN_CLASS[col] ?? ""} style={thStyle(i, col)}>
                   <div class="flex items-center gap-0.5">
                     <button
+                      type="button"
                       onclick={() => toggleSort(col)}
                       class="hover:text-primary text-xs font-bold"
                     >
@@ -732,9 +744,13 @@ function appDisplayLabel(prefix: string): string {
                     </button>
                     {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
                       <button
+                        type="button"
                         onclick={(e) => toggleDropdown(col, e)}
                         class="btn btn-ghost btn-xs px-0.5 min-h-0 h-5"
-                        title="Filter"
+                        aria-label={`Filter ${col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}`}
+                        aria-haspopup="dialog"
+                        aria-expanded={openDropdown === col}
+                        tabindex="-1"
                       >
                         <span
                           class="text-xs {filterStateFor(col).selected.length
@@ -753,20 +769,18 @@ function appDisplayLabel(prefix: string): string {
               {/each}
               {#each apparatusPrefixes as prefix, i}
                 <th
-                  onclick={() => toggleSort(`${prefix}-total`)}
-                  class="cursor-pointer select-none hover:text-primary text-left min-w-12 {COL_MIN_CLASS[
+                  scope="col"
+                  class="text-left min-w-12 {COL_MIN_CLASS[
                     prefix
                   ] ?? ''}"
                   style={thStyle(frontMeta.length + i, prefix)}
                 >
                   {appDisplayLabel(prefix)}
-                  {#if sortCol === `${prefix}-total`}{sortAsc
-                      ? " ▲"
-                      : " ▼"}{/if}
                 </th>
               {/each}
               {#each backMeta as col, i}
                 <th
+                  scope="col"
                   class={COL_MIN_CLASS[col] ?? ""}
                   style={thStyle(
                     frontMeta.length + apparatusPrefixes.length + i,
@@ -775,6 +789,7 @@ function appDisplayLabel(prefix: string): string {
                 >
                   <div class="flex items-center gap-0.5">
                     <button
+                      type="button"
                       onclick={() => toggleSort(col)}
                       class="hover:text-primary text-xs font-bold"
                     >
@@ -783,9 +798,13 @@ function appDisplayLabel(prefix: string): string {
                     </button>
                     {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
                       <button
+                        type="button"
                         onclick={(e) => toggleDropdown(col, e)}
                         class="btn btn-ghost btn-xs px-0.5 min-h-0 h-5"
-                        title="Filter"
+                        aria-label={`Filter ${col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}`}
+                        aria-haspopup="dialog"
+                        aria-expanded={openDropdown === col}
+                        tabindex="-1"
                       >
                         <span
                           class="text-xs {filterStateFor(col).selected.length
@@ -815,12 +834,15 @@ function appDisplayLabel(prefix: string): string {
         <tr>
           {#each frontMeta as col, i}
             <th
+              scope="col"
               class="cursor-pointer select-none hover:text-primary {COL_MIN_CLASS[
                 col
               ] ?? ''}"
+              aria-sort={sortCol === col ? (sortAsc ? "ascending" : "descending") : "none"}
             >
               <div class="flex items-center gap-0.5">
                 <button
+                  type="button"
                   onclick={() => toggleSort(col)}
                   class="hover:text-primary text-xs font-bold"
                 >
@@ -831,8 +853,15 @@ function appDisplayLabel(prefix: string): string {
                 </button>
                 {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
                   <button
+                    type="button"
                     onclick={(e) => toggleDropdown(col, e)}
+                    onkeydown={(e) => {
+                      if (e.key === "Escape") { e.preventDefault(); openDropdown = null; }
+                    }}
                     class="btn btn-ghost btn-xs px-0.5 min-h-0 h-5"
+                    aria-label={`Filter ${col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}`}
+                    aria-haspopup="dialog"
+                    aria-expanded={openDropdown === col}
                   >
                     <span
                       class="text-xs {filterStateFor(col).selected.length
@@ -851,26 +880,35 @@ function appDisplayLabel(prefix: string): string {
           {/each}
           {#each apparatusPrefixes as prefix, i}
             <th
-              onclick={() => toggleSort(`${prefix}-total`)}
-              class="cursor-pointer select-none hover:text-primary text-left min-w-12 {COL_MIN_CLASS[
+              scope="col"
+              class="text-left min-w-12 {COL_MIN_CLASS[
                 prefix
               ] ?? ''}"
-              colspan="1"
+              aria-sort={sortCol === `${prefix}-total` ? (sortAsc ? "ascending" : "descending") : "none"}
             >
-              {appDisplayLabel(prefix)}
-              {#if sortCol === `${prefix}-total`}
-                <span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>
-              {/if}
+              <button
+                type="button"
+                onclick={() => toggleSort(`${prefix}-total`)}
+                class="cursor-pointer select-none hover:text-primary"
+              >
+                {appDisplayLabel(prefix)}
+                {#if sortCol === `${prefix}-total`}
+                  <span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>
+                {/if}
+              </button>
             </th>
           {/each}
           {#each backMeta as col, i}
             <th
+              scope="col"
               class="cursor-pointer select-none hover:text-primary {COL_MIN_CLASS[
                 col
               ] ?? ''}"
+              aria-sort={sortCol === col ? (sortAsc ? "ascending" : "descending") : "none"}
             >
               <div class="flex items-center gap-0.5">
                 <button
+                  type="button"
                   onclick={() => toggleSort(col)}
                   class="hover:text-primary text-xs font-bold"
                 >
@@ -881,8 +919,15 @@ function appDisplayLabel(prefix: string): string {
                 </button>
                 {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
                   <button
+                    type="button"
                     onclick={(e) => toggleDropdown(col, e)}
+                    onkeydown={(e) => {
+                      if (e.key === "Escape") { e.preventDefault(); openDropdown = null; }
+                    }}
                     class="btn btn-ghost btn-xs px-0.5 min-h-0 h-5"
+                    aria-label={`Filter ${col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}`}
+                    aria-haspopup="dialog"
+                    aria-expanded={openDropdown === col}
                   >
                     <span
                       class="text-xs {filterStateFor(col).selected.length
@@ -900,7 +945,7 @@ function appDisplayLabel(prefix: string): string {
             </th>
           {/each}
           {#if editMode}
-            <th class="w-16"></th>
+            <th scope="col" class="w-16"></th>
           {/if}
         </tr>
       </thead>
@@ -913,6 +958,7 @@ function appDisplayLabel(prefix: string): string {
                   <input
                     type="text"
                     class="input input-xs input-bordered w-full min-w-24"
+                    aria-label={`Edit ${HEADER_LABELS[col] ?? col}`}
                     value={editValues[editKey(rowIdx, col)] ?? row[col] ?? ""}
                     oninput={(e) => {
                       editValues = { ...editValues, [editKey(rowIdx, col)]: e.currentTarget.value };
@@ -972,7 +1018,7 @@ function appDisplayLabel(prefix: string): string {
           </tr>
         {:else}
           <tr>
-            <td colspan="100%" class="text-center py-8 text-base-content/60">
+            <td colspan="100%" class="text-center py-8 text-base-content/70">
               No results found matching criteria.
             </td>
           </tr>
@@ -991,7 +1037,7 @@ function appDisplayLabel(prefix: string): string {
         >
           « Prev
         </button>
-        <button class="btn btn-sm join-item no-animation">
+        <button class="btn btn-sm join-item no-animation" aria-current="page">
           Page {currentPage} of {totalPages}
         </button>
         <button
@@ -1002,27 +1048,41 @@ function appDisplayLabel(prefix: string): string {
           Next »
         </button>
       </div>
-      <select
-        class="select select-bordered select-sm"
-        value={pageSize}
-        onchange={(e) => {
-          pageSize = Number((e.target as HTMLSelectElement).value);
-          currentPage = 1;
-        }}
-      >
-        <option value={25}>25 per page</option>
-        <option value={50}>50 per page</option>
-        <option value={100}>100 per page</option>
-      </select>
+      <label class="flex items-center gap-1 text-xs">
+        <span class="sr-only">Results per page</span>
+        <select
+          class="select select-bordered select-sm"
+          aria-label="Results per page"
+          value={pageSize}
+          onchange={(e) => {
+            pageSize = Number((e.target as HTMLSelectElement).value);
+            currentPage = 1;
+          }}
+        >
+          <option value={25}>25 per page</option>
+          <option value={50}>50 per page</option>
+          <option value={100}>100 per page</option>
+        </select>
+      </label>
     </div>
   {/if}
 
   {#if openDropdown}
     <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-    <div class="fixed inset-0 z-40" onclick={() => (openDropdown = null)}></div>
+    <div class="fixed inset-0 z-40" onclick={() => (openDropdown = null)} aria-hidden="true"></div>
     <div
+      role="dialog"
+      aria-label={`Filter ${filterStateFor(openDropdown).label}`}
+      tabindex="-1"
+      bind:this={openDropdownEl}
       class="fixed z-50 bg-base-100 border border-base-300 rounded-box shadow-xl p-2 min-w-44 max-h-60 overflow-y-auto"
       style="top:{openDropdownY}px; left:{openDropdownX}px"
+      onkeydown={(e) => {
+        if (e.key === "Escape") {
+          e.preventDefault();
+          openDropdown = null;
+        }
+      }}
     >
       <div class="flex justify-between px-1 pb-1 border-b border-base-200 mb-1">
         <span class="font-bold text-xs"
@@ -1030,6 +1090,7 @@ function appDisplayLabel(prefix: string): string {
         >
         {#if filterStateFor(openDropdown).selected.length}
           <button
+            type="button"
             onclick={() => {
               clearFilter(openDropdown);
               openDropdown = null;
@@ -1058,7 +1119,7 @@ function appDisplayLabel(prefix: string): string {
 {/if}
 
 {#if editToast}
-  <div class="toast toast-bottom toast-end z-50">
+  <div class="toast toast-bottom toast-end z-50" role="status">
     <div class="alert alert-success text-sm">
       <span>{editToast}</span>
     </div>
