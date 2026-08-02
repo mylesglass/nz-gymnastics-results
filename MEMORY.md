@@ -123,11 +123,12 @@ Core logic:
 
 **Shared components:**
 - `WideResultsTable.svelte` — encapsulate all table rendering, filtering, sorting, sticky headers, scroll sync, duplicate header column width alignment, region column with colored dots, truncated event names. Used by all result pages.
+- `Dialog.svelte` — a11y dialog: `role="dialog"` + `aria-modal`, labelled heading, initial-focus move, Tab/Shift+Tab focus trap, Escape close, focus restore to opener, backdrop click. Used by all 5 modals.
 - `RegionBadge.svelte` — region pill with 2x2 checkerboard (primary+secondary colors) on primary fill, `whitespace-nowrap`, used in rankings and clubs pages
-- `NZRegionMap.svelte` — interactive SVG map of 15 regions; hovered/selected regions fill with a scrolling checker pattern (each region has its own CSS-var-driven direction + duration; seamless loop, respects `prefers-reduced-motion`)
-- `regions.ts` — `REGION_PALETTES` constant mapping 15 NZ regions to 2-3 hex colors (NZ sports team inspired), plus `REGION_ORDER` (north→south) and gradient/text/heading color helpers
-- `ScoreTooltip.svelte` — DaisyUI dropdown hover card showing D, E, N, Bonus, Rank for each apparatus
-- `AATooltip.svelte` — DaisyUI dropdown-hover tooltip showing AA score, rank, and summed D/E/N across all apparatus
+- `NZRegionMap.svelte` — interactive SVG map of 15 regions; hovered/selected regions fill with a scrolling checker pattern (each region has its own CSS-var-driven direction + duration; seamless loop, respects `prefers-reduced-motion`). Regions are keyboard-focusable `role="button"`s with `focus-visible` outline, `aria-pressed` on the active region, `aria-live` announcement on selection.
+- `regions.ts` — `REGION_PALETTES` constant mapping 15 NZ regions to 2-3 hex colors (NZ sports team inspired), plus `REGION_ORDER` (north→south). `textColor()`/`gradientTextColor()` pick `#000` vs `#fff` via WCAG relative-luminance contrast.
+- `ScoreTooltip.svelte` — DaisyUI `dropdown-hover` tooltip (opens on hover + focus-within) showing D, E, N, Bonus, Rank per apparatus; `<button>` trigger with `aria-label` (visible text + context) + `aria-describedby` → `role="tooltip"` panel
+- `AATooltip.svelte` — same pattern for AA score/rank/summed D/E/N
 - `MultiSelect.svelte` — DaisyUI dropdown with checkboxes, Clear button, `min-w-48` buttons
 - `ExportMenu.svelte` — DaisyUI export dropdown (CSV/XLSX/PDF); `export.ts` builds files, XLSX honors `colFormat` (hidden columns + widths), PDF renders table-like columns with header + page numbers, libraries lazy-loaded
 
@@ -165,8 +166,15 @@ Core logic:
 - `min-w-full` table fills container width
 - Region column filterable via column header dropdown
 
-## Test Suite (251 tests)
-- `test_decoder.py`: 14 tests — output map building, decoding, DNS detection, Start Value
+### Accessibility (STEP 24 — complete, all 6 public pages 100/100 on Lighthouse)
+- Shared `Dialog.svelte` for all modals: `role="dialog"`/`aria-modal`, focus trap, Escape, focus restore, labelled heading.
+- Tabs are native radios (no `role="tab"`); WAG/MAG toggles are `aria-pressed` buttons.
+- Tooltips are DaisyUI `dropdown-hover` (`<button>` trigger, `role="tooltip"`, `aria-describedby`, label-in-name).
+- `textColor()`/`gradientTextColor()` use WCAG relative-luminance contrast (`#000` vs `#fff`).
+- Skip link, `<main id="main">`, `<nav>` landmarks, `aria-current` on active links, `aria-live`/`role="status"` toasts, `role="alert"` errors, 24px min button targets, reduced-motion gating.
+- Reports in `a11y-reports/` (rerun: `./a11y-reports/run.sh before|after [pages...]`, needs `CHROME_PATH`).
+
+## Test Suite (251 tests)- `test_decoder.py`: 14 tests — output map building, decoding, DNS detection, Start Value
 - `test_resolver.py`: 21 tests — all resolver functions
 - `test_models.py`: 4 tests — CRUD, cascade delete
 - `test_parser.py`: 35 parametrized tests + validation + equal-discarded regression — known-file tests + bulk 2025 scan + real-data + validation + edge case tests

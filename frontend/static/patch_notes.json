@@ -3,6 +3,16 @@
     "date": "2 Aug 2026",
     "entries": [
       {
+        "title": "Accessibility pass — all pages 100/100 on Lighthouse",
+        "items": [
+          "Keyboard access everywhere: mobile menu, file upload, table sorting and filters, score/competition tooltips, the NZ region map, and every dialog.",
+          "Dialogs now trap focus, close on Escape, and restore focus to the button that opened them.",
+          "Screen-reader labels added to all inputs, selects, icon-only buttons, toasts, and error messages; navigation announces the current page.",
+          "Reduced-motion preference is respected by the landing-page animations.",
+          "Contrast fixes across light and dark themes, including the club region badges and the map focus indicator."
+        ]
+      },
+      {
         "title": "Home, clubs & NZ map polish",
         "items": [
           "Landing page: the three info items (WAG & MAG, Export & Share, Smart Filtering) moved above the clickable nav cards and stripped of card styling, so the links clearly read as links.",

@@ -47,8 +47,9 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   │   ├── auth.ts             # JWT auth stores (currentUser, setToken, logout)
 │   │   │   ├── year.ts             # yearOptions store (selectedYear removed)
 │   │   │   ├── utils/debounce.ts   # Debounce helper for search inputs
-│   │   │   ├── regions.ts          # Region color palettes + REGION_ORDER (north→south) + gradient/text helpers
+│   │   │   ├── regions.ts          # Region color palettes + REGION_ORDER (north→south) + WCAG-contrast text/gradient helpers
 │   │   │   ├── RegionBadge.svelte  # Region color badge component
+│   │   │   ├── Dialog.svelte       # A11y dialog (aria-modal, focus trap, Escape, focus restore)
 │   │   │   ├── NZRegionMap.svelte  # Interactive NZ SVG map (15 gym regions, animated checker on hover/select)
 │   │   │   ├── WideResultsTable.svelte  # Shared results table (paginated, virtualized)
 │   │   │   ├── ScoreTooltip.svelte      # Apparatus score tooltip
@@ -272,3 +273,15 @@ docker compose -f docker-compose.prod.yml up --build -d
 - **Svelte 5 snippet gotcha** — `{#snippet}` components must be invoked with `{@render RegionCard({...})}`, NOT `<RegionCard />` (throws `invalid_snippet_arguments`). Also avoid `class:ring-2` on snippet elements — Svelte parses the hyphen as an expression (`ring` undefined); use a plain `class` string instead.
 - **Client-side exports** — all result/ranking pages use `ExportMenu.svelte` + `export.ts` for CSV/XLSX/PDF. SheetJS (`xlsx`) and jsPDF are lazy-loaded via dynamic `import()` so they don't bloat the entry bundle. XLSX honors a `colFormat` map (hidden columns + `wch` widths) computed in `WideResultsTable.svelte` — it hides `region`, per-pass vault columns (`vt-1-*`, `vt-2-*`), and all `*-bonus` columns, and widens name/club (30) and event_name (45). PDF exports render a condensed table (one column per apparatus showing `D / Total`, matching the frontend) with a title header and `Page X of Y` footer. CSV/XLSX keep every raw column (minus hidden ones); PDF uses `pdfColumns`. `slugifyFilename()` (in export.ts) kebab-cases download names.
 - **SheetJS advisories** — `npm audit` flags prototype pollution/ReDoS in `xlsx` 0.18.5, but only for *parsing* untrusted files; the app only *writes* XLSX, so risk is negligible.
+
+## Accessibility Conventions (STEP 24)
+
+- All 6 public pages score **100/100** on Lighthouse accessibility (verified after a 3-tier pass; reports tracked in `a11y-reports/`, rerun with `./a11y-reports/run.sh before|after [pages...]` against the dev server — needs `CHROME_PATH` pointing at a Chrome/Chromium binary).
+- **Dialogs** — use the shared `frontend/src/lib/Dialog.svelte` (`role="dialog"`, `aria-modal`, labelled `h3`, initial-focus move, Tab/Shift+Tab focus trap, Escape close, focus restore to opener, backdrop click). All 5 modals (upload club mapping, add/reset/delete user, edit/delete event) migrated to it.
+- **Tabs** — year + WAG/MAG selectors are native `radio` inputs styled as `.tab` (NO `role="tab"` — native `checked` is announced and arrow-key navigation works). Two-button discipline toggles use `aria-pressed` buttons. Avoid the `role="tab"` on `<input>` anti-pattern (flagged by axe).
+- **Tooltips** — `ScoreTooltip`/`AATooltip` and rankings/wellington score tooltips are DaisyUI `dropdown-hover` (opens on hover AND focus-within) with a `<button>` trigger, `aria-label` containing the visible score text (WCAG 2.5.3), `aria-describedby` → `role="tooltip"` panel. Never use hover-only CSS tooltips for information that isn't in the DOM elsewhere.
+- **Focus** — SVG map regions keep a `focus-visible` outline + stroke; region selection moves focus to the desktop card and announces via an `aria-live` region. Drawer closes on Escape and restores focus to the hamburger button.
+- **Buttons** — icon-only buttons need `aria-label` (not `title` alone). Table sort/filter buttons must clear the 24px min target size (WCAG 2.5.8) — the header filter buttons use `h-6 min-w-6`, sort labels `min-h-6`.
+- **Live regions** — toasts (admin merge/cache, edit save, upload status) use `role="status"`; error cards `role="alert"`; "Showing X–Y of Z" uses `role="status"`.
+- **Contrast** — `textColor()`/`gradientTextColor()` in `regions.ts` pick `#000` vs `#fff` via WCAG relative-luminance contrast (not the old >160 luminance heuristic; pure black matters for mid greens like `#008751`). Avoid `text-base-content/40–50` for real text (bump to `/60–70`).
+- **Skip link + landmarks** — `+layout.svelte` has a skip-to-content link, `<main id="main">`, navbar/drawer as `<nav>`, and `aria-current="page"` on active nav links.
