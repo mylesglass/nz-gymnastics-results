@@ -4,7 +4,7 @@
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { currentUser, authConfigured, logout, hasPermission, setPermissions, PERMISSIONS } from "$lib/auth";
-  import { listYears, me } from "$lib/api";
+  import { checkAuthStatus, listYears, me } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
   import "../app.css";
 
@@ -35,6 +35,9 @@
     const unsub2 = authConfigured.subscribe((v) => (authCfg = v));
     const unsub3 = selectedYear.subscribe((v) => (selYear = v));
     const unsub4 = yearOptions.subscribe((v) => (years = v));
+    checkAuthStatus()
+      .then((s) => authConfigured.set(s.configured))
+      .catch(() => {});
     if (user) {
       me()
         .then((u) => setPermissions(u.permissions))
