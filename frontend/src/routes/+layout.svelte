@@ -30,7 +30,11 @@
   let canWellington = $derived(hasPermission(user, PERMISSIONS.wellington));
   let canRankings = $derived(canNational || canWellington);
 
-  let isProtectedRoute = $derived(currentPath.startsWith("/admin"));
+  let isProtectedRoute = $derived(
+    currentPath.startsWith("/admin") ||
+    currentPath === "/rankings" ||
+    currentPath === "/wellington-ranking"
+  );
   let renderChildren = $derived(
     !isProtectedRoute || (authResolved && (!authCfg || user !== null))
   );
