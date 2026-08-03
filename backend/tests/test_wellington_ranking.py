@@ -361,6 +361,37 @@ def _add_wag5(session, event_name: str, name: str, gnz_id: str, club: str, score
     return event.id
 
 
+def _add_intl_score(
+    session, event_name: str, step: str, name: str, gnz_id: str,
+    club: str, apparatus: str, score: float, pass_number: int = 1,
+    aa_score: float | None = None,
+) -> None:
+    """Add a WAG International division score for 2025."""
+    event = Event(
+        name=event_name,
+        start_date="2025-03-01",
+        end_date="2025-03-02",
+        discipline="WAG",
+        year=2025,
+        is_national=False,
+    )
+    session.add(event)
+    session.flush()
+    session.add(LongScore(
+        event_id=event.id,
+        event_name=event_name,
+        gymnast_name=name,
+        gnz_id=gnz_id,
+        club_name=club,
+        discipline="WAG",
+        level_category=step,
+        apparatus=apparatus,
+        pass_number=pass_number,
+        pass_final_score=score,
+        aa_score=aa_score,
+    ))
+
+
 class TestSlotAlignment:
     def test_events_placed_in_correct_category_slots(self):
         from app.database import SessionLocal
@@ -388,3 +419,87 @@ class TestSlotAlignment:
         assert reg_away["scores"] == [52.0, None, 50.0]
         assert reg_away["competition_names"] == ["WAG Wellington Champs", "", "Manawatu WAG Opens"]
         assert reg_away["categories"] == ["regional", "", "away"]
+
+
+class TestInternational:
+    def test_configs_resolve(self):
+        assert _get_config("WAG", "Youth International")["key"] == "wag_youth_international"
+        assert _get_config("WAG", "Junior International")["key"] == "wag_junior_international"
+        assert _get_config("WAG", "Senior International")["key"] == "wag_senior_international"
+        assert _get_config("MAG", "U18")["key"] == "mag_level_7_plus"
+        assert _get_config("MAG", "Senior Open")["key"] == "mag_level_7_plus"
+
+    def test_selection_checks_empty_for_single_mark(self):
+        config = _get_config("WAG", "Junior International")
+        assert config is not None
+        assert _selection_checks(config, 0, 0, 0, 1) == []
+
+    def test_mag_7_plus_has_specialists(self):
+        config = _get_config("MAG", "Level 8")
+        assert config is not None
+        assert config["specialist_steps"] == {"Level 7", "Level 8", "Level 9", "Senior Open", "U18"}
+        assert config["apparatus_qualifying_score"] == 11.5
+        assert config["apparatus_qualifying_count"] == 1
+
+    def test_single_mark_ranking_and_qualifier(self):
+        from app.database import SessionLocal
+
+        session = SessionLocal()
+        try:
+            _add_intl_score(
+                session, "Junior International Selection", "Junior International",
+                "Intl Qualifier", "J-001", "Capital Gymnastics",
+                "AA", 43.5, aa_score=43.5,
+            )
+            _add_intl_score(
+                session, "Junior International Selection", "Junior International",
+                "Intl Low", "J-002", "Capital Gymnastics",
+                "AA", 40.0, aa_score=40.0,
+            )
+            session.commit()
+        finally:
+            session.close()
+
+        result = compute_wellington_rankings(
+            2025, "WAG", "Junior International", intents=None,
+        )
+        ranked = {r["name"]: r for r in result["rankings"]}
+
+        assert "Intl Qualifier" in ranked
+        assert "Intl Low" not in ranked
+        entry = ranked["Intl Qualifier"]
+        # Single-mark selection: one slot only, total == that mark.
+        assert entry["scores"] == [43.5]
+        assert entry["competitions"] == ["Junior International Selection"]
+        assert entry["total"] == 43.5
+        assert entry["average"] == 43.5
+
+    def test_intl_apparatus_specialist(self):
+        from app.database import SessionLocal
+
+        session = SessionLocal()
+        try:
+            # Qualifies via UB specialist mark (10.4 for Junior International).
+            _add_intl_score(
+                session, "Junior International Selection", "Junior International",
+                "UB Specialist", "J-003", "Capital Gymnastics",
+                "UB", 10.6, aa_score=None,
+            )
+            # Reaches a mark on only one apparatus below its threshold → not a specialist.
+            _add_intl_score(
+                session, "Junior International Selection", "Junior International",
+                "Too Low", "J-004", "Capital Gymnastics",
+                "UB", 10.0, aa_score=None,
+            )
+            session.commit()
+        finally:
+            session.close()
+
+        result = compute_wellington_rankings(
+            2025, "WAG", "Junior International", intents={"J-003", "J-004"},
+        )
+        specialists = {s["name"]: s for s in result["apparatus_specialists"]}
+        assert "UB Specialist" in specialists
+        assert specialists["UB Specialist"]["apparatus"][0]["app"] == "UB"
+        assert specialists["UB Specialist"]["apparatus"][0]["best"] == 10.6
+        assert "Too Low" not in specialists

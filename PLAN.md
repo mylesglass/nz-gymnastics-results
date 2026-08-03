@@ -243,9 +243,9 @@
 - [x] Apparatus Specialist Wellington Qualifying
   - WAG STEP 8-10 fallback: athletes not in the AA table who reach ≥11.000 on two distinct apparatus are returned as `apparatus_specialists` (best per apparatus across eligible events, competition name tracked). May need MAG support and/or expansion to other STEP ranges.
   - **Files:** `backend/app/wellington_ranking.py`, `frontend/src/routes/wellington-ranking/+page.svelte`
-- [ ] International Divisions Wellington Qual
-  - Define how international-division gymnasts qualify for Wellington events. Separate thresholds/table vs merged into the existing rankings — needs domain input.
-  - **Files:** `backend/app/wellington_ranking.py`
+- [x] International Divisions Wellington Qual
+  - WAG International divisions (Youth/Junior/Senior International) now appear on the Wellington rankings page: ranked by the single highest All Around mark (no competition-mix selection), Gymnastics NZ qualifying 42.500 / 43.000 / 45.000 on one occasion. Junior + Senior also qualify via per-apparatus specialist marks (count 1): JI VT 12.2/UB 10.4/BB 10.5/FX 11.4, SI VT 12.50/UB 11.30/BB 11.20/FX 11.40 (vault is avg of two). MAG Level 7+ (L7–10, U18, Senior Open) now also computes apparatus specialists at 11.500 (count 1). Apparatus specialist thresholds support a per-apparatus dict (`apparatus_qualifying_scores`) alongside the existing single float; vault specialist scores apply `_use_vault_average` rules per event. New `marks_required` config field (default 3, International = 1) drives the can't-form-selection check and `_selection_checks` (empty for single-mark configs). Step dropdown no longer excludes "international".
+  - **Files:** `backend/app/wellington_ranking.py`, `frontend/src/routes/wellington-ranking/+page.svelte`
 - [x] Order /clubs by region (Northland → Southland)
   - Desktop uses the interactive NZ map (geographic selection). Mobile replaced the map with a collapsible accordion of the region cards, so a latitudinal ordering is needed again — `REGION_ORDER` in `frontend/src/lib/regions.ts` drives the `grouped` sort on `/clubs` (north→south, "Other" last). Rendered via the shared `RegionCard` snippet.
   - **Files:** `frontend/src/routes/clubs/+page.svelte`, `frontend/src/lib/regions.ts`

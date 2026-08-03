@@ -39,8 +39,8 @@
   }
 </script>
 
-<div class="dropdown dropdown-end">
-  <button class="btn btn-primary btn-sm ml-auto" type="button" disabled={exporting !== ""}>
+<div class="dropdown dropdown-end ml-auto">
+  <button class="btn btn-secondary btn-sm" type="button" disabled={exporting !== ""}>
     {#if exporting}<span class="loading loading-spinner loading-xs"></span>{/if}
     {label} ▾
   </button>

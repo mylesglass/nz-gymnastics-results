@@ -56,7 +56,34 @@
       selection: "Best regional mark (1) + best two away marks (2, 3). Three marks averaged to rank.",
       qual_note: "Athletes must achieve 63.000 (Wellington) on one occasion at a regional event (Wellington Champs or Central Champs) and two away events.",
     },
+    "wag_youth_international": {
+      title: "WAG Youth International",
+      regional: [],
+      club: [],
+      selection: "Single highest All Around mark across the season, ranked by that mark.",
+      qual_note: "Gymnastics NZ: 42.500 on one occasion.",
+    },
+    "wag_junior_international": {
+      title: "WAG Junior International",
+      regional: [],
+      club: [],
+      selection: "Single highest All Around mark across the season, ranked by that mark.",
+      qual_note: "Gymnastics NZ: 43.000 on one occasion, or an apparatus specialist mark (VT 12.200, UB 10.400, BB 10.500, FX 11.400) on one apparatus.",
+    },
+    "wag_senior_international": {
+      title: "WAG Senior International",
+      regional: [],
+      club: [],
+      selection: "Single highest All Around mark across the season, ranked by that mark.",
+      qual_note: "Gymnastics NZ: 45.000 on one occasion, or an apparatus specialist mark (VT 12.500, UB 11.300, BB 11.200, FX 11.400) on one apparatus.",
+    },
   };
+
+  const INTERNATIONAL_CONFIGS = new Set([
+    "wag_youth_international",
+    "wag_junior_international",
+    "wag_senior_international",
+  ]);
 
   const STEP7_CONFIGS = new Set(["wag_step_7_10", "mag_level_7_plus"]);
 
@@ -71,6 +98,9 @@
     wag_step_7_10: ["Regional Best", "Endorsed Best", "Endorsed 2nd"],
     mag_level_4_6: ["Wellington Best", "Wellington 2nd", "Away Best"],
     mag_level_7_plus: ["Regional Best", "Away Best", "Away 2nd"],
+    wag_youth_international: ["Best AA"],
+    wag_junior_international: ["Best AA"],
+    wag_senior_international: ["Best AA"],
   };
 
   let loading = $state(true);
@@ -112,23 +142,35 @@
   });
 
   const EXCLUDE_STEPS = ["STEP 1", "STEP 2", "STEP 3", "STEP 4", "Level 1", "Level 2", "Level 3"];
-  const EXCLUDE_WORDS = ["international"];
+
+  function sortSteps(stepsList: string[]): string[] {
+    const stepOrder: Record<string, number> = {};
+    for (let i = 1; i <= 10; i++) stepOrder[`STEP ${i}`] = i;
+    for (let i = 1; i <= 10; i++) stepOrder[`Level ${i}`] = 10 + i;
+    stepOrder["Youth"] = 101;
+    stepOrder["Youth International"] = 102;
+    stepOrder["Junior"] = 103;
+    stepOrder["Junior International"] = 104;
+    stepOrder["Senior"] = 105;
+    stepOrder["Senior International"] = 106;
+    stepOrder["Senior Open"] = 107;
+    stepOrder["U18"] = 108;
+    stepOrder["U16"] = 109;
+    return [...stepsList].sort((a, b) => {
+      const oa = stepOrder[a];
+      const ob = stepOrder[b];
+      if (oa !== undefined && ob !== undefined) return oa - ob;
+      if (oa !== undefined) return -1;
+      if (ob !== undefined) return 1;
+      return a.localeCompare(b);
+    });
+  }
 
   async function loadSteps() {
     if (!year) return;
     try {
       const data = await getRankingSteps(Number(year), discipline);
-      steps = data.steps
-        .filter(
-          (s) =>
-            !EXCLUDE_STEPS.includes(s) &&
-            !EXCLUDE_WORDS.some((w) => s.toLowerCase().includes(w)),
-        )
-        .sort((a, b) => {
-          const na = parseInt(a.match(/\d+/)?.[0] ?? "999", 10);
-          const nb = parseInt(b.match(/\d+/)?.[0] ?? "999", 10);
-          return na - nb;
-        });
+      steps = sortSteps(data.steps.filter((s) => !EXCLUDE_STEPS.includes(s)));
       if (steps.length > 0 && !steps.includes(selectedStep)) {
         selectedStep = steps[0];
       }
@@ -138,6 +180,21 @@
   }
 
   let loadingRankings = $state(false);
+
+  let specialistNote = $derived.by(() => {
+    switch (configKey) {
+      case "wag_step_7_10":
+        return "STEP 8–10 athletes who submitted intent and reached 11.000 on two apparatus, but did not qualify via the All Around path.";
+      case "mag_level_7_plus":
+        return "MAG Level 7+ athletes who submitted intent and reached 11.500 on one apparatus, but did not qualify via the All Around path.";
+      case "wag_junior_international":
+        return "Junior International athletes who submitted intent and reached an apparatus specialist mark (VT 12.200, UB 10.400, BB 10.500, FX 11.400) on one apparatus, but did not qualify via the All Around path.";
+      case "wag_senior_international":
+        return "Senior International athletes who submitted intent and reached an apparatus specialist mark (VT 12.500, UB 11.300, BB 11.200, FX 11.400) on one apparatus, but did not qualify via the All Around path.";
+      default:
+        return "";
+    }
+  });
 
   let exportRows = $derived(rankings.map((r) => {
     const obj: Record<string, string> = {
@@ -244,10 +301,12 @@
             <h3 class="card-title text-sm mb-1">{info.title}</h3>
 
             <div class="text-xs text-base-content/70 space-y-1.5">
-              <div>
-                <span class="font-semibold text-base-content/90">Regional events:</span>
-                {info.regional.join(", ")}
-              </div>
+              {#if info.regional.length > 0}
+                <div>
+                  <span class="font-semibold text-base-content/90">Regional events:</span>
+                  {info.regional.join(", ")}
+                </div>
+              {/if}
               {#if info.club.length > 0}
                 <div>
                   <span class="font-semibold text-base-content/90">Club endorsed events:</span>
@@ -255,11 +314,12 @@
                 </div>
               {/if}
               <div>{info.selection}</div>
-              <div>
-                <span class="font-semibold text-base-content/90">GNZ:</span>
-                {#if gnzScore !== null}{gnzScore.toFixed(3)} — {/if}
-                {configKey === "wag_step_5_6" ? "Reach score at two separate events (one outside Wellington)." : "Reach score on one occasion (any province)."}
-              </div>
+              {#if gnzScore !== null}
+                <div>
+                  <span class="font-semibold text-base-content/90">Gymnastics NZ:</span>
+                  {gnzScore.toFixed(3)} — {configKey === "wag_step_5_6" ? "Reach score at two separate events (one outside Wellington)." : "Reach score on one occasion (any province)."}
+                </div>
+              {/if}
               {#if wgtnScore !== null}
                 <div>
                   <span class="font-semibold text-base-content/90">Wellington:</span>
@@ -329,7 +389,9 @@
             {#each HEADER_LABELS[configKey] ?? ["Score 1", "Score 2", "Score 3"] as label}
               <th scope="col" class="text-right">{label}</th>
             {/each}
-            <th scope="col" class="text-right">Average</th>
+            {#if !INTERNATIONAL_CONFIGS.has(configKey)}
+              <th scope="col" class="text-right">Average</th>
+            {/if}
           </tr>
         </thead>
         <tbody>
@@ -338,9 +400,7 @@
               <td class="font-bold text-lg">{r.rank}</td>
               <td class="text-center w-12">
                 {#if (configKey === 'wag_step_5_6' || STEP7_CONFIGS.has(configKey)) && i < 4}
-                  <span class="badge badge-xs" style="background:#FFC72C;color:#000000;border:none">1</span>
-                {:else if STEP7_CONFIGS.has(configKey) && i < 8}
-                  <span class="badge badge-xs" style="background:#000000;color:#FFC72C;border:none">2</span>
+                  <span class="inline-flex items-center justify-center size-4 rounded-full text-[10px] font-bold" style="background:#FFC72C;color:#000000">1</span>
                 {/if}
               </td>
               <td class="font-medium">
@@ -407,7 +467,9 @@
                   </span>
                 </td>
               {/each}
-              <td class="text-right font-bold">{r.average.toFixed(3)}</td>
+              {#if !INTERNATIONAL_CONFIGS.has(configKey)}
+                <td class="text-right font-bold">{r.average.toFixed(3)}</td>
+              {/if}
             </tr>
           {/each}
         </tbody>
@@ -415,12 +477,53 @@
     </div>
   {/if}
 
+  {#if specialists.length > 0}
+    <h2 class="text-2xl font-bold mt-8 mb-1">Apparatus Specialists</h2>
+    <p class="text-base-content/70 mb-4">
+      {specialistNote}
+      Best score per apparatus across the season is shown.
+    </p>
+    <table class="table table-zebra">
+      <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">GNZ ID</th>
+          <th scope="col">Club</th>
+          <th scope="col" class="text-right">Apparatus</th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each specialists as s}
+          <tr class="hover:bg-base-300">
+            <td class="font-medium">
+              <a href="/gymnast/{s.gnz_id}" class="hover:link">{s.name}</a>
+            </td>
+            <td class="text-base-content/70 text-xs">{s.gnz_id}</td>
+            <td>{s.club}</td>
+            <td>
+              <div class="flex flex-wrap gap-1 justify-end">
+                {#each s.apparatus as a}
+                  <button
+                    type="button"
+                    class="tooltip tooltip-top cursor-help"
+                    data-tip={a.event || "Unknown competition"}
+                    aria-label={`${a.app} ${a.best.toFixed(3)}, best at ${a.event || "unknown competition"}`}
+                  >
+                    <span class="badge badge-sm {appBadgeClass(a.app)}">{a.app} {a.best.toFixed(3)}</span>
+                  </button>
+                {/each}
+              </div>
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  {/if}
+
   {#if notRanked.length > 0}
     <h2 class="text-2xl font-bold mt-8 mb-1">Not on the Ranking</h2>
     <p class="text-base-content/70 mb-4">
-      Wellington athletes in this level who aren't on the ranking above, and why —
-      whether they haven't met the 3-competition requirement yet or are missing
-      intent/qualifiers. Mark intent to track them for selection.
+      Wellington athletes in this level who aren't on the ranking above, and why. Mark intent to track them for selection.
     </p>
     <table class="table table-zebra">
       <thead>
@@ -462,7 +565,7 @@
                 <input type="checkbox" class="checkbox checkbox-xs" checked={r.intent_submitted} disabled aria-label={`Intent submitted for ${r.name}`} />
               {/if}
             </td>
-            {#each [0, 1, 2] as i}
+            {#each (HEADER_LABELS[configKey] ?? ["Score 1", "Score 2", "Score 3"]) as _, i}
               <td class="text-right">
                 {#if r.scores[i] != null}
                   <span class="dropdown dropdown-hover dropdown-right">
@@ -550,49 +653,6 @@
                   </span>
                 </span>
               </span>
-            </td>
-          </tr>
-        {/each}
-      </tbody>
-    </table>
-  {/if}
-
-  {#if specialists.length > 0}
-    <h2 class="text-2xl font-bold mt-8 mb-1">Apparatus Specialists</h2>
-    <p class="text-base-content/70 mb-4">
-      STEP 8–10 athletes who submitted intent and reached 11.000 on two apparatus, but did not qualify via the All Around path.
-      Best score per apparatus across the season is shown.
-    </p>
-    <table class="table table-zebra">
-      <thead>
-        <tr>
-          <th scope="col">Name</th>
-          <th scope="col">GNZ ID</th>
-          <th scope="col">Club</th>
-          <th scope="col" class="text-right">Apparatus</th>
-        </tr>
-      </thead>
-      <tbody>
-        {#each specialists as s}
-          <tr class="hover:bg-base-300">
-            <td class="font-medium">
-              <a href="/gymnast/{s.gnz_id}" class="hover:link">{s.name}</a>
-            </td>
-            <td class="text-base-content/70 text-xs">{s.gnz_id}</td>
-            <td>{s.club}</td>
-            <td>
-              <div class="flex flex-wrap gap-1 justify-end">
-                {#each s.apparatus as a}
-                  <button
-                    type="button"
-                    class="tooltip tooltip-top cursor-help"
-                    data-tip={a.event || "Unknown competition"}
-                    aria-label={`${a.app} ${a.best.toFixed(3)}, best at ${a.event || "unknown competition"}`}
-                  >
-                    <span class="badge badge-sm {appBadgeClass(a.app)}">{a.app} {a.best.toFixed(3)}</span>
-                  </button>
-                {/each}
-              </div>
             </td>
           </tr>
         {/each}

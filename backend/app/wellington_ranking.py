@@ -84,6 +84,57 @@ _STEP_CONFIGS: list[dict] = [
         "selection": "mag_level_7_plus",
         "club_events": False,
         "away_required": False,
+        "specialist_steps": {"Level 7", "Level 8", "Level 9", "Senior Open", "U18"},
+        "apparatus_qualifying_score": 11.5,
+        "apparatus_qualifying_count": 1,
+    },
+    {
+        "key": "wag_youth_international",
+        "label": "WAG Youth International",
+        "steps": {"Youth International"},
+        "disciplines": {"WAG"},
+        "gnz_qualifying_score": 42.5,
+        "gnz_requires_two": False,
+        "gnz_requires_away": False,
+        "wellington_qualifying_score": None,
+        "selection": "international",
+        "club_events": False,
+        "away_required": False,
+        "marks_required": 1,
+    },
+    {
+        "key": "wag_junior_international",
+        "label": "WAG Junior International",
+        "steps": {"Junior International"},
+        "disciplines": {"WAG"},
+        "gnz_qualifying_score": 43.0,
+        "gnz_requires_two": False,
+        "gnz_requires_away": False,
+        "wellington_qualifying_score": None,
+        "selection": "international",
+        "club_events": False,
+        "away_required": False,
+        "marks_required": 1,
+        "specialist_steps": {"Junior International"},
+        "apparatus_qualifying_scores": {"VT": 12.2, "UB": 10.4, "BB": 10.5, "FX": 11.4},
+        "apparatus_qualifying_count": 1,
+    },
+    {
+        "key": "wag_senior_international",
+        "label": "WAG Senior International",
+        "steps": {"Senior International"},
+        "disciplines": {"WAG"},
+        "gnz_qualifying_score": 45.0,
+        "gnz_requires_two": False,
+        "gnz_requires_away": False,
+        "wellington_qualifying_score": None,
+        "selection": "international",
+        "club_events": False,
+        "away_required": False,
+        "marks_required": 1,
+        "specialist_steps": {"Senior International"},
+        "apparatus_qualifying_scores": {"VT": 12.5, "UB": 11.3, "BB": 11.2, "FX": 11.4},
+        "apparatus_qualifying_count": 1,
     },
 ]
 
@@ -153,6 +204,9 @@ def _selection_checks(
     """
     key = config["selection"]
 
+    if config.get("marks_required", 3) == 1:
+        return []
+
     if key == "wag_step_5_6":
         named = n_regional + n_club
         return [
@@ -185,7 +239,7 @@ def _qualifier_checks(config: dict, gnz_ok: bool, wgtn_ok: bool) -> list[dict]:
     gnz = config.get("gnz_qualifying_score")
     if gnz is not None:
         checks.append({
-            "label": f"GNZ qualifying mark ({gnz:.3f})",
+            "label": f"Gymnastics NZ qualifying mark ({gnz:.3f})",
             "met": gnz_ok,
             "detail": "",
         })
@@ -376,11 +430,25 @@ def _select_mag_level_7_plus(
     return [score1, score2, score3]
 
 
+def _select_international(
+    regional: list[dict], club: list[dict], away: list[dict],
+    all_events: list[dict],
+) -> list[dict | None]:
+    """Single highest AA mark — no competition-mix selection.
+
+    Returns a length-3 list with the best score first and ``None`` slots
+    after, so a single-mark config fills exactly one slot.
+    """
+    best = max(all_events, key=lambda x: x["score"]) if all_events else None
+    return [best, None, None]
+
+
 _SELECTORS = {
     "wag_step_5_6": _select_wag_step_5_6,
     "wag_step_7_10": _select_wag_step_7_10,
     "mag_level_4_6": _select_mag_level_4_6,
     "mag_level_7_plus": _select_mag_level_7_plus,
+    "international": _select_international,
 }
 
 
@@ -498,13 +566,30 @@ def compute_wellington_rankings(
                 }
                 for s in scores
             ]
+
+            # Event-level apparatus score for specialist tracking. Vault
+            # aggregates multiple passes per the AA rules (average or best).
+            event_app_scores: dict[str, float] = {}
+            vt_totals: list[float] = []
             for p in apparatus:
                 if p["total"] is None:
                     continue
-                prev = best_apparatus[name].get(p["app"])
-                if prev is None or p["total"] > prev["score"]:
-                    best_apparatus[name][p["app"]] = {
-                        "score": p["total"],
+                if p["app"] == "VT":
+                    vt_totals.append(p["total"])
+                else:
+                    prev = event_app_scores.get(p["app"])
+                    if prev is None or p["total"] > prev:
+                        event_app_scores[p["app"]] = p["total"]
+            if vt_totals:
+                if _use_vault_average(step, key[5]):
+                    event_app_scores["VT"] = sum(vt_totals) / len(vt_totals)
+                else:
+                    event_app_scores["VT"] = max(vt_totals)
+            for app, score in event_app_scores.items():
+                prev = best_apparatus[name].get(app)
+                if prev is None or score > prev["score"]:
+                    best_apparatus[name][app] = {
+                        "score": score,
                         "event_name": key[4],
                     }
 
@@ -546,7 +631,8 @@ def compute_wellington_rankings(
             selected = selector(regionals, clubs, aways, all_events_list)
             if selected is None:
                 continue
-            if None in selected:
+            marks_required = config.get("marks_required", 3)
+            if None in selected[:marks_required]:
                 meta = gymnast_meta.get(name, {"gnz_id": "", "club": ""})
                 gnz_id = meta["gnz_id"]
                 club = meta["club"]
@@ -561,8 +647,10 @@ def compute_wellington_rankings(
                 slot_names = [s["event_name"] if s else "" for s in selected]
                 slot_cats = [s["category"] if s else "" for s in selected]
                 slot_apps = [s.get("apparatus", []) if s else [] for s in selected]
-                if count < 3:
-                    why = f"Needs 3 eligible competitions — currently has {count}"
+                if count < marks_required:
+                    why = f"Needs {marks_required} eligible competition{'s' if marks_required != 1 else ''} — currently has {count}"
+                elif marks_required == 1:
+                    why = "No eligible competitions"
                 else:
                     why = "Can't form the required 3-mark selection — missing the regional/away event mix"
                 intent_submitted = intents is None or gnz_id in intents
@@ -581,9 +669,9 @@ def compute_wellington_rankings(
                 ))
                 continue
 
-            scores = [s["score"] for s in selected]
-            competitions = [s["event_name"] for s in selected]
-            categories = [s["category"] for s in selected]
+            scores = [s["score"] for s in selected if s is not None]
+            competitions = [s["event_name"] for s in selected if s is not None]
+            categories = [s["category"] for s in selected if s is not None]
             total = sum(scores)
             avg = total / len(scores)
 
@@ -615,7 +703,7 @@ def compute_wellington_rankings(
                 "scores": [round(s, 3) for s in scores],
                 "competitions": competitions,
                 "categories": categories,
-                "apparatus": [s.get("apparatus", []) for s in selected],
+                "apparatus": [s.get("apparatus", []) for s in selected if s is not None],
                 "total": round(total, 3),
                 "average": round(avg, 3),
                 "warnings": warnings,
@@ -677,13 +765,15 @@ def compute_wellington_rankings(
             else:
                 entry["rank_text"] = str(entry["rank"])
 
-        # 6. Apparatus specialists: STEP 8+ athletes with intent who did not
-        #    qualify via the All Around path but reached the apparatus score
-        #    threshold on two apparatus (best score per apparatus, all events).
+        # 6. Apparatus specialists: athletes with intent who did not qualify
+        #    via the All Around path but reached the apparatus score threshold
+        #    (best score per apparatus, all events). Thresholds are either a
+        #    single float across apparatus or a per-apparatus dict.
         apparatus_specialists = []
         specialist_steps = config.get("specialist_steps")
         if specialist_steps and step in specialist_steps:
             app_threshold = config.get("apparatus_qualifying_score")
+            app_scores_by_app = config.get("apparatus_qualifying_scores")
             app_count = config.get("apparatus_qualifying_count", 2)
             aa_names = {r["name"] for r in rankings}
             for name, app_best in best_apparatus.items():
@@ -702,7 +792,11 @@ def compute_wellington_rankings(
                             "event": info["event_name"],
                         }
                         for app, info in app_best.items()
-                        if info["score"] >= app_threshold
+                        if info["score"] >= (
+                            app_scores_by_app.get(app, float("inf"))
+                            if app_scores_by_app is not None
+                            else app_threshold
+                        )
                     ],
                     key=lambda x: (-x["best"], x["app"]),
                 )

@@ -3,6 +3,29 @@
     "date": "3 Aug 2026",
     "entries": [
       {
+        "title": "Export buttons restyled",
+        "items": [
+          "Export menus on all results and ranking tables now use the secondary theme colour and sit flush against the right edge of the toolbar."
+        ]
+      },
+      {
+        "title": "Wellington Rankings — presentation polish",
+        "items": [
+          "Apparatus Specialists now appear above the \"Not on the Ranking\" table.",
+          "Team indicators are circles instead of badges, and the second-team (2) markers were removed for STEP 7+ levels — only the top-4 markers remain.",
+          "The step dropdown now lists STEP 5–10 then Youth, Junior, Senior in that order."
+        ]
+      },
+      {
+        "title": "International divisions on the Wellington Rankings",
+        "items": [
+          "WAG Youth/Junior/Senior International levels now appear in the Wellington rankings step selector, ranked by a gymnast's single highest All Around mark.",
+          "Gymnastics NZ qualifying marks on one occasion: Youth 42.500, Junior 43.000, Senior 45.000.",
+          "Junior and Senior International athletes can also qualify as apparatus specialists by reaching the mark on one apparatus (Junior: VT 12.200 / UB 10.400 / BB 10.500 / FX 11.400; Senior: VT 12.500 / UB 11.300 / BB 11.200 / FX 11.400) — vault is the average of two.",
+          "MAG Level 7+ now also lists apparatus specialists who reach 11.500 on one apparatus."
+        ]
+      },
+      {
         "title": "Wellington Rankings — combined \"Not on the Ranking\" table",
         "items": [
           "The separate \"In Progress\" and \"Not on the Ranking\" tables are merged into one, listed alphabetically: every Wellington athlete who isn't on the ranking.",
