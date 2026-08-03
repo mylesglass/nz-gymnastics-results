@@ -292,6 +292,28 @@ class TestWellingtonRankings:
         finally:
             session.close()
 
+    def test_not_ranked_returned(self):
+        self._upload()
+        resp = client.get("/api/rankings/wellington?year=2025&step=STEP 8&discipline=WAG")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "not_ranked" in body
+        for row in body["not_ranked"]:
+            assert row["region"] == "Wellington"
+            assert row["competitions"] >= 1
+            assert len(row["scores"]) == 3
+            assert len(row["competition_names"]) == 3
+            assert "intent_submitted" in row
+            assert "regional_count" in row
+            assert "club_count" in row
+            assert "away_count" in row
+            assert row["regional_count"] + row["club_count"] + row["away_count"] == row["competitions"]
+            assert row["why"]
+            assert len(row["checks"]) >= 1
+            for check in row["checks"]:
+                assert "label" in check
+                assert "met" in check
+
     def test_apparatus_specialists_returned(self):
         self._upload()
         candidates = self._specialist_candidates()

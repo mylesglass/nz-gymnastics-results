@@ -207,6 +207,7 @@
 - [x] Wellington Rankings page with WAG/MAG tabs, STEP selector, qualifier toggles, CSV export, apparatus tooltips
 - [x] Rankings nav dropdown with National Rankings / Wellington Rankings
 - [x] Config: WAG STEP 5-6 (GNZ 50.0 2×+away, Wgtn 53.0), WAG STEP 7-10 (GNZ 43.0 1×), MAG Level 4-6 (Wgtn 58.0), MAG Level 7+ (Wgtn 63.0)
+- [x] Not-on-the-ranking table: `compute_wellington_rankings` returns a single `not_ranked` list of every Wellington athlete who isn't on the ranking with a `why` headline + `checks` ✓/✗ requirements checklist (competition mix via `_selection_checks()`, intent, and GNZ/Wellington marks via `_qualifier_checks()`, each with "x of y" detail). Frontend renders it as "Not on the Ranking", sorted alphabetically, with a trailing column whose tooltip shows the checklist; no filter toggles — the main table always shows only qualified + intended athletes, and ticking Intent moves selection-capable athletes up immediately. Score columns are slot-aligned (the 4 selectors return `None`-placeholder slots; partial selections fill the correct category column with dashes elsewhere).
 
 ### STEP 24: Accessibility (a11y) ✅
 - [x] **Tier 1 — High-value quick wins**

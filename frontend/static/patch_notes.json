@@ -1,5 +1,19 @@
 [
   {
+    "date": "3 Aug 2026",
+    "entries": [
+      {
+        "title": "Wellington Rankings — combined \"Not on the Ranking\" table",
+        "items": [
+          "The separate \"In Progress\" and \"Not on the Ranking\" tables are merged into one, listed alphabetically: every Wellington athlete who isn't on the ranking.",
+          "Each row's tooltip shows a check/cross requirements checklist — regional, named and away events, intent, and the GNZ/Wellington qualifying marks — each showing what's achieved and what's still missing (e.g. \"2 away competitions (1 of 2)\").",
+          "The ranking now always shows only qualified and intended athletes (the GNZ/Wellington/Intent filter toggles are gone); everyone else appears below, and ticking an athlete's Intent moves them up immediately.",
+          "Score columns in the lower table now align with their category slots (Regional Best / Next Best / Away Best) — each event appears in the right column, with a dash where an athlete has no event for that slot."
+        ]
+      }
+    ]
+  },
+  {
     "date": "2 Aug 2026",
     "entries": [
       {

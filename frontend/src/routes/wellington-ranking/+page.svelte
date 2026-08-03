@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getWellingtonRankings, getRankingSteps, getIntents, toggleIntent, type WellingtonRankingRow, type ApparatusSpecialistRow } from "$lib/api";
+  import { getWellingtonRankings, getRankingSteps, getIntents, toggleIntent, type WellingtonRankingRow, type ApparatusSpecialistRow, type WellingtonNotRankedRow } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
   import { currentUser } from "$lib/auth";
   import ExportMenu from "$lib/ExportMenu.svelte";
@@ -82,6 +82,7 @@
   let selectedStep = $state("");
   let rankings = $state<WellingtonRankingRow[]>([]);
   let specialists = $state<ApparatusSpecialistRow[]>([]);
+  let notRanked = $state<WellingtonNotRankedRow[]>([]);
   let years = $state<string[]>([]);
   let configKey = $state("");
   let gnzScore = $state<number | null>(null);
@@ -160,12 +161,13 @@
     error = "";
     try {
       const [data, intentIds] = await Promise.all([
-        getWellingtonRankings(Number(year), selectedStep, discipline, gnzQualifierMode, wgtnQualifierMode, intentFilterMode),
+        getWellingtonRankings(Number(year), selectedStep, discipline),
         getIntents(Number(year)),
       ]);
       if (token !== fetchToken) return;
       rankings = data.rankings;
       specialists = data.apparatus_specialists ?? [];
+      notRanked = data.not_ranked ?? [];
       configKey = data.config_key;
       gnzScore = data.qualifying_score;
       wgtnScore = data.wellington_qualifying_score;
@@ -178,9 +180,6 @@
     }
   }
 
-  let gnzQualifierMode = $state(true);
-  let wgtnQualifierMode = $state(true);
-  let intentFilterMode = $state(true);
   let user = $state<{ role: string } | null>(null);
   let intents = $state<Set<string>>(new Set());
 
@@ -288,21 +287,6 @@
         {/each}
       </select>
 
-      <label class="label cursor-pointer gap-1">
-        <input type="checkbox" class="checkbox checkbox-xs" bind:checked={gnzQualifierMode} />
-        <span class="label-text text-xs">GNZ Qualifier</span>
-      </label>
-      {#if wgtnScore !== null}
-        <label class="label cursor-pointer gap-1">
-          <input type="checkbox" class="checkbox checkbox-xs" bind:checked={wgtnQualifierMode} />
-          <span class="label-text text-xs">Wellington Qualifier</span>
-        </label>
-      {/if}
-      <label class="label cursor-pointer gap-1">
-        <input type="checkbox" class="checkbox checkbox-xs" bind:checked={intentFilterMode} />
-        <span class="label-text text-xs">Intent</span>
-      </label>
-
       {#if rankings.length > 0}
         <ExportMenu columns={EXPORT_KEYS} rows={exportRows} headerLabels={CSV_HEADERS} title={`Wellington Rankings ${year} ${discipline} ${selectedStep}`} filename={`Wellington Rankings ${year} ${discipline} ${selectedStep}`} />
       {/if}
@@ -346,7 +330,6 @@
               <th scope="col" class="text-right">{label}</th>
             {/each}
             <th scope="col" class="text-right">Average</th>
-            <th scope="col" class="w-8"></th>
           </tr>
         </thead>
         <tbody>
@@ -365,23 +348,25 @@
               </td>
               <td class="text-base-content/70 text-xs">{r.gnz_id}</td>
               <td>{r.club}</td>
-              <td class="text-center w-10">
-                {#if user?.role === "admin"}
-                  <input
-                    type="checkbox"
-                    class="checkbox checkbox-xs checkbox-primary"
-                    aria-label={`Intent submitted for ${r.name}`}
-                    bind:checked={r.intent_submitted}
-                    onchange={() => {
-                      toggleIntent(r.gnz_id, Number(year), r.intent_submitted).then(loadRankings).catch(() => {
-                        r.intent_submitted = !r.intent_submitted;
-                      });
-                    }}
-                  />
-                {:else}
-                  <input type="checkbox" class="checkbox checkbox-xs" checked={r.intent_submitted} disabled aria-label={`Intent submitted for ${r.name}`} />
-                {/if}
-              </td>
+            <td class="text-center w-10">
+              {#if user?.role === "admin"}
+                <input
+                  type="checkbox"
+                  class="checkbox checkbox-xs checkbox-primary"
+                  aria-label={`Intent submitted for ${r.name}`}
+                  bind:checked={r.intent_submitted}
+                  onchange={() => {
+                    const row = r;
+                    notRanked = notRanked.filter((x) => x !== row);
+                    toggleIntent(row.gnz_id, Number(year), row.intent_submitted)
+                      .then(loadRankings)
+                      .catch(() => loadRankings());
+                  }}
+                />
+              {:else}
+                <input type="checkbox" class="checkbox checkbox-xs" checked={r.intent_submitted} disabled aria-label={`Intent submitted for ${r.name}`} />
+              {/if}
+            </td>
               {#each r.scores as score, i}
                 <td class="text-right">
                   <span class="dropdown dropdown-hover dropdown-right">
@@ -423,34 +408,153 @@
                 </td>
               {/each}
               <td class="text-right font-bold">{r.average.toFixed(3)}</td>
-              <td class="text-center w-8">
-                {#if r.warnings?.length}
-                  <span class="dropdown dropdown-hover dropdown-left">
-                    <button
-                      type="button"
-                      class="cursor-help"
-                      aria-label={`Warnings for ${r.name}`}
-                      aria-describedby={`wgtn-warn-${r.gnz_id}`}
-                    >
-                      <span class="text-warning" aria-hidden="true">⚠</span>
-                    </button>
-                    <span
-                      id={`wgtn-warn-${r.gnz_id}`}
-                      role="tooltip"
-                      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2.5 text-xs min-w-48 whitespace-normal"
-                    >
-                      {#each r.warnings as w}
-                        <span class="block">{w}</span>
-                      {/each}
-                    </span>
-                  </span>
-                {/if}
-              </td>
             </tr>
           {/each}
         </tbody>
       </table>
     </div>
+  {/if}
+
+  {#if notRanked.length > 0}
+    <h2 class="text-2xl font-bold mt-8 mb-1">Not on the Ranking</h2>
+    <p class="text-base-content/70 mb-4">
+      Wellington athletes in this level who aren't on the ranking above, and why —
+      whether they haven't met the 3-competition requirement yet or are missing
+      intent/qualifiers. Mark intent to track them for selection.
+    </p>
+    <table class="table table-zebra">
+      <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">GNZ ID</th>
+          <th scope="col">Club</th>
+          <th scope="col" class="w-10">Intent</th>
+          {#each HEADER_LABELS[configKey] ?? ["Score 1", "Score 2", "Score 3"] as label}
+            <th scope="col" class="text-right">{label}</th>
+          {/each}
+          <th scope="col" class="w-8"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each notRanked as r}
+          <tr class="hover:bg-base-300">
+            <td class="font-medium">
+              <a href="/gymnast/{r.gnz_id}" class="hover:link">{r.name}</a>
+            </td>
+            <td class="text-base-content/70 text-xs">{r.gnz_id}</td>
+            <td>{r.club}</td>
+            <td class="text-center w-10">
+              {#if user?.role === "admin"}
+                <input
+                  type="checkbox"
+                  class="checkbox checkbox-xs checkbox-primary"
+                  aria-label={`Intent submitted for ${r.name}`}
+                  bind:checked={r.intent_submitted}
+                  onchange={() => {
+                    const row = r;
+                    notRanked = notRanked.filter((x) => x !== row);
+                    toggleIntent(row.gnz_id, Number(year), row.intent_submitted)
+                      .then(loadRankings)
+                      .catch(() => loadRankings());
+                  }}
+                />
+              {:else}
+                <input type="checkbox" class="checkbox checkbox-xs" checked={r.intent_submitted} disabled aria-label={`Intent submitted for ${r.name}`} />
+              {/if}
+            </td>
+            {#each [0, 1, 2] as i}
+              <td class="text-right">
+                {#if r.scores[i] != null}
+                  <span class="dropdown dropdown-hover dropdown-right">
+                    <button
+                      type="button"
+                      class="cursor-pointer font-mono border-b border-dotted border-base-content/40 hover:border-base-content/70 leading-tight"
+                      aria-label={`Best score ${i + 1} for ${r.name}: ${r.scores[i]!.toFixed(3)}`}
+                      aria-describedby={`wgtn-nr-score-${r.gnz_id}-${i}`}
+                    >
+                      {r.scores[i]!.toFixed(3)}
+                    </button>
+                    <span
+                      id={`wgtn-nr-score-${r.gnz_id}-${i}`}
+                      role="tooltip"
+                      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2.5 text-xs min-w-44"
+                    >
+                      <span class="block font-medium text-xs truncate max-w-48 mb-1">{r.competition_names[i] || "Unknown competition"}</span>
+                      <span>
+                        <span class={catBadge(r.categories[i])}>
+                          {(HEADER_LABELS[configKey] ?? [])[i] ?? CATEGORY_LABELS[r.categories[i]] ?? r.categories[i]}
+                        </span>
+                      </span>
+                      {#if r.apparatus?.[i]?.length}
+                        <span class="divider my-1"></span>
+                        {#each r.apparatus[i] as pass}
+                          <span class="flex justify-between leading-tight gap-4">
+                            <span class="font-semibold">{pass.app}</span>
+                            <span>{pass.total?.toFixed(3) ?? "DNS"}</span>
+                          </span>
+                        {/each}
+                        <span class="divider my-0.5"></span>
+                        <span class="flex justify-between font-semibold">
+                          <span>AA</span>
+                          <span>{r.scores[i]!.toFixed(3)}</span>
+                        </span>
+                      {/if}
+                    </span>
+                  </span>
+                {:else}
+                  <span class="text-base-content/40">—</span>
+                {/if}
+              </td>
+            {/each}
+            <td class="text-center w-8">
+              <span class="dropdown dropdown-hover dropdown-left">
+                <button
+                  type="button"
+                  class="cursor-help"
+                  aria-label={`Why ${r.name} isn't on the ranking`}
+                  aria-describedby={`wgtn-nr-why-${r.gnz_id}`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    class="text-secondary size-5"
+                    aria-hidden="true"
+                  >
+                    <path fill="currentColor" d="m12 23l-3-3H3V2h18v18h-6zm-.1-6q.525 0 .888-.363t.362-.887t-.363-.888t-.887-.362t-.888.363t-.362.887t.363.888t.887.362m-.9-3.85h1.85q0-.425.038-.725t.162-.575t.312-.512t.538-.588q.875-.875 1.238-1.463T15.5 7.95q0-1.325-.9-2.137T12.175 5q-1.375 0-2.337.675T8.5 7.55l1.65.65q.175-.675.7-1.087t1.225-.413q.675 0 1.125.363t.45.962q0 .425-.275.9t-.925 1.05q-.425.35-.688.688t-.437.712t-.25.788t-.075.987"/>
+                  </svg>
+                </button>
+                <span
+                  id={`wgtn-nr-why-${r.gnz_id}`}
+                  role="tooltip"
+                  class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs min-w-64 max-w-80 whitespace-normal text-left"
+                >
+                  <span class="block space-y-1">
+                    {#each r.checks as c}
+                      <span class="flex items-start gap-1.5 leading-snug">
+                        <span class="shrink-0 flex items-center justify-center size-4 rounded-full {c.met ? 'bg-success text-success-content' : 'bg-error text-error-content'}" aria-hidden="true">
+                          {#if c.met}
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-3" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+                          {:else}
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-3" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                          {/if}
+                        </span>
+                        <span>
+                          <span class="sr-only">{c.met ? "Met:" : "Missing:"}</span>
+                          {c.label}
+                          {#if c.detail}<span class="text-neutral-content/60">({c.detail})</span>{/if}
+                        </span>
+                      </span>
+                    {/each}
+                  </span>
+                </span>
+              </span>
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
   {/if}
 
   {#if specialists.length > 0}

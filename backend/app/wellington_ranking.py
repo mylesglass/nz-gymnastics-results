@@ -143,6 +143,102 @@ def _wgtn_failure_reason(config: dict) -> str:
     return f"Has not achieved Wellington qualifying mark {threshold:.3f}"
 
 
+def _selection_checks(
+    config: dict, n_regional: int, n_club: int, n_away: int, n_total: int,
+) -> list[dict]:
+    """Return the competition-mix requirements checklist for a config.
+
+    Each item is ``{label, met, detail}`` where ``detail`` shows the current
+    count out of the requirement (``"x of y"``).
+    """
+    key = config["selection"]
+
+    if key == "wag_step_5_6":
+        named = n_regional + n_club
+        return [
+            {"label": "Regional event", "met": n_regional >= 1, "detail": f"{n_regional} of 1"},
+            {"label": "2nd named event (regional/Capital/Rimutaka)", "met": named >= 2, "detail": f"{named} of 2"},
+            {"label": "Away competition", "met": n_away >= 1, "detail": f"{n_away} of 1"},
+        ]
+    if key == "wag_step_7_10":
+        return [
+            {"label": "Regional event", "met": n_regional >= 1, "detail": f"{n_regional} of 1"},
+            {"label": "3 competitions", "met": n_total >= 3, "detail": f"{n_total} of 3"},
+            {"label": "Away competition", "met": n_away >= 1, "detail": f"{n_away} of 1"},
+        ]
+    if key == "mag_level_4_6":
+        named = n_regional + n_club
+        return [
+            {"label": "2 Wellington events (regional or Capital)", "met": named >= 2, "detail": f"{named} of 2"},
+            {"label": "Away competition", "met": n_away >= 1, "detail": f"{n_away} of 1"},
+        ]
+    # mag_level_7_plus
+    return [
+        {"label": "Regional event", "met": n_regional >= 1, "detail": f"{n_regional} of 1"},
+        {"label": "2 away competitions", "met": n_away >= 2, "detail": f"{n_away} of 2"},
+    ]
+
+
+def _qualifier_checks(config: dict, gnz_ok: bool, wgtn_ok: bool) -> list[dict]:
+    """Return intent/qualifier checklist items for a config, if applicable."""
+    checks: list[dict] = []
+    gnz = config.get("gnz_qualifying_score")
+    if gnz is not None:
+        checks.append({
+            "label": f"GNZ qualifying mark ({gnz:.3f})",
+            "met": gnz_ok,
+            "detail": "",
+        })
+    wgtn = config.get("wellington_qualifying_score")
+    if wgtn is not None:
+        checks.append({
+            "label": f"Wellington qualifying mark ({wgtn:.3f})",
+            "met": wgtn_ok,
+            "detail": "",
+        })
+    return checks
+
+
+def _dropped_reasons(
+    intent_filter: bool, intent_submitted: bool, warnings: list[str],
+) -> list[str]:
+    """Reasons a selection-capable athlete isn't on the ranking."""
+    reasons: list[str] = []
+    if intent_filter and not intent_submitted:
+        reasons.append("Hasn't submitted intent yet")
+    reasons.extend(warnings)
+    if not reasons:
+        reasons.append("Doesn't meet the current selection criteria")
+    return reasons
+
+
+def _unranked_row(
+    name: str, gnz_id: str, club: str, region: str,
+    scores: list[float | None], competition_names: list[str],
+    categories: list[str], apparatus: list[list[dict]],
+    competitions: int, n_regional: int, n_club: int, n_away: int,
+    why: str, checks: list[dict], intent_submitted: bool,
+) -> dict:
+    """Build a unified ``not_ranked`` row shared by all non-ranked athletes."""
+    return {
+        "name": name,
+        "gnz_id": gnz_id,
+        "club": club,
+        "region": region,
+        "scores": scores,
+        "competition_names": competition_names,
+        "categories": categories,
+        "apparatus": apparatus,
+        "competitions": competitions,
+        "regional_count": n_regional,
+        "club_count": n_club,
+        "away_count": n_away,
+        "why": why,
+        "checks": checks,
+        "intent_submitted": intent_submitted,
+    }
+
+
 def _get_config(discipline: str, step: str) -> dict | None:
     for cfg in _STEP_CONFIGS:
         if discipline in cfg["disciplines"] and step in cfg["steps"]:
@@ -198,100 +294,85 @@ def _pick_distinct(
 def _select_wag_step_5_6(
     regional: list[dict], club: list[dict], away: list[dict],
     all_events: list[dict],
-) -> list[dict] | None:
-    """Best regional → next best from remaining 3 named events → best away."""
-    score1 = regional[0] if regional else None
-    if score1 is None:
-        return None
+) -> list[dict | None]:
+    """Best regional → next best from remaining 3 named events → best away.
 
-    used = {score1["event_id"]}
+    Returns a length-3 list with ``None`` for slots that couldn't be filled.
+    """
+    score1 = regional[0] if regional else None
+    used = {score1["event_id"]} if score1 else set()
     named = sorted(regional + club, key=lambda x: -x["score"])
 
     score2 = _pick_distinct(named, used)
-    if score2 is None:
-        return None
-    used.add(score2["event_id"])
+    if score2:
+        used.add(score2["event_id"])
 
     score3 = _pick_distinct(away, used)
-    if score3 is None:
-        return None
-
     return [score1, score2, score3]
 
 
 def _select_wag_step_7_10(
     regional: list[dict], club: list[dict], away: list[dict],
     all_events: list[dict],
-) -> list[dict] | None:
-    """Best regional → best two endorsed competitions (1 must be away)."""
-    score1 = regional[0] if regional else None
-    if score1 is None:
-        return None
+) -> list[dict | None]:
+    """Best regional → best two endorsed competitions (1 must be away).
 
-    used = {score1["event_id"]}
+    Returns a length-3 list with ``None`` for slots that couldn't be filled.
+    """
+    score1 = regional[0] if regional else None
+    used = {score1["event_id"]} if score1 else set()
     endorsed = [e for e in all_events if e["event_id"] not in used]
     endorsed_away = [e for e in endorsed if e["event_id"] in {a["event_id"] for a in away}]
 
     score2 = _pick_distinct(endorsed, used)
-    if score2 is None:
-        return None
-    used.add(score2["event_id"])
+    if score2:
+        used.add(score2["event_id"])
 
     # At least one of the two endorsed marks must be away
-    if score2["event_id"] not in {a["event_id"] for a in away}:
+    if score2 and score2["event_id"] not in {a["event_id"] for a in away}:
         score3 = _pick_distinct(endorsed_away, used)
     else:
         score3 = _pick_distinct(endorsed, used)
-    if score3 is None:
-        return None
-
     return [score1, score2, score3]
 
 
 def _select_mag_level_4_6(
     regional: list[dict], club: list[dict], away: list[dict],
     all_events: list[dict],
-) -> list[dict] | None:
-    """Best two Wellington scores → best away."""
+) -> list[dict | None]:
+    """Best two Wellington scores → best away.
+
+    Returns a length-3 list with ``None`` for slots that couldn't be filled.
+    """
     wellington = sorted(regional + club, key=lambda x: -x["score"])
 
     score1 = _pick_distinct(wellington, set())
-    if score1 is None:
-        return None
-    used = {score1["event_id"]}
+    used = {score1["event_id"]} if score1 else set()
 
     score2 = _pick_distinct(wellington, used)
-    if score2 is None:
-        return None
-    used.add(score2["event_id"])
+    if score2:
+        used.add(score2["event_id"])
 
     score3 = _pick_distinct(away, used)
-    if score3 is None:
-        return None
-
     return [score1, score2, score3]
 
 
 def _select_mag_level_7_plus(
     regional: list[dict], club: list[dict], away: list[dict],
     all_events: list[dict],
-) -> list[dict] | None:
-    """Best regional → best two away."""
-    score1 = regional[0] if regional else None
-    if score1 is None:
-        return None
+) -> list[dict | None]:
+    """Best regional → best two away.
 
-    used = {score1["event_id"]}
+    Returns a length-3 list with ``None`` for slots that couldn't be filled.
+    """
+    score1 = regional[0] if regional else None
+    used = {score1["event_id"]} if score1 else set()
 
     score2 = _pick_distinct(away, used)
-    if score2 is None:
-        return None
-    used.add(score2["event_id"])
+    if score2:
+        used.add(score2["event_id"])
 
     score3 = _pick_distinct(away, used)
-    if score3 is None:
-        return None
-
     return [score1, score2, score3]
 
 
@@ -310,16 +391,25 @@ def compute_wellington_rankings(
     gnz_qualifier: bool = True, wellington_qualifier: bool = True,
     intents: set[str] | None = None, intent_filter: bool = True,
 ) -> dict:
-    """Return ranking dict with keys ``rankings``, ``year``, ``step``, ``discipline``.
+    """Return ranking dict with keys ``rankings``, ``not_ranked``, ``year``,
+    ``step``, ``discipline``.
 
     Each ranking entry contains:
       name, gnz_id, club, region, scores[3], competitions[3],
       categories[3], total, average
+
+    ``not_ranked`` lists Wellington athletes who aren't on the ranking and
+    why: either they can't yet form the required 3-mark selection (too few
+    competitions / missing event mix) or they were dropped by the active
+    toggles (intent / GNZ / Wellington qualifier). ``why`` is the headline
+    reason and ``checks`` is a ✓/✗ requirements checklist (competition mix,
+    intent, and qualifiers) for getting onto the ranking.
     """
     config = _get_config(discipline, step)
     if config is None:
         return {
             "rankings": [],
+            "not_ranked": [],
             "apparatus_specialists": [],
             "year": year,
             "step": step,
@@ -338,6 +428,7 @@ def compute_wellington_rankings(
         if not event_ids:
             return {
                 "rankings": [],
+                "not_ranked": [],
                 "apparatus_specialists": [],
                 "year": year,
                 "step": step,
@@ -436,6 +527,7 @@ def compute_wellington_rankings(
 
         # 3. Per gymnast: take best score per event, classify, select top 3
         rankings = []
+        not_ranked = []
         for name, event_map in gymnast_events.items():
             all_events_list = []
             for eid, scores_list in event_map.items():
@@ -454,6 +546,40 @@ def compute_wellington_rankings(
             selected = selector(regionals, clubs, aways, all_events_list)
             if selected is None:
                 continue
+            if None in selected:
+                meta = gymnast_meta.get(name, {"gnz_id": "", "club": ""})
+                gnz_id = meta["gnz_id"]
+                club = meta["club"]
+                region = _find_region(club)
+                if region != "Wellington":
+                    continue
+                count = len(all_events_list)
+                n_regional = len(regionals)
+                n_club = len(clubs)
+                n_away = len(aways)
+                slot_scores = [round(s["score"], 3) if s else None for s in selected]
+                slot_names = [s["event_name"] if s else "" for s in selected]
+                slot_cats = [s["category"] if s else "" for s in selected]
+                slot_apps = [s.get("apparatus", []) if s else [] for s in selected]
+                if count < 3:
+                    why = f"Needs 3 eligible competitions — currently has {count}"
+                else:
+                    why = "Can't form the required 3-mark selection — missing the regional/away event mix"
+                intent_submitted = intents is None or gnz_id in intents
+                checks = _selection_checks(config, n_regional, n_club, n_away, count)
+                checks.append({"label": "Intent submitted", "met": intent_submitted, "detail": ""})
+                checks.extend(_qualifier_checks(
+                    config,
+                    _is_gnz_qualified(all_events_list, config),
+                    _is_wellington_qualified(all_events_list, config),
+                ))
+                not_ranked.append(_unranked_row(
+                    name, gnz_id, club, region,
+                    slot_scores, slot_names, slot_cats, slot_apps,
+                    count, n_regional, n_club, n_away,
+                    why, checks, intent_submitted,
+                ))
+                continue
 
             scores = [s["score"] for s in selected]
             competitions = [s["event_name"] for s in selected]
@@ -471,25 +597,17 @@ def compute_wellington_rankings(
             if not wgtn_ok:
                 warnings.append(_wgtn_failure_reason(config))
 
-            # Filter when the corresponding toggle is ON
-            if gnz_qualifier and not gnz_ok:
-                continue
-            if wellington_qualifier and not wgtn_ok:
-                continue
-
             # Intent check
             best_gnz_id = next(
                 (s["gnz_id"] for s in all_events_list if s["gnz_id"]), "",
             )
             intent_submitted = intents is None or best_gnz_id in intents
-            if intent_filter and not intent_submitted:
-                continue
 
             best_club = next(
                 (s["club"] for s in all_events_list if s["club"]), "",
             )
 
-            rankings.append({
+            entry = {
                 "name": name,
                 "gnz_id": best_gnz_id,
                 "club": best_club,
@@ -502,10 +620,43 @@ def compute_wellington_rankings(
                 "average": round(avg, 3),
                 "warnings": warnings,
                 "intent_submitted": intent_submitted,
-            })
+            }
+
+            # Filter when the corresponding toggle is ON; athletes dropped by a
+            # toggle still appear in ``not_ranked`` so selectors can see them.
+            if (
+                (gnz_qualifier and not gnz_ok)
+                or (wellington_qualifier and not wgtn_ok)
+                or (intent_filter and not intent_submitted)
+            ):
+                reasons = _dropped_reasons(intent_filter, intent_submitted, warnings)
+                checks = _selection_checks(
+                    config, len(regionals), len(clubs), len(aways),
+                    len(all_events_list),
+                )
+                checks.append({
+                    "label": "Intent submitted",
+                    "met": entry["intent_submitted"],
+                    "detail": "",
+                })
+                checks.extend(_qualifier_checks(config, gnz_ok, wgtn_ok))
+                not_ranked.append(_unranked_row(
+                    entry["name"], entry["gnz_id"], entry["club"], entry["region"],
+                    entry["scores"], entry["competitions"], entry["categories"],
+                    entry["apparatus"],
+                    len(all_events_list), len(regionals), len(clubs), len(aways),
+                    reasons[0], checks, entry["intent_submitted"],
+                ))
+                continue
+
+            rankings.append(entry)
 
         # 4. Filter to Wellington region only
         rankings = [r for r in rankings if r["region"] == "Wellington"]
+        not_ranked = [r for r in not_ranked if r["region"] == "Wellington"]
+
+        # Sort not-ranked alphabetically by name.
+        not_ranked.sort(key=lambda x: x["name"].lower())
 
         # 5. Sort by total descending and assign ranks
         rankings.sort(key=lambda x: -x["total"])
@@ -573,6 +724,7 @@ def compute_wellington_rankings(
 
         return {
             "rankings": rankings,
+            "not_ranked": not_ranked,
             "apparatus_specialists": apparatus_specialists,
             "year": year,
             "step": step,

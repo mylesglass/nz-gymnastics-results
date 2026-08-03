@@ -174,11 +174,36 @@ class WellingtonRankingRow(BaseModel):
     intent_submitted: bool = True
 
 
+class CheckItem(BaseModel):
+    label: str
+    met: bool
+    detail: str = ""
+
+
+class WellingtonNotRankedRow(BaseModel):
+    name: str
+    gnz_id: str
+    club: str | None
+    region: str = ""
+    scores: list[float | None]
+    competition_names: list[str]
+    categories: list[str]
+    apparatus: list[list[ApparatusRow]] = []
+    competitions: int
+    regional_count: int = 0
+    club_count: int = 0
+    away_count: int = 0
+    why: str = ""
+    checks: list[CheckItem] = []
+    intent_submitted: bool = True
+
+
 class WellingtonRankingResponse(BaseModel):
     year: int
     step: str
     discipline: str
     rankings: list[WellingtonRankingRow]
+    not_ranked: list[WellingtonNotRankedRow] = []
     config_key: str = ""
     qualifying_score: float | None = None
     wellington_qualifying_score: float | None = None

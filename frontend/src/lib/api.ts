@@ -273,11 +273,36 @@ export interface ApparatusSpecialistRow {
   count: number;
 }
 
+export interface CheckItem {
+  label: string;
+  met: boolean;
+  detail: string;
+}
+
+export interface WellingtonNotRankedRow {
+  name: string;
+  gnz_id: string;
+  club: string | null;
+  region: string;
+  scores: (number | null)[];
+  competition_names: string[];
+  categories: string[];
+  apparatus: ApparatusPass[][];
+  competitions: number;
+  regional_count: number;
+  club_count: number;
+  away_count: number;
+  why: string;
+  checks: CheckItem[];
+  intent_submitted: boolean;
+}
+
 export interface WellingtonRankingResponse {
   year: number;
   step: string;
   discipline: string;
   rankings: WellingtonRankingRow[];
+  not_ranked: WellingtonNotRankedRow[];
   config_key: string;
   qualifying_score: number | null;
   wellington_qualifying_score: number | null;

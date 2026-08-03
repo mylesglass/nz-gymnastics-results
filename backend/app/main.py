@@ -53,6 +53,7 @@ from app.schemas import (
     UserCreate,
     UserResponse,
     UserUpdate,
+    WellingtonNotRankedRow,
     WellingtonRankingRow,
     WellingtonRankingResponse,
 )
@@ -651,11 +652,32 @@ def get_wellington_rankings(
         )
         for r in result.get("apparatus_specialists", [])
     ]
+    not_ranked = [
+        WellingtonNotRankedRow(
+            name=r["name"],
+            gnz_id=r["gnz_id"],
+            club=r["club"],
+            region=r["region"],
+            scores=r["scores"],
+            competition_names=r["competition_names"],
+            categories=r.get("categories", []),
+            apparatus=r.get("apparatus", []),
+            competitions=r["competitions"],
+            regional_count=r.get("regional_count", 0),
+            club_count=r.get("club_count", 0),
+            away_count=r.get("away_count", 0),
+            why=r.get("why", ""),
+            checks=r.get("checks", []),
+            intent_submitted=r["intent_submitted"],
+        )
+        for r in result.get("not_ranked", [])
+    ]
     return WellingtonRankingResponse(
         year=result["year"],
         step=result["step"],
         discipline=result["discipline"],
         rankings=rankings,
+        not_ranked=not_ranked,
         config_key=result.get("config_key", ""),
         qualifying_score=result.get("gnz_qualifying_score"),
         wellington_qualifying_score=result.get("wellington_qualifying_score"),
