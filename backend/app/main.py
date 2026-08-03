@@ -1,4 +1,5 @@
 import json
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -7,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 from sqlalchemy import func
+from starlette.concurrency import run_in_threadpool
 
 from app.auth import (
     ALL_PERMISSIONS,
@@ -27,13 +29,15 @@ from app.auth import (
 )
 from app.cache import cache, cache_headers, cached, invalidate
 from app.database import get_session, init_db
-from app.models import Event, LongScore, User, WellingtonIntent
+from app.models import ACTIVITY_TYPE_API, ACTIVITY_TYPE_PAGE, ActivityLog, Event, LongScore, User, WellingtonIntent
 from app.parser import ParseError, _NAME_TO_CANONICAL, find_unknown_clubs, parse_json, reload_club_maps, suggest_club_mapping, validate_upload_structure
 from app.reconcile import reconcile_athletes
 from app.scoreholder import ScoreholderFetchError, fetch_event_json
 from app.schemas import (
     ApparatusSpecialistRow,
     ApplyFixItem,
+    ActivityLogItem,
+    ActivityLogResponse,
     ClubItem,
     ConflictItem,
     DuplicateGroup,
@@ -56,6 +60,7 @@ from app.schemas import (
     StepsResponse,
     SuggestedMerge,
     TokenResponse,
+    TrackPageRequest,
     UploadValidationResponse,
     UserCreate,
     UserPermissionsUpdate,
@@ -109,6 +114,80 @@ async def add_cache_control(request: Request, call_next):
     ):
         response.headers["Cache-Control"] = "no-store, no-cache, private"
 
+    return response
+
+
+def _log_activity(
+    username: str,
+    role: str,
+    type_: str,
+    method: str | None,
+    path: str,
+    query: str | None,
+    status_code: int | None,
+    duration_ms: float | None,
+) -> None:
+    """Insert a single activity log row (runs in a thread)."""
+    session = get_session()
+    try:
+        session.add(ActivityLog(
+            username=username,
+            role=role,
+            type=type_,
+            method=method,
+            path=path,
+            query=query,
+            status_code=status_code,
+            duration_ms=duration_ms,
+        ))
+        session.commit()
+    finally:
+        session.close()
+
+
+@app.middleware("http")
+async def log_activity(request: Request, call_next):
+    """Record every authenticated API request for admin review.
+
+    Only requests carrying a valid Bearer token are logged; anonymous
+    traffic and the page-tracking beacon are skipped. Failures never
+    affect the request itself.
+    """
+    start = time.perf_counter()
+    response = await call_next(request)
+    duration_ms = (time.perf_counter() - start) * 1000.0
+
+    path = request.url.path
+    if path == "/api/track/page" or path.startswith("/api/admin/activity"):
+        return response
+    if not path.startswith("/api"):
+        return response
+
+    authorization = request.headers.get("authorization")
+    if not authorization:
+        return response
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer":
+        return response
+    payload = decode_token(token)
+    if payload is None:
+        return response
+
+    query = request.url.query or None
+    try:
+        await run_in_threadpool(
+            _log_activity,
+            payload["sub"],
+            payload.get("role", "member"),
+            ACTIVITY_TYPE_API,
+            request.method,
+            path[:500],
+            (query or "")[:1000],
+            response.status_code,
+            round(duration_ms, 2),
+        )
+    except Exception:
+        pass
     return response
 
 
@@ -728,6 +807,7 @@ def get_wellington_rankings(
             region=r["region"],
             apparatus=r.get("apparatus", []),
             count=r.get("count", 0),
+            qualified=r.get("qualified", True),
         )
         for r in result.get("apparatus_specialists", [])
     ]
@@ -761,6 +841,8 @@ def get_wellington_rankings(
         qualifying_score=result.get("gnz_qualifying_score"),
         wellington_qualifying_score=result.get("wellington_qualifying_score"),
         apparatus_specialists=specialists,
+        apparatus_qualifying_score=result.get("apparatus_qualifying_score"),
+        apparatus_qualifying_count=result.get("apparatus_qualifying_count", 2),
     )
 
 
@@ -1013,6 +1095,87 @@ def apply_duplicate_fixes(
 def refresh_cache(_auth=Depends(require_role("admin"))):
     invalidate()
     return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Activity tracking (admin)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/track/page")
+def track_page(body: TrackPageRequest, _auth=Depends(get_current_user)):
+    session = get_session()
+    try:
+        session.add(ActivityLog(
+            username=_auth["username"],
+            role=_auth["role"],
+            type=ACTIVITY_TYPE_PAGE,
+            method="GET",
+            path=body.path[:500] or "/",
+        ))
+        session.commit()
+        return {"ok": True}
+    finally:
+        session.close()
+
+
+@app.get("/api/admin/activity", response_model=ActivityLogResponse)
+def list_activity(
+    user: str = None,
+    type: str = None,
+    limit: int = 100,
+    offset: int = 0,
+    _auth=Depends(require_role("admin")),
+):
+    limit = max(1, min(limit, 500))
+    offset = max(0, offset)
+    session = get_session()
+    try:
+        query = session.query(ActivityLog)
+        if user:
+            query = query.filter(ActivityLog.username == user)
+        if type:
+            query = query.filter(ActivityLog.type == type)
+        total = query.count()
+        rows = (
+            query.order_by(ActivityLog.created_at.desc(), ActivityLog.id.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+        return ActivityLogResponse(
+            items=[
+                ActivityLogItem(
+                    id=r.id,
+                    username=r.username,
+                    role=r.role,
+                    type=r.type,
+                    method=r.method,
+                    path=r.path,
+                    query=r.query,
+                    status_code=r.status_code,
+                    duration_ms=r.duration_ms,
+                    created_at=r.created_at,
+                )
+                for r in rows
+            ],
+            total=total,
+        )
+    finally:
+        session.close()
+
+
+@app.delete("/api/admin/activity")
+def clear_activity(user: str = None, _auth=Depends(require_role("admin"))):
+    session = get_session()
+    try:
+        query = session.query(ActivityLog)
+        if user:
+            query = query.filter(ActivityLog.username == user)
+        deleted = query.delete(synchronize_session=False)
+        session.commit()
+        return {"deleted": deleted}
+    finally:
+        session.close()
 
 
 def _find_similar_names(session, threshold: float = 0.85) -> list[dict]:

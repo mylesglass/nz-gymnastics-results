@@ -545,7 +545,12 @@ def compute_wellington_rankings(
         gymnast_events: dict[str, dict[int, list[dict]]] = defaultdict(
             lambda: defaultdict(list),
         )
-        best_apparatus: dict[str, dict[str, dict]] = defaultdict(dict)
+        # Per (gymnast, apparatus, event): best apparatus score for that
+        # competition. Multiple round types of a two-day competition merge to
+        # the best score for the event. Used for specialist qualification.
+        apparatus_events: dict[str, dict[str, dict[int, dict]]] = defaultdict(
+            lambda: defaultdict(dict),
+        )
         gymnast_meta: dict[str, dict[str, str]] = {}
         for key, scores in raw_groups.items():
             name = key[0]
@@ -586,9 +591,9 @@ def compute_wellington_rankings(
                 else:
                     event_app_scores["VT"] = max(vt_totals)
             for app, score in event_app_scores.items():
-                prev = best_apparatus[name].get(app)
+                prev = apparatus_events[name][app].get(event_id)
                 if prev is None or score > prev["score"]:
-                    best_apparatus[name][app] = {
+                    apparatus_events[name][app][event_id] = {
                         "score": score,
                         "event_name": key[4],
                     }
@@ -766,9 +771,13 @@ def compute_wellington_rankings(
                 entry["rank_text"] = str(entry["rank"])
 
         # 6. Apparatus specialists: athletes with intent who did not qualify
-        #    via the All Around path but reached the apparatus score threshold
-        #    (best score per apparatus, all events). Thresholds are either a
-        #    single float across apparatus or a per-apparatus dict.
+        #    via the All Around path but reached the apparatus score threshold.
+        #    Thresholds are either a single float across apparatus or a
+        #    per-apparatus dict. The mark must be reached in
+        #    ``apparatus_qualifying_count`` DISTINCT COMPETITIONS on the same
+        #    apparatus. Athletes who reached it once but not enough times are
+        #    returned as ``qualified: False`` rows so the UI can render
+        #    greyed-out "ghost" badges.
         apparatus_specialists = []
         specialist_steps = config.get("specialist_steps")
         if specialist_steps and step in specialist_steps:
@@ -776,7 +785,7 @@ def compute_wellington_rankings(
             app_scores_by_app = config.get("apparatus_qualifying_scores")
             app_count = config.get("apparatus_qualifying_count", 2)
             aa_names = {r["name"] for r in rankings}
-            for name, app_best in best_apparatus.items():
+            for name, app_events in apparatus_events.items():
                 if name in aa_names:
                     continue
                 meta = gymnast_meta.get(name, {"gnz_id": "", "club": ""})
@@ -784,37 +793,64 @@ def compute_wellington_rankings(
                 club = meta["club"]
                 if intents is not None and gnz_id not in intents:
                     continue
-                qualifying = sorted(
-                    [
-                        {
-                            "app": app,
-                            "best": round(info["score"], 3),
-                            "event": info["event_name"],
-                        }
-                        for app, info in app_best.items()
-                        if info["score"] >= (
-                            app_scores_by_app.get(app, float("inf"))
-                            if app_scores_by_app is not None
-                            else app_threshold
-                        )
-                    ],
-                    key=lambda x: (-x["best"], x["app"]),
-                )
-                if len(qualifying) < app_count:
-                    continue
                 region = _find_region(club)
                 if region != "Wellington":
                     continue
-                apparatus_specialists.append({
-                    "name": name,
-                    "gnz_id": gnz_id,
-                    "club": club,
-                    "region": region,
-                    "apparatus": qualifying,
-                    "count": len(qualifying),
-                })
 
-            apparatus_specialists.sort(key=lambda x: (-x["count"], x["name"]))
+                qualifying = []
+                partial = []
+                for app, events in app_events.items():
+                    threshold = (
+                        app_scores_by_app.get(app, float("inf"))
+                        if app_scores_by_app is not None
+                        else app_threshold
+                    )
+                    hits = sorted(
+                        (e for e in events.values() if e["score"] >= threshold),
+                        key=lambda x: -x["score"],
+                    )
+                    if not hits:
+                        continue
+                    best = hits[0]
+                    entry = {
+                        "app": app,
+                        "best": round(best["score"], 3),
+                        "event": best["event_name"],
+                        "count": len(hits),
+                        "competitions": sorted({h["event_name"] for h in hits}),
+                    }
+                    if len(hits) >= app_count:
+                        qualifying.append(entry)
+                    else:
+                        partial.append(entry)
+
+                if qualifying:
+                    qualifying.sort(key=lambda x: (-x["best"], x["app"]))
+                    partial.sort(key=lambda x: (-x["best"], x["app"]))
+                    apparatus_specialists.append({
+                        "name": name,
+                        "gnz_id": gnz_id,
+                        "club": club,
+                        "region": region,
+                        "apparatus": qualifying + partial,
+                        "count": len(qualifying) + len(partial),
+                        "qualified": True,
+                    })
+                elif partial:
+                    partial.sort(key=lambda x: (-x["best"], x["app"]))
+                    apparatus_specialists.append({
+                        "name": name,
+                        "gnz_id": gnz_id,
+                        "club": club,
+                        "region": region,
+                        "apparatus": partial,
+                        "count": len(partial),
+                        "qualified": False,
+                    })
+
+            apparatus_specialists.sort(
+                key=lambda x: (-x["qualified"], -x["count"], x["name"]),
+            )
 
         return {
             "rankings": rankings,
@@ -826,6 +862,8 @@ def compute_wellington_rankings(
             "config_key": config["key"],
             "gnz_qualifying_score": config.get("gnz_qualifying_score"),
             "wellington_qualifying_score": config.get("wellington_qualifying_score"),
+            "apparatus_qualifying_score": config.get("apparatus_qualifying_score"),
+            "apparatus_qualifying_count": config.get("apparatus_qualifying_count", 2),
         }
     finally:
         session.close()

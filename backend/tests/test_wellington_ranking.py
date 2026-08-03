@@ -421,6 +421,154 @@ class TestSlotAlignment:
         assert reg_away["categories"] == ["regional", "", "away"]
 
 
+class TestStep8ApparatusSpecialists:
+    def test_two_comps_same_apparatus_qualifies(self):
+        from app.database import SessionLocal
+
+        session = SessionLocal()
+        try:
+            _add_intl_score(
+                session, "WAG Wellington Champs", "STEP 8",
+                "Twice Vault", "S-001", "Capital Gymnastics",
+                "VT", 11.2, aa_score=None,
+            )
+            _add_intl_score(
+                session, "Manawatu WAG Opens", "STEP 8",
+                "Twice Vault", "S-001", "Capital Gymnastics",
+                "VT", 11.5, aa_score=None,
+            )
+            session.commit()
+        finally:
+            session.close()
+
+        result = compute_wellington_rankings(
+            2025, "WAG", "STEP 8", intents={"S-001"},
+        )
+        specialists = {s["name"]: s for s in result["apparatus_specialists"]}
+        assert "Twice Vault" in specialists
+        row = specialists["Twice Vault"]
+        assert row["qualified"] is True
+        assert row["count"] == 1
+        assert len(row["apparatus"]) == 1
+        app = row["apparatus"][0]
+        assert app["app"] == "VT"
+        assert app["best"] == 11.5
+        assert app["count"] == 2
+        assert set(app["competitions"]) == {"WAG Wellington Champs", "Manawatu WAG Opens"}
+
+    def test_one_comp_ghost_badge(self):
+        from app.database import SessionLocal
+
+        session = SessionLocal()
+        try:
+            _add_intl_score(
+                session, "WAG Wellington Champs", "STEP 8",
+                "Once Vault", "S-002", "Capital Gymnastics",
+                "VT", 11.1, aa_score=None,
+            )
+            session.commit()
+        finally:
+            session.close()
+
+        result = compute_wellington_rankings(
+            2025, "WAG", "STEP 8", intents={"S-002"},
+        )
+        specialists = {s["name"]: s for s in result["apparatus_specialists"]}
+        assert "Once Vault" in specialists
+        row = specialists["Once Vault"]
+        assert row["qualified"] is False
+        assert len(row["apparatus"]) == 1
+        app = row["apparatus"][0]
+        assert app["app"] == "VT"
+        assert app["count"] == 1
+        assert app["competitions"] == ["WAG Wellington Champs"]
+
+    def test_two_apparatus_one_comp_each_is_ghost_not_qualified(self):
+        from app.database import SessionLocal
+
+        session = SessionLocal()
+        try:
+            _add_intl_score(
+                session, "WAG Wellington Champs", "STEP 8",
+                "Mixed", "S-003", "Capital Gymnastics",
+                "VT", 11.2, aa_score=None,
+            )
+            _add_intl_score(
+                session, "Manawatu WAG Opens", "STEP 8",
+                "Mixed", "S-003", "Capital Gymnastics",
+                "UB", 11.1, aa_score=None,
+            )
+            session.commit()
+        finally:
+            session.close()
+
+        result = compute_wellington_rankings(
+            2025, "WAG", "STEP 8", intents={"S-003"},
+        )
+        specialists = {s["name"]: s for s in result["apparatus_specialists"]}
+        row = specialists["Mixed"]
+        assert row["qualified"] is False
+        assert {a["app"] for a in row["apparatus"]} == {"VT", "UB"}
+        assert all(a["count"] == 1 for a in row["apparatus"])
+
+    def test_mixed_qualified_and_ghost_badges(self):
+        from app.database import SessionLocal
+
+        session = SessionLocal()
+        try:
+            _add_intl_score(
+                session, "WAG Wellington Champs", "STEP 8",
+                "Mixed Row", "S-005", "Capital Gymnastics",
+                "FX", 11.4, aa_score=None,
+            )
+            _add_intl_score(
+                session, "Manawatu WAG Opens", "STEP 8",
+                "Mixed Row", "S-005", "Capital Gymnastics",
+                "FX", 11.6, aa_score=None,
+            )
+            _add_intl_score(
+                session, "CSG Classic", "STEP 8",
+                "Mixed Row", "S-005", "Capital Gymnastics",
+                "VT", 11.2, aa_score=None,
+            )
+            session.commit()
+        finally:
+            session.close()
+
+        result = compute_wellington_rankings(
+            2025, "WAG", "STEP 8", intents={"S-005"},
+        )
+        specialists = {s["name"]: s for s in result["apparatus_specialists"]}
+        row = specialists["Mixed Row"]
+        assert row["qualified"] is True
+        by_app = {a["app"]: a for a in row["apparatus"]}
+        assert set(by_app) == {"FX", "VT"}
+        assert by_app["FX"]["count"] == 2
+        assert by_app["FX"]["best"] == 11.6
+        assert by_app["VT"]["count"] == 1
+        assert by_app["VT"]["best"] == 11.2
+
+    def test_below_mark_not_listed(self):
+        from app.database import SessionLocal
+
+        session = SessionLocal()
+        try:
+            _add_intl_score(
+                session, "WAG Wellington Champs", "STEP 8",
+                "Below Mark", "S-004", "Capital Gymnastics",
+                "VT", 10.9, aa_score=None,
+            )
+            session.commit()
+        finally:
+            session.close()
+
+        result = compute_wellington_rankings(
+            2025, "WAG", "STEP 8", intents={"S-004"},
+        )
+        specialists = {s["name"]: s for s in result["apparatus_specialists"]}
+        assert "Below Mark" not in specialists
+
+
 class TestInternational:
     def test_configs_resolve(self):
         assert _get_config("WAG", "Youth International")["key"] == "wag_youth_international"

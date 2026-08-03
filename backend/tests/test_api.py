@@ -265,15 +265,16 @@ class TestWellingtonRankings:
         assert resp.status_code == 200
 
     def _specialist_candidates(self, step: str = "STEP 8") -> list[str]:
-        from collections import defaultdict
-
         from app.database import SessionLocal
         from app.models import LongScore
 
         session = SessionLocal()
         try:
+            # Athletes who reached the mark at least once on some apparatus.
+            # The endpoint must surface these as qualified specialists (≥ 2
+            # competitions on the same apparatus) or greyed "ghost" rows (1).
             rows = (
-                session.query(LongScore.gnz_id, LongScore.apparatus, func.max(LongScore.pass_final_score))
+                session.query(LongScore.gnz_id)
                 .filter(
                     LongScore.level_category == step,
                     LongScore.discipline == "WAG",
@@ -281,14 +282,11 @@ class TestWellingtonRankings:
                     LongScore.gnz_id != "",
                     LongScore.pass_final_score.isnot(None),
                 )
-                .group_by(LongScore.gnz_id, LongScore.apparatus)
+                .group_by(LongScore.gnz_id, LongScore.apparatus, LongScore.event_id)
                 .having(func.max(LongScore.pass_final_score) >= 11.0)
                 .all()
             )
-            per_gymnast: dict[str, set[str]] = defaultdict(set)
-            for gnz_id, apparatus, _score in rows:
-                per_gymnast[gnz_id].add(apparatus)
-            return [g for g, apps in per_gymnast.items() if len(apps) >= 2]
+            return sorted({g for (g,) in rows})
         finally:
             session.close()
 
@@ -336,3 +334,11 @@ class TestWellingtonRankings:
         assert "apparatus_specialists" in body
         specialist_ids = [s["gnz_id"] for s in body["apparatus_specialists"]]
         assert any(g in specialist_ids for g in candidates)
+        for s in body["apparatus_specialists"]:
+            assert "qualified" in s
+            assert s["apparatus"], f"{s['name']} has no apparatus badges"
+            for a in s["apparatus"]:
+                assert a["app"]
+                assert a["best"] >= 11.0
+                assert a["count"] >= 1
+                assert isinstance(a["competitions"], list)

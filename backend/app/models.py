@@ -3,6 +3,9 @@ from datetime import datetime, timezone
 from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, relationship
 
+ACTIVITY_TYPE_API = "api"
+ACTIVITY_TYPE_PAGE = "page"
+
 
 class Base(DeclarativeBase):
     pass
@@ -75,6 +78,26 @@ class LongScore(Base):
     date_created = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     event = relationship("Event", back_populates="scores")
+
+
+class ActivityLog(Base):
+    __tablename__ = "activity_logs"
+
+    __table_args__ = (
+        Index("idx_activity_logs_created_at", "created_at"),
+        Index("idx_activity_logs_username", "username"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String, nullable=False)
+    role = Column(String, nullable=False, default="member")
+    type = Column(String, nullable=False)
+    method = Column(String, nullable=True)
+    path = Column(String, nullable=False)
+    query = Column(String, nullable=True)
+    status_code = Column(Integer, nullable=True)
+    duration_ms = Column(Float, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class WellingtonIntent(Base):

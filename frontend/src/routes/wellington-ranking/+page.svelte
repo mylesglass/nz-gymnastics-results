@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getWellingtonRankings, getRankingSteps, getIntents, toggleIntent, type WellingtonRankingRow, type ApparatusSpecialistRow, type WellingtonNotRankedRow } from "$lib/api";
+  import { getWellingtonRankings, getRankingSteps, getIntents, toggleIntent, type WellingtonRankingRow, type ApparatusSpecialistRow, type ApparatusQualifyingApp, type WellingtonNotRankedRow } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
   import { currentUser } from "$lib/auth";
   import ExportMenu from "$lib/ExportMenu.svelte";
@@ -117,6 +117,8 @@
   let configKey = $state("");
   let gnzScore = $state<number | null>(null);
   let wgtnScore = $state<number | null>(null);
+  let appQualScore = $state<number | null>(null);
+  let appQualCount = $state(2);
 
   let subYear: (() => void) | undefined;
   let subYears: (() => void) | undefined;
@@ -184,7 +186,7 @@
   let specialistNote = $derived.by(() => {
     switch (configKey) {
       case "wag_step_7_10":
-        return "STEP 8–10 athletes who submitted intent and reached 11.000 on two apparatus, but did not qualify via the All Around path.";
+        return "STEP 8–10 athletes who submitted intent and reached 11.000 twice at different competitions, but did not qualify via the All Around path. Greyed-out badges show apparatus where the mark has been reached once so far.";
       case "mag_level_7_plus":
         return "MAG Level 7+ athletes who submitted intent and reached 11.500 on one apparatus, but did not qualify via the All Around path.";
       case "wag_junior_international":
@@ -228,6 +230,8 @@
       configKey = data.config_key;
       gnzScore = data.qualifying_score;
       wgtnScore = data.wellington_qualifying_score;
+      appQualScore = data.apparatus_qualifying_score ?? null;
+      appQualCount = data.apparatus_qualifying_count ?? 2;
       intents = new Set(intentIds);
     } catch (e) {
       error = "Failed to load rankings.";
@@ -268,6 +272,16 @@
       case "FX": return "badge-info";
       default: return "badge-neutral";
     }
+  }
+
+  function appTooltip(a: ApparatusQualifyingApp): string {
+    const mark = appQualScore != null ? appQualScore.toFixed(3) : "the qualifying mark";
+    if (a.count >= appQualCount) {
+      return a.competitions.length > 0
+        ? `${a.app} ${a.best.toFixed(3)} — reached ${mark} at ${a.competitions.join(", ")}`
+        : a.event || "Unknown competition";
+    }
+    return `Reached ${mark} once at ${a.event || "unknown competition"} — needs ${appQualCount} different competitions`;
   }
 </script>
 
@@ -506,10 +520,14 @@
                   <button
                     type="button"
                     class="tooltip tooltip-top cursor-help"
-                    data-tip={a.event || "Unknown competition"}
-                    aria-label={`${a.app} ${a.best.toFixed(3)}, best at ${a.event || "unknown competition"}`}
+                    data-tip={appTooltip(a)}
+                    aria-label={appTooltip(a)}
                   >
-                    <span class="badge badge-sm {appBadgeClass(a.app)}">{a.app} {a.best.toFixed(3)}</span>
+                    {#if a.count >= appQualCount}
+                      <span class="badge badge-sm {appBadgeClass(a.app)}">{a.app} {a.best.toFixed(3)}</span>
+                    {:else}
+                      <span class="badge badge-sm badge-outline text-base-content/60">{a.app} {a.best.toFixed(3)}</span>
+                    {/if}
                   </button>
                 {/each}
               </div>

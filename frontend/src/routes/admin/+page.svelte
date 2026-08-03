@@ -215,7 +215,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       <a href="/admin/users" class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer">
         <div class="card-body">
           <h2 class="card-title">👥 User Management</h2>
@@ -234,6 +234,12 @@
           <p class="text-sm text-base-content/70">Clear backend cache so all pages show the latest data</p>
         </div>
       </button>
+      <a href="/admin/activity" class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer">
+        <div class="card-body">
+          <h2 class="card-title">📋 Activity Log</h2>
+          <p class="text-sm text-base-content/70">Pages and API requests made by logged-in users</p>
+        </div>
+      </a>
     </div>
 
     <div class="card bg-base-200 border border-base-300">

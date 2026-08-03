@@ -295,13 +295,22 @@ export interface WellingtonRankingRow {
   intent_submitted: boolean;
 }
 
+export interface ApparatusQualifyingApp {
+  app: string;
+  best: number;
+  event: string;
+  count: number;
+  competitions: string[];
+}
+
 export interface ApparatusSpecialistRow {
   name: string;
   gnz_id: string;
   club: string | null;
   region: string;
-  apparatus: { app: string; best: number; event: string }[];
+  apparatus: ApparatusQualifyingApp[];
   count: number;
+  qualified: boolean;
 }
 
 export interface CheckItem {
@@ -338,6 +347,8 @@ export interface WellingtonRankingResponse {
   qualifying_score: number | null;
   wellington_qualifying_score: number | null;
   apparatus_specialists: ApparatusSpecialistRow[];
+  apparatus_qualifying_score: number | null;
+  apparatus_qualifying_count: number;
 }
 
 export async function getWellingtonRankings(
@@ -476,6 +487,56 @@ export async function updateGymnast(data: {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function trackPage(path: string): Promise<void> {
+  await fetch(`${API_BASE}/api/track/page`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ path }),
+  });
+}
+
+export interface ActivityLogItem {
+  id: number;
+  username: string;
+  role: string;
+  type: string;
+  method: string | null;
+  path: string;
+  query: string | null;
+  status_code: number | null;
+  duration_ms: number | null;
+  created_at: string;
+}
+
+export async function getActivityLogs(params?: {
+  user?: string;
+  type?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<{ items: ActivityLogItem[]; total: number }> {
+  const qp = new URLSearchParams();
+  if (params?.user) qp.set("user", params.user);
+  if (params?.type) qp.set("type", params.type);
+  if (params?.limit !== undefined) qp.set("limit", String(params.limit));
+  if (params?.offset !== undefined) qp.set("offset", String(params.offset));
+  const qs = qp.toString();
+  const res = await fetch(`${API_BASE}/api/admin/activity?${qs}`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function clearActivityLogs(user?: string): Promise<{ deleted: number }> {
+  const qs = user ? `?user=${encodeURIComponent(user)}` : "";
+  const res = await fetch(`${API_BASE}/api/admin/activity${qs}`, {
+    method: "DELETE",
+    headers: authHeaders(),
   });
   if (!res.ok) throw new Error(await res.text());
   return res.json();

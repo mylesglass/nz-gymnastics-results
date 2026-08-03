@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { fly, fade } from "svelte/transition";
   import { getStats } from "$lib/api";
+  import { currentUser } from "$lib/auth";
 
   let stats = $state<{
     total_events: number;
@@ -11,6 +12,7 @@
   } | null>(null);
   let patchNotes = $state<{ date: string; entries: { title: string; items: string[] }[] }[]>([]);
   let motion = $state(true);
+  let user = $state<{ username: string; role: string; permissions: string[] } | null>(null);
 
   function reveal(
     node: Element,
@@ -21,16 +23,20 @@
   }
 
   onMount(() => {
+    const unsub = currentUser.subscribe((v) => (user = v));
     motion = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     getStats()
       .then((s) => (stats = s))
       .catch(() => {});
-    fetch("/patch_notes.json")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((list: { date: string; entries: { title: string; items: string[] }[] }[]) => {
-        patchNotes = list ?? [];
-      })
-      .catch(() => {});
+    if (user) {
+      fetch("/patch_notes.json")
+        .then((r) => (r.ok ? r.json() : []))
+        .then((list: { date: string; entries: { title: string; items: string[] }[] }[]) => {
+          patchNotes = list ?? [];
+        })
+        .catch(() => {});
+    }
+    return () => unsub();
   });
 </script>
 
@@ -134,32 +140,34 @@
     </a>
   </div>
 
-  <div in:reveal={{ delay: 300 }} class="card bg-base-200 border border-base-300 mt-12 mb-8">
-    <div class="card-body p-6">
-      <h2 class="text-xl font-bold mb-5">What's new</h2>
-      {#if patchNotes.length}
-        <div class="space-y-5 max-h-96 overflow-y-auto pr-2 -mr-2" tabindex="0" role="region" aria-label="Patch notes">
-          {#each patchNotes as group}
-            <div>
-              <h3 class="text-sm font-semibold text-base-content mb-2">{group.date}</h3>
-              <ul class="space-y-3 text-sm text-base-content/80">
-                {#each group.entries as entry}
-                  <li class="border-l-2 border-base-300 pl-4">
-                    <p class="font-medium text-base-content">{entry.title}</p>
-                    <ul class="text-xs text-base-content/70 space-y-1 list-disc list-inside mt-1">
-                      {#each entry.items as item}
-                        <li>{item}</li>
-                      {/each}
-                    </ul>
-                  </li>
-                {/each}
-              </ul>
-            </div>
-          {/each}
-        </div>
-      {:else}
-        <p class="text-xs text-base-content/70">Patch notes unavailable.</p>
-      {/if}
+  {#if user}
+    <div in:reveal={{ delay: 300 }} class="card bg-base-200 border border-base-300 mt-12 mb-8">
+      <div class="card-body p-6">
+        <h2 class="text-xl font-bold mb-5">What's new</h2>
+        {#if patchNotes.length}
+          <div class="space-y-5 max-h-96 overflow-y-auto pr-2 -mr-2" tabindex="0" role="region" aria-label="Patch notes">
+            {#each patchNotes as group}
+              <div>
+                <h3 class="text-sm font-semibold text-base-content mb-2">{group.date}</h3>
+                <ul class="space-y-3 text-sm text-base-content/80">
+                  {#each group.entries as entry}
+                    <li class="border-l-2 border-base-300 pl-4">
+                      <p class="font-medium text-base-content">{entry.title}</p>
+                      <ul class="text-xs text-base-content/70 space-y-1 list-disc list-inside mt-1">
+                        {#each entry.items as item}
+                          <li>{item}</li>
+                        {/each}
+                      </ul>
+                    </li>
+                  {/each}
+                </ul>
+              </div>
+            {/each}
+          </div>
+        {:else}
+          <p class="text-xs text-base-content/70">Patch notes unavailable.</p>
+        {/if}
+      </div>
     </div>
-  </div>
+  {/if}
 </div>

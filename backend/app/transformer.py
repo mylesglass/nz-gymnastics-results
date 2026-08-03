@@ -511,7 +511,7 @@ def _use_vault_average(step: str, round_type: str) -> bool:
       Everything else:           best mark
     """
     lower_step = step.lower()
-    lower_rt = round_type.lower()
+    lower_rt = (round_type or "").lower()
 
     if "step 6" in lower_step or "step 7" in lower_step:
         return True

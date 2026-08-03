@@ -4,7 +4,7 @@
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { currentUser, authConfigured, logout, hasPermission, setPermissions, PERMISSIONS } from "$lib/auth";
-  import { checkAuthStatus, listYears, me } from "$lib/api";
+  import { checkAuthStatus, listYears, me, trackPage } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
   import "../app.css";
 
@@ -108,6 +108,17 @@
     if (requiresAuth && authActive && !routeAllowed) {
       goto("/");
     }
+  });
+
+  let lastTracked = "";
+  $effect(() => {
+    const u = user;
+    if (!u || !authCfg) return;
+    const path = currentPath + $page.url.search;
+    const key = `${u.username}|${path}`;
+    if (key === lastTracked) return;
+    lastTracked = key;
+    trackPage(path).catch(() => {});
   });
 </script>
 
@@ -238,6 +249,12 @@
               class="btn btn-sm {active('/admin') ? 'btn-primary' : 'btn-ghost'}"
             >
               Admin
+            </a>
+            <a
+              href="/admin/activity"
+              class="btn btn-sm {active('/admin/activity') ? 'btn-primary' : 'btn-ghost'}"
+            >
+              Activity
             </a>
           {/if}
         </div>
@@ -428,6 +445,12 @@
           <a href="/admin" onclick={handleNavClick} class:active={active("/admin")}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V7H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-1.5V5.5A4.5 4.5 0 0 0 10 1Zm0 2.5A2 2 0 0 1 12 5.5V7H8V5.5A2 2 0 0 1 10 3.5Z" clip-rule="evenodd" /></svg>
             Admin
+          </a>
+        </li>
+        <li>
+          <a href="/admin/activity" onclick={handleNavClick} class:active={active("/admin/activity")}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clip-rule="evenodd" /></svg>
+            Activity Log
           </a>
         </li>
       {/if}

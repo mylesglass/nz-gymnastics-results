@@ -215,6 +215,16 @@ class WellingtonRankingResponse(BaseModel):
     qualifying_score: float | None = None
     wellington_qualifying_score: float | None = None
     apparatus_specialists: list["ApparatusSpecialistRow"] = []
+    apparatus_qualifying_score: float | None = None
+    apparatus_qualifying_count: int = 2
+
+
+class ApparatusQualifyingApp(BaseModel):
+    app: str
+    best: float
+    event: str = ""
+    count: int = 0
+    competitions: list[str] = []
 
 
 class ApparatusSpecialistRow(BaseModel):
@@ -222,8 +232,9 @@ class ApparatusSpecialistRow(BaseModel):
     gnz_id: str
     club: str | None
     region: str = ""
-    apparatus: list[dict[str, float | str]] = []
+    apparatus: list[ApparatusQualifyingApp] = []
     count: int = 0
+    qualified: bool = True
 
 
 class DuplicateInstance(BaseModel):
@@ -282,3 +293,25 @@ class GymnastEditRequest(BaseModel):
 
 class GymnastEditResponse(BaseModel):
     updated: int
+
+
+class TrackPageRequest(BaseModel):
+    path: str
+
+
+class ActivityLogItem(BaseModel):
+    id: int
+    username: str
+    role: str
+    type: str
+    method: str | None = None
+    path: str
+    query: str | None = None
+    status_code: int | None = None
+    duration_ms: float | None = None
+    created_at: datetime
+
+
+class ActivityLogResponse(BaseModel):
+    items: list[ActivityLogItem]
+    total: int
