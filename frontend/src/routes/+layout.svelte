@@ -3,8 +3,8 @@
   import type { Snippet } from "svelte";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
-  import { currentUser, authConfigured, logout } from "$lib/auth";
-  import { listYears } from "$lib/api";
+  import { currentUser, authConfigured, logout, hasPermission, setPermissions, PERMISSIONS } from "$lib/auth";
+  import { listYears, me } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
   import "../app.css";
 
@@ -19,11 +19,15 @@
     "dim", "nord", "sunset", "caramellatte", "abyss", "silk",
   ];
   let theme = $state("dark");
-  let user = $state<{ username: string; role: string } | null>(null);
+  let user = $state<{ username: string; role: string; permissions: string[] } | null>(null);
   let authCfg = $state(false);
   let currentPath = $derived($page.url.pathname);
   let selYear = $state<string | null>(null);
   let years = $state<string[]>([]);
+
+  let canNational = $derived(hasPermission(user, PERMISSIONS.national));
+  let canWellington = $derived(hasPermission(user, PERMISSIONS.wellington));
+  let canRankings = $derived(canNational || canWellington);
 
   onMount(() => {
     theme = document.documentElement.dataset.theme || "dark";
@@ -31,6 +35,11 @@
     const unsub2 = authConfigured.subscribe((v) => (authCfg = v));
     const unsub3 = selectedYear.subscribe((v) => (selYear = v));
     const unsub4 = yearOptions.subscribe((v) => (years = v));
+    if (user) {
+      me()
+        .then((u) => setPermissions(u.permissions))
+        .catch(() => {});
+    }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && drawerOpen) {
         drawerOpen = false;
@@ -166,20 +175,24 @@
           >
             Clubs
           </a>
-          {#if user}
+          {#if canRankings}
             <div class="dropdown dropdown-hover dropdown-end" style="z-index: 100">
               <button
                 class="btn btn-sm {active('/rankings') || active('/wellington-ranking') ? 'btn-primary' : 'btn-ghost'}"
                 aria-haspopup="menu"
                 aria-expanded={false}
-                onclick={() => goto('/rankings')}
+                onclick={() => goto(canNational ? '/rankings' : '/wellington-ranking')}
               >
                 Rankings
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-3 fill-current opacity-60" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
               </button>
               <ul role="menu" aria-label="Rankings" class="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow">
-                <li role="none"><a role="menuitem" href="/rankings" class={active('/rankings') ? 'active' : ''}>National Rankings</a></li>
-                <li role="none"><a role="menuitem" href="/wellington-ranking" class={active('/wellington-ranking') ? 'active' : ''}>Wellington Rankings</a></li>
+                {#if canNational}
+                  <li role="none"><a role="menuitem" href="/rankings" class={active('/rankings') ? 'active' : ''}>National Rankings</a></li>
+                {/if}
+                {#if canWellington}
+                  <li role="none"><a role="menuitem" href="/wellington-ranking" class={active('/wellington-ranking') ? 'active' : ''}>Wellington Rankings</a></li>
+                {/if}
               </ul>
             </div>
           {/if}
@@ -321,7 +334,7 @@
           Clubs
         </a>
       </li>
-      {#if user}
+      {#if canRankings}
         <li>
           <details class="w-full">
             <summary class="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-base-300 transition-colors cursor-pointer">
@@ -329,12 +342,16 @@
               Rankings
             </summary>
             <ul class="ml-4 border-l border-base-300 pl-2 mt-1">
-              <li>
-                <a href="/rankings" onclick={handleNavClick} class:active={active("/rankings")}>National Rankings</a>
-              </li>
-              <li>
-                <a href="/wellington-ranking" onclick={handleNavClick} class:active={active("/wellington-ranking")}>Wellington Rankings</a>
-              </li>
+              {#if canNational}
+                <li>
+                  <a href="/rankings" onclick={handleNavClick} class:active={active("/rankings")}>National Rankings</a>
+                </li>
+              {/if}
+              {#if canWellington}
+                <li>
+                  <a href="/wellington-ranking" onclick={handleNavClick} class:active={active("/wellington-ranking")}>Wellington Rankings</a>
+                </li>
+              {/if}
             </ul>
           </details>
         </li>

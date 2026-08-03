@@ -23,7 +23,7 @@
     error = null;
     try {
       const data = await authLogin(username.trim(), password.trim());
-      setToken(data.access_token);
+      setToken(data.access_token, data.permissions);
       goto("/");
     } catch (err) {
       error = String(err);

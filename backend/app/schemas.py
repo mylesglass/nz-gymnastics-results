@@ -13,22 +13,29 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     username: str
     role: str
+    permissions: list[str] = []
 
 
 class UserCreate(BaseModel):
     username: str
     password: str
     role: str = "member"
+    permissions: list[str] = []
 
 
 class UserUpdate(BaseModel):
     password: str
 
 
+class UserPermissionsUpdate(BaseModel):
+    permissions: list[str]
+
+
 class UserResponse(BaseModel):
     id: int
     username: str
     role: str
+    permissions: list[str] = []
     created_at: datetime
 
 

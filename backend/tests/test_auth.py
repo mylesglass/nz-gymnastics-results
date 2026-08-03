@@ -385,3 +385,135 @@ class TestRankingsEndpoint:
     def test_unauthenticated_cannot_access(self):
         resp = client.get("/api/rankings")
         assert resp.status_code == 401
+
+
+class TestPermissions:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        _enable_auth()
+        self.db_path, self.engine, TestSession, self.old_engine, self.old_session = _setup_db()
+        import app.database as db_mod
+        init_db()
+        seed_admin_user()
+        self.admin_token = client.post(
+            "/api/auth/login", json={"username": "admin", "password": TEST_PASSWORD}
+        ).json()["access_token"]
+        yield
+        _teardown_db(self.db_path, self.old_engine, self.old_session)
+        _disable_auth()
+
+    def _register_member(self, username: str = "alice", permissions: list[str] | None = None):
+        body: dict = {"username": username, "password": "alice-pw", "role": "member"}
+        if permissions is not None:
+            body["permissions"] = permissions
+        resp = client.post(
+            "/api/auth/register",
+            json=body,
+            headers={"Authorization": f"Bearer {self.admin_token}"},
+        )
+        assert resp.status_code == 200, resp.text
+        return resp.json()
+
+    def _member_token(self, username: str = "alice"):
+        login = client.post("/api/auth/login", json={"username": username, "password": "alice-pw"})
+        assert login.status_code == 200
+        return login.json()
+
+    def test_member_default_permissions(self):
+        data = self._register_member()
+        assert data["permissions"] == ["rankings.national"]
+
+    def test_admin_permissions(self):
+        login = client.post("/api/auth/login", json={"username": "admin", "password": TEST_PASSWORD})
+        data = login.json()
+        assert data["permissions"] == ["rankings.national", "rankings.wellington"]
+
+    def test_register_with_custom_permissions(self):
+        data = self._register_member(permissions=["rankings.wellington"])
+        assert data["permissions"] == ["rankings.wellington"]
+
+    def test_register_filters_unknown_permissions(self):
+        data = self._register_member(permissions=["rankings.wellington", "bogus"])
+        assert data["permissions"] == ["rankings.wellington"]
+
+    def test_national_access_with_default_member(self):
+        self._register_member()
+        token = self._member_token()["access_token"]
+        resp = client.get(
+            "/api/rankings?year=2026&step=STEP+10&discipline=WAG",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 200
+
+    def test_wellington_denied_without_permission(self):
+        self._register_member()
+        token = self._member_token()["access_token"]
+        resp = client.get(
+            "/api/rankings/wellington?year=2026&step=STEP+10&discipline=WAG",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 403
+
+    def test_wellington_allowed_with_permission(self):
+        self._register_member(permissions=["rankings.wellington"])
+        token = self._member_token()["access_token"]
+        resp = client.get(
+            "/api/rankings/wellington?year=2026&step=STEP+10&discipline=WAG",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 200
+
+    def test_steps_allowed_with_either_permission(self):
+        self._register_member(permissions=["rankings.wellington"])
+        token = self._member_token()["access_token"]
+        resp = client.get(
+            "/api/rankings/steps?year=2026&discipline=WAG",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 200
+
+    def test_intents_denied_without_wellington(self):
+        self._register_member()
+        token = self._member_token()["access_token"]
+        resp = client.get(
+            "/api/wellington/intents?year=2026",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 403
+
+    def test_admin_bypasses_permission_checks(self):
+        token = client.post(
+            "/api/auth/login", json={"username": "admin", "password": TEST_PASSWORD}
+        ).json()["access_token"]
+        resp = client.get(
+            "/api/rankings/wellington?year=2026&step=STEP+10&discipline=WAG",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 200
+
+    def test_update_permissions_endpoint(self):
+        self._register_member()
+        users = client.get(
+            "/api/auth/users", headers={"Authorization": f"Bearer {self.admin_token}"}
+        ).json()
+        alice = next(u for u in users if u["username"] == "alice")
+        resp = client.patch(
+            f"/api/auth/users/{alice['id']}/permissions",
+            json={"permissions": ["rankings.wellington"]},
+            headers={"Authorization": f"Bearer {self.admin_token}"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["permissions"] == ["rankings.wellington"]
+        token = self._member_token()["access_token"]
+        wellington = client.get(
+            "/api/rankings/wellington?year=2026&step=STEP+10&discipline=WAG",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert wellington.status_code == 200
+
+    def test_me_returns_permissions(self):
+        self._register_member()
+        data = self._member_token()["access_token"]
+        resp = client.get("/api/auth/me", headers={"Authorization": f"Bearer {data}"})
+        assert resp.status_code == 200
+        assert resp.json()["permissions"] == ["rankings.national"]

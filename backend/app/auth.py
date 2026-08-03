@@ -13,6 +13,25 @@ load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_DAYS = 7
 
+PERMISSION_NATIONAL = "rankings.national"
+PERMISSION_WELLINGTON = "rankings.wellington"
+ALL_PERMISSIONS = [PERMISSION_NATIONAL, PERMISSION_WELLINGTON]
+DEFAULT_MEMBER_PERMISSIONS = [PERMISSION_NATIONAL]
+
+
+def parse_permissions(permissions: str | None) -> list[str]:
+    """Split a comma-separated permissions string into a non-empty list."""
+    if not permissions:
+        return []
+    return [p.strip() for p in permissions.split(",") if p.strip()]
+
+
+def effective_permissions(role: str, permissions: str | None) -> list[str]:
+    """Permissions a user effectively holds — admins always get all of them."""
+    if role == "admin":
+        return list(ALL_PERMISSIONS)
+    return parse_permissions(permissions)
+
 
 def _is_auth_enabled() -> bool:
     pw = os.environ.get("ADMIN_PASSWORD")
@@ -109,6 +128,38 @@ def require_role(*roles: str):
     async def _dependency(current_user: dict = Depends(get_current_user)):
         if current_user["role"] not in roles:
             raise HTTPException(403, "Insufficient permissions")
+        return current_user
+
+    return _dependency
+
+
+def get_user_permissions(username: str) -> list[str]:
+    """Return the effective permissions for a username (empty if user missing)."""
+    from app.database import get_session
+    from app.models import User
+
+    session = get_session()
+    try:
+        user = session.query(User).filter(User.username == username).first()
+        if not user:
+            return []
+        return effective_permissions(user.role, user.permissions)
+    finally:
+        session.close()
+
+
+def require_permission(*permissions: str):
+    """FastAPI dependency: require an authenticated user granted one of the
+    given permissions. Admins always pass. When auth is disabled (dev fallback
+    user with role 'admin') access is granted too.
+    """
+
+    async def _dependency(current_user: dict = Depends(get_current_user)):
+        if current_user["role"] == "admin":
+            return current_user
+        granted = get_user_permissions(current_user["username"])
+        if not any(p in granted for p in permissions):
+            raise HTTPException(403, "Access denied")
         return current_user
 
     return _dependency

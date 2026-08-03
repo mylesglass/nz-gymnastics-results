@@ -89,21 +89,26 @@ Core logic:
 | id | INTEGER PK |
 | username | STRING UNIQUE |
 | hashed_password | STRING |
-| role | STRING (admin/uploader) |
+| role | STRING (admin/member) |
+| permissions | STRING (comma-separated: rankings.national, rankings.wellington) |
 | created_at | DATETIME |
 
 ## Auth (JWT-based, role-based access)
 
 ### Backend
-- `backend/app/auth.py`: bcrypt hashing, JWT create/decode (HS256, 7-day expiry), `require_role()` FastAPI dependency factory
+- `backend/app/auth.py`: bcrypt hashing, JWT create/decode (HS256, 7-day expiry), `require_role()` and `require_permission()` FastAPI dependency factories
+- `require_permission(*keys)`: DB lookup of `User.permissions`; admins always pass; used by ranking endpoints (`/api/rankings`→national, `/api/rankings/wellington` + `GET /api/wellington/intents`→wellington, `/api/rankings/steps`→either)
+- `effective_permissions()`: admins report all permissions, members report their stored list
 - `seed_admin_user()`: reads `ADMIN_USERNAME`/`ADMIN_PASSWORD`/`ADMIN_ROLE` env vars on startup; creates admin user if not exists
 - Auto-generated `JWT_SECRET` persisted to `data/jwt_secret.txt` (survives container restarts)
 - When `ADMIN_PASSWORD` env var is unset, auth is disabled (all endpoints public)
 
 ### Endpoints
-- `POST /api/auth/login` → returns JWT token + user info
-- `POST /api/auth/register` → create user (admin only)
+- `POST /api/auth/login` → returns JWT token + user info (incl. effective permissions)
+- `POST /api/auth/register` → create user (admin only); new members default to `rankings.national`
 - `GET /api/auth/users` → list users (admin only)
+- `PATCH /api/auth/users/{id}/permissions` → update a user's ranking-page access (admin only)
+- `GET /api/auth/me` → DB-fresh `{ username, role, permissions }` for the token holder
 - `POST /api/auth/users/{id}/reset-password` → change password (admin only)
 - `DELETE /api/auth/users/{id}` → delete user (admin only)
 - `GET /api/admin/duplicates` → list duplicate GNZ ID groups by name (with club/level instances)
@@ -112,9 +117,12 @@ Core logic:
 
 ### Frontend
 - JWT stored in `localStorage`, read by `getToken()` / `setToken()`
-- `currentUser` Svelte store holds `{ username, role }` decoded from JWT payload
+- `currentUser` Svelte store holds `{ username, role, permissions }`; permissions persisted to `localStorage` under `nzgr_permissions`
+- `setPermissions()` / `hasPermission()` in `lib/auth.ts` (admins always pass)
+- `+layout.svelte` refreshes permissions via `me()` on mount and gates the Rankings nav links (desktop + mobile)
+- Ranking pages show a "No access" card when the logged-in user lacks the relevant permission
 - `logout()` clears token + store
-- Nav bar shows/hides Upload/Admin/Rankings links based on role
+- Nav bar shows/hides Upload/Admin/Rankings links based on role/permissions
 - All write API calls send `Authorization: Bearer <token>` header
 
 ## Frontend

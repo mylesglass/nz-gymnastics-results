@@ -58,6 +58,14 @@ def init_db():
             conn.execute(
                 text("ALTER TABLE events ADD COLUMN is_national BOOLEAN DEFAULT 0")
             )
+        user_cols = {
+            row[1]
+            for row in conn.execute(text("PRAGMA table_info(users)")).fetchall()
+        }
+        if "permissions" not in user_cols:
+            conn.execute(
+                text("ALTER TABLE users ADD COLUMN permissions VARCHAR DEFAULT ''")
+            )
         _ensure_indexes(conn)
         conn.commit()
 

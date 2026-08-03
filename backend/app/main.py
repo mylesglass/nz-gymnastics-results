@@ -9,11 +9,18 @@ from pydantic import BaseModel
 from sqlalchemy import func
 
 from app.auth import (
+    ALL_PERMISSIONS,
+    DEFAULT_MEMBER_PERMISSIONS,
+    PERMISSION_NATIONAL,
+    PERMISSION_WELLINGTON,
     create_token,
     decode_token,
+    effective_permissions,
     get_current_user,
+    get_user_permissions,
     hash_password,
     is_auth_configured,
+    require_permission,
     require_role,
     seed_admin_user,
     verify_password,
@@ -51,6 +58,7 @@ from app.schemas import (
     TokenResponse,
     UploadValidationResponse,
     UserCreate,
+    UserPermissionsUpdate,
     UserResponse,
     UserUpdate,
     WellingtonNotRankedRow,
@@ -261,8 +269,28 @@ def auth_status(authorization: str | None = Header(None)):
         if scheme.lower() == "bearer":
             payload = decode_token(token)
             if payload:
-                resp["user"] = {"username": payload["sub"], "role": payload["role"]}
+                resp["user"] = {
+                    "username": payload["sub"],
+                    "role": payload["role"],
+                    "permissions": get_user_permissions(payload["sub"]),
+                }
     return resp
+
+
+@app.get("/api/auth/me")
+def auth_me(_auth=Depends(get_current_user)):
+    session = get_session()
+    try:
+        user = session.query(User).filter(User.username == _auth["username"]).first()
+    finally:
+        session.close()
+    if not user:
+        raise HTTPException(404, "User not found")
+    return {
+        "username": user.username,
+        "role": user.role,
+        "permissions": effective_permissions(user.role, user.permissions),
+    }
 
 
 @app.post("/api/auth/login", response_model=TokenResponse)
@@ -275,7 +303,13 @@ def auth_login(body: LoginRequest):
         if not user or not verify_password(body.password, user.hashed_password):
             raise HTTPException(401, "Invalid username or password")
         token = create_token(user.username, user.role)
-        return TokenResponse(access_token=token, username=user.username, role=user.role)
+        permissions = effective_permissions(user.role, user.permissions)
+        return TokenResponse(
+            access_token=token,
+            username=user.username,
+            role=user.role,
+            permissions=permissions,
+        )
     finally:
         session.close()
 
@@ -287,11 +321,29 @@ def auth_register(body: UserCreate, _auth=Depends(require_role("admin"))):
         existing = session.query(User).filter(User.username == body.username).first()
         if existing:
             raise HTTPException(409, "Username already exists")
+        role = body.role or "member"
+        if role == "admin":
+            permissions = ALL_PERMISSIONS
+        elif body.permissions:
+            permissions = [p for p in body.permissions if p in ALL_PERMISSIONS]
+        else:
+            permissions = DEFAULT_MEMBER_PERMISSIONS
         hashed = hash_password(body.password)
-        user = User(username=body.username, hashed_password=hashed, role=body.role)
+        user = User(
+            username=body.username,
+            hashed_password=hashed,
+            role=role,
+            permissions=",".join(permissions),
+        )
         session.add(user)
         session.commit()
-        return UserResponse(id=user.id, username=user.username, role=user.role, created_at=user.created_at)
+        return UserResponse(
+            id=user.id,
+            username=user.username,
+            role=user.role,
+            permissions=permissions,
+            created_at=user.created_at,
+        )
     finally:
         session.close()
 
@@ -302,7 +354,13 @@ def list_users(_auth=Depends(require_role("admin")), current_user: dict = Depend
     try:
         users = session.query(User).order_by(User.created_at).all()
         return [
-            UserResponse(id=u.id, username=u.username, role=u.role, created_at=u.created_at)
+            UserResponse(
+                id=u.id,
+                username=u.username,
+                role=u.role,
+                permissions=effective_permissions(u.role, u.permissions),
+                created_at=u.created_at,
+            )
             for u in users
         ]
     finally:
@@ -319,6 +377,27 @@ def reset_password(user_id: int, body: UserUpdate, _auth=Depends(require_role("a
         user.hashed_password = hash_password(body.password)
         session.commit()
         return {"ok": True}
+    finally:
+        session.close()
+
+
+@app.patch("/api/auth/users/{user_id}/permissions")
+def update_permissions(user_id: int, body: UserPermissionsUpdate, _auth=Depends(require_role("admin"))):
+    session = get_session()
+    try:
+        user = session.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(404, "User not found")
+        if user.role == "admin":
+            permissions = ALL_PERMISSIONS
+        else:
+            permissions = [p for p in body.permissions if p in ALL_PERMISSIONS]
+        user.permissions = ",".join(permissions)
+        session.commit()
+        return {
+            "ok": True,
+            "permissions": permissions,
+        }
     finally:
         session.close()
 
@@ -393,7 +472,7 @@ def list_years(response: Response):
 
 
 @app.get("/api/rankings/steps", response_model=StepsResponse)
-def list_ranking_steps(year: int, discipline: str, _auth=Depends(require_role("admin", "member"))):
+def list_ranking_steps(year: int, discipline: str, _auth=Depends(require_permission(PERMISSION_NATIONAL, PERMISSION_WELLINGTON))):
     session = get_session()
     try:
         steps = (
@@ -437,7 +516,7 @@ def get_rankings(
     discipline: str,
     quota: bool = False,
     qualifier: bool = False,
-    _auth=Depends(require_role("admin", "member")),
+    _auth=Depends(require_permission(PERMISSION_NATIONAL)),
 ):
     session = get_session()
     try:
@@ -605,7 +684,7 @@ def get_wellington_rankings(
     gnz_qualifier: bool = True,
     wellington_qualifier: bool = True,
     intent_filter: bool = True,
-    _auth=Depends(require_role("admin", "member")),
+    _auth=Depends(require_permission(PERMISSION_WELLINGTON)),
 ):
     session = get_session()
     try:
@@ -688,7 +767,7 @@ def get_wellington_rankings(
 @app.get("/api/wellington/intents")
 def get_intents(
     year: int,
-    _auth=Depends(require_role("admin", "member")),
+    _auth=Depends(require_permission(PERMISSION_WELLINGTON)),
 ):
     session = get_session()
     try:

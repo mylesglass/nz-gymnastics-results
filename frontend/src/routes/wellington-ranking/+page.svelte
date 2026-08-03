@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { getWellingtonRankings, getRankingSteps, getIntents, toggleIntent, type WellingtonRankingRow, type ApparatusSpecialistRow, type WellingtonNotRankedRow } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
-  import { currentUser } from "$lib/auth";
+  import { currentUser, hasPermission, PERMISSIONS } from "$lib/auth";
   import ExportMenu from "$lib/ExportMenu.svelte";
 
 
@@ -237,8 +237,9 @@
     }
   }
 
-  let user = $state<{ role: string } | null>(null);
+  let user = $state<{ username: string; role: string; permissions: string[] } | null>(null);
   let intents = $state<Set<string>>(new Set());
+  let denied = $derived(user !== null && !hasPermission(user, PERMISSIONS.wellington));
 
   function switchDisc(d: string) {
     discipline = d;
@@ -276,6 +277,16 @@
 </svelte:head>
 
 <div class="max-w-6xl mx-auto">
+  {#if denied}
+    <div class="card bg-base-200">
+      <div class="card-body items-center text-center py-12">
+        <h2 class="text-xl font-bold">No access</h2>
+        <p class="text-base-content/70">
+          You don't have permission to view the Wellington selection rankings.
+        </p>
+      </div>
+    </div>
+  {:else}
   <h1 class="text-3xl font-bold mb-1 flex items-center gap-3">
     <span class="inline-flex flex-wrap w-6 h-6 shrink-0 overflow-hidden rounded">
       <span class="w-3 h-3" style="background: #000000"></span>
@@ -658,5 +669,6 @@
         {/each}
       </tbody>
     </table>
+  {/if}
   {/if}
 </div>

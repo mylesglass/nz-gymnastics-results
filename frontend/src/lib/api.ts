@@ -30,17 +30,48 @@ export interface WideResponse {
   mag: { columns: string[]; rows: Record<string, unknown>[] };
 }
 
+export interface CurrentUserInfo {
+  username: string;
+  role: string;
+  permissions: string[];
+}
+
 export async function checkAuthStatus(): Promise<{ configured: boolean }> {
   const res = await fetch(`${API_BASE}/api/auth/status`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
-export async function authLogin(username: string, password: string): Promise<{ access_token: string; role: string }> {
+export async function authLogin(username: string, password: string): Promise<{
+  access_token: string;
+  role: string;
+  permissions: string[];
+}> {
   const res = await fetch(`${API_BASE}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function me(): Promise<CurrentUserInfo> {
+  const res = await fetch(`${API_BASE}/api/auth/me`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function updateUserPermissions(
+  userId: number,
+  permissions: string[]
+): Promise<{ ok: boolean; permissions: string[] }> {
+  const res = await fetch(`${API_BASE}/api/auth/users/${userId}/permissions`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ permissions }),
   });
   if (!res.ok) throw new Error(await res.text());
   return res.json();

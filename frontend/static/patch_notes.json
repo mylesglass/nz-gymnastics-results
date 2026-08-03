@@ -3,6 +3,14 @@
     "date": "3 Aug 2026",
     "entries": [
       {
+        "title": "Per-user page access for rankings",
+        "items": [
+          "Admins can now grant or revoke access to each ranking page per user from the User Management page (National Rankings and Wellington Rankings checkboxes).",
+          "New members are granted National Rankings by default; Wellington Rankings access must be explicitly granted.",
+          "Users without access to a ranking page no longer see it in the nav menu, and visiting the page directly shows a \"No access\" message. Admins always have full access."
+        ]
+      },
+      {
         "title": "Export buttons restyled",
         "items": [
           "Export menus on all results and ranking tables now use the secondary theme colour and sit flush against the right edge of the toolbar."
