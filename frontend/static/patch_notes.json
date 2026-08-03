@@ -5,7 +5,7 @@
       {
         "title": "Rankings pages redirect signed-out visitors to the homepage",
         "items": [
-          "Visiting the National Rankings or Wellington Rankings pages without being logged in now redirects to the homepage instead of showing a load error. Logged-in users who lack access to a particular ranking page still see the \"No access\" card."
+          "Visiting the National Rankings or Wellington Rankings pages without being logged in now redirects to the homepage instead of showing a load error. Members who don't have access to a particular ranking page are redirected too — for example, a member with National access only can't open the Wellington Rankings page."
         ]
       },
       {

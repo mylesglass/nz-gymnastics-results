@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import { getRankings, getRankingSteps, type RankingRow } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
-  import { currentUser, hasPermission, PERMISSIONS } from "$lib/auth";
   import RegionBadge from "$lib/RegionBadge.svelte";
   import { REGION_PALETTES } from "$lib/regions";
   import ExportMenu from "$lib/ExportMenu.svelte";
@@ -20,9 +19,6 @@
   let loading = $state(true);
   let error = $state("");
 
-  let user = $state<{ username: string; role: string; permissions: string[] } | null>(null);
-  let denied = $derived(user !== null && !hasPermission(user, PERMISSIONS.national));
-
   let discipline = $state("WAG");
   let year = $state<string | null>(null);
   let steps = $state<string[]>([]);
@@ -34,7 +30,6 @@
   let subYears: (() => void) | undefined;
 
   onMount(() => {
-    const unsubUser = currentUser.subscribe((v) => (user = v));
     subYear = selectedYear.subscribe((v) => {
       year = v;
       if (v) loadSteps();
@@ -47,7 +42,6 @@
       }
     });
     return () => {
-      unsubUser();
       subYear?.();
       subYears?.();
     };
@@ -131,16 +125,6 @@
 </svelte:head>
 
 <div class="max-w-6xl mx-auto">
-  {#if denied}
-    <div class="card bg-base-200">
-      <div class="card-body items-center text-center py-12">
-        <h2 class="text-xl font-bold">No access</h2>
-        <p class="text-base-content/70">
-          You don't have permission to view the National Rankings.
-        </p>
-      </div>
-    </div>
-  {:else}
   <h1 class="text-3xl font-bold mb-2">National Rankings</h1>
   <p class="text-base-content/70 mb-6">Season rankings — top 2 All Around scores per gymnast (excludes Nationals).</p>
 
@@ -256,6 +240,5 @@
         </tbody>
       </table>
     </div>
-  {/if}
   {/if}
 </div>

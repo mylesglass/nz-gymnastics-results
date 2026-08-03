@@ -30,14 +30,19 @@
   let canWellington = $derived(hasPermission(user, PERMISSIONS.wellington));
   let canRankings = $derived(canNational || canWellington);
 
-  let isProtectedRoute = $derived(
+  let requiresAuth = $derived(
     currentPath.startsWith("/admin") ||
     currentPath === "/rankings" ||
     currentPath === "/wellington-ranking"
   );
-  let renderChildren = $derived(
-    !isProtectedRoute || (authResolved && (!authCfg || user !== null))
+  let authActive = $derived(authResolved && authCfg);
+  let routeAllowed = $derived(
+    !authActive ||
+    (currentPath.startsWith("/admin") && user?.role === "admin") ||
+    (currentPath === "/rankings" && hasPermission(user, PERMISSIONS.national)) ||
+    (currentPath === "/wellington-ranking" && hasPermission(user, PERMISSIONS.wellington))
   );
+  let renderChildren = $derived(!requiresAuth || (authActive && routeAllowed));
 
   onMount(() => {
     theme = document.documentElement.dataset.theme || "dark";
@@ -100,7 +105,7 @@
   }
 
   $effect(() => {
-    if (isProtectedRoute && authResolved && authCfg && !user) {
+    if (requiresAuth && authActive && !routeAllowed) {
       goto("/");
     }
   });

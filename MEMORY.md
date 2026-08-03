@@ -119,8 +119,7 @@ Core logic:
 - JWT stored in `localStorage`, read by `getToken()` / `setToken()`
 - `currentUser` Svelte store holds `{ username, role, permissions }`; permissions persisted to `localStorage` under `nzgr_permissions`
 - `setPermissions()` / `hasPermission()` in `lib/auth.ts` (admins always pass)
-- `+layout.svelte` refreshes permissions via `me()` on mount and gates the Rankings nav links (desktop + mobile)
-- Ranking pages show a "No access" card when the logged-in user lacks the relevant permission
+- `+layout.svelte` refreshes permissions via `me()` on mount and gates the Rankings nav links (desktop + mobile); its route guard (`requiresAuth`/`routeAllowed`) redirects signed-out users and members without the relevant permission away from `/admin`, `/rankings`, and `/wellington-ranking`
 - `logout()` clears token + store
 - Nav bar shows/hides Upload/Admin/Rankings links based on role/permissions
 - All write API calls send `Authorization: Bearer <token>` header
