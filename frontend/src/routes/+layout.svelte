@@ -120,6 +120,7 @@
             <path fill="currentColor" d="M8 22h5v-4H6v2q0 .825.588 1.413T8 22m7 0h5q.825 0 1.413-.587T22 20v-2h-7zM2 18V4q0-.825.588-1.412T4 2h14v2H4v14zm4-2h7v-4H6zm9 0h7v-4h-7zm-9-6h16V8q0-.825-.587-1.412T20 6H8q-.825 0-1.412.588T6 8z"/>
           </svg>
           NZ Gymnastics Results
+          <span class="badge badge-warning badge-sm">Beta</span>
         </a>
       </div>
 
@@ -275,6 +276,10 @@
         </div>
         <p class="text-xs text-base-content/70 mt-3">
           If this has saved you time, consider donating to cover development costs.
+        </p>
+        <p class="text-xs text-base-content/70 mt-1">
+          Found a bug? Email
+          <a href="mailto:myles@hcg.org.nz" class="link">myles@hcg.org.nz</a>.
         </p>
       </div>
       <div class="flex justify-end mt-4">

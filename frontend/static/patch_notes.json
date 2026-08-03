@@ -3,6 +3,13 @@
     "date": "3 Aug 2026",
     "entries": [
       {
+        "title": "Beta notice + bug reporting",
+        "items": [
+          "The site is now marked as in beta — the homepage shows an alert noting that results are provided as-is and may contain errors or inaccuracies, and the nav logo carries a small Beta badge.",
+          "Added a footer contact: found a bug? Email myles@hcg.org.nz."
+        ]
+      },
+      {
         "title": "Login button now shows on every page",
         "items": [
           "Fixed a bug where the Login button (and mobile menu's Login link) only appeared on the upload page — the auth-configured check was never run on other pages. It now appears in the nav across the site, including the homepage for signed-out visitors."
