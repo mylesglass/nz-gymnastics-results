@@ -3,7 +3,13 @@
     "date": "3 Aug 2026",
     "entries": [
       {
-        "title": "Beta notice + bug reporting",
+        "title": "Admin pages redirect signed-out visitors to the homepage",
+        "items": [
+          "Visiting /admin or /admin/users without being logged in now redirects to the homepage instead of showing an error-filled page. The redirect waits until the auth check resolves, so the admin UI never flashes."
+        ]
+      },
+      {
+        "title": "Login button now shows on every page",
         "items": [
           "The site is now marked as in beta — the homepage shows an alert noting that results are provided as-is and may contain errors or inaccuracies, and the nav logo carries a small Beta badge.",
           "Added a footer contact: found a bug? Email myles@hcg.org.nz."

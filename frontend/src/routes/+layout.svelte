@@ -21,6 +21,7 @@
   let theme = $state("dark");
   let user = $state<{ username: string; role: string; permissions: string[] } | null>(null);
   let authCfg = $state(false);
+  let authResolved = $state(false);
   let currentPath = $derived($page.url.pathname);
   let selYear = $state<string | null>(null);
   let years = $state<string[]>([]);
@@ -29,6 +30,11 @@
   let canWellington = $derived(hasPermission(user, PERMISSIONS.wellington));
   let canRankings = $derived(canNational || canWellington);
 
+  let isProtectedRoute = $derived(currentPath.startsWith("/admin"));
+  let renderChildren = $derived(
+    !isProtectedRoute || (authResolved && (!authCfg || user !== null))
+  );
+
   onMount(() => {
     theme = document.documentElement.dataset.theme || "dark";
     const unsub1 = currentUser.subscribe((v) => (user = v));
@@ -36,8 +42,13 @@
     const unsub3 = selectedYear.subscribe((v) => (selYear = v));
     const unsub4 = yearOptions.subscribe((v) => (years = v));
     checkAuthStatus()
-      .then((s) => authConfigured.set(s.configured))
-      .catch(() => {});
+      .then((s) => {
+        authConfigured.set(s.configured);
+        authResolved = true;
+      })
+      .catch(() => {
+        authResolved = true;
+      });
     if (user) {
       me()
         .then((u) => setPermissions(u.permissions))
@@ -83,6 +94,12 @@
       closeDrawer();
     }
   }
+
+  $effect(() => {
+    if (isProtectedRoute && authResolved && authCfg && !user) {
+      goto("/");
+    }
+  });
 </script>
 
 <div class="drawer">
@@ -245,7 +262,9 @@
     </nav>
 
     <main id="main" class="mx-auto grow shrink-0 basis-auto w-full max-w-full px-4 pt-6">
-      {@render children()}
+      {#if renderChildren}
+        {@render children()}
+      {/if}
     </main>
 
     <footer class="flex-none bg-base-200 text-base-content px-8 py-10 mt-8">
