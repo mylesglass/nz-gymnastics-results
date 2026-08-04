@@ -9,14 +9,6 @@
         ]
       },
       {
-        "title": "Activity Log for admins",
-        "items": [
-          "Admins can now see which pages logged-in users visit and which API requests they make, from a new Activity Log page (Admin → Activity).",
-          "The log records the user, timestamp, page or endpoint, HTTP method, status code, and response time. No IP addresses or user-agent strings are stored.",
-          "Filters by username and by type (page views vs API requests), auto-refreshes while open, and can be cleared (or cleared for a single user)."
-        ]
-      },
-      {
         "title": "Wellington apparatus specialists: mark needed twice at different competitions",
         "items": [
           "STEP 8–10 apparatus specialists now need to reach the qualifying mark (11.000) twice at different competitions on the same apparatus, instead of once on two different apparatus.",
