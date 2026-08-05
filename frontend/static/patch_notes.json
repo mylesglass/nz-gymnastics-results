@@ -3,6 +3,12 @@
     "date": "6 Aug 2026",
     "entries": [
       {
+        "title": "National Rankings: filter by club or region",
+        "items": [
+          "The Club and Region column headers now have a funnel icon that opens a filter — pick a club or a region (or both) to narrow the table instantly. Exports include the filtered rows, and the filter clears itself when you change year, step or discipline."
+        ]
+      },
+      {
         "title": "National Rankings: STEP 1–4 qualifying indicator",
         "items": [
           "STEP 1–4 now show a 'Q' column on the right of the table — a check means the gymnast has met the Gymnastics NZ qualifying score of 52.000 twice in the season (two different competitions), a dash means they haven't. Hovering the Q header shows what it means."
