@@ -60,11 +60,11 @@
       : importFromUrl(source.url, allowUnknown, uploadClub || undefined);
   }
 
-  async function handleSources(sources: UploadSource[]) {
+  async function handleSources(sources: UploadSource[], reset = true) {
     if (sources.length === 0) return;
 
     uploading = true;
-    uploads = [];
+    if (reset) uploads = [];
 
     for (let i = 0; i < sources.length; i++) {
       const source = sources[i];
@@ -188,7 +188,7 @@
       uploading = false;
     }
     if (rest.length > 0) {
-      await handleSources(rest);
+      await handleSources(rest, false);
     }
   }
 
@@ -220,7 +220,7 @@
       uploading = false;
     }
     if (rest.length > 0) {
-      await handleSources(rest);
+      await handleSources(rest, false);
     }
   }
 

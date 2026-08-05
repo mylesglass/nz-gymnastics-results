@@ -3,6 +3,13 @@
     "date": "6 Aug 2026",
     "entries": [
       {
+        "title": "Bulk upload: club-dialog events no longer disappear",
+        "items": [
+          "When importing multiple Scoreholder links and resolving unknown clubs with Save & Retry (or Keep all original), the imported event now stays visible in the upload list — previously it, and the rest of the batch's results, vanished from the list after the dialog, making it look like the event was never added.",
+          "Retry failures now also show as error cards instead of being silently hidden."
+        ]
+      },
+      {
         "title": "National Rankings: filter by club or region",
         "items": [
           "The Club and Region column headers now have a funnel icon that opens a filter — pick a club or a region (or both) to narrow the table instantly. Exports include the filtered rows, and the filter clears itself when you change year, step or discipline."
