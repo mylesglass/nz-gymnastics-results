@@ -60,6 +60,7 @@ class EventResponse(BaseModel):
     ids_corrected: int = 0
     names_unified: int = 0
     conflicts: list[ConflictItem] = []
+    host_club: str | None = None
 
 
 class EventListItem(BaseModel):
@@ -71,6 +72,7 @@ class EventListItem(BaseModel):
     year: int | None = None
     gymnast_count: int
     is_national: bool = False
+    host_club: str | None = None
 
 
 class ResultsResponse(BaseModel):
@@ -82,6 +84,7 @@ class ResultsResponse(BaseModel):
 class EventUpdate(BaseModel):
     name: str | None = None
     is_national: bool | None = None
+    host_club: str | None = None
 
 
 class StatsResponse(BaseModel):
@@ -96,6 +99,11 @@ class ClubItem(BaseModel):
     gymnast_count: int
     region: str | None
     is_region: bool = False
+
+
+class KnownClubItem(BaseModel):
+    name: str
+    region: str
 
 
 class GymnastItem(BaseModel):
@@ -115,6 +123,7 @@ class UploadValidationResponse(BaseModel):
 class ImportUrlRequest(BaseModel):
     url: str
     allow_unknown: bool = False
+    host_club: str | None = None
 
 
 class ConflictItem(BaseModel):
@@ -140,6 +149,7 @@ class RankingRow(BaseModel):
     scores: list[float]
     competitions: list[str]
     total: float
+    reached_mark: bool = False
 
 
 class RankingsResponse(BaseModel):

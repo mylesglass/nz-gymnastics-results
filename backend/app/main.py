@@ -51,6 +51,7 @@ from app.schemas import (
     GymnastItem,
     ImportUrlRequest,
     IntentToggle,
+    KnownClubItem,
     LoginRequest,
     MergeNamesRequest,
     RankingsResponse,
@@ -70,7 +71,7 @@ from app.schemas import (
     WellingtonRankingRow,
     WellingtonRankingResponse,
 )
-from app.transformer import _find_region, _use_vault_average, export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict, pivot_to_wide_dict_multi
+from app.transformer import _find_region, _guess_host_club, _use_vault_average, export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict, pivot_to_wide_dict_multi
 from app.wellington_ranking import compute_wellington_rankings
 
 
@@ -221,6 +222,29 @@ def list_clubs(response: Response):
     response.headers.update(cache_headers())
     data = cached(("clubs",), lambda: _compute_clubs(), ttl=300)
     return data
+
+
+@app.get("/api/clubs/known", response_model=list[KnownClubItem])
+def list_known_clubs(response: Response):
+    """Return the canonical club list (with regions) from clubs_and_regions.json.
+
+    Used by the host-club picker on the upload and events pages.
+    """
+    response.headers.update(cache_headers())
+    data = cached(("clubs-known",), lambda: _compute_known_clubs(), ttl=300)
+    return data
+
+
+def _compute_known_clubs() -> list[KnownClubItem]:
+    club_data_path = Path(__file__).resolve().parent.parent / "clubs_and_regions.json"
+    with open(club_data_path) as f:
+        club_data = json.load(f)
+    items: list[KnownClubItem] = []
+    for region_name, clubs in club_data.get("regions", {}).items():
+        for c in clubs:
+            items.append(KnownClubItem(name=c["name"], region=region_name))
+    items.sort(key=lambda x: (x.region, x.name))
+    return items
 
 
 def _compute_clubs() -> list[ClubItem]:
@@ -573,19 +597,78 @@ def list_ranking_steps(year: int, discipline: str, _auth=Depends(require_permiss
         session.close()
 
 
-_QUALIFIER_THRESHOLDS = {
-    "STEP 5": 52.0,
-    "STEP 6": 52.0,
-    "STEP 7": 43.0,
-    "STEP 8": 43.0,
+# Gymnastics NZ qualifying marks for the national rankings qualifier filter.
+# ``count`` marks at or above ``mark`` are required, each from a distinct
+# competition (per-event marks are distinct by construction). ``away`` rules
+# additionally need one qualifying mark from an event whose host club's region
+# differs from the athlete's home province (region of their club).
+_QUALIFIER_CONFIG: dict[str, dict] = {
+    "STEP 5": {"mark": 50.0, "count": 2, "away": True},
+    "STEP 6": {"mark": 50.0, "count": 2, "away": True},
+    "STEP 7": {"mark": 43.0, "count": 2},
+    "STEP 8": {"mark": 43.0, "count": 2},
+    "STEP 9": {"mark": 43.0, "count": 2},
+    "STEP 10": {"mark": 43.0, "count": 2},
+    "Youth International": {"mark": 42.5, "count": 1},
+    "Junior International": {"mark": 43.0, "count": 1},
+    "Senior International": {"mark": 45.0, "count": 1},
+    "Level 7": {"mark": 63.0, "count": 1},
+    "Level 8": {"mark": 63.0, "count": 1},
+    "Level 9": {"mark": 63.0, "count": 1},
+    "U18": {"mark": 63.0, "count": 1},
+    "Senior Open": {"mark": 63.0, "count": 1},
 }
 
 
-def _is_qualifier(data: dict, step: str) -> bool:
-    threshold = _QUALIFIER_THRESHOLDS.get(step)
-    if threshold is None:
+# Number of marks used for the national ranking per step. STEP 5/6 rank on the
+# AVERAGE of their top 3 competition scores; all other steps use the top 2.
+_RANKING_MARKS: dict[str, int] = {
+    "STEP 5": 3,
+    "STEP 6": 3,
+}
+
+# Display-only season-mark indicator for low WAG steps: a ✓ is shown when the
+# gymnast reached ``mark`` on ``count`` distinct competitions that season.
+# Kept separate from ``_QUALIFIER_CONFIG`` so it never filters the ranking.
+_MARK_INDICATOR: dict[str, dict] = {
+    "STEP 1": {"mark": 52.0, "count": 2},
+    "STEP 2": {"mark": 52.0, "count": 2},
+    "STEP 3": {"mark": 52.0, "count": 2},
+    "STEP 4": {"mark": 52.0, "count": 2},
+}
+
+
+def _reached_mark_twice(all_events: list[dict], step: str) -> bool:
+    """Whether a gymnast reached the season-mark threshold ``count`` times.
+
+    Each entry in ``all_events`` is a distinct competition, so reaching the
+    mark on two entries means two different competitions.
+    """
+    cfg = _MARK_INDICATOR.get(step)
+    if cfg is None:
+        return False
+    qualifying = [e for e in all_events if e["score"] >= cfg["mark"]]
+    return len(qualifying) >= cfg["count"]
+
+
+def _is_qualifier(all_events: list[dict], club: str, step: str) -> bool:
+    """Check the GNZ qualifying-mark rules against all per-competition marks."""
+    cfg = _QUALIFIER_CONFIG.get(step)
+    if cfg is None:
         return True
-    return any(s >= threshold for s in data["scores"])
+    qualifying = [e for e in all_events if e["score"] >= cfg["mark"]]
+    if len(qualifying) < cfg["count"]:
+        return False
+    if cfg.get("away"):
+        home = _find_region(club or "")
+        if not home:
+            return False
+        for e in qualifying:
+            host_region = _find_region(e["host_club"] or "")
+            if host_region and host_region != home:
+                return True
+        return False
+    return True
 
 
 @app.get("/api/rankings", response_model=RankingsResponse)
@@ -621,7 +704,9 @@ def get_rankings(
                 LongScore.pass_final_score,
                 LongScore.aa_score,
                 LongScore.round_type,
+                Event.host_club,
             )
+            .join(Event, LongScore.event_id == Event.id)
             .filter(
                 LongScore.event_id.in_(event_ids),
                 LongScore.level_category == step,
@@ -639,9 +724,11 @@ def get_rankings(
             key = (r.gymnast_name, r.gnz_id, r.club_name, r.event_id, r.event_name, r.round_type)
             event_groups[key].append(r)
 
-        # Compute a single competition score per (gymnast, event, round_type)
-        # then pick top 2 competitions per gymnast (same as before)
-        comp_scores: dict[str, list[tuple[float, str, str, str]]] = defaultdict(list)
+        # Compute a single competition score per (gymnast, event, round_type),
+        # then collapse to ONE mark per (gymnast, event) so the top-2 total
+        # never uses two marks from the same competition (e.g. the two days of
+        # a two-day meet).
+        per_event: dict[tuple, dict] = {}
         for (name, gnz_id, club, eid, ename, rt), scores in event_groups.items():
             aa_values = [s.aa_score for s in scores if s.aa_score is not None]
             if aa_values:
@@ -661,43 +748,60 @@ def get_rankings(
                     else:
                         comp_score += sum(app_scores)
 
-            comp_scores[name].append((comp_score, ename, gnz_id or "", club or ""))
+            key2 = (name, eid)
+            prev = per_event.get(key2)
+            if prev is None or comp_score > prev["score"]:
+                per_event[key2] = {
+                    "score": comp_score,
+                    "event_name": ename,
+                    "gnz_id": gnz_id or "",
+                    "club": club or "",
+                    "host_club": scores[0].host_club or "",
+                }
 
-        # Build gymnast_data: aggregate competitions per gymnast,
-        # take top 2 by score, keep the best gnz_id and club per gymnast
+        # Build gymnast_data: aggregate competitions per gymnast, keep the best
+        # gnz_id and club, and retain ALL per-event marks for the qualifier check.
+        by_name: dict[str, list[dict]] = defaultdict(list)
+        for (name, _eid), entry in per_event.items():
+            by_name[name].append(entry)
+
         gymnast_data: dict[str, dict] = {}
-        for name, entries in comp_scores.items():
-            paired = sorted(entries, key=lambda x: -x[0])
-            top_two = paired[:2]
-            best_gnz_id = next((e[2] for e in paired if e[2]), "")
-            best_club = next((e[3] for e in paired if e[3]), "")
+        for name, entries in by_name.items():
+            paired = sorted(entries, key=lambda x: -x["score"])
+            best_gnz_id = next((e["gnz_id"] for e in paired if e["gnz_id"]), "")
+            best_club = next((e["club"] for e in paired if e["club"]), "")
             gymnast_data[name] = {
                 "name": name,
                 "gnz_id": best_gnz_id,
                 "club": best_club,
-                "scores": [s[0] for s in top_two],
-                "competitions": [s[1] for s in top_two],
+                "all_events": paired,
+                "scores": [e["score"] for e in paired[:2]],
+                "competitions": [e["event_name"] for e in paired[:2]],
             }
 
-        # Qualifier filter: check all per-competition max scores against threshold
+        # Qualifier filter: check the GNZ qualifying-mark rules against all
+        # per-competition marks (each already a distinct competition).
         if qualifier:
             gymnast_data = {
                 k: v for k, v in gymnast_data.items()
-                if _is_qualifier(v, step)
+                if _is_qualifier(v["all_events"], v["club"], step)
             }
+
+        mark_count = _RANKING_MARKS.get(step, 2)
+        rank_by_average = step in _RANKING_MARKS
 
         ranking_list = []
         for data in gymnast_data.values():
-            scores = data["scores"]
-            comps = data["competitions"]
-            paired = sorted(zip(scores, comps), key=lambda x: -x[0])
-            top_two = paired[:2]
-            data["scores"] = [s for s, _ in top_two]
-            data["competitions"] = [c for _, c in top_two]
+            top = data["all_events"][:mark_count]
+            data["scores"] = [s["score"] for s in top]
+            data["competitions"] = [s["event_name"] for s in top]
             data["total"] = sum(data["scores"])
+            data["average"] = data["total"] / len(data["scores"]) if data["scores"] else 0.0
+            data["reached_mark"] = _reached_mark_twice(data["all_events"], step)
             ranking_list.append(data)
 
-        ranking_list.sort(key=lambda x: -x["total"])
+        rank_key = "average" if rank_by_average else "total"
+        ranking_list.sort(key=lambda x: -x[rank_key])
 
         # Quota mode: cap each region at 4 for the first pass, then fill remaining
         if quota:
@@ -721,17 +825,18 @@ def get_rankings(
                 entry["region"] = _find_region(entry["club"] or "")
 
         rank = 1
-        prev_total = None
+        prev_val = None
         for i, entry in enumerate(ranking_list):
-            if prev_total is not None and entry["total"] < prev_total:
+            val = entry[rank_key]
+            if prev_val is not None and val < prev_val:
                 rank = i + 1
             entry["rank"] = rank
-            prev_total = entry["total"]
+            prev_val = val
 
         for i, entry in enumerate(ranking_list):
-            if i > 0 and entry["total"] == ranking_list[i - 1]["total"]:
+            if i > 0 and entry[rank_key] == ranking_list[i - 1][rank_key]:
                 entry["rank_text"] = f"T{entry['rank']}"
-            elif i < len(ranking_list) - 1 and entry["total"] == ranking_list[i + 1]["total"]:
+            elif i < len(ranking_list) - 1 and entry[rank_key] == ranking_list[i + 1][rank_key]:
                 entry["rank_text"] = f"T{entry['rank']}"
             else:
                 entry["rank_text"] = str(entry["rank"])
@@ -746,6 +851,7 @@ def get_rankings(
                 scores=r["scores"],
                 competitions=r["competitions"],
                 total=round(r["total"], 3),
+                reached_mark=r.get("reached_mark", False),
             )
             for r in ranking_list
         ]
@@ -1352,7 +1458,7 @@ def edit_gymnast_scores(
 # ---------------------------------------------------------------------------
 
 @app.post("/api/upload", response_model=EventResponse)
-def upload_file(file: UploadFile = File(...), allow_unknown: str = None, _auth=Depends(require_role("admin"))):
+def upload_file(file: UploadFile = File(...), allow_unknown: str = None, host_club: str = None, _auth=Depends(require_role("admin"))):
     if not file.filename or not file.filename.endswith(".json"):
         raise HTTPException(400, "Only .json files are accepted")
 
@@ -1362,10 +1468,27 @@ def upload_file(file: UploadFile = File(...), allow_unknown: str = None, _auth=D
     except json.JSONDecodeError as e:
         raise HTTPException(400, f"Invalid JSON: {e}")
 
-    return _ingest_event(data, allow_unknown)
+    return _ingest_event(data, allow_unknown, host_club)
 
 
-def _ingest_event(data: dict, allow_unknown: str | None) -> EventResponse:
+def _resolve_host_club(event_name: str, host_club: str | None = None) -> str | None:
+    """Pick an event's host club: explicit value wins, else a name-based guess.
+
+    National events default to ``"Gymnastics NZ"`` (they aren't hosted by a
+    member club). Returns ``None`` when nothing resolves.
+    """
+    explicit = (host_club or "").strip()
+    if explicit:
+        return explicit
+    guess = _guess_host_club(event_name)
+    if guess:
+        return guess
+    if "national" in event_name.lower():
+        return "Gymnastics NZ"
+    return None
+
+
+def _ingest_event(data: dict, allow_unknown: str | None, host_club: str | None = None) -> EventResponse:
     errors = validate_upload_structure(data)
     if errors:
         raise HTTPException(422, {"message": "Invalid upload structure", "errors": errors})
@@ -1399,6 +1522,7 @@ def _ingest_event(data: dict, allow_unknown: str | None) -> EventResponse:
             end_date=event_info["end_date"],
             discipline=event_info["discipline"],
             year=event_info.get("year"),
+            host_club=_resolve_host_club(event_info["name"], host_club),
         )
         session.add(event)
         session.flush()
@@ -1464,6 +1588,7 @@ def _ingest_event(data: dict, allow_unknown: str | None) -> EventResponse:
             ids_corrected=report["ids_corrected"],
             names_unified=report["names_unified"],
             conflicts=report.get("conflicts", []),
+            host_club=event.host_club,
         )
     finally:
         session.close()
@@ -1477,7 +1602,7 @@ def import_from_url(req: ImportUrlRequest, _auth=Depends(require_role("admin")))
         data = fetch_event_json(req.url.strip())
     except ScoreholderFetchError as e:
         raise HTTPException(502, str(e))
-    return _ingest_event(data, "1" if req.allow_unknown else None)
+    return _ingest_event(data, "1" if req.allow_unknown else None, req.host_club)
 
 
 # ---------------------------------------------------------------------------
@@ -1509,6 +1634,7 @@ def list_events(response: Response):
                 year=ev.year,
                 gymnast_count=gymnast_count or 0,
                 is_national=bool(ev.is_national),
+                host_club=ev.host_club,
             )
             for ev, gymnast_count in results
         ]
@@ -1715,6 +1841,8 @@ def update_event(event_id: int, body: EventUpdate, _auth=Depends(require_role("a
             )
         if body.is_national is not None:
             event.is_national = body.is_national
+        if body.host_club is not None:
+            event.host_club = body.host_club or None
         session.commit()
         invalidate(event_id)
         gymnast_count = (
@@ -1731,6 +1859,7 @@ def update_event(event_id: int, body: EventUpdate, _auth=Depends(require_role("a
             year=event.year,
             gymnast_count=gymnast_count,
             is_national=bool(event.is_national),
+            host_club=event.host_club,
         )
     finally:
         session.close()

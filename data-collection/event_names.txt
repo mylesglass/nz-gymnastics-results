@@ -1,0 +1,199 @@
+2023	2023 ARGOS Senior Competition	ARGOS Gymnastics Club
+2023	2023 Auckland Manukau Championships	
+2023	2023 Central Champs	Central Gymnastics Club
+2023	2023 New Zealand Gymnastics Championships - Artistic	Gymnastics NZ
+2023	2023 Tri Star Elementary and Novice Competition	Tri Star Gymnastics
+2023	2023 Tri Star Senior Champs	Tri Star Gymnastics
+2023	Affinity Gymnastics Academy Junior and Senior Challenge 2023	Affinity Gymnastics Academy
+2023	Balclutha Gymnastics Club Competition	Balcutha Gymnastics Club
+2023	CSG Classic 2023	
+2023	Canterbury Intermediate and Senior Artistic Championships  2023	
+2023	Canterbury Junior Championships	
+2023	Capital Juniors 2023	Capital Gymnastics
+2023	College Street Junior Competition	College Street Gymnastics Club
+2023	DGA Interclub 2023	
+2023	Franklin Gymsports Elementary Competition 2023	Franklin Gymsports
+2023	Gymnastics Waitara - Junior Opens 2023	Gymnastics Waitara
+2023	Gymnastics Waitara - Senior Opens 2023	Gymnastics Waitara
+2023	HBPB Senior Championships	
+2023	HCG Elementary Competition 2023	
+2023	Hamilton City Senior Artistic Competition 2023	Hamilton City Gymnastics
+2023	Hastings Gymnastics Junior Competition 2023	Hastings Gymnastics Club
+2023	Hutt Valley Elementary Competition	Hutt Valley Gymnastics
+2023	Kapiti Juniors 2023	Kapiti Gymnastics
+2023	Kerikeri Comp - July 2023	
+2023	Kerrin Bishop Memorial	
+2023	Kings Birthday Juniors	
+2023	Levin Gymnastics Club Elementary Competition	Levin Gymnastics Club
+2023	MAG Wellington Champs	
+2023	MIGS Elementary Artistic 2023 Competition	Mid Island Gym Sports
+2023	MIGS Junior Senior Artistic 2023 Competition	Mid Island Gym Sports
+2023	Manawatu GymSports Junior Opens 2023	Manawatu Gymsports
+2023	Manawatu Senior Opens 2023	Manawatu Gymsports
+2023	Midlands Elementary Championships	
+2023	Midlands Seniors 2023	
+2023	Northland Champs 2023	
+2023	Omni Junior Ribbon Competition 2023	OMNI Gymnastic Centre
+2023	Ribbon Day	
+2023	Rimutaka Juniors	Rimutaka Gymsports
+2023	South Island Gymnastics Championships 2023	
+2023	Southern Champs 2023	
+2023	Top of the South Gymnastics Competition	
+2023	Twisters Elementary Competition 2023	Twisters Tawa Gymnastics Club
+2023	Upper South and Canterbury Regional Championships	
+2023	WAG Wellington Champs	
+2023	WAGS 2023 Junior Competition	Whangarei Academy of Gymnastics
+2023	Waitakere Junior Competition	Waitakere Gymnastics Club
+2023	Whanganui Opens	Whanganui Boys and Girls Gym Club
+2023	Whangarei Club Competition	Whangarei Academy of Gymnastics
+2024	2024 Auckland Manukau Champs	
+2024	2024 Central Champs	Central Gymnastics Club
+2024	2024 Kerrin Bishop Memorial	
+2024	2024 NHG Championships	NHG Gymnastics
+2024	2024 Oceania Continental Championships	
+2024	2024 Te Wero Whakataetae	Te Wero Gymnastics
+2024	2024 Tri Star Elementary & Novice Comp	Tri Star Gymnastics
+2024	2024 Tri Star Senior Champs	Tri Star Gymnastics
+2024	2024 WAG International Trial	
+2024	2024 XP New Zealand Gymnastics Championships - Artistic	Gymnastics NZ
+2024	ARGOS Elementary Competition	ARGOS Gymnastics Club
+2024	Affinity Gymnastics Academy Junior and Senior Challenge 2024	Affinity Gymnastics Academy
+2024	Aspiring Gymsports Qualifier '24	Aspiring Gymsports
+2024	Balclutha Gymnastics Competition 2024	
+2024	CSG Classic 2024	
+2024	Canterbury Elementary Championships	
+2024	Canterbury Intermediate & Senior Artistic Championships	
+2024	Capital Juniors 2024	Capital Gymnastics
+2024	DGA Invitational 2024	
+2024	Franklin Elementary 2024	Franklin Gymsports
+2024	Gisborne Junior Gymnastics Competition	Gisborne Gymnastics Club
+2024	Gymnastics Waitara - Junior Opens 2024	Gymnastics Waitara
+2024	Gymnastics Waitara - Senior Opens 2024	Gymnastics Waitara
+2024	HBPB Junior & Senior  Championships	
+2024	HBPB Junior Competition 2024 - MAG	
+2024	HBPB Junior Competition 2024 - WAG	
+2024	HCG Elementary Competition 2024	
+2024	HCG Junior+Senior Competition 2024	
+2024	Hastings Gymnastics Junior Competition 2024	Hastings Gymnastics Club
+2024	Huntly Elementary Competition 2024	Huntly Gymnastics Club
+2024	IGC Junior Competition	
+2024	Kapiti Juniors 2024	Kapiti Gymnastics
+2024	Kings Birthday Invitational 2024	
+2024	Levin Elemental Competition 2024	Levin Gymnastics Club
+2024	MAG Wellington Champs 2024	
+2024	MIGS Elementary Competition 2024	Mid Island Gym Sports
+2024	MIGS Junior Senior 2024 Artistic Competition	Mid Island Gym Sports
+2024	Manawatu GymSports MAG Competition 2024	Manawatu Gymsports
+2024	Manawatu GymSports WAG Competition 2024	Manawatu Gymsports
+2024	Marlborough Champs	
+2024	Midlands Elementary 2024	
+2024	Midlands Senior Championship	
+2024	Mount Tauhara Apparatus Finals 2024	Mt Tauhara Gymnastics Club
+2024	Northland Championship 2024	
+2024	Omni Junior Ribbon Competition 2024	OMNI Gymnastic Centre
+2024	Rimutaka Juniors 2024	Rimutaka Gymsports
+2024	South Island Gymnastics Championships 2024	
+2024	Southern Champs	
+2024	Twisters Elementary Competition 2024	Twisters Tawa Gymnastics Club
+2024	WAGS  Club Competition	Whangarei Academy of Gymnastics
+2024	WAGS Junior Ribbon Competition	Whangarei Academy of Gymnastics
+2025	2025 Auckland Manukau Champs	
+2025	2025 Kapiti Juniors	Kapiti Gymnastics
+2025	2025 Kerrin Bishop Memorial	
+2025	2025 MAG Wellington Champs	
+2025	2025 NHG Championships	NHG Gymnastics
+2025	2025 Te Wero Whakataetae	Te Wero Gymnastics
+2025	2025 Tri Star Elementary and Novice Competition	Tri Star Gymnastics
+2025	2025 Tri Star Senior Champs	Tri Star Gymnastics
+2025	2025 WAG Wellington Champs	
+2025	2025 XP Gymnastics Nationals - Artistic	Gymnastics NZ
+2025	ARGOS Junior and Senior Competition	ARGOS Gymnastics Club
+2025	Affinity Gymnastics Academy Junior and Senior Challenge 2025	Affinity Gymnastics Academy
+2025	Auckland Champs	
+2025	Auckland Champs	
+2025	Auckland Champs	
+2025	Auckland Champs	
+2025	CSG CLASSIC 2025 | Brought to you by Extreme Carpet Cleaning	
+2025	Canterbury Intermediate and Senior Championships 2025	
+2025	Capital Juniors 2025	Capital Gymnastics
+2025	Central Championships	Central Gymnastics Club
+2025	Central Championships	Central Gymnastics Club
+2025	Central Championships	Central Gymnastics Club
+2025	Central Championships	Central Gymnastics Club
+2025	Central Champs 2025	Central Gymnastics Club
+2025	Christchurch Champs	
+2025	Christchurch Champs	
+2025	Christchurch Champs	
+2025	Christchurch Champs	
+2025	Counties Championships	Counties Manukau Gymnastics
+2025	DGA Invitational 2025	
+2025	Elementary Competition	
+2025	Franklin Elementary Comp 2025	Franklin Gymsports
+2025	Gymnastics Waitara - Senior Opens 2025	Gymnastics Waitara
+2025	Gymnastics Waitara Junior Opens 2025	Gymnastics Waitara
+2025	HBPB Junior & Elementary Competition	
+2025	HBPB Junior & Senior Championships	
+2025	HCG Elementary Competition 2025	
+2025	Hastings Elementary Competition 2025	Hastings Gymnastics Club
+2025	IGC Elementary + GFA Competition	
+2025	IGC Interclub	
+2025	Junior Competition	
+2025	Kaitaia Gymnastic Club Junior Competition	Kaitaia Gymnastics Club
+2025	Kings Birthday 2025	
+2025	Levin Gymnastics Club 2025 Comp July	Levin Gymnastics Club
+2025	MAG Wellington Champs	
+2025	MAG Wellington Champs	
+2025	MAG Wellington Champs	
+2025	MAG Wellington Champs	
+2025	MIGS Junior Senior Artistic Competition	Mid Island Gym Sports
+2025	MTT Apparatus Finals 2025	
+2025	Manawatu GymSports MAG 2025	Manawatu Gymsports
+2025	Manawatu GymSports WAG Opens 2025	Manawatu Gymsports
+2025	Marlborough Champs 2025	
+2025	Midlands Junior/Senior 2025	
+2025	Northland Championships 2025	
+2025	Omni Elementary Ribbon Competition 2025	OMNI Gymnastic Centre
+2025	Ribbon Day 2025	
+2025	Rimutaka Juniors 2025	Rimutaka Gymsports
+2025	South Island Gymnastics Champs 2025	
+2025	Southern Championships	
+2025	Twisters Elementary Competition 2025	Twisters Tawa Gymnastics Club
+2025	Upper South and Canterbury Regional Competition 2025	
+2025	WAGS Ribbon Competition	Whangarei Academy of Gymnastics
+2025	Wellington Champs Day 2	
+2025	Wellington Champs Day 2	
+2025	Wellington Champs Day 2	
+2025	Wellington Champs Day 2	
+2026	2026 ARGOS Elementary Competition	ARGOS Gymnastics Club
+2026	2026 Counties Championships	Counties Manukau Gymnastics
+2026	2026 Kaitaia Gymnastic Club Junior Competition	Kaitaia Gymnastics Club
+2026	2026 MAG Wellington Champs	
+2026	2026 NHG CHAMPS	NHG Gymnastics
+2026	2026 Te Wero Whakataetae	Te Wero Gymnastics
+2026	2026 Tri Star Elementary and Novice Competition	Tri Star Gymnastics
+2026	2026 Tri Star Senior Champs	Tri Star Gymnastics
+2026	2026 WAG Wellington Champs	
+2026	Affinity Gymnastics Junior and Senior Challenge 2026	Affinity Gymnastics Academy
+2026	CSG CLASSIC 2026 | Brought to you by Extreme Carpet Cleaning	
+2026	Capital Juniors 2026	Capital Gymnastics
+2026	Gisborne Gymnastics Club Junior Competition 2026	Gisborne Gymnastics Club
+2026	Gymnastics Waitara Senior Opens 2026	Gymnastics Waitara
+2026	HBPB Junior & Elementary Competition 2026	
+2026	HBPB Senior & Junior Championships 2026	
+2026	HVG Elementary Competition 2026	
+2026	Hamilton City Gymnastics Elementary 2026	Hamilton City Gymnastics
+2026	IGC Elementary Competition 2026	
+2026	IGC Interclub Competition	
+2026	King Birthday Invitational 2026	
+2026	MAG 2026 Opens	
+2026	Manawatu WAG Opens 2026	Manawatu Gymsports
+2026	Marlborough Champs 2026	
+2026	Midlands Senior Competition 2026	
+2026	Mosey Grayson Memorial Competition	
+2026	Mount Tauhara Apparatus Finals 2026	Mt Tauhara Gymnastics Club
+2026	Ribbon Day 2026	
+2026	Rimutaka Juniors 2026	Rimutaka Gymsports
+2026	Southern Junior Championships 2026	
+2026	Twisters Elementary Competition 2026	Twisters Tawa Gymnastics Club
+2026	WAGS 2026 Ribbon Comp	Whangarei Academy of Gymnastics
+2026	Waitākere Elementary Competition 2026	

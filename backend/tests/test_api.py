@@ -185,6 +185,15 @@ class TestListEvents:
         assert resp.status_code == 200
         assert resp.json() == []
 
+    def test_known_clubs(self):
+        resp = client.get("/api/clubs/known")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) > 0
+        assert all({"name", "region"} <= set(item) for item in data)
+        names = {item["name"] for item in data}
+        assert "Capital Gymnastics" in names
+
     def test_after_upload(self):
         path = DATA_DIR / "hve-2026.json"
         if not path.exists():

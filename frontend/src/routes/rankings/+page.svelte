@@ -6,15 +6,18 @@
   import { REGION_PALETTES } from "$lib/regions";
   import ExportMenu from "$lib/ExportMenu.svelte";
 
-  const CSV_HEADERS: Record<string, string> = {
+  const SCORE_KEYS = ["score1", "comp1", "score2", "comp2", "score3", "comp3"];
+
+  const EXPORT_HEADERS: Record<string, string> = {
     rank: "Rank", name: "Name", gnz_id: "GNZ ID", club: "Club",
     region: "Region",
     score1: "Score 1", comp1: "Competition 1",
     score2: "Score 2", comp2: "Competition 2",
+    score3: "Score 3", comp3: "Competition 3",
     total: "Total", average: "Average",
   };
 
-  const EXPORT_KEYS = ["rank", "name", "gnz_id", "club", "region", "score1", "comp1", "score2", "comp2", "total", "average"];
+  const BASE_EXPORT_KEYS = ["rank", "name", "gnz_id", "club", "region"];
 
   let loading = $state(true);
   let error = $state("");
@@ -82,13 +85,27 @@
 
   let loadingRankings = $state(false);
 
-  let exportRows = $derived(rankings.map((r) => ({
-    rank: r.rank, name: r.name, gnz_id: r.gnz_id, club: r.club ?? "", region: r.region,
-    score1: r.scores[0]?.toFixed(3) ?? "", comp1: r.competitions[0] ?? "",
-    score2: r.scores[1]?.toFixed(3) ?? "", comp2: r.competitions[1] ?? "",
-    total: r.total.toFixed(3),
-    average: (r.total / r.scores.length).toFixed(3),
-  })));
+  let scoreCols = $derived(["STEP 5", "STEP 6"].includes(selectedStep) ? 3 : 2);
+  let exportKeys = $derived([
+    ...BASE_EXPORT_KEYS,
+    ...SCORE_KEYS.slice(0, scoreCols * 2),
+    "total",
+    "average",
+  ]);
+  let headerLabels = $derived(Object.fromEntries(exportKeys.map((k) => [k, EXPORT_HEADERS[k]])));
+
+  let exportRows = $derived(rankings.map((r) => {
+    const row: Record<string, string> = {
+      rank: r.rank, name: r.name, gnz_id: r.gnz_id, club: r.club ?? "", region: r.region,
+      total: r.total.toFixed(3),
+      average: (r.total / r.scores.length).toFixed(3),
+    };
+    for (let i = 0; i < scoreCols; i++) {
+      row[`score${i + 1}`] = r.scores[i]?.toFixed(3) ?? "";
+      row[`comp${i + 1}`] = r.competitions[i] ?? "";
+    }
+    return row;
+  }));
 
   async function loadRankings() {
     if (!year || !selectedStep) return;
@@ -108,6 +125,28 @@
   let quotaMode = $state(false);
   let qualifierMode = $state(true);
 
+  const QUALIFIER_RULES: Record<string, string> = {
+    "STEP 5": "2 marks at 50.000, one outside home province",
+    "STEP 6": "2 marks at 50.000, one outside home province",
+    "STEP 7": "2 marks at 43.000 (different competitions)",
+    "STEP 8": "2 marks at 43.000 (different competitions)",
+    "STEP 9": "2 marks at 43.000 (different competitions)",
+    "STEP 10": "2 marks at 43.000 (different competitions)",
+    "Youth International": "1 mark at 42.500",
+    "Junior International": "1 mark at 43.000",
+    "Senior International": "1 mark at 45.000",
+    "Level 7": "1 mark at 63.000",
+    "Level 8": "1 mark at 63.000",
+    "Level 9": "1 mark at 63.000",
+    "U18": "1 mark at 63.000",
+    "Senior Open": "1 mark at 63.000",
+  };
+
+  let qualifierHint = $derived(QUALIFIER_RULES[selectedStep] ?? "");
+
+  let showRankingToggles = $derived(!["STEP 1", "STEP 2", "STEP 3", "STEP 4", "Level 1", "Level 2", "Level 3"].includes(selectedStep));
+  let showMarkColumn = $derived(["STEP 1", "STEP 2", "STEP 3", "STEP 4"].includes(selectedStep));
+
   function switchDisc(d: string) {
     discipline = d;
     if (year) loadSteps();
@@ -126,7 +165,7 @@
 
 <div class="max-w-6xl mx-auto">
   <h1 class="text-3xl font-bold mb-2">National Rankings</h1>
-  <p class="text-base-content/70 mb-6">Season rankings — top 2 All Around scores per gymnast (excludes Nationals).</p>
+  <p class="text-base-content/70 mb-6">Season rankings — top {scoreCols} All Around scores per gymnast (excludes Nationals).</p>
 
   <div class="flex flex-wrap items-center gap-3 mb-6">
     <div class="tabs tabs-box" aria-label="Discipline">
@@ -142,17 +181,75 @@
         {/each}
       </select>
 
-      <label class="label cursor-pointer gap-2">
-        <input type="checkbox" class="checkbox checkbox-sm" bind:checked={quotaMode} />
-        <span class="label-text text-sm">Enable Region Quotas</span>
-      </label>
-      <label class="label cursor-pointer gap-2">
-        <input type="checkbox" class="checkbox checkbox-sm" bind:checked={qualifierMode} />
-        <span class="label-text text-sm">Exclude non-qualifiers</span>
-      </label>
+      {#if showRankingToggles}
+      <div class="flex items-center gap-1.5">
+        <label class="label cursor-pointer gap-2">
+          <input type="checkbox" class="checkbox checkbox-sm" bind:checked={quotaMode} />
+          <span class="label-text text-sm">Enable Region Quotas</span>
+        </label>
+        <span class="dropdown dropdown-hover dropdown-top">
+          <button
+            type="button"
+            class="cursor-help"
+            aria-label="About region quotas"
+            aria-describedby="quota-tooltip"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              class="size-4 text-base-content/60"
+              aria-hidden="true"
+            >
+              <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5A.75.75 0 0 0 12 9Z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <span
+            id="quota-tooltip"
+            role="tooltip"
+            class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs whitespace-nowrap"
+          >
+            Caps each region at 4 gymnasts in the initial ranking, then fills the remaining places with the next best gymnasts from any region.
+          </span>
+        </span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <label class="label cursor-pointer gap-2">
+          <input type="checkbox" class="checkbox checkbox-sm" bind:checked={qualifierMode} />
+          <span class="label-text text-sm">Exclude non-qualifiers</span>
+        </label>
+        {#if qualifierHint}
+          <span class="dropdown dropdown-hover dropdown-top">
+            <button
+              type="button"
+              class="cursor-help"
+              aria-label="About the qualifying marks"
+              aria-describedby="qualifier-tooltip"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                class="size-4 text-base-content/60"
+                aria-hidden="true"
+              >
+                <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5A.75.75 0 0 0 12 9Z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <span
+              id="qualifier-tooltip"
+              role="tooltip"
+              class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs whitespace-nowrap"
+            >
+              Qualifies: {qualifierHint}
+            </span>
+          </span>
+        {/if}
+      </div>
+      {/if}
 
       {#if rankings.length > 0}
-        <ExportMenu columns={EXPORT_KEYS} rows={exportRows} headerLabels={CSV_HEADERS} title={`National Rankings ${year} ${discipline} ${selectedStep}`} filename={`National Rankings ${year} ${discipline} ${selectedStep}`} />
+        <ExportMenu columns={exportKeys} rows={exportRows} headerLabels={headerLabels} title={`National Rankings ${year} ${discipline} ${selectedStep}`} filename={`National Rankings ${year} ${discipline} ${selectedStep}`} />
       {/if}
     {:else if year}
       <span class="text-sm text-base-content/70">No STEP levels available</span>
@@ -189,10 +286,40 @@
             <th scope="col">GNZ ID</th>
             <th scope="col">Club</th>
             <th scope="col">Region</th>
-            <th scope="col" class="text-right">Score 1</th>
-            <th scope="col" class="text-right">Score 2</th>
-            <th scope="col" class="text-right">Total</th>
+            {#each Array(scoreCols) as _, i}
+              <th scope="col" class="text-right">Score {i + 1}</th>
+            {/each}
             <th scope="col" class="text-right">Average</th>
+            {#if showMarkColumn}
+              <th scope="col" class="text-center">
+                <span class="dropdown dropdown-hover dropdown-end">
+                  <button
+                    type="button"
+                    class="cursor-help inline-flex items-center gap-0.5"
+                    aria-label="About the Q column (Gymnastics NZ qualifying mark)"
+                    aria-describedby="q-tooltip"
+                  >
+                    Q
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      class="size-3.5 text-base-content/60"
+                      aria-hidden="true"
+                    >
+                      <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5A.75.75 0 0 0 12 9Z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
+                  <span
+                    id="q-tooltip"
+                    role="tooltip"
+                    class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs whitespace-nowrap"
+                  >
+                    Has met Gymnastics NZ qualifying score of 52.000 twice
+                  </span>
+                </span>
+              </th>
+            {/if}
           </tr>
         </thead>
         <tbody>
@@ -209,36 +336,63 @@
                   <RegionBadge region={r.region} colors={REGION_PALETTES[r.region] ?? []} />
                 {/if}
               </td>
-              {#each r.scores as score, i}
-                <td class="text-right">
-                  <div class="dropdown dropdown-hover dropdown-top">
-                    <button
-                      type="button"
-                      class="cursor-pointer font-mono"
-                      aria-label={`Score ${i + 1} for ${r.name}`}
-                      aria-describedby={`rank-comp-${r.gnz_id}-${i}`}
-                    >
-                      {score.toFixed(3)}
-                    </button>
-                    <div
-                      id={`rank-comp-${r.gnz_id}-${i}`}
-                      role="tooltip"
-                      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs whitespace-nowrap"
-                    >
-                      {r.competitions[i] || "Unknown competition"}
+              {#each Array(scoreCols) as _, i}
+                {@const score = r.scores[i]}
+                {#if score != null}
+                  <td class="text-right">
+                    <div class="dropdown dropdown-hover dropdown-top dropdown-end">
+                      <button
+                        type="button"
+                        class="cursor-pointer font-mono"
+                        aria-label={`Score ${i + 1} for ${r.name}`}
+                        aria-describedby={`rank-comp-${r.gnz_id}-${i}`}
+                      >
+                        {score.toFixed(3)}
+                      </button>
+                      <div
+                        id={`rank-comp-${r.gnz_id}-${i}`}
+                        role="tooltip"
+                        class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs whitespace-nowrap"
+                      >
+                        {r.competitions[i] || "Unknown competition"}
+                      </div>
                     </div>
-                  </div>
-                </td>
+                  </td>
+                {:else}
+                  <td class="text-right text-base-content/70">—</td>
+                {/if}
               {/each}
-              {#if r.scores.length < 2}
-                <td class="text-right text-base-content/70">—</td>
+              <td class="text-right font-semibold">{(r.total / r.scores.length).toFixed(3)}</td>
+              {#if showMarkColumn}
+                <td class="text-center">
+                  {#if r.reached_mark}
+                    <span class="text-success font-bold" role="img" aria-label="Reached 52.000 twice">&#10003;</span>
+                  {:else}
+                    <span class="text-base-content/40" role="img" aria-label="Has not reached 52.000 twice">&mdash;</span>
+                  {/if}
+                </td>
               {/if}
-              <td class="text-right font-semibold">{r.total.toFixed(3)}</td>
-              <td class="text-right text-base-content/70">{(r.total / r.scores.length).toFixed(3)}</td>
             </tr>
           {/each}
         </tbody>
       </table>
     </div>
+
+    {#if qualifierMode && showRankingToggles}
+      <div class="alert alert-info mt-4" role="status">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="size-5 shrink-0"
+          aria-hidden="true"
+        >
+          <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5A.75.75 0 0 0 12 9Z" clip-rule="evenodd" />
+        </svg>
+        <div class="text-sm">
+          <span class="font-semibold">Can't find someone?</span> The <span class="font-medium">Exclude non-qualifiers</span> filter is on — gymnasts who haven't reached the {selectedStep} qualifying mark are hidden. Turn the filter off to show everyone.
+        </div>
+      </div>
+    {/if}
   {/if}
 </div>

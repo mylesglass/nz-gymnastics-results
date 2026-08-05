@@ -58,6 +58,18 @@ def init_db():
             conn.execute(
                 text("ALTER TABLE events ADD COLUMN is_national BOOLEAN DEFAULT 0")
             )
+        if "host_club" not in existing_cols:
+            conn.execute(
+                text("ALTER TABLE events ADD COLUMN host_club VARCHAR")
+            )
+        if "host_province" in existing_cols:
+            try:
+                conn.execute(
+                    text("ALTER TABLE events DROP COLUMN host_province")
+                )
+            except Exception:
+                # Older SQLite without DROP COLUMN — leave the empty column in place
+                pass
         user_cols = {
             row[1]
             for row in conn.execute(text("PRAGMA table_info(users)")).fetchall()

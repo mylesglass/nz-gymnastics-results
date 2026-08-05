@@ -19,6 +19,7 @@ export interface EventSummary {
   score_count: number;
   club_count?: number;
   is_national?: boolean;
+  host_club?: string | null;
   ids_corrected?: number;
   names_unified?: number;
   conflicts?: Array<{ name: string; previous_ids: string[]; chosen_id: string | null; rows_updated: number }>;
@@ -77,11 +78,12 @@ export async function updateUserPermissions(
   return res.json();
 }
 
-export async function uploadFile(file: File, allowUnknown = false): Promise<EventSummary> {
+export async function uploadFile(file: File, allowUnknown = false, hostClub?: string): Promise<EventSummary> {
   const form = new FormData();
   form.append("file", file);
   let url = `${API_BASE}/api/upload`;
   if (allowUnknown) url += "?allow_unknown=1";
+  if (hostClub) url += `${allowUnknown ? "&" : "?"}host_club=${encodeURIComponent(hostClub)}`;
   const res = await fetch(url, {
     method: "POST",
     body: form,
@@ -91,11 +93,11 @@ export async function uploadFile(file: File, allowUnknown = false): Promise<Even
   return res.json();
 }
 
-export async function importFromUrl(url: string, allowUnknown = false): Promise<EventSummary> {
+export async function importFromUrl(url: string, allowUnknown = false, hostClub?: string): Promise<EventSummary> {
   const res = await fetch(`${API_BASE}/api/import-url`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeaders() },
-    body: JSON.stringify({ url, allow_unknown: allowUnknown }),
+    body: JSON.stringify({ url, allow_unknown: allowUnknown, host_club: hostClub || null }),
   });
   await throwIfUploadError(res);
   return res.json();
@@ -125,7 +127,7 @@ export async function saveAliases(aliases: Record<string, string>): Promise<void
 }
 
 export async function listEvents(): Promise<EventSummary[]> {
-  const res = await fetch(`${API_BASE}/api/events`);
+  const res = await fetch(`${API_BASE}/api/events`, { cache: "no-store" });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
@@ -199,7 +201,7 @@ export async function renameEvent(
 
 export async function updateEvent(
   eventId: number,
-  data: { name?: string; is_national?: boolean }
+  data: { name?: string; is_national?: boolean; host_club?: string | null }
 ): Promise<EventSummary> {
   const res = await fetch(`${API_BASE}/api/events/${eventId}`, {
     method: "PATCH",
@@ -214,6 +216,17 @@ export async function listClubs(): Promise<
   { name: string; gymnast_count: number; region: string | null; is_region: boolean }[]
 > {
   const res = await fetch(`${API_BASE}/api/clubs`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export interface KnownClub {
+  name: string;
+  region: string;
+}
+
+export async function listKnownClubs(): Promise<KnownClub[]> {
+  const res = await fetch(`${API_BASE}/api/clubs/known`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
@@ -241,6 +254,7 @@ export interface RankingRow {
   scores: number[];
   competitions: string[];
   total: number;
+  reached_mark?: boolean;
 }
 
 export interface RankingsResponse {

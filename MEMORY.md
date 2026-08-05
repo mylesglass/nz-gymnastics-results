@@ -145,7 +145,7 @@ Core logic:
 - `/login` — Username + password form, redirects to `/`
 - `/admin` — Admin dashboard (stats, user management, unified athlete ID reconciliation card with per-instance dropdowns, Quick Fix + Apply Selected buttons)
 - `/admin/users` — User management table (create, delete, reset password)
-- `/rankings` — Rankings with discipline tabs, STEP dropdown, region quotas, qualifier filter, partial AA support
+- `/rankings` — Rankings with discipline tabs, STEP dropdown, region quotas + qualifier filter (info tooltips; hidden for STEP 1–4 / MAG Level 1–3), STEP 5/6 use the average of the top 3 marks (three score columns), STEP 1–4 show a rightmost Q column (✓ when 52.000 reached twice), Total column hidden (bolded Average), "Can't find someone?" note under the table when the qualifier filter is on, partial AA support
 - `/events` — Event list with search bar, year filter, rename/delete, Nationals trophy toggle
 - `/events/[id]` — Per-event results (thin wrapper around `WideResultsTable`)
 - `/results` — All events results (thin wrapper around `WideResultsTable`, adds Event filter column)

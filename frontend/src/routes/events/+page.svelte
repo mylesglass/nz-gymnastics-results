@@ -1,8 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { listEvents, deleteEvent, updateEvent, type EventSummary } from "$lib/api";
+  import { listEvents, deleteEvent, updateEvent, listKnownClubs, type EventSummary, type KnownClub } from "$lib/api";
   import { currentUser } from "$lib/auth";
   import { selectedYear } from "$lib/year";
+  import { REGION_PALETTES } from "$lib/regions";
+  import RegionBadge from "$lib/RegionBadge.svelte";
   import Dialog from "$lib/Dialog.svelte";
 
   let events = $state<EventSummary[]>([]);
@@ -60,9 +62,12 @@
     }
   }
 
-  let editTarget = $state<{ id: number; name: string; is_national?: boolean } | null>(null);
+  let editTarget = $state<{ id: number; name: string; is_national?: boolean; host_club?: string | null } | null>(null);
   let editName = $state("");
   let editNational = $state(false);
+  let editClub = $state("");
+  let knownClubs = $state<KnownClub[]>([]);
+  let clubRegions = $derived(new Map(knownClubs.map((c) => [c.name.toLowerCase(), c.region])));
   let editSaving = $state(false);
   let showDeleteConfirm = $state(false);
   let editDeleting = $state(false);
@@ -76,6 +81,11 @@
       loading = false;
     }
     const unsub = currentUser.subscribe((v) => (loggedIn = v?.role === "admin"));
+    try {
+      knownClubs = await listKnownClubs();
+    } catch {
+      // ignore
+    }
     return unsub;
   });
 
@@ -83,6 +93,7 @@
     editTarget = ev;
     editName = ev.name;
     editNational = ev.is_national ?? false;
+    editClub = ev.host_club ?? "";
     showDeleteConfirm = false;
   }
 
@@ -94,7 +105,11 @@
     if (!editTarget || !editName.trim()) return;
     editSaving = true;
     try {
-      const updated = await updateEvent(editTarget.id, { name: editName.trim(), is_national: editNational });
+      const updated = await updateEvent(editTarget.id, {
+        name: editName.trim(),
+        is_national: editNational,
+        host_club: editClub || null,
+      });
       events = events.map((e) => (e.id === updated.id ? updated : e));
       editTarget = null;
     } catch {
@@ -186,6 +201,12 @@
                 {#if sortCol === "gymnast_count"}<span class="ml-1 text-xs" aria-hidden="true">{sortAsc ? "▲" : "▼"}</span>{/if}
               </button>
             </th>
+            <th scope="col" aria-sort={sortCol === "host_club" ? (sortAsc ? "ascending" : "descending") : "none"}>
+              <button type="button" class="cursor-pointer hover:text-primary uppercase" onclick={() => toggleSort("host_club")}>
+                Host Club
+                {#if sortCol === "host_club"}<span class="ml-1 text-xs" aria-hidden="true">{sortAsc ? "▲" : "▼"}</span>{/if}
+              </button>
+            </th>
             {#if loggedIn}
               <th scope="col" class="w-20"></th>
             {/if}
@@ -217,6 +238,18 @@
                 {/if}
               </td>
               <td class="text-right">{ev.gymnast_count}</td>
+              <td class="text-xs">
+                {#if ev.host_club}
+                  {@const region = clubRegions.get(ev.host_club.toLowerCase()) ?? ""}
+                  {#if region}
+                    <RegionBadge region={region} colors={REGION_PALETTES[region] ?? []} label={ev.host_club} truncate />
+                  {:else}
+                    <span class="badge badge-outline badge-sm">{ev.host_club}</span>
+                  {/if}
+                {:else}
+                  <span class="text-base-content/50">Not set</span>
+                {/if}
+              </td>
               {#if loggedIn}
               <td>
                 <button
@@ -286,6 +319,26 @@
           <p class="text-xs text-base-content/70 mt-0.5">excluded from ranking lists</p>
         </div>
       </label>
+      <label for="edit-event-club" class="block mt-4">
+        <span class="font-medium text-sm block mb-1">Host Club</span>
+        <input
+          id="edit-event-club"
+          type="text"
+          list="known-clubs-list"
+          class="input input-bordered input-sm w-full"
+          placeholder="Search for a club…"
+          bind:value={editClub}
+        />
+        <datalist id="known-clubs-list">
+          <option value="Gymnastics NZ"></option>
+          {#each knownClubs as club}
+            <option value={club.name}></option>
+          {/each}
+        </datalist>
+      </label>
+      <p class="text-xs text-base-content/70 mt-1">
+        The host club's region drives the STEP 5/6 "outside home province" qualifier rule on the national rankings. Nationals are hosted by Gymnastics NZ.
+      </p>
       <div class="flex justify-between items-center mt-6">
         <button
           class="btn btn-error btn-sm"

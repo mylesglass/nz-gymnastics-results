@@ -61,6 +61,30 @@ def _region_from_prefix(lower: str, club_data: dict) -> str:
                     return region_name
     return ""
 
+
+def _guess_host_club(event_name: str) -> str:
+    """Best-effort host-club guess from an event name.
+
+    Matches canonical club names and aliases as substrings of the event name
+    (case-insensitive); the longest match wins. Returns ``""`` when nothing
+    matches (Nationals should be set to ``"Gymnastics NZ"`` separately).
+    """
+    if not event_name:
+        return ""
+    lower = event_name.lower()
+    club_data = _load_club_data()
+    best = ""
+    best_len = 0
+    for region_name, clubs in club_data.get("regions", {}).items():
+        for c in clubs:
+            canonical = c["name"]
+            for name in [canonical] + c.get("aliases", []):
+                ln = name.lower()
+                if ln and ln in lower and len(ln) > best_len:
+                    best = canonical
+                    best_len = len(ln)
+    return best
+
 WAG_ORDER = ["VT", "UB", "BB", "FX"]
 MAG_ORDER = ["FX", "PH", "SR", "VT", "PB", "HB"]
 

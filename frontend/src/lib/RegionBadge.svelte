@@ -1,6 +1,6 @@
 <script lang="ts">
   import { textColor } from "./regions";
-  let { region, colors = [] }: { region: string; colors?: string[] } = $props();
+  let { region, colors = [], label = region, truncate = false }: { region: string; colors?: string[]; label?: string; truncate?: boolean } = $props();
 
   let c = $derived(colors.length ? colors : ["#888", "#888"]);
   let bg = $derived(c[0]);
@@ -18,5 +18,5 @@
     <span class="w-2.5 h-2.5" style="background: {ckB}"></span>
     <span class="w-2.5 h-2.5" style="background: {ckA}"></span>
   </span>
-  <span class="px-1.5 flex items-center">{region}</span>
+  <span class="px-1.5 flex items-center {truncate ? 'max-w-[13rem] truncate' : ''}">{label}</span>
 </span>

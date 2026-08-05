@@ -443,7 +443,7 @@
             </td>
               {#each r.scores as score, i}
                 <td class="text-right">
-                  <span class="dropdown dropdown-hover dropdown-right">
+                  <span class="dropdown dropdown-hover dropdown-top dropdown-end">
                     <button
                       type="button"
                       class="cursor-pointer font-mono border-b border-dotted border-base-content/40 hover:border-base-content/70 leading-tight"
@@ -586,7 +586,7 @@
             {#each (HEADER_LABELS[configKey] ?? ["Score 1", "Score 2", "Score 3"]) as _, i}
               <td class="text-right">
                 {#if r.scores[i] != null}
-                  <span class="dropdown dropdown-hover dropdown-right">
+                  <span class="dropdown dropdown-hover dropdown-top dropdown-end">
                     <button
                       type="button"
                       class="cursor-pointer font-mono border-b border-dotted border-base-content/40 hover:border-base-content/70 leading-tight"

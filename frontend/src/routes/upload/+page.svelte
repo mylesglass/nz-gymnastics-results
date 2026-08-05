@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { uploadFile, importFromUrl, saveAliases, checkAuthStatus } from "$lib/api";
+  import { uploadFile, importFromUrl, saveAliases, checkAuthStatus, listKnownClubs, type KnownClub } from "$lib/api";
   import type { EventSummary } from "$lib/api";
   import { currentUser, authConfigured } from "$lib/auth";
   import Dialog from "$lib/Dialog.svelte";
@@ -27,6 +27,8 @@
   let authCfg = $state(false);
   let urlInput = $state("");
   let fileInput: HTMLInputElement | undefined = $state();
+  let uploadClub = $state("");
+  let knownClubs = $state<KnownClub[]>([]);
 
   // Club mapping dialog state
   let clubDialog = $state<{ source: UploadSource; unknown: string[]; known: string[] } | null>(null);
@@ -36,6 +38,9 @@
   onMount(() => {
     checkAuthStatus()
       .then((s) => authConfigured.set(s.configured))
+      .catch(() => {});
+    listKnownClubs()
+      .then((clubs) => (knownClubs = clubs))
       .catch(() => {});
     const unsub1 = currentUser.subscribe((v) => (loggedIn = v !== null));
     const unsub2 = authConfigured.subscribe((v) => (authCfg = v));
@@ -50,7 +55,9 @@
   }
 
   async function uploadSource(source: UploadSource, allowUnknown = false): Promise<EventSummary> {
-    return source.kind === "file" ? uploadFile(source.file, allowUnknown) : importFromUrl(source.url, allowUnknown);
+    return source.kind === "file"
+      ? uploadFile(source.file, allowUnknown, uploadClub || undefined)
+      : importFromUrl(source.url, allowUnknown, uploadClub || undefined);
   }
 
   async function handleSources(sources: UploadSource[]) {
@@ -273,6 +280,26 @@
       </div>
     </div>
   {:else}
+    <label for="upload-club" class="block max-w-sm mb-4">
+      <span class="text-sm font-medium block mb-1">Host Club (optional)</span>
+      <input
+        id="upload-club"
+        type="text"
+        list="upload-known-clubs"
+        class="input input-bordered input-sm w-full"
+        placeholder="Search for a club… (blank = auto-detect)"
+        bind:value={uploadClub}
+      />
+      <datalist id="upload-known-clubs">
+        <option value="Gymnastics NZ"></option>
+        {#each knownClubs as club}
+          <option value={club.name}></option>
+        {/each}
+      </datalist>
+      <span class="text-xs text-base-content/70 block mt-1">
+        Applied to all files/links in this batch. The host club's region drives the STEP 5/6 "outside home province" qualifier. Can be changed later on the Events page.
+      </span>
+    </label>
     <div
       class="card border-2 border-dashed border-base-content/30 hover:border-primary bg-base-200/50 hover:bg-base-200 cursor-pointer transition-all p-12 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       role="button"

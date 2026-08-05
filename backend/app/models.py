@@ -36,6 +36,7 @@ class Event(Base):
     discipline = Column(String, nullable=False)
     year = Column(Integer, nullable=True)
     is_national = Column(Boolean, default=False)
+    host_club = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     scores = relationship("LongScore", back_populates="event", cascade="all, delete-orphan")
