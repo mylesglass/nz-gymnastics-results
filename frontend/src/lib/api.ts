@@ -151,6 +151,46 @@ export async function getStats(): Promise<{
   return res.json();
 }
 
+export interface MedalCounts {
+  g: number;
+  s: number;
+  b: number;
+  total: number;
+}
+
+export interface GymnastMedals {
+  gnz_id: string;
+  name: string;
+  club: string | null;
+  medals: MedalCounts;
+}
+
+export interface ClubMedals {
+  name: string;
+  medals: MedalCounts;
+}
+
+export interface MedalsResponse {
+  year: number | null;
+  gymnasts: GymnastMedals[];
+  clubs: ClubMedals[];
+}
+
+export async function getMedals(params?: {
+  year?: number;
+  gnz_id?: string;
+  club?: string;
+}): Promise<MedalsResponse> {
+  const qp = new URLSearchParams();
+  if (params?.year !== undefined) qp.set("year", String(params.year));
+  if (params?.gnz_id) qp.set("gnz_id", params.gnz_id);
+  if (params?.club) qp.set("club", params.club);
+  const qs = qp.toString();
+  const res = await fetch(`${API_BASE}/api/medals${qs ? `?${qs}` : ""}`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export async function getWideResults(eventId: number): Promise<WideResponse> {
   const res = await fetch(`${API_BASE}/api/events/${eventId}/results/wide`);
   if (!res.ok) throw new Error(await res.text());
@@ -237,10 +277,13 @@ export async function listYears(): Promise<{ years: number[] }> {
   return res.json();
 }
 
-export async function listGymnasts(): Promise<
+export async function listGymnasts(params?: { year?: number }): Promise<
   { gnz_id: string; name: string; club: string | null }[]
 > {
-  const res = await fetch(`${API_BASE}/api/gymnasts`);
+  const qp = new URLSearchParams();
+  if (params?.year !== undefined) qp.set("year", String(params.year));
+  const qs = qp.toString();
+  const res = await fetch(`${API_BASE}/api/gymnasts${qs ? `?${qs}` : ""}`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }

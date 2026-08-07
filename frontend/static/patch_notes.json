@@ -1,7 +1,31 @@
 [
   {
+    "date": "7 Aug 2026",
+    "entries": [
+      {
+        "title": "Season Timeline",
+        "items": [
+          "New Timeline page: every competition in a season drawn as a horizontally-scrollable map in the style of a London Underground diagram — black lines, consistent stroke widths and 45° elbows.",
+          "Each week with a competition gets a white dot on the main line, and each competition branches off to an inline station-style label with its date underneath.",
+          "Region colours appear as a 2×2 checkerboard marker on each branch (the same palette as the /clubs map); National Championships and events without a host club use a neutral grey marker.",
+          "Hover or focus any competition to see its full details (date, host club, region, WAG/MAG), and click to open its results. Clicking is scoped to a specific year — the All-years view is disabled here."
+        ]
+      }
+    ]
+  },
+  {
     "date": "6 Aug 2026",
     "entries": [
+      {
+        "title": "Medal counts for gymnasts, clubs and regions",
+        "items": [
+          "Gold/silver/bronze totals now appear on the gymnast page, club page and gymnast list — tallied from every apparatus and all-around result the athlete placed in (1st/2nd/3rd).",
+          "Ties count as shared medals, and multi-pass vaults count once per event.",
+          "Every competition counts the same — National Championships and provincial team entries are tallied like any other meet.",
+          "Totals follow the year selector: pick a year to see that season's medals, or all years when none is selected.",
+          "In the result tables, every apparatus and all-around score that earned 1st/2nd/3rd now shows a gold, silver or bronze dot next to it."
+        ]
+      },
       {
         "title": "Bulk upload: club-dialog events no longer disappear",
         "items": [

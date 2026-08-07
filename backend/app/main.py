@@ -38,6 +38,7 @@ from app.schemas import (
     ApplyFixItem,
     ActivityLogItem,
     ActivityLogResponse,
+    ClubMedals,
     ClubItem,
     ConflictItem,
     DuplicateGroup,
@@ -49,10 +50,13 @@ from app.schemas import (
     GymnastEditRequest,
     GymnastEditResponse,
     GymnastItem,
+    GymnastMedals,
     ImportUrlRequest,
     IntentToggle,
     KnownClubItem,
     LoginRequest,
+    MedalCounts,
+    MedalsResponse,
     MergeNamesRequest,
     RankingsResponse,
     RankingRow,
@@ -103,6 +107,7 @@ async def add_cache_control(request: Request, call_next):
         path.startswith("/api/events")
         or path.startswith("/api/results")
         or path == "/api/stats"
+        or path == "/api/medals"
         or path == "/api/clubs"
         or path == "/api/gymnasts"
         or path == "/api/years"
@@ -217,6 +222,117 @@ def _compute_stats() -> StatsResponse:
         session.close()
 
 
+# Round types where an all-around ranking is a real award. "Apparatus Finals"
+# and "Day 2" rounds never carry an AA medal.
+_AA_MEDAL_ROUND_TYPES = ("All Around", "All Around - Final", "All Around - Day 2", "All Around, Teams", "Team")
+
+
+@app.get("/api/medals", response_model=MedalsResponse)
+def get_medals(response: Response, year: int = None, gnz_id: str = None, club: str = None):
+    response.headers.update(cache_headers())
+    return cached(
+        ("medals", year or "", gnz_id or "", club or ""),
+        lambda: _compute_medals(year, gnz_id, club),
+        ttl=300,
+    )
+
+
+def _compute_medals(year: int | None, gnz_id: str | None, club: str | None) -> MedalsResponse:
+    """Aggregate gold/silver/bronze tallies per gymnast and club.
+
+    Medals are counted by rank value (1 = gold, 2 = silver, 3 = bronze) from
+    the stored apparatus/AA ranks, deduped so multi-pass vaults and the AA
+    rank duplicated across a gymnast's apparatus rows count once. Every
+    competition (including National Championships) and every team entry is
+    treated the same.
+    """
+    from collections import defaultdict
+
+    session = get_session()
+    try:
+        query = (
+            session.query(
+                LongScore.event_id,
+                LongScore.gnz_id,
+                LongScore.gymnast_name,
+                LongScore.club_name,
+                LongScore.apparatus,
+                LongScore.round_type,
+                LongScore.apparatus_rank,
+                LongScore.aa_rank,
+            )
+            .join(Event, Event.id == LongScore.event_id)
+        )
+        if year:
+            query = query.filter(Event.year == year)
+        if gnz_id:
+            query = query.filter(LongScore.gnz_id == gnz_id)
+        if club:
+            query = query.filter(LongScore.club_name == club)
+        rows = query.all()
+
+        awards: list[tuple[str, int, str | None]] = []
+        app_seen: set[tuple] = set()
+        aa_seen: set[tuple] = set()
+        entity_meta: dict[str, tuple[str, str | None, str | None]] = {}
+
+        for (event_id, gid, name, club_name, apparatus, round_type,
+             app_rank, aa_rank) in rows:
+            entity_key = f"id:{gid}" if gid else f"name:{name}"
+            if entity_key not in entity_meta:
+                entity_meta[entity_key] = (name, gid, club_name)
+            if app_rank in (1, 2, 3):
+                unit = (event_id, entity_key, apparatus, round_type or "")
+                if unit not in app_seen:
+                    app_seen.add(unit)
+                    awards.append((entity_key, app_rank, club_name))
+            if aa_rank in (1, 2, 3) and round_type in _AA_MEDAL_ROUND_TYPES:
+                unit = (event_id, entity_key, round_type or "")
+                if unit not in aa_seen:
+                    aa_seen.add(unit)
+                    awards.append((entity_key, aa_rank, club_name))
+
+        def _init_counts() -> dict:
+            return {"g": 0, "s": 0, "b": 0, "total": 0}
+
+        def _add(totals: dict, rank: int) -> None:
+            key = {1: "g", 2: "s", 3: "b"}[rank]
+            totals[key] += 1
+            totals["total"] += 1
+
+        gymnast = defaultdict(_init_counts)
+        club_counts = defaultdict(_init_counts)
+
+        for entity_key, rank, club_name in awards:
+            _add(gymnast[entity_key], rank)
+            if club_name:
+                _add(club_counts[club_name], rank)
+
+        gymnasts = [
+            GymnastMedals(
+                gnz_id=meta[1] or "",
+                name=meta[0],
+                club=meta[2],
+                medals=MedalCounts(**gymnast[k]),
+            )
+            for k, meta in entity_meta.items()
+            if k in gymnast and gymnast[k]["total"] > 0
+        ]
+        clubs = [
+            ClubMedals(
+                name=name,
+                medals=MedalCounts(**club_counts[name]),
+            )
+            for name in club_counts
+            if club_counts[name]["total"] > 0
+        ]
+        gymnasts.sort(key=lambda x: x.name.lower())
+        clubs.sort(key=lambda x: x.name.lower())
+        return MedalsResponse(year=year, gymnasts=gymnasts, clubs=clubs)
+    finally:
+        session.close()
+
+
 @app.get("/api/clubs", response_model=list[ClubItem])
 def list_clubs(response: Response):
     response.headers.update(cache_headers())
@@ -306,23 +422,26 @@ def _compute_clubs() -> list[ClubItem]:
 
 
 @app.get("/api/gymnasts", response_model=list[GymnastItem])
-def list_gymnasts(response: Response):
+def list_gymnasts(response: Response, year: int = None):
     response.headers.update(cache_headers())
-    data = cached(("gymnasts",), lambda: _compute_gymnasts(), ttl=300)
+    data = cached(("gymnasts", year or ""), lambda: _compute_gymnasts(year), ttl=300)
     return data
 
 
-def _compute_gymnasts() -> list[GymnastItem]:
+def _compute_gymnasts(year: int | None) -> list[GymnastItem]:
     from collections import defaultdict
 
     session = get_session()
     try:
-        rows = (
+        query = (
             session.query(LongScore.gymnast_name, LongScore.gnz_id, LongScore.club_name)
+            .join(Event, Event.id == LongScore.event_id)
             .filter(LongScore.gnz_id.isnot(None), LongScore.gnz_id != "")
             .distinct()
-            .all()
         )
+        if year:
+            query = query.filter(Event.year == year)
+        rows = query.all()
 
         name_groups: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
         club_groups: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
@@ -1446,6 +1565,7 @@ def edit_gymnast_scores(
             cache.invalidate_prefix("stats")
             cache.invalidate_prefix("gymnasts")
             cache.invalidate_prefix("clubs")
+            cache.invalidate_prefix("medals")
             invalidate(req.event_id)
 
         return GymnastEditResponse(updated=updated)
@@ -1555,6 +1675,7 @@ def _ingest_event(data: dict, allow_unknown: str | None, host_club: str | None =
             score = LongScore(event_id=event.id, **row)
             session.add(score)
         session.commit()
+        cache.invalidate_prefix("medals")
         invalidate(event.id)
 
         gymnast_count = (
@@ -1817,6 +1938,7 @@ def delete_event(event_id: int, _auth=Depends(require_role("admin"))):
             raise HTTPException(404, "Event not found")
         session.delete(event)
         session.commit()
+        cache.invalidate_prefix("medals")
         invalidate(event_id)
         return {"ok": True}
     finally:
@@ -1844,6 +1966,7 @@ def update_event(event_id: int, body: EventUpdate, _auth=Depends(require_role("a
         if body.host_club is not None:
             event.host_club = body.host_club or None
         session.commit()
+        cache.invalidate_prefix("medals")
         invalidate(event_id)
         gymnast_count = (
             session.query(func.count(func.distinct(LongScore.gymnast_name)))

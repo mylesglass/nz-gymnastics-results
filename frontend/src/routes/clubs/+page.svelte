@@ -9,14 +9,11 @@
   let loading = $state(true);
   let active = $state<string | null>(null);
 
-  onMount(async () => {
-    try {
-      clubs = await listClubs();
-    } catch {
-      // ignore
-    } finally {
-      loading = false;
-    }
+  onMount(() => {
+    listClubs()
+      .then((c) => (clubs = c))
+      .catch(() => {})
+      .finally(() => (loading = false));
   });
 
   let grouped = $derived.by(() => {
@@ -149,9 +146,11 @@
               href="/club/{encodeURIComponent(club.name)}"
               class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer"
             >
-              <div class="card-body py-3 px-4 flex-row items-center justify-between">
-                <span class="font-medium text-sm">{club.name}</span>
-                <span class="text-xs text-base-content/70">{club.gymnast_count} gymnasts</span>
+              <div class="card-body py-3 px-4 flex-row items-center justify-between gap-2">
+                <span class="font-medium text-sm truncate">{club.name}</span>
+                <span class="flex items-center gap-2 shrink-0">
+                  <span class="text-xs text-base-content/70">{club.gymnast_count} gymnasts</span>
+                </span>
               </div>
             </a>
           {/each}
@@ -192,7 +191,9 @@
     >
       <div class="flex flex-wrap items-center gap-3 mb-4">
         <div class="flex-1 min-w-0">
-          <h3 class="text-2xl font-bold leading-tight" style="color: {headingCol}">{region}</h3>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h3 class="text-2xl font-bold leading-tight" style="color: {headingCol}">{region}</h3>
+          </div>
           <p class="text-sm opacity-80" style="color: {headingCol}">{regionClubs.filter((c) => !c.is_region).length} club(s)</p>
         </div>
         {#if team}
@@ -234,9 +235,11 @@
               class="card backdrop-blur-sm border transition-colors cursor-pointer"
               style="--bg: {pillBg}; --hover-bg: {hoverBg}; border-color: {pillBorder}; color: {fg};"
             >
-              <div class="card-body py-2 px-3 flex-row items-center justify-between">
-                <span class="font-medium text-sm" style="color: {fg}">{club.name}</span>
-                <span class="text-xs opacity-70">{club.gymnast_count} gymnasts</span>
+              <div class="card-body py-2 px-3 flex-row items-center justify-between gap-2">
+                <span class="font-medium text-sm truncate" style="color: {fg}">{club.name}</span>
+                <span class="flex items-center gap-2 shrink-0">
+                  <span class="text-xs opacity-70">{club.gymnast_count} gymnasts</span>
+                </span>
               </div>
             </a>
           {/each}

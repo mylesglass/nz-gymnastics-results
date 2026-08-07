@@ -94,6 +94,31 @@ class StatsResponse(BaseModel):
     total_clubs: int
 
 
+class MedalCounts(BaseModel):
+    g: int = 0
+    s: int = 0
+    b: int = 0
+    total: int = 0
+
+
+class GymnastMedals(BaseModel):
+    gnz_id: str
+    name: str
+    club: str | None = None
+    medals: MedalCounts = MedalCounts()
+
+
+class ClubMedals(BaseModel):
+    name: str
+    medals: MedalCounts = MedalCounts()
+
+
+class MedalsResponse(BaseModel):
+    year: int | None = None
+    gymnasts: list[GymnastMedals]
+    clubs: list[ClubMedals]
+
+
 class ClubItem(BaseModel):
     name: str
     gymnast_count: int

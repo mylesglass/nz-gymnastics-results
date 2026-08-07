@@ -1,6 +1,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { listGymnasts } from "$lib/api";
+  import { listGymnasts, getMedals } from "$lib/api";
+  import type { GymnastMedals } from "$lib/api";
+  import { selectedYear } from "$lib/year";
+  import MedalBadges from "$lib/MedalBadges.svelte";
 
   interface Gymnast {
     gnz_id: string;
@@ -15,6 +18,8 @@
   let search = $state("");
   let activeLetter = $state("");
   let scrolled = $state(false);
+  let filterYear = $state<string | null>(null);
+  let gymnastMedals = $state<Record<string, GymnastMedals>>({});
 
   let filtered = $derived(
     search
@@ -22,14 +27,23 @@
       : gymnasts
   );
 
-  onMount(async () => {
-    try {
-      gymnasts = await listGymnasts();
-    } catch {
-      // ignore
-    } finally {
-      loading = false;
-    }
+  onMount(() => {
+    const unsub = selectedYear.subscribe((v) => (filterYear = v));
+    return unsub;
+  });
+
+  $effect(() => {
+    loading = true;
+    listGymnasts(filterYear ? { year: parseInt(filterYear) } : {})
+      .then((g) => (gymnasts = g))
+      .catch(() => (gymnasts = []))
+      .finally(() => (loading = false));
+  });
+
+  $effect(() => {
+    getMedals(filterYear ? { year: parseInt(filterYear) } : {})
+      .then((r) => (gymnastMedals = Object.fromEntries(r.gymnasts.map((g) => [g.gnz_id, g]))))
+      .catch(() => (gymnastMedals = {}));
   });
 
   let grouped = $derived.by(() => {
@@ -178,11 +192,18 @@
               class="flex flex-col px-3 py-1.5 rounded hover:bg-base-200 transition-colors"
             >
               <span class="flex items-center gap-1">
-                <span class="text-sm font-medium">{gr.name}</span>
-                {#if gr.alt_ids.length > 0}
-                  <span class="text-warning text-xs">⚠</span>
-                {/if}
-                <span class="ml-auto"><span class="badge badge-ghost badge-xs font-mono">{displayIds(gr)}</span></span>
+                <span class="flex items-center gap-1 min-w-0">
+                  <span class="text-sm font-medium truncate">{gr.name}</span>
+                  {#if gr.alt_ids.length > 0}
+                    <span class="text-warning text-xs shrink-0">⚠</span>
+                  {/if}
+                </span>
+                <span class="ml-auto flex items-center gap-2 shrink-0">
+                  {#if gymnastMedals[gr.gnz_id]}
+                    <MedalBadges size="xs" showEmpty={false} medals={gymnastMedals[gr.gnz_id].medals} />
+                  {/if}
+                  <span class="badge badge-ghost badge-xs font-mono">{displayIds(gr)}</span>
+                </span>
               </span>
               <span class="text-xs leading-snug mt-0.5">
                 {#each (gr.alt_clubs.length > 0 ? [gr.club, ...gr.alt_clubs].filter(Boolean) : gr.club ? [gr.club] : []) as clubName, i}

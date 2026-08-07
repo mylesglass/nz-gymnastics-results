@@ -4,6 +4,7 @@
   import { debounce } from "$lib/utils/debounce";
   import ScoreTooltip from "./ScoreTooltip.svelte";
   import AATooltip from "./AATooltip.svelte";
+  import MedalDot from "./MedalDot.svelte";
   import { REGION_PALETTES } from "./regions";
   import { currentUser } from "$lib/auth";
   import { updateGymnast } from "$lib/api";
@@ -293,6 +294,16 @@
     metaColumns = allMeta;
     frontMeta = allMeta.filter((c) => !TAIL_META.has(c));
     backMeta = ["aa-score", "aa-rank"].filter((c) => allMeta.includes(c));
+  }
+
+  function appRank(row: Record<string, unknown>, prefix: string): number | null {
+    const single = row[`${prefix}-rank`];
+    if (single != null) return Number(single);
+    for (const i of [1, 2]) {
+      const pass = row[`${prefix}-${i}-rank`];
+      if (pass != null) return Number(pass);
+    }
+    return null;
   }
 
   function buildFilterOptions(rs: Record<string, unknown>[]) {
@@ -995,13 +1006,19 @@ function appDisplayLabel(prefix: string): string {
             {/each}
             {#each apparatusPrefixes as prefix, i}
               <td class="text-left min-w-12 whitespace-nowrap py-1.5 {COL_MIN_CLASS[prefix] ?? ''}">
-                <ScoreTooltip {row} {prefix} isLast={i === apparatusPrefixes.length - 1} />
+                <span class="inline-flex items-center gap-1">
+                  <ScoreTooltip {row} {prefix} isLast={i === apparatusPrefixes.length - 1} />
+                  <MedalDot rank={appRank(row, prefix)} />
+                </span>
               </td>
             {/each}
             {#each backMeta as col}
               {#if col === "aa-score"}
                 <td class="whitespace-nowrap py-1.5 {COL_MIN_CLASS[col] ?? ''}">
-                  <AATooltip {row} prefixes={apparatusPrefixes} />
+                  <span class="inline-flex items-center gap-1">
+                    <AATooltip {row} prefixes={apparatusPrefixes} />
+                    <MedalDot rank={row["aa-rank"] != null ? Number(row["aa-rank"]) : null} />
+                  </span>
                 </td>
               {:else}
                 <td class="whitespace-nowrap py-1.5 {COL_MIN_CLASS[col] ?? ''}"

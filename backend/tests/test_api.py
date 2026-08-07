@@ -351,3 +351,42 @@ class TestWellingtonRankings:
                 assert a["best"] >= 11.0
                 assert a["count"] >= 1
                 assert isinstance(a["competitions"], list)
+
+
+class TestGymnasts:
+    def _seed(self, session) -> None:
+        from app.models import Event, LongScore
+
+        ev25 = Event(name="Meet 2025", start_date="2025-03-01", end_date="2025-03-02", discipline="WAG", year=2025)
+        ev26 = Event(name="Meet 2026", start_date="2026-03-01", end_date="2026-03-02", discipline="WAG", year=2026)
+        session.add_all([ev25, ev26])
+        session.flush()
+        session.add_all([
+            LongScore(event_id=ev25.id, event_name="Meet 2025", gymnast_name="Alice", gnz_id="A-001", club_name="Affinity Gymnastics Academy", discipline="WAG", level_category="STEP 5", apparatus="VT", pass_number=1, pass_final_score=10.0, round_type="All Around"),
+            LongScore(event_id=ev25.id, event_name="Meet 2025", gymnast_name="Bob", gnz_id="B-001", club_name="Levin Gymnastics Club", discipline="WAG", level_category="STEP 5", apparatus="FX", pass_number=1, pass_final_score=9.5, round_type="All Around"),
+            LongScore(event_id=ev26.id, event_name="Meet 2026", gymnast_name="Alice", gnz_id="A-001", club_name="Affinity Gymnastics Academy", discipline="WAG", level_category="STEP 5", apparatus="UB", pass_number=1, pass_final_score=11.0, round_type="All Around"),
+        ])
+        session.commit()
+
+    def test_year_filter(self):
+        from app.cache import cache
+        from app.database import SessionLocal
+
+        cache.clear()
+        session = SessionLocal()
+        try:
+            self._seed(session)
+        finally:
+            session.close()
+
+        all_resp = client.get("/api/gymnasts")
+        assert all_resp.status_code == 200
+        assert {g["name"] for g in all_resp.json()} == {"Alice", "Bob"}
+
+        resp25 = client.get("/api/gymnasts", params={"year": 2025})
+        assert resp25.status_code == 200
+        assert {g["name"] for g in resp25.json()} == {"Alice", "Bob"}
+
+        resp26 = client.get("/api/gymnasts", params={"year": 2026})
+        assert resp26.status_code == 200
+        assert {g["name"] for g in resp26.json()} == {"Alice"}
