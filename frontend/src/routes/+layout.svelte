@@ -18,7 +18,7 @@
     "business", "acid", "lemonade", "night", "coffee", "winter",
     "dim", "nord", "sunset", "caramellatte", "abyss", "silk",
   ];
-  let theme = $state("dark");
+  let theme = $state("light");
   let user = $state<{ username: string; role: string; permissions: string[] } | null>(null);
   let authCfg = $state(false);
   let authResolved = $state(false);
@@ -45,7 +45,7 @@
   let renderChildren = $derived(!requiresAuth || (authActive && routeAllowed));
 
   onMount(() => {
-    theme = document.documentElement.dataset.theme || "dark";
+    theme = document.documentElement.dataset.theme || "light";
     const unsub1 = currentUser.subscribe((v) => (user = v));
     const unsub2 = authConfigured.subscribe((v) => (authCfg = v));
     const unsub3 = selectedYear.subscribe((v) => (selYear = v));
