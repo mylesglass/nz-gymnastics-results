@@ -146,10 +146,10 @@ Core logic:
 - `/admin` — Admin dashboard (stats, user management, unified athlete ID reconciliation card with per-instance dropdowns, Quick Fix + Apply Selected buttons)
 - `/admin/users` — User management table (create, delete, reset password)
 - `/rankings` — Rankings with discipline tabs, STEP dropdown, WAG-only Division dropdown (All/Over/Under, resets on step/discipline change, recomputes the ranking server-side via a `division` query param on `GET /api/rankings` so qualifier/Q/quota/exports all respect it), region quotas + qualifier filter (info tooltips; hidden for STEP 1–4 / MAG Level 1–3), STEP 5/6 use the average of the top 3 marks (three score columns), STEP 1–4 show a rightmost Q column (✓ when 52.000 reached twice), Club/Region header funnel dropdowns filter the loaded rows client-side (exports follow), Total column hidden (bolded Average), "Can't find someone?" note under the table when the qualifier filter is on, partial AA support
-- `/events` — Event list with search bar, year filter, rename/delete, Nationals trophy toggle
+- `/events` — Event list with search bar, year filter, rename/delete, Nationals trophy toggle; a season timeline (`Timeline.svelte`, train-map style) appears at the top on desktop when a specific year is selected
 - `/events/[id]` — Per-event results (thin wrapper around `WideResultsTable`)
 - `/results` — All events results (thin wrapper around `WideResultsTable`, adds Event filter column)
-- `/gymnast/[gnz_id]` — Individual gymnast results across all events
+- `/gymnast/[gnz_id]` — Individual gymnast results; defaults to the current year; when a specific year is selected it shows a Personal Bests card (best per-apparatus score + D, best achieved AA, Best Possible AA), a region badge beside the name, and GNZ ID / club / steps underneath
 - `/gymnasts` — Gymnast list (A-Z grouped, live search, GNZ ID shown subtly, ⚠ for multi-ID, comma-separated clubs for multi-club). Sticky header: search box + alphabet jump bar inline, active-letter highlight on scroll, collapsing title, "Back to top" button once scrolled
 - `/club/[club]` — Club results across all events
 - `/clubs` — Club list: desktop has the interactive NZ map (sticky left) + selected region box (right); mobile (`<lg`) replaces the map with a collapsible accordion of region cards (tap to expand, one open at a time), listed north→south via `REGION_ORDER`
