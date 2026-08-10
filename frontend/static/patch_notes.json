@@ -1,5 +1,18 @@
 [
   {
+    "date": "8 Aug 2026",
+    "entries": [
+      {
+        "title": "National rankings: Over/Under division filter",
+        "items": [
+          "The National Rankings page (WAG) now has a Division dropdown next to the step selector — All Divisions, Over, or Under — so you can view a step's ranking split by over/under rather than combined.",
+          "The filter recomputes the ranking from only the selected division's competitions, so qualifier marks, the Q column, quota mode and exports all respect it.",
+          "The export filename/title appends 'Over' or 'Under' when a division is selected."
+        ]
+      }
+    ]
+  },
+  {
     "date": "7 Aug 2026",
     "entries": [
       {

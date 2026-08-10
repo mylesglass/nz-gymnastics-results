@@ -797,6 +797,7 @@ def get_rankings(
     discipline: str,
     quota: bool = False,
     qualifier: bool = False,
+    division: str = "",
     _auth=Depends(require_permission(PERMISSION_NATIONAL)),
 ):
     session = get_session()
@@ -831,6 +832,7 @@ def get_rankings(
                 LongScore.level_category == step,
                 LongScore.discipline == discipline,
                 LongScore.pass_final_score.isnot(None),
+                *([LongScore.division == division] if division else []),
             )
             .all()
         )

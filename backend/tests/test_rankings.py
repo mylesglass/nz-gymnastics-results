@@ -59,6 +59,7 @@ def _add_score(
     session, event_id: int, event_name: str, name: str, gnz_id: str, club: str,
     score: float, level_category: str = "STEP 5", discipline: str = "WAG",
     aa_score: float | None = None, round_type: str = "All Around",
+    division: str | None = None,
 ) -> None:
     session.add(LongScore(
         event_id=event_id,
@@ -68,6 +69,7 @@ def _add_score(
         club_name=club,
         discipline=discipline,
         level_category=level_category,
+        division=division,
         apparatus="FX",
         pass_number=1,
         pass_final_score=score,
@@ -76,7 +78,7 @@ def _add_score(
     ))
 
 
-def _rank(year: int, step: str, discipline: str, qualifier: bool = False) -> dict:
+def _rank(year: int, step: str, discipline: str, qualifier: bool = False, division: str | None = None) -> dict:
     resp = client.get(
         "/api/rankings",
         params={
@@ -84,6 +86,7 @@ def _rank(year: int, step: str, discipline: str, qualifier: bool = False) -> dic
             "step": step,
             "discipline": discipline,
             "qualifier": "true" if qualifier else "false",
+            "division": division or "",
         },
     )
     assert resp.status_code == 200
@@ -388,3 +391,73 @@ class TestGuessHostClub:
 
     def test_no_match_returns_empty(self):
         assert _guess_host_club("Ribbon Day 2025") == ""
+
+
+class TestDivisionFilter:
+    def _seed(self, session) -> None:
+        ev_over = _add_event(session, "Over Champs", "Capital Gymnastics")
+        ev_under = _add_event(session, "Under Champs", "Capital Gymnastics")
+        # Two marks each in a single division
+        _add_score(session, ev_over, "Over Champs", "Over Athlete", "A-001", "Capital Gymnastics", 51.0, division="OVER")
+        _add_score(session, ev_under, "Under Champs", "Under Athlete", "B-001", "Capital Gymnastics", 50.5, division="UNDER")
+        # Mixed athlete: one mark in each division
+        _add_score(session, ev_over, "Over Champs", "Mixed Athlete", "C-001", "Capital Gymnastics", 52.0, division="OVER")
+        _add_score(session, ev_under, "Under Champs", "Mixed Athlete", "C-001", "Capital Gymnastics", 51.5, division="UNDER")
+        # No division set (None)
+        _add_score(session, ev_over, "Over Champs", "No Division", "D-001", "Capital Gymnastics", 49.0, division=None)
+        session.commit()
+
+    def test_all_divisions_by_default(self):
+        from app.database import SessionLocal
+
+        session = SessionLocal()
+        try:
+            self._seed(session)
+        finally:
+            session.close()
+
+        body = _rank(2025, "STEP 5", "WAG")
+        names = {r["name"] for r in body["rankings"]}
+        assert names == {"Over Athlete", "Under Athlete", "Mixed Athlete", "No Division"}
+
+    def test_over_filter(self):
+        from app.database import SessionLocal
+
+        session = SessionLocal()
+        try:
+            self._seed(session)
+        finally:
+            session.close()
+
+        body = _rank(2025, "STEP 5", "WAG", division="OVER")
+        names = {r["name"] for r in body["rankings"]}
+        assert names == {"Over Athlete", "Mixed Athlete"}
+        row = next(r for r in body["rankings"] if r["name"] == "Mixed Athlete")
+        assert row["scores"] == [52.0]
+
+    def test_under_filter(self):
+        from app.database import SessionLocal
+
+        session = SessionLocal()
+        try:
+            self._seed(session)
+        finally:
+            session.close()
+
+        body = _rank(2025, "STEP 5", "WAG", division="UNDER")
+        names = {r["name"] for r in body["rankings"]}
+        assert names == {"Under Athlete", "Mixed Athlete"}
+        row = next(r for r in body["rankings"] if r["name"] == "Mixed Athlete")
+        assert row["scores"] == [51.5]
+
+    def test_unknown_division_returns_empty(self):
+        from app.database import SessionLocal
+
+        session = SessionLocal()
+        try:
+            self._seed(session)
+        finally:
+            session.close()
+
+        body = _rank(2025, "STEP 5", "WAG", division="INTERNATIONAL")
+        assert body["rankings"] == []

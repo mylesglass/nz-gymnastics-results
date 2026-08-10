@@ -85,6 +85,8 @@
 
   let loadingRankings = $state(false);
 
+  let divisionFilter = $state("");
+
   let scoreCols = $derived(["STEP 5", "STEP 6"].includes(selectedStep) ? 3 : 2);
 
   let clubFilter = $state("");
@@ -132,7 +134,7 @@
     loadingRankings = true;
     error = "";
     try {
-      const data = await getRankings(Number(year), selectedStep, discipline, quotaMode, qualifierMode);
+      const data = await getRankings(Number(year), selectedStep, discipline, quotaMode, qualifierMode, divisionFilter);
       rankings = data.rankings;
     } catch (e) {
       error = "Failed to load rankings.";
@@ -169,8 +171,18 @@
 
   function switchDisc(d: string) {
     discipline = d;
+    divisionFilter = "";
     if (year) loadSteps();
   }
+
+  let prevStepKey = "";
+  $effect(() => {
+    const stepKey = `${discipline}|${selectedStep}`;
+    if (prevStepKey && prevStepKey !== stepKey) {
+      divisionFilter = "";
+    }
+    prevStepKey = stepKey;
+  });
 
   $effect(() => {
     if (year && selectedStep && discipline) {
@@ -178,6 +190,12 @@
       regionFilter = "";
       clubMenuOpen = false;
       regionMenuOpen = false;
+      loadRankings();
+    }
+  });
+
+  $effect(() => {
+    if (divisionFilter) {
       loadRankings();
     }
   });
@@ -259,56 +277,34 @@
 
     {#if steps.length > 0}
       <label for="rank-step" class="sr-only">Step</label>
-      <select id="rank-step" class="select select-bordered select-sm" bind:value={selectedStep}>
+      <select id="rank-step" class="select select-bordered select-sm w-40" bind:value={selectedStep}>
         {#each steps as s}
           <option value={s}>{s}</option>
         {/each}
       </select>
 
+      {#if discipline === "WAG"}
+        <label for="rank-division" class="sr-only">Division</label>
+        <select id="rank-division" class="select select-bordered select-sm w-40" bind:value={divisionFilter}>
+          <option value="">All Divisions</option>
+          <option value="OVER">Over</option>
+          <option value="UNDER">Under</option>
+        </select>
+      {/if}
+
       {#if showRankingToggles}
-      <div class="flex items-center gap-1.5">
-        <label class="label cursor-pointer gap-2">
-          <input type="checkbox" class="checkbox checkbox-sm" bind:checked={quotaMode} />
-          <span class="label-text text-sm">Enable Region Quotas</span>
-        </label>
-        <span class="dropdown dropdown-hover dropdown-top">
-          <button
-            type="button"
-            class="cursor-help"
-            aria-label="About region quotas"
-            aria-describedby="quota-tooltip"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              class="size-4 text-base-content/60"
-              aria-hidden="true"
-            >
-              <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5A.75.75 0 0 0 12 9Z" clip-rule="evenodd" />
-            </svg>
-          </button>
-          <span
-            id="quota-tooltip"
-            role="tooltip"
-            class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs whitespace-nowrap"
-          >
-            Caps each region at 4 gymnasts in the initial ranking, then fills the remaining places with the next best gymnasts from any region.
-          </span>
-        </span>
-      </div>
-      <div class="flex items-center gap-1.5">
-        <label class="label cursor-pointer gap-2">
-          <input type="checkbox" class="checkbox checkbox-sm" bind:checked={qualifierMode} />
-          <span class="label-text text-sm">Exclude non-qualifiers</span>
-        </label>
-        {#if qualifierHint}
+      <div class="flex items-center gap-3 whitespace-nowrap">
+        <div class="flex items-center gap-1.5">
+          <label class="label cursor-pointer gap-2">
+            <input type="checkbox" class="checkbox checkbox-sm" bind:checked={quotaMode} />
+            <span class="label-text text-sm">Enable Region Quotas</span>
+          </label>
           <span class="dropdown dropdown-hover dropdown-top">
             <button
               type="button"
               class="cursor-help"
-              aria-label="About the qualifying marks"
-              aria-describedby="qualifier-tooltip"
+              aria-label="About region quotas"
+              aria-describedby="quota-tooltip"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -321,19 +317,53 @@
               </svg>
             </button>
             <span
-              id="qualifier-tooltip"
+              id="quota-tooltip"
               role="tooltip"
               class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs whitespace-nowrap"
             >
-              Qualifies: {qualifierHint}
+              Caps each region at 4 gymnasts in the initial ranking, then fills the remaining places with the next best gymnasts from any region.
             </span>
           </span>
-        {/if}
+        </div>
+        <div class="flex items-center gap-1.5">
+          <label class="label cursor-pointer gap-2">
+            <input type="checkbox" class="checkbox checkbox-sm" bind:checked={qualifierMode} />
+            <span class="label-text text-sm">Exclude non-qualifiers</span>
+          </label>
+          {#if qualifierHint}
+            <span class="dropdown dropdown-hover dropdown-top">
+              <button
+                type="button"
+                class="cursor-help"
+                aria-label="About the qualifying marks"
+                aria-describedby="qualifier-tooltip"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  class="size-4 text-base-content/60"
+                  aria-hidden="true"
+                >
+                  <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5A.75.75 0 0 0 12 9Z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <span
+                id="qualifier-tooltip"
+                role="tooltip"
+                class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs whitespace-nowrap"
+              >
+                Qualifies: {qualifierHint}
+              </span>
+            </span>
+          {/if}
+        </div>
       </div>
       {/if}
 
       {#if filteredRankings.length > 0}
-        <ExportMenu columns={exportKeys} rows={exportRows} headerLabels={headerLabels} title={`National Rankings ${year} ${discipline} ${selectedStep}`} filename={`National Rankings ${year} ${discipline} ${selectedStep}`} />
+        {@const divisionLabel = divisionFilter === "OVER" ? " Over" : divisionFilter === "UNDER" ? " Under" : ""}
+        <ExportMenu columns={exportKeys} rows={exportRows} headerLabels={headerLabels} title={`National Rankings ${year} ${discipline} ${selectedStep}${divisionLabel}`} filename={`National Rankings ${year} ${discipline} ${selectedStep}${divisionLabel}`} />
       {/if}
     {:else if year}
       <span class="text-sm text-base-content/70">No STEP levels available</span>

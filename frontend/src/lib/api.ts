@@ -312,11 +312,13 @@ export async function getRankings(
   step: string,
   discipline: string,
   quota?: boolean,
-  qualifier?: boolean
+  qualifier?: boolean,
+  division?: string
 ): Promise<RankingsResponse> {
   const params = new URLSearchParams({ year: String(year), step, discipline });
   if (quota) params.set("quota", "true");
   if (qualifier) params.set("qualifier", "true");
+  if (division) params.set("division", division);
   const res = await fetch(`${API_BASE}/api/rankings?${params}`, {
     headers: authHeaders(),
   });
