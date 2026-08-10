@@ -44,6 +44,16 @@
   );
   let renderChildren = $derived(!requiresAuth || (authActive && routeAllowed));
 
+  let showYearTabs = $derived(
+    currentPath === "/events" ||
+    currentPath === "/results" ||
+    currentPath === "/rankings" ||
+    currentPath === "/wellington-ranking" ||
+    currentPath === "/gymnasts" ||
+    currentPath.startsWith("/gymnast/") ||
+    currentPath.startsWith("/club/")
+  );
+
   onMount(() => {
     theme = document.documentElement.dataset.theme || "light";
     const unsub1 = currentUser.subscribe((v) => (user = v));
@@ -161,7 +171,7 @@
         </a>
       </div>
 
-      {#if $page.url.pathname === "/events" || $page.url.pathname === "/results" || $page.url.pathname === "/rankings" || $page.url.pathname === "/wellington-ranking" || $page.url.pathname.startsWith("/gymnast/") || $page.url.pathname.startsWith("/club/")}
+      {#if showYearTabs}
       <div class="flex-none">
         <div class="tabs tabs-box tabs-xs" aria-label="Year filter">
           {#each years as yr}
@@ -409,7 +419,7 @@
           </details>
         </li>
       {/if}
-      {#if $page.url.pathname === "/events" || $page.url.pathname === "/results" || $page.url.pathname === "/rankings" || $page.url.pathname === "/wellington-ranking" || $page.url.pathname.startsWith("/gymnast/") || $page.url.pathname.startsWith("/club/")}
+      {#if showYearTabs}
       <li class="menu-title mt-4"><span>Year</span></li>
       <li>
         <div class="tabs tabs-box tabs-xs mt-1" aria-label="Year filter">

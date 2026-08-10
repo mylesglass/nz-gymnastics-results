@@ -37,6 +37,10 @@
     empty,
     extraControls,
     eventId,
+    onData,
+    afterHeader,
+    nameBadge,
+    nameMeta,
   }: {
     loadData: () => Promise<LoadDataResult>;
     loadKey?: string;
@@ -46,6 +50,10 @@
     empty?: Snippet;
     extraControls?: Snippet;
     eventId?: number;
+    onData?: (tabs: Record<string, TabData>) => void;
+    afterHeader?: Snippet;
+    nameBadge?: Snippet;
+    nameMeta?: Snippet;
   } = $props();
 
   let loading = $state(true);
@@ -396,6 +404,7 @@ function appDisplayLabel(prefix: string): string {
       const r = await loadData();
       title = r.title;
       allData = r.tabs;
+      onData?.(r.tabs);
       const keys = Object.keys(r.tabs);
       if (keys.length > 0) {
         activeTab = keys[0];
@@ -654,83 +663,109 @@ function appDisplayLabel(prefix: string): string {
     </div>
   {/if}
 {:else}
+  {#snippet leftControls()}
+    <div class="tabs tabs-box tabs-xs" aria-label="Discipline">
+      {#each Object.keys(allData) as tab}
+        <input
+          type="radio"
+          name={discTabsName}
+          class="tab {tab === 'wag' ? 'checked:bg-primary checked:text-primary-content' : 'checked:bg-secondary checked:text-secondary-content'}"
+          aria-label={tab.toUpperCase()}
+          checked={activeTab === tab}
+          onchange={() => applyTab(tab)}
+        />
+      {/each}
+    </div>
+    {#if extraControls}
+      {@render extraControls()}
+    {/if}
+
+    <label class="input input-bordered input-xs flex items-center gap-1 w-64">
+      <span class="text-base-content/60 text-xs" aria-hidden="true">🔍</span>
+      <input
+        type="text"
+        class="grow text-xs w-12"
+        placeholder="Search name or ID"
+        aria-label="Search name or ID"
+        bind:value={rawSearchInput}
+      />
+    </label>
+
+    {#if totalPages > 1}
+      <div class="join ml-1">
+        <button class="btn btn-xs join-item" disabled={currentPage <= 1}
+          onclick={() => { if (currentPage > 1) currentPage--; }}
+          aria-label="Previous page"
+        >«</button>
+        <button class="btn btn-xs join-item no-animation" aria-current="page">{currentPage}/{totalPages}</button>
+        <button class="btn btn-xs join-item" disabled={currentPage >= totalPages}
+          onclick={() => { if (currentPage < totalPages) currentPage++; }}
+          aria-label="Next page"
+        >»</button>
+      </div>
+    {/if}
+
+    <span class="text-xs text-base-content/70 ml-1" role="status">
+      Showing {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, filteredCount)} of {filteredCount} results
+    </span>
+  {/snippet}
+
+  {#snippet rightControls()}
+    {#if download}
+      {@render download({
+        columns,
+        rows: filteredRows,
+        headerLabels: HEADER_LABELS,
+        pdfColumns,
+        colFormat,
+      })}
+    {/if}
+
+    {#if isAdmin}
+      <button
+        class="btn btn-xs {editMode ? 'btn-primary' : 'btn-ghost'}"
+        onclick={toggleEditMode}
+      >
+        {editMode ? "Done Editing" : "Edit"}
+      </button>
+    {/if}
+  {/snippet}
+
   <div
     class="sticky px-2 top-0 z-40 bg-base-100 transition-shadow duration-50 {isScrolled
       ? ''
       : ''}"
   >
-    <h1
-      class="font-bold transition-all duration-50 ml-2 {isScrolled
-        ? 'text-lg mb-0 py-1'
-        : 'text-3xl mb-2 mt-2'}"
-    >
-      {title}
-    </h1>
-
-    <div class="flex flex-wrap items-center gap-1 pb-1">
-      <div class="tabs tabs-box tabs-xs" aria-label="Discipline">
-        {#each Object.keys(allData) as tab}
-          <input
-            type="radio"
-            name={discTabsName}
-            class="tab {tab === 'wag' ? 'checked:bg-primary checked:text-primary-content' : 'checked:bg-secondary checked:text-secondary-content'}"
-            aria-label={tab.toUpperCase()}
-            checked={activeTab === tab}
-            onchange={() => applyTab(tab)}
-          />
-        {/each}
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] items-center gap-x-4 gap-y-1">
+      <div class="flex flex-col min-w-0">
+        <div class="flex flex-wrap items-center gap-2">
+          <h1
+            class="font-bold transition-all duration-50 ml-2 {isScrolled
+              ? 'text-lg mb-0 py-1'
+              : 'text-3xl mb-2 mt-2'}"
+          >
+            {title}
+          </h1>
+          {#if nameBadge}
+            {@render nameBadge()}
+          {/if}
+        </div>
+        {#if nameMeta}
+          <div class="ml-2 pb-1">
+            {@render nameMeta()}
+          </div>
+        {/if}
       </div>
-      {#if extraControls}
-        {@render extraControls()}
-      {/if}
-
-      <label class="input input-bordered input-xs flex items-center gap-1 w-64">
-        <span class="text-base-content/60 text-xs" aria-hidden="true">🔍</span>
-        <input
-          type="text"
-          class="grow text-xs w-12"
-          placeholder="Search name or ID"
-          aria-label="Search name or ID"
-          bind:value={rawSearchInput}
-        />
-      </label>
-
-      {#if totalPages > 1}
-        <div class="join ml-1">
-          <button class="btn btn-xs join-item" disabled={currentPage <= 1}
-            onclick={() => { if (currentPage > 1) currentPage--; }}
-            aria-label="Previous page"
-          >«</button>
-          <button class="btn btn-xs join-item no-animation" aria-current="page">{currentPage}/{totalPages}</button>
-          <button class="btn btn-xs join-item" disabled={currentPage >= totalPages}
-            onclick={() => { if (currentPage < totalPages) currentPage++; }}
-            aria-label="Next page"
-          >»</button>
+      {#if afterHeader}
+        <div class="flex justify-center">
+          {@render afterHeader()}
         </div>
       {/if}
+    </div>
 
-      <span class="text-xs text-base-content/70 ml-1" role="status">
-        Showing {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, filteredCount)} of {filteredCount} results
-      </span>
-
-      {#if download}
-        {@render download({
-          columns,
-          rows: filteredRows,
-          headerLabels: HEADER_LABELS,
-          pdfColumns,
-          colFormat,
-        })}
-      {/if}
-
-      {#if isAdmin}
-        <button
-          class="btn btn-xs {editMode ? 'btn-primary' : 'btn-ghost'}"
-          onclick={toggleEditMode}
-        >
-          {editMode ? "Done Editing" : "Edit"}
-        </button>
-      {/if}
+    <div class="flex flex-wrap items-center gap-1 pb-1">
+      {@render leftControls()}
+      {@render rightControls()}
     </div>
 
     {#if showDuplicateHeaders}

@@ -249,9 +249,9 @@ JSON file
        -> sanitise floats/ranks (DNS/DNF -> None)
        -> strip parenthetical metadata from names
        -> skip GFA units, non-competitive levels
-  -> backfill missing GNZ IDs from existing DB (by name match)
-  -> delete existing event with same name (re-upload)
-  -> INSERT all rows into long_scores
+   -> backfill missing GNZ IDs from existing DB (by name match)
+   -> delete existing events with same (name, start_date, discipline) (re-upload)
+   -> INSERT all rows into long_scores
   -> call reconcile_athletes() (auto-fix ID inconsistencies)
   -> return EventResponse with counts + reconcile report
 ```

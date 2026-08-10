@@ -2,10 +2,11 @@
   import { onMount } from "svelte";
   import { listEvents, deleteEvent, updateEvent, listKnownClubs, type EventSummary, type KnownClub } from "$lib/api";
   import { currentUser } from "$lib/auth";
-  import { selectedYear } from "$lib/year";
+  import { selectedYear, yearOptions } from "$lib/year";
   import { REGION_PALETTES } from "$lib/regions";
   import RegionBadge from "$lib/RegionBadge.svelte";
   import Dialog from "$lib/Dialog.svelte";
+  import Timeline from "$lib/Timeline.svelte";
 
   let events = $state<EventSummary[]>([]);
   let loading = $state(true);
@@ -17,8 +18,16 @@
   let sortAsc = $state(false);
 
   onMount(() => {
-    const unsub = selectedYear.subscribe((v) => (filterYear = v));
-    return unsub;
+    const unsubs: Array<() => void> = [];
+    unsubs.push(selectedYear.subscribe((v) => (filterYear = v)));
+    unsubs.push(
+      yearOptions.subscribe((ys) => {
+        if (ys.length === 0 || filterYear !== null) return;
+        const maxYear = ys.reduce((a, b) => (Number(a) > Number(b) ? a : b));
+        selectedYear.set(maxYear);
+      })
+    );
+    return () => unsubs.forEach((u) => u());
   });
 
   function sorted<T>(items: T[], col: string, asc: boolean): T[] {
@@ -138,22 +147,33 @@
   <title>Events — NZ Gymnastics Results</title>
 </svelte:head>
 
-<div class="max-w-6xl mx-auto">
-  <h1 class="text-3xl font-bold mb-2">Events</h1>
+<div>
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold mb-2">Events</h1>
+  </div>
 
   {#if loading}
-    <div class="flex justify-center py-12">
-      <span class="loading loading-spinner loading-lg text-primary"></span>
+    <div class="max-w-6xl mx-auto">
+      <div class="flex justify-center py-12">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+      </div>
     </div>
   {:else if events.length === 0}
-    <div class="card bg-base-200 mt-4">
-      <div class="card-body items-center text-center py-12">
-        <p class="text-base-content/70">No events uploaded yet.</p>
-        <a href="/upload" class="btn btn-primary btn-sm mt-2">Upload an event</a>
+    <div class="max-w-6xl mx-auto">
+      <div class="card bg-base-200 mt-4">
+        <div class="card-body items-center text-center py-12">
+          <p class="text-base-content/70">No events uploaded yet.</p>
+          <a href="/upload" class="btn btn-primary btn-sm mt-2">Upload an event</a>
+        </div>
       </div>
     </div>
   {:else}
-    <div class="flex flex-wrap items-center gap-2 mb-3">
+    <div class="hidden md:block mb-4">
+      <Timeline {events} {knownClubs} />
+    </div>
+
+    <div class="max-w-6xl mx-auto">
+      <div class="flex flex-wrap items-center gap-2 mb-3">
       <label for="events-search" class="sr-only">Search events</label>
       <input
         id="events-search"
@@ -273,6 +293,7 @@
           {/each}
         </tbody>
       </table>
+    </div>
     </div>
   {/if}
 </div>

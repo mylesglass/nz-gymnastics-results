@@ -59,7 +59,8 @@
           "Tri Star",
           "Tri Star Gymnastics",
           "Tristar",
-          "Tristar Gymnastics Club"
+          "Tristar Gymnastics Club",
+          "Tristar Gymnastics"
         ]
       },
       {
@@ -287,7 +288,8 @@
           "Manawatu Gymsports",
           "Manawatu GymSports",
           "Manawatu",
-          "Manawatu Gymnastics Club"
+          "Manawatu Gymnastics Club",
+          "Manawatu Gymnastics Incorporated"
         ]
       },
       {
@@ -454,7 +456,8 @@
         "name": "Queenstown Gymnastics Club",
         "aliases": [
           "Queenstown Gymnastics Club",
-          "Queenstown Gymnastics"
+          "Queenstown Gymnastics",
+          "Queenstown Gymnastics Centre"
         ]
       },
       {
@@ -553,7 +556,8 @@
           "Turn and Gymnastics Circle",
           "Turn and Gymnastic Circle",
           "T&GC",
-          "Turn and Gymnastics Cirlce Club"
+          "Turn and Gymnastics Cirlce Club",
+          "Turn and Gymnastics Circles"
         ]
       },
       {
@@ -593,7 +597,8 @@
           "Hutt Valley Gymnastics",
           "Hutt Valley",
           "Hutt Valley Gymnastics Club",
-          "Hutt Valley Gymsports"
+          "Hutt Valley Gymsports",
+          "Hutt Valley  Gymnastics"
         ]
       },
       {
@@ -1815,6 +1820,26 @@
     "fantastic gymnastics club": {
       "name": "Fantastic Gymnastics",
       "region": "Northland"
+    },
+    "hutt valley  gymnastics": {
+      "name": "Hutt Valley Gymnastics",
+      "region": "Wellington"
+    },
+    "manawatu gymnastics incorporated": {
+      "name": "Manawatu Gymsports",
+      "region": "Manawatu - Whanganui"
+    },
+    "queenstown gymnastics centre": {
+      "name": "Queenstown Gymnastics Club",
+      "region": "Southland"
+    },
+    "tristar gymnastics": {
+      "name": "Tri Star Gymnastics",
+      "region": "Auckland"
+    },
+    "turn and gymnastics circles": {
+      "name": "Turn and Gymnastic Circle",
+      "region": "Waikato"
     }
   }
 }

@@ -1,5 +1,36 @@
 [
   {
+    "date": "10 Aug 2026",
+    "entries": [
+      {
+        "title": "Gymnast pages: season best summary",
+        "items": [
+          "Picking a specific year on a gymnast's page now shows a Personal Bests card above the results table — the best score the gymnast achieved on each apparatus that season, with the D-score shown underneath, plus the best all-around they actually achieved.",
+          "Hover or focus any apparatus to see which competition and round the best score came from.",
+          "The card also sums the per-apparatus bests into a Best Possible AA score — the best score on each apparatus, combined.",
+          "The gymnast's GNZ ID, club, region and the step(s) they competed in that year are shown underneath their name when a specific year is selected.",
+          "A gymnast's page now defaults to the current year instead of All results (falls back to the most recent season with data if the current year isn't loaded yet)."
+        ]
+      },
+      {
+        "title": "Fixed: phantom 2025 competitions",
+        "items": [
+          "The Events timeline and table were showing a pile of identical competitions on 2 March 2025 — a batch of test Scoreholder exports had been imported more than once, leaving duplicate phantom events behind (each with almost no results).",
+          "All of those phantom March 2025 events have been removed entirely, along with one empty 2024 trial import that had no results.",
+          "Imports now replace every previous copy of the same competition (same name, date and discipline) instead of accumulating them, so this can't happen again — and a same-named event from a different year is left untouched."
+        ]
+      },
+      {
+        "title": "Season Timeline moves to the Events page",
+        "items": [
+          "The season timeline now lives at the top of the Events page instead of a separate Timeline page — scroll the map, then the event table below it.",
+          "It appears only when a specific year is selected (desktop only); on the All-years view just the table shows, so the map and table always match.",
+          "Line and dot colours now adapt to light/dark themes."
+        ]
+      }
+    ]
+  },
+  {
     "date": "8 Aug 2026",
     "entries": [
       {
@@ -18,10 +49,10 @@
       {
         "title": "Season Timeline",
         "items": [
-          "New Timeline page: every competition in a season drawn as a horizontally-scrollable map in the style of a London Underground diagram — black lines, consistent stroke widths and 45° elbows.",
-          "Each week with a competition gets a white dot on the main line, and each competition branches off to an inline station-style label with its date underneath.",
+          "Every competition in a season drawn as a horizontally-scrollable map in the style of a London Underground diagram — theme-aware ink lines, consistent stroke widths and 45° elbows.",
+          "Each week with a competition gets a station dot on the main line, and each competition branches off to an inline station-style label with its date underneath.",
           "Region colours appear as a 2×2 checkerboard marker on each branch (the same palette as the /clubs map); National Championships and events without a host club use a neutral grey marker.",
-          "Hover or focus any competition to see its full details (date, host club, region, WAG/MAG), and click to open its results. Clicking is scoped to a specific year — the All-years view is disabled here."
+          "Hover or focus any competition to see its full details (date, host club, region, WAG/MAG), and click to open its results."
         ]
       }
     ]

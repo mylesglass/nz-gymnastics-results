@@ -98,6 +98,41 @@ class TestUpload:
         resp = client.get("/api/events")
         assert len(resp.json()) == 1
 
+    def test_upload_replaces_all_duplicate_copies(self):
+        path = DATA_DIR / "hve-2026.json"
+        if not path.exists():
+            pytest.skip("hve-2026.json not found")
+
+        # Simulate an event that was imported multiple times (stale duplicates
+        # already in the DB). Re-uploading the same competition must clear them
+        # all, not just the first match.
+        import app.database as db_mod
+
+        from app.models import Event
+
+        session = db_mod.SessionLocal()
+        try:
+            for _ in range(3):
+                session.add(
+                    Event(
+                        name="HVG Elementary Competition 2026",
+                        start_date="2026-05-23",
+                        end_date="2026-05-23",
+                        discipline="WAG+MAG",
+                        year=2026,
+                    )
+                )
+            session.commit()
+        finally:
+            session.close()
+
+        with open(path, "rb") as f:
+            resp = client.post("/api/upload", files={"file": ("hve-2026.json", f, "application/json")})
+        assert resp.status_code == 200
+
+        resp = client.get("/api/events")
+        assert len(resp.json()) == 1
+
 
 class TestImportUrl:
     def _load_hve(self):

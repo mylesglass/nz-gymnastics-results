@@ -1632,10 +1632,21 @@ def _ingest_event(data: dict, allow_unknown: str | None, host_club: str | None =
 
     session = get_session()
     try:
-        # Re-upload: delete existing data for same event name
-        existing = session.query(Event).filter(Event.name == event_info["name"]).first()
+        # Re-upload: replace every existing copy of the same competition
+        # (name + start date + discipline) so re-imports never accumulate
+        # duplicates, and a same-named event from another year is left alone.
+        existing = (
+            session.query(Event)
+            .filter(
+                Event.name == event_info["name"],
+                Event.start_date == event_info["start_date"],
+                Event.discipline == event_info["discipline"],
+            )
+            .all()
+        )
+        for event in existing:
+            session.delete(event)
         if existing:
-            session.delete(existing)
             session.flush()
 
         event = Event(
