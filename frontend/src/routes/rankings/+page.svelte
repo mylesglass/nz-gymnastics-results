@@ -696,9 +696,9 @@
                     <div
                       id={`spec-badge-${s.gnz_id}-${a.app}`}
                       role="tooltip"
-                      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs max-w-[18rem] whitespace-normal break-words"
+                      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs w-72 whitespace-normal break-words space-y-1"
                     >
-                      <div class="font-semibold">{a.app} {a.best.toFixed(3)}</div>
+                      <div class="font-semibold text-sm">{a.app} {a.best.toFixed(3)}</div>
                       <div>
                         {#if qual}
                           Reached {appMarkText(a.app)} at {a.count} competition{a.count === 1 ? "" : "s"}
