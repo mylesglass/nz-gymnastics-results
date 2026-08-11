@@ -746,6 +746,31 @@ _RANKING_MARKS: dict[str, int] = {
     "STEP 6": 3,
 }
 
+# Apparatus-qualifier section thresholds per step, mirroring the Wellington
+# rankings. ``mark`` is a single threshold across all apparatus; ``marks`` is a
+# per-apparatus dict. A gymnast qualifies as a specialist when they reach the
+# threshold on ``count`` DISTINCT COMPETITIONS on the same apparatus (per-event
+# apparatus scores are round-type-merged, vault per ``_use_vault_average``).
+# The section lists gymnasts who aren't already in the (filtered) AA table.
+_APPARATUS_QUALIFIER_CONFIG: dict[str, dict] = {
+    "STEP 8": {"mark": 11.0, "count": 2},
+    "STEP 9": {"mark": 11.0, "count": 2},
+    "STEP 10": {"mark": 11.0, "count": 2},
+    "Level 7": {"mark": 11.5, "count": 1},
+    "Level 8": {"mark": 11.5, "count": 1},
+    "Level 9": {"mark": 11.5, "count": 1},
+    "U18": {"mark": 11.5, "count": 1},
+    "Senior Open": {"mark": 11.5, "count": 1},
+    "Junior International": {
+        "marks": {"VT": 12.2, "UB": 10.4, "BB": 10.5, "FX": 11.4},
+        "count": 1,
+    },
+    "Senior International": {
+        "marks": {"VT": 12.5, "UB": 11.3, "BB": 11.2, "FX": 11.4},
+        "count": 1,
+    },
+}
+
 # Display-only season-mark indicator for low WAG steps: a ✓ is shown when the
 # gymnast reached ``mark`` on ``count`` distinct competitions that season.
 # Kept separate from ``_QUALIFIER_CONFIG`` so it never filters the ranking.
@@ -788,6 +813,89 @@ def _is_qualifier(all_events: list[dict], club: str, step: str) -> bool:
                 return True
         return False
     return True
+
+
+def _compute_apparatus_specialists(
+    apparatus_events: dict[str, dict[str, dict[int, dict]]],
+    step: str,
+    meta_by_name: dict[str, dict[str, str]],
+    exclude_names: set[str] | None = None,
+) -> tuple[list[dict], float | None, int]:
+    """Build the national apparatus-qualifier section for a step.
+
+    Every gymnast who reached the step's apparatus threshold on ``count``
+    distinct competitions on the same apparatus, unless their name is in
+    ``exclude_names`` (the qualifier-filtered All Around table, when the
+    ``qualifier`` filter is on). Returns ``(specialists, single-float mark,
+    count)`` where the single-float mark is ``None`` for per-apparatus-threshold
+    steps.
+    """
+    cfg = _APPARATUS_QUALIFIER_CONFIG.get(step)
+    if cfg is None:
+        return [], None, 2
+    app_threshold = cfg.get("mark")
+    app_scores_by_app = cfg.get("marks")
+    app_count = cfg.get("count", 2)
+
+    specialists = []
+    for name, app_events in apparatus_events.items():
+        if exclude_names and name in exclude_names:
+            continue
+        meta = meta_by_name.get(name, {"gnz_id": "", "club": ""})
+        club = meta["club"]
+        qualifying: list[dict] = []
+        partial: list[dict] = []
+        for app, events in app_events.items():
+            threshold = (
+                app_scores_by_app.get(app, float("inf"))
+                if app_scores_by_app is not None
+                else app_threshold
+            )
+            hits = sorted(
+                (e for e in events.values() if e["score"] >= threshold),
+                key=lambda x: -x["score"],
+            )
+            if not hits:
+                continue
+            best = hits[0]
+            entry = {
+                "app": app,
+                "best": round(best["score"], 3),
+                "event": best["event_name"],
+                "count": len(hits),
+                "competitions": sorted({h["event_name"] for h in hits}),
+            }
+            if len(hits) >= app_count:
+                qualifying.append(entry)
+            else:
+                partial.append(entry)
+
+        if qualifying:
+            qualifying.sort(key=lambda x: (-x["best"], x["app"]))
+            partial.sort(key=lambda x: (-x["best"], x["app"]))
+            specialists.append({
+                "name": name,
+                "gnz_id": meta["gnz_id"],
+                "club": club,
+                "region": _find_region(club or ""),
+                "apparatus": qualifying + partial,
+                "count": len(qualifying) + len(partial),
+                "qualified": True,
+            })
+        elif partial:
+            partial.sort(key=lambda x: (-x["best"], x["app"]))
+            specialists.append({
+                "name": name,
+                "gnz_id": meta["gnz_id"],
+                "club": club,
+                "region": _find_region(club or ""),
+                "apparatus": partial,
+                "count": len(partial),
+                "qualified": False,
+            })
+
+    specialists.sort(key=lambda x: (-x["qualified"], -x["count"], x["name"]))
+    return specialists, app_threshold, app_count
 
 
 @app.get("/api/rankings", response_model=RankingsResponse)
@@ -850,6 +958,13 @@ def get_rankings(
         # never uses two marks from the same competition (e.g. the two days of
         # a two-day meet).
         per_event: dict[tuple, dict] = {}
+        # Per (gymnast, apparatus, event): best apparatus score for that
+        # competition. Multiple round types of a two-day competition merge to
+        # the best score for the event. Used for apparatus-qualifier tracking.
+        apparatus_events: dict[str, dict[str, dict[int, dict]]] = defaultdict(
+            lambda: defaultdict(dict),
+        )
+        meta_by_name: dict[str, dict[str, str]] = {}
         for (name, gnz_id, club, eid, ename, rt), scores in event_groups.items():
             aa_values = [s.aa_score for s in scores if s.aa_score is not None]
             if aa_values:
@@ -879,6 +994,40 @@ def get_rankings(
                     "club": club or "",
                     "host_club": scores[0].host_club or "",
                 }
+
+            # Event-level apparatus score for specialist tracking. Vault
+            # aggregates multiple passes per the AA rules (average or best).
+            event_app_scores: dict[str, float] = {}
+            vt_totals: list[float] = []
+            for s in scores:
+                if s.pass_final_score is None:
+                    continue
+                if s.apparatus == "VT":
+                    vt_totals.append(float(s.pass_final_score))
+                else:
+                    prev_app = event_app_scores.get(s.apparatus or "")
+                    if prev_app is None or float(s.pass_final_score) > prev_app:
+                        event_app_scores[s.apparatus or ""] = float(s.pass_final_score)
+            if vt_totals:
+                if _use_vault_average(step, rt or ""):
+                    event_app_scores["VT"] = sum(vt_totals) / len(vt_totals)
+                else:
+                    event_app_scores["VT"] = max(vt_totals)
+            for app, score in event_app_scores.items():
+                prev_app = apparatus_events[name][app].get(eid)
+                if prev_app is None or score > prev_app["score"]:
+                    apparatus_events[name][app][eid] = {
+                        "score": score,
+                        "event_name": ename,
+                    }
+
+            if name not in meta_by_name:
+                meta_by_name[name] = {"gnz_id": gnz_id or "", "club": club or ""}
+            else:
+                if not meta_by_name[name]["gnz_id"] and gnz_id:
+                    meta_by_name[name]["gnz_id"] = gnz_id
+                if not meta_by_name[name]["club"] and club:
+                    meta_by_name[name]["club"] = club
 
         # Build gymnast_data: aggregate competitions per gymnast, keep the best
         # gnz_id and club, and retain ALL per-event marks for the qualifier check.
@@ -977,7 +1126,36 @@ def get_rankings(
             for r in ranking_list
         ]
 
-        return RankingsResponse(year=year, step=step, discipline=discipline, rankings=rankings)
+        # Apparatus-qualifier section: shown alongside the qualifier view. It
+        # lists gymnasts who reached the step's apparatus threshold, excluding
+        # gymnasts who qualified for All Around (already in the filtered table),
+        # so the two tables never overlap. With the qualifier filter off the
+        # section is empty.
+        specialists_list, app_qual_score, app_qual_count = _compute_apparatus_specialists(
+            apparatus_events, step, meta_by_name,
+            exclude_names=set(gymnast_data) if qualifier else None,
+        )
+        if not qualifier:
+            specialists_list = []
+        specialists_rows = [
+            ApparatusSpecialistRow(
+                name=r["name"],
+                gnz_id=r["gnz_id"],
+                club=r["club"],
+                region=r["region"],
+                apparatus=r.get("apparatus", []),
+                count=r.get("count", 0),
+                qualified=r.get("qualified", True),
+            )
+            for r in specialists_list
+        ]
+
+        return RankingsResponse(
+            year=year, step=step, discipline=discipline, rankings=rankings,
+            apparatus_specialists=specialists_rows,
+            apparatus_qualifying_score=app_qual_score,
+            apparatus_qualifying_count=app_qual_count,
+        )
     finally:
         session.close()
 

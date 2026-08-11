@@ -305,6 +305,9 @@ export interface RankingsResponse {
   step: string;
   discipline: string;
   rankings: RankingRow[];
+  apparatus_specialists?: ApparatusSpecialistRow[];
+  apparatus_qualifying_score?: number | null;
+  apparatus_qualifying_count?: number;
 }
 
 export async function getRankings(

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getRankings, getRankingSteps, type RankingRow } from "$lib/api";
+  import { getRankings, getRankingSteps, type RankingRow, type ApparatusSpecialistRow, type ApparatusQualifyingApp } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
   import RegionBadge from "$lib/RegionBadge.svelte";
   import { REGION_ORDER, REGION_PALETTES } from "$lib/regions";
@@ -94,6 +94,63 @@
   let clubMenuOpen = $state(false);
   let regionMenuOpen = $state(false);
 
+  let specialists = $state<ApparatusSpecialistRow[]>([]);
+  let appQualScore = $state<number | null>(null);
+  let appQualCount = $state(2);
+
+  const SPECIALIST_NOTES: Record<string, string> = {
+    "STEP 8": "STEP 8–10 athletes who reached 11.000 at two different competitions but didn't qualify for the All Around ranking. Greyed-out badges show an apparatus where the mark has been reached once so far.",
+    "STEP 9": "STEP 8–10 athletes who reached 11.000 at two different competitions but didn't qualify for the All Around ranking. Greyed-out badges show an apparatus where the mark has been reached once so far.",
+    "STEP 10": "STEP 8–10 athletes who reached 11.000 at two different competitions but didn't qualify for the All Around ranking. Greyed-out badges show an apparatus where the mark has been reached once so far.",
+    "Level 7": "MAG Level 7+ athletes who reached 11.500 on one apparatus but didn't qualify for the All Around ranking.",
+    "Level 8": "MAG Level 7+ athletes who reached 11.500 on one apparatus but didn't qualify for the All Around ranking.",
+    "Level 9": "MAG Level 7+ athletes who reached 11.500 on one apparatus but didn't qualify for the All Around ranking.",
+    "U18": "MAG Level 7+ athletes who reached 11.500 on one apparatus but didn't qualify for the All Around ranking.",
+    "Senior Open": "MAG Level 7+ athletes who reached 11.500 on one apparatus but didn't qualify for the All Around ranking.",
+    "Junior International": "Junior International athletes who reached an apparatus specialist mark (VT 12.200, UB 10.400, BB 10.500, FX 11.400) on one apparatus but didn't qualify for the All Around ranking.",
+    "Senior International": "Senior International athletes who reached an apparatus specialist mark (VT 12.500, UB 11.300, BB 11.200, FX 11.400) on one apparatus but didn't qualify for the All Around ranking.",
+  };
+
+  let specialistNote = $derived(SPECIALIST_NOTES[selectedStep] ?? "");
+
+  function appBadgeClass(app: string): string {
+    switch (app) {
+      case "VT": return "badge-primary";
+      case "UB": return "badge-secondary";
+      case "BB": return "badge-accent";
+      case "FX": return "badge-info";
+      default: return "badge-neutral";
+    }
+  }
+
+  const APPARATUS_MARKS: Record<string, Record<string, number>> = {
+    "Junior International": { VT: 12.2, UB: 10.4, BB: 10.5, FX: 11.4 },
+    "Senior International": { VT: 12.5, UB: 11.3, BB: 11.2, FX: 11.4 },
+  };
+
+  function appMarkText(app: string): string {
+    if (appQualScore != null) return appQualScore.toFixed(3);
+    return (APPARATUS_MARKS[selectedStep]?.[app] ?? null)?.toFixed(3) ?? "the qualifying mark";
+  }
+
+  function appTooltip(a: ApparatusQualifyingApp): string {
+    const mark = appMarkText(a.app);
+    if (a.count >= appQualCount) {
+      return a.competitions.length > 0
+        ? `${a.app} ${a.best.toFixed(3)} — reached ${mark} at ${a.competitions.join(", ")}`
+        : a.event || "Unknown competition";
+    }
+    return `Reached ${mark} once at ${a.event || "unknown competition"} — needs ${appQualCount} different competitions`;
+  }
+
+  let filteredSpecialists = $derived(
+    specialists.filter(
+      (s) =>
+        (!clubFilter || s.club === clubFilter) &&
+        (!regionFilter || s.region === regionFilter)
+    )
+  );
+
   let clubOptions = $derived([...new Set(rankings.map((r) => r.club).filter(Boolean) as string[])].sort());
   let regionOptions = $derived(
     [...new Set(rankings.map((r) => r.region).filter(Boolean) as string[])].sort(
@@ -136,6 +193,9 @@
     try {
       const data = await getRankings(Number(year), selectedStep, discipline, quotaMode, qualifierMode, divisionFilter);
       rankings = data.rankings;
+      specialists = data.apparatus_specialists ?? [];
+      appQualScore = data.apparatus_qualifying_score ?? null;
+      appQualCount = data.apparatus_qualifying_count ?? 2;
     } catch (e) {
       error = "Failed to load rankings.";
       rankings = [];
@@ -166,8 +226,27 @@
 
   let qualifierHint = $derived(QUALIFIER_RULES[selectedStep] ?? "");
 
+  const APPARATUS_RULES: Record<string, string> = {
+    "STEP 8": "11.000 on one apparatus at two different competitions",
+    "STEP 9": "11.000 on one apparatus at two different competitions",
+    "STEP 10": "11.000 on one apparatus at two different competitions",
+    "Level 7": "11.500 on one apparatus",
+    "Level 8": "11.500 on one apparatus",
+    "Level 9": "11.500 on one apparatus",
+    "U18": "11.500 on one apparatus",
+    "Senior Open": "11.500 on one apparatus",
+    "Junior International": "VT 12.200, UB 10.400, BB 10.500, FX 11.400 on one apparatus",
+    "Senior International": "VT 12.500, UB 11.300, BB 11.200, FX 11.400 on one apparatus",
+  };
+  let apparatusNote = $derived(APPARATUS_RULES[selectedStep] ?? "");
+
+  let rankingNote = $derived(["STEP 5", "STEP 6"].includes(selectedStep)
+    ? "Ranked by the average of each gymnast's top 3 competition scores."
+    : "Ranked by the average of each gymnast's top 2 competition scores.");
+
   let showRankingToggles = $derived(!["STEP 1", "STEP 2", "STEP 3", "STEP 4", "Level 1", "Level 2", "Level 3"].includes(selectedStep));
   let showMarkColumn = $derived(["STEP 1", "STEP 2", "STEP 3", "STEP 4"].includes(selectedStep));
+  let divisionDisabled = $derived(["STEP 9", "STEP 10", "Youth International", "Junior International", "Senior International"].includes(selectedStep));
 
   function switchDisc(d: string) {
     discipline = d;
@@ -178,7 +257,7 @@
   let prevStepKey = "";
   $effect(() => {
     const stepKey = `${discipline}|${selectedStep}`;
-    if (prevStepKey && prevStepKey !== stepKey) {
+    if ((prevStepKey && prevStepKey !== stepKey) || divisionDisabled) {
       divisionFilter = "";
     }
     prevStepKey = stepKey;
@@ -266,8 +345,47 @@
 {/snippet}
 
 <div class="max-w-6xl mx-auto">
-  <h1 class="text-3xl font-bold mb-2">National Rankings</h1>
-  <p class="text-base-content/70 mb-6">Season rankings — top {scoreCols} All Around scores per gymnast (excludes Nationals).</p>
+  <h1 class="text-3xl font-bold mb-6">National Rankings</h1>
+
+  {#if showRankingToggles && selectedStep}
+    <div class="card bg-base-200 border border-base-300 mb-6">
+      <div class="card-body py-4">
+        <div class="flex items-start gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="size-6 shrink-0 mt-0.5 fill-info">
+            <path fill="currentColor" d="M11 17h2v-6h-2zm1.713-8.287Q13 8.425 13 8t-.288-.712T12 7t-.712.288T11 8t.288.713T12 9t.713-.288M12 22q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22"/>
+          </svg>
+          <div class="min-w-0">
+            <h3 class="card-title text-sm mb-1">{selectedStep}</h3>
+            <div class="text-xs text-base-content/70 space-y-1.5">
+              <div>
+                <span class="font-semibold text-base-content/90">Ranking:</span>
+                {rankingNote}
+              </div>
+              {#if qualifierHint}
+                <div>
+                  <span class="font-semibold text-base-content/90">Qualification Criteria:</span>
+                  {qualifierHint}
+                </div>
+              {/if}
+              {#if apparatusNote}
+                <div>
+                  <span class="font-semibold text-base-content/90">Apparatus:</span>
+                  {apparatusNote}
+                </div>
+              {/if}
+              <div>
+                <span class="font-semibold text-base-content/90">Toggles:</span>
+                <ul class="list-disc list-inside ml-3 mt-1 space-y-0.5">
+                  <li><span class="font-semibold text-base-content/90">Region Quotas</span> — caps each region at 4 gymnasts initially.</li>
+                  <li><span class="font-semibold text-base-content/90">Qualified</span> — filters to gymnasts who reached the qualifying mark and shows the App Specialists table below (AA-qualified gymnasts excluded).</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {/if}
 
   <div class="flex flex-wrap items-center gap-3 mb-6">
     <div class="tabs tabs-box" aria-label="Discipline">
@@ -285,19 +403,19 @@
 
       {#if discipline === "WAG"}
         <label for="rank-division" class="sr-only">Division</label>
-        <select id="rank-division" class="select select-bordered select-sm w-40" bind:value={divisionFilter}>
+        <select id="rank-division" class="select select-bordered select-sm w-40 {divisionDisabled ? 'select-disabled opacity-60' : ''}" bind:value={divisionFilter} disabled={divisionDisabled} aria-disabled={divisionDisabled}>
           <option value="">All Divisions</option>
           <option value="OVER">Over</option>
           <option value="UNDER">Under</option>
         </select>
       {/if}
 
-      {#if showRankingToggles}
+  {#if showRankingToggles && selectedStep}
       <div class="flex items-center gap-3 whitespace-nowrap">
         <div class="flex items-center gap-1.5">
           <label class="label cursor-pointer gap-2">
             <input type="checkbox" class="checkbox checkbox-sm" bind:checked={quotaMode} />
-            <span class="label-text text-sm">Enable Region Quotas</span>
+            <span class="label-text text-sm">Region Quotas</span>
           </label>
           <span class="dropdown dropdown-hover dropdown-top">
             <button
@@ -328,7 +446,7 @@
         <div class="flex items-center gap-1.5">
           <label class="label cursor-pointer gap-2">
             <input type="checkbox" class="checkbox checkbox-sm" bind:checked={qualifierMode} />
-            <span class="label-text text-sm">Exclude non-qualifiers</span>
+            <span class="label-text text-sm">Qualified</span>
           </label>
           {#if qualifierHint}
             <span class="dropdown dropdown-hover dropdown-top">
@@ -448,7 +566,7 @@
                     role="tooltip"
                     class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs whitespace-nowrap"
                   >
-                    Has met Gymnastics NZ qualifying score of 52.000 twice
+                    Has met Gymnastics NZ qualifying score of 52.000 at two different competitions
                   </span>
                 </span>
               </th>
@@ -523,9 +641,89 @@
           <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5A.75.75 0 0 0 12 9Z" clip-rule="evenodd" />
         </svg>
         <div class="text-sm">
-          <span class="font-semibold">Can't find someone?</span> The <span class="font-medium">Exclude non-qualifiers</span> filter is on — gymnasts who haven't reached the {selectedStep} qualifying mark are hidden. Turn the filter off to show everyone.
+          <span class="font-semibold">Can't find someone?</span> The <span class="font-medium">Qualified</span> filter is on — gymnasts who haven't reached the {selectedStep} qualifying mark are hidden. Turn it off to show everyone.
         </div>
       </div>
     {/if}
+  {/if}
+
+  {#if filteredSpecialists.length > 0}
+    <h2 class="text-2xl font-bold mt-8 mb-1">Apparatus Qualifiers</h2>
+    <p class="text-base-content/70 mb-4">
+      {specialistNote}
+      Best score per apparatus across the season is shown.
+    </p>
+    <table class="table table-zebra">
+      <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">GNZ ID</th>
+          <th scope="col">Club</th>
+          <th scope="col">Region</th>
+          <th scope="col" class="text-right">Apparatus</th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each filteredSpecialists as s}
+          <tr class="hover:bg-base-300">
+            <td class="font-medium">
+              <a href="/gymnast/{s.gnz_id}" class="hover:link">{s.name}</a>
+            </td>
+            <td class="text-base-content/70 text-xs">{s.gnz_id}</td>
+            <td>{s.club}</td>
+            <td>
+              {#if s.region}
+                <RegionBadge region={s.region} colors={REGION_PALETTES[s.region] ?? []} />
+              {/if}
+            </td>
+            <td>
+              <div class="flex flex-wrap gap-1 justify-end">
+                {#each s.apparatus as a}
+                  {@const qual = a.count >= appQualCount}
+                  <div class="dropdown dropdown-hover dropdown-top dropdown-end">
+                    <button
+                      type="button"
+                      class="cursor-help"
+                      aria-label={appTooltip(a)}
+                      aria-describedby={`spec-badge-${s.gnz_id}-${a.app}`}
+                    >
+                      {#if qual}
+                        <span class="badge badge-sm {appBadgeClass(a.app)}">{a.app} {a.best.toFixed(3)}</span>
+                      {:else}
+                        <span class="badge badge-sm badge-outline text-base-content/60">{a.app} {a.best.toFixed(3)}</span>
+                      {/if}
+                    </button>
+                    <div
+                      id={`spec-badge-${s.gnz_id}-${a.app}`}
+                      role="tooltip"
+                      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs max-w-[18rem] whitespace-normal break-words"
+                    >
+                      <div class="font-semibold">{a.app} {a.best.toFixed(3)}</div>
+                      <div>
+                        {#if qual}
+                          Reached {appMarkText(a.app)} at {a.count} competition{a.count === 1 ? "" : "s"}
+                        {:else}
+                          Reached {appMarkText(a.app)} once at {a.event || "unknown competition"}
+                        {/if}
+                      </div>
+                      {#if qual && a.competitions.length > 0}
+                        <ul class="list-disc list-inside mt-1 space-y-0.5">
+                          {#each a.competitions as c}
+                            <li>{c}</li>
+                          {/each}
+                        </ul>
+                      {/if}
+                      {#if !qual}
+                        <div>Needs {appQualCount} different competitions to qualify</div>
+                      {/if}
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
   {/if}
 </div>

@@ -388,6 +388,132 @@ class TestWellingtonRankings:
                 assert isinstance(a["competitions"], list)
 
 
+class TestNationalRankingsApparatus:
+    """Apparatus-qualifier section on the national /api/rankings endpoint."""
+
+    _DATA = HERE.parent.parent / "data-collection" / "2025" / "wellington-wag_2025.json"
+
+    def _upload(self):
+        if not self._DATA.exists():
+            pytest.skip("wellington-wag_2025.json not found")
+        with open(self._DATA, "rb") as f:
+            resp = client.post("/api/upload", files={"file": ("wellington-wag_2025.json", f, "application/json")})
+        assert resp.status_code == 200
+
+    def test_apparatus_specialists_returned(self):
+        self._upload()
+        resp = client.get("/api/rankings?year=2025&step=STEP 8&discipline=WAG&qualifier=true")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "apparatus_specialists" in body
+        assert body["apparatus_qualifying_score"] == 11.0
+        assert body["apparatus_qualifying_count"] == 2
+        specialists = body["apparatus_specialists"]
+        assert len(specialists) >= 1, "no STEP 8 apparatus specialists in test data"
+        ranked_ids = {r["gnz_id"] for r in body["rankings"]}
+        for s in specialists:
+            assert s["gnz_id"] not in ranked_ids, f"{s['name']} is both ranked and a specialist"
+            assert s["apparatus"], f"{s['name']} has no apparatus badges"
+            for a in s["apparatus"]:
+                assert a["app"]
+                assert a["best"] >= 11.0
+                assert a["count"] >= 1
+                assert isinstance(a["competitions"], list)
+
+    def test_specialists_empty_without_qualifier(self):
+        # The specialist section is tied to the qualifier view: with the
+        # qualifier filter off it stays empty.
+        self._upload()
+        resp = client.get("/api/rankings?year=2025&step=STEP 8&discipline=WAG")
+        assert resp.status_code == 200
+        assert resp.json()["apparatus_specialists"] == []
+
+    def test_no_specialist_config_for_low_step(self):
+        self._upload()
+        resp = client.get("/api/rankings?year=2025&step=STEP 5&discipline=WAG&qualifier=true")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["apparatus_specialists"] == []
+        assert body["apparatus_qualifying_score"] is None
+
+    def test_threshold_count_round_merge_and_vault(self):
+        # Deterministic: STEP 8 = 11.000 on 2 DISTINCT competitions, vault best
+        # of the day, two round types of one competition merge to a single mark.
+        from app.database import SessionLocal
+        from app.models import Event, LongScore
+
+        session = SessionLocal()
+        try:
+            def _event(i: int) -> int:
+                ev = Event(
+                    name=f"Meet {i}", start_date="2025-03-01", end_date="2025-03-02",
+                    discipline="WAG", year=2025,
+                )
+                session.add(ev)
+                session.flush()
+                return ev.id
+
+            def _score(eid, name, gnz, app, total, rt="All Around", pn=1, aa=None):
+                session.add(LongScore(
+                    event_id=eid, event_name=f"Meet {eid}", gymnast_name=name, gnz_id=gnz,
+                    club_name="Clubs R Us", discipline="WAG", level_category="STEP 8",
+                    apparatus=app, pass_number=pn, pass_final_score=total,
+                    round_type=rt, aa_score=aa,
+                ))
+
+            e1, e2, e3 = _event(1), _event(2), _event(3)
+
+            # "Dual" reaches 11.2/11.3 UB at two events -> qualified specialist.
+            _score(e1, "Dual", "G100", "UB", 11.2)
+            _score(e2, "Dual", "G100", "UB", 11.3)
+            # "Once" reaches 11.1 UB at one event only -> greyed ghost.
+            _score(e1, "Once", "G200", "UB", 11.1)
+            # "SameDay": two round types of the same event merge to one mark.
+            _score(e1, "SameDay", "G300", "UB", 11.0, rt="All Around")
+            _score(e1, "SameDay", "G300", "UB", 11.6, rt="Apparatus Finals")
+            # "VaultGirl": two passes a day; STEP 8 takes the best mark, and the
+            # mark is reached at two distinct events -> qualified.
+            _score(e1, "VaultGirl", "G500", "VT", 11.0, pn=1)
+            _score(e1, "VaultGirl", "G500", "VT", 11.4, pn=2)
+            _score(e2, "VaultGirl", "G500", "VT", 11.2, pn=1)
+            _score(e2, "VaultGirl", "G500", "VT", 11.1, pn=2)
+            # "AAQual" qualifies for the AA table AND reaches the mark -> with
+            # the qualifier filter on, AA-qualified gymnasts are excluded from
+            # the specialist section.
+            _score(e1, "AAQual", "G400", "UB", 11.5, aa=43.0)
+            _score(e2, "AAQual", "G400", "UB", 11.4, aa=43.5)
+            session.commit()
+        finally:
+            session.close()
+
+        resp = client.get("/api/rankings?year=2025&step=STEP 8&discipline=WAG&qualifier=true")
+        assert resp.status_code == 200
+        by_name = {s["name"]: s for s in resp.json()["apparatus_specialists"]}
+
+        dual = by_name.get("Dual")
+        assert dual is not None and dual["qualified"] is True
+        assert next(a for a in dual["apparatus"] if a["app"] == "UB")["count"] == 2
+        assert next(a for a in dual["apparatus"] if a["app"] == "UB")["best"] == 11.3
+
+        once = by_name.get("Once")
+        assert once is not None and once["qualified"] is False
+        assert next(a for a in once["apparatus"] if a["app"] == "UB")["count"] == 1
+
+        same = by_name.get("SameDay")
+        assert same is not None
+        same_ub = next(a for a in same["apparatus"] if a["app"] == "UB")
+        assert same_ub["count"] == 1
+        assert same_ub["best"] == 11.6
+
+        vault = by_name.get("VaultGirl")
+        assert vault is not None and vault["qualified"] is True
+        vt = next(a for a in vault["apparatus"] if a["app"] == "VT")
+        assert vt["count"] == 2
+        assert vt["best"] == 11.4
+
+        assert "AAQual" not in by_name
+
+
 class TestGymnasts:
     def _seed(self, session) -> None:
         from app.models import Event, LongScore

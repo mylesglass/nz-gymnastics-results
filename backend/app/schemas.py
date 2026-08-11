@@ -182,6 +182,9 @@ class RankingsResponse(BaseModel):
     step: str
     discipline: str
     rankings: list[RankingRow]
+    apparatus_specialists: list["ApparatusSpecialistRow"] = []
+    apparatus_qualifying_score: float | None = None
+    apparatus_qualifying_count: int = 2
 
 
 class StepsResponse(BaseModel):

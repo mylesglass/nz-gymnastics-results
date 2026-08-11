@@ -3,6 +3,17 @@
     "date": "10 Aug 2026",
     "entries": [
       {
+        "title": "National rankings: apparatus qualifiers",
+        "items": [
+          "STEP 8–10 (WAG) and Level 7+ (MAG) rankings now show an Apparatus Qualifiers section below the table — gymnasts who reached an apparatus qualifying mark but didn't qualify for the All Around ranking.",
+          "The qualifying marks match the Wellington rankings: 11.000 on the same apparatus at two different competitions for STEP 8–10, 11.500 on one apparatus for MAG Level 7+, and the per-apparatus specialist marks for Junior/Senior International.",
+          "Hover or focus any apparatus badge to see the competitions where the mark was reached; greyed-out badges show an apparatus where the mark has only been reached once so far.",
+          "The section appears alongside the 'Qualified' filter — turning it on filters the main table to qualifiers and lists the apparatus specialists below (gymnasts who already qualified for All Around are left out), and turning it off hides the section.",
+          "STEP 5 and above also get a callout at the top of the page explaining the ranking system, the qualifying marks, and what each toggle (Region Quotas, Qualified) does.",
+          "The Over/Under division filter is greyed out for STEP 9, STEP 10 and the international steps — those levels don't use division splits."
+        ]
+      },
+      {
         "title": "Gymnast pages: season best summary",
         "items": [
           "Picking a specific year on a gymnast's page now shows a Personal Bests card above the results table — the best score the gymnast achieved on each apparatus that season, with the D-score shown underneath, plus the best all-around they actually achieved.",
