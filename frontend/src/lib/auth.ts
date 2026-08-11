@@ -18,6 +18,7 @@ function parseToken(token: string): { username: string; role: string } | null {
   try {
     const payload = token.split(".")[1];
     const decoded = JSON.parse(atob(payload));
+    if (decoded.exp && Date.now() / 1000 > decoded.exp) return null;
     return { username: decoded.sub, role: decoded.role };
   } catch {
     return null;

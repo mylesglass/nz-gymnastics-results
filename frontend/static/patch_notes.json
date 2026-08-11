@@ -1,5 +1,17 @@
 [
   {
+    "date": "11 Aug 2026",
+    "entries": [
+      {
+        "title": "Expired sessions sign you out cleanly instead of bouncing",
+        "items": [
+          "If your login has expired (tokens last 7 days), the site now signs you out and takes you to the Login page when you visit a rankings or admin page — previously it could get stuck in a loop that looked like you had no access even though you did.",
+          "A hard refresh no longer gets stuck either, since an expired token is detected as soon as the page loads and is cleared from the browser."
+        ]
+      }
+    ]
+  },
+  {
     "date": "10 Aug 2026",
     "entries": [
       {

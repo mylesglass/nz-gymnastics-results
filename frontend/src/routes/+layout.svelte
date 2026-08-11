@@ -3,7 +3,7 @@
   import type { Snippet } from "svelte";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
-  import { currentUser, authConfigured, logout, hasPermission, setPermissions, PERMISSIONS } from "$lib/auth";
+  import { currentUser, authConfigured, logout, hasPermission, setPermissions, getToken, PERMISSIONS } from "$lib/auth";
   import { checkAuthStatus, listYears, me, trackPage } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
   import "../app.css";
@@ -25,6 +25,7 @@
   let user = $state<{ username: string; role: string; permissions: string[] } | null>(null);
   let authCfg = $state(false);
   let authResolved = $state(false);
+  let authRedirectTarget = $state("/");
   let currentPath = $derived($page.url.pathname);
   let selYear = $state<string | null>(null);
   let years = $state<string[]>([]);
@@ -63,19 +64,28 @@
     const unsub2 = authConfigured.subscribe((v) => (authCfg = v));
     const unsub3 = selectedYear.subscribe((v) => (selYear = v));
     const unsub4 = yearOptions.subscribe((v) => (years = v));
-    checkAuthStatus()
-      .then((s) => {
-        authConfigured.set(s.configured);
-        authResolved = true;
-      })
-      .catch(() => {
-        authResolved = true;
-      });
-    if (user) {
-      me()
-        .then((u) => setPermissions(u.permissions))
-        .catch(() => {});
+    const authTasks: Promise<void>[] = [
+      checkAuthStatus()
+        .then((s) => {
+          authConfigured.set(s.configured);
+        })
+        .catch(() => {}),
+    ];
+    if (getToken()) {
+      authTasks.push(
+        me()
+          .then((u) => setPermissions(u.permissions))
+          .catch((err: Error & { status?: number }) => {
+            if (err.status === 401) {
+              logout();
+              authRedirectTarget = "/login";
+            }
+          })
+      );
     }
+    Promise.allSettled(authTasks).then(() => {
+      authResolved = true;
+    });
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && drawerOpen) {
         drawerOpen = false;
@@ -119,7 +129,7 @@
 
   $effect(() => {
     if (requiresAuth && authActive && !routeAllowed) {
-      goto("/");
+      goto(authRedirectTarget);
     }
   });
 

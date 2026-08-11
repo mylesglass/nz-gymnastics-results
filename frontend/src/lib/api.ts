@@ -61,7 +61,11 @@ export async function me(): Promise<CurrentUserInfo> {
   const res = await fetch(`${API_BASE}/api/auth/me`, {
     headers: authHeaders(),
   });
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) {
+    const err = new Error(await res.text()) as Error & { status?: number };
+    err.status = res.status;
+    throw err;
+  }
   return res.json();
 }
 
