@@ -10,6 +10,8 @@
 
   let { children }: { children: Snippet } = $props();
 
+  const SHOW_UPDATE_BANNER = true;
+
   const THEMES = [
     "light", "dark", "cupcake", "bumblebee", "emerald", "corporate",
     "synthwave", "retro", "cyberpunk", "valentine", "halloween",
@@ -361,6 +363,17 @@
         </div>
       </div>
     </footer>
+
+    {#if SHOW_UPDATE_BANNER}
+      <div class="toast toast-end toast-bottom z-[70] pointer-events-none" role="status">
+        <div class="alert alert-warning shadow-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 size-6" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Currently undergoing an update. If something isn't working, try ctrl+shift+r to hard-refresh the page</span>
+        </div>
+      </div>
+    {/if}
   </div>
 
   <div class="drawer-side z-50">
