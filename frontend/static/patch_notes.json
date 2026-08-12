@@ -3,6 +3,12 @@
     "date": "12 Aug 2026",
     "entries": [
       {
+        "title": "Cleaner data for multi-day competitions",
+        "items": [
+          "Did-Not-Start (DNS) entries are no longer stored as phantom score rows when a competition is imported — a gymnast who only competed one vault on a multi-day meet now shows a single real score instead of a DNS cell, and athletes who never competed at all no longer clutter the gymnast count."
+        ]
+      },
+      {
         "title": "Rankings card on the homepage",
         "items": [
           "Logged-in members now see a Rankings card on the homepage alongside Events, Results, Gymnasts and Clubs — a direct shortcut to the ranking pages."

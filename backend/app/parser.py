@@ -575,6 +575,8 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                     score_data = scores_by_id.get(item_id)
                     if score_data is None:
                         continue
+                    if not isinstance(score_data.get("pass_final_score"), (int, float)):
+                        continue
                     if item_id in emitted_score_ids:
                         continue
                     emitted_score_ids.add(item_id)

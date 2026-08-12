@@ -41,7 +41,7 @@ Core logic:
    - Deduplicate by score `_id` (same score may appear in multiple result sets)
 6. Extract division from `resultTableConfigs` → competition node names (UNDER/OVER/INTERNATIONAL)
 7. Infer `round_type` from unit name + node name (All Around / Apparatus Finals / Qualification)
-8. Sanitise floats/ranks (DNS/DNF → None)
+ 8. Sanitise floats/ranks (DNS/DNF → None); skip any score item whose decoded `pass_final_score` is not numeric (DNS/no-score passes) at emit time — phantom DNS rows are never stored, the wide table renders missing apparatus as "DNS" anyway
 9. **Name cleaning**: `_NAME_LEVEL_SUFFIX = re.compile(r"\s+\((?:L\d+|STEP\s*\d+|YI)\)$")` strips `(L6)`, `(STEP 10)`, `(YI)` etc. suffixes from gymnast names at parse time
 
 ### 4. transformer.py — `pivot_to_wide()` / `pivot_to_wide_dict()`

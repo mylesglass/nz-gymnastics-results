@@ -284,6 +284,26 @@ class TestParseRealData:
         assert len(wags) > 0
 
 
+class TestSkipDnsRows:
+    """DNS (Did Not Start) score items must not be stored as long_score rows.
+
+    Scoreholder emits an explicit DNS score item (decoded ``pass_final_score`` of
+    ``"dns"``) for apparatus/day an athlete didn't compete on multi-day meets.
+    These used to be stored as phantom rows with a NULL total; they are now
+    skipped at emit time so every row carries a numeric score.
+    """
+
+    @pytest.mark.parametrize("fname", ["mgi-wag-2026.json", "hve-2026.json"])
+    def test_no_rows_without_numeric_score(self, fname):
+        data = load(fname)
+        _, rows = parse_json(data)
+        assert len(rows) > 0
+        assert all(r["pass_final_score"] is not None for r in rows), (
+            f"{fname}: expected no DNS/no-score rows, got "
+            f"{sum(1 for r in rows if r['pass_final_score'] is None)}"
+        )
+
+
 class TestValidateUploadStructure:
     def test_valid_structure(self):
         data = {

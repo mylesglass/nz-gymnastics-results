@@ -77,7 +77,7 @@ class TestUpload:
         data = resp.json()
         assert data["name"] == "HVG Elementary Competition 2026"
         assert data["discipline"] == "WAG+MAG"
-        assert data["gymnast_count"] == 271
+        assert data["gymnast_count"] == 269
         assert data["score_count"] >= 1000
         assert data["id"] > 0
 
@@ -175,7 +175,7 @@ class TestImportUrl:
         body = resp.json()
         assert body["name"] == "HVG Elementary Competition 2026"
         assert body["discipline"] == "WAG+MAG"
-        assert body["gymnast_count"] == 271
+        assert body["gymnast_count"] == 269
         assert body["id"] > 0
 
     def _unknown_club_payload(self, org_name="Totally Unknown Club XYZ"):
@@ -241,7 +241,7 @@ class TestListEvents:
         data = resp.json()
         assert len(data) == 1
         assert data[0]["name"] == "HVG Elementary Competition 2026"
-        assert data[0]["gymnast_count"] == 271
+        assert data[0]["gymnast_count"] == 269
 
 
 class TestGetResults:
@@ -264,7 +264,7 @@ class TestGetResults:
         assert "columns" in data
         assert "rows" in data
         assert "event" in data
-        assert data["event"]["gymnast_count"] == 271
+        assert data["event"]["gymnast_count"] == 269
         assert len(data["rows"]) >= 1000
         # Verify columns
         for col in ["gymnast_name", "apparatus", "pass_final_score"]:
