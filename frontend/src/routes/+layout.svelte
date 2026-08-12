@@ -260,26 +260,6 @@
               </ul>
             </div>
           {/if}
-          {#if user?.role === "admin"}
-            <a
-              href="/upload"
-              class="btn btn-sm {active('/upload') ? 'btn-primary' : 'btn-ghost'}"
-            >
-              Upload
-            </a>
-            <a
-              href="/admin"
-              class="btn btn-sm {active('/admin') ? 'btn-primary' : 'btn-ghost'}"
-            >
-              Admin
-            </a>
-            <a
-              href="/admin/activity"
-              class="btn btn-sm {active('/admin/activity') ? 'btn-primary' : 'btn-ghost'}"
-            >
-              Activity
-            </a>
-          {/if}
         </div>
 
         {#if authCfg}
@@ -294,8 +274,13 @@
                 {user.username}
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-3 fill-current opacity-60" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
               </button>
-              <ul tabindex="0" role="menu" aria-label="User menu" class="dropdown-content menu bg-base-100 rounded-box w-44 p-2 shadow" style="z-index: 50">
+              <ul tabindex="0" role="menu" aria-label="User menu" class="dropdown-content menu bg-base-100 rounded-box w-48 p-2 shadow" style="z-index: 50">
                 <li role="none"><span class="text-xs text-base-content/70 px-3 py-1">{user.role}</span></li>
+                {#if user?.role === "admin"}
+                  <li role="none"><a role="menuitem" href="/admin" class={active("/admin") && currentPath === "/admin" ? 'active' : ''}>Dashboard</a></li>
+                  <li role="none"><a role="menuitem" href="/admin/activity" class={active("/admin/activity") ? 'active' : ''}>Activity</a></li>
+                  <li role="none"><a role="menuitem" href="/upload" class={active("/upload") ? 'active' : ''}>Upload</a></li>
+                {/if}
                 <li role="none" class="border-t border-base-300 mt-1 pt-1">
                   <button role="menuitem" onclick={() => { logout(); goto("/"); }}>
                     Logout
@@ -462,26 +447,6 @@
         </div>
       </li>
       {/if}
-      {#if user?.role === "admin"}
-        <li>
-          <a href="/upload" onclick={handleNavClick} class:active={active("/upload")}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path d="M9.25 13.25a.75.75 0 0 0 1.5 0V4.636l2.955 3.129a.75.75 0 0 0 1.09-1.03l-4.25-4.5a.75.75 0 0 0-1.09 0l-4.25 4.5a.75.75 0 1 0 1.09 1.03L9.25 4.636V13.25Z" /><path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" /></svg>
-            Upload
-          </a>
-        </li>
-        <li>
-          <a href="/admin" onclick={handleNavClick} class:active={active("/admin")}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V7H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-1.5V5.5A4.5 4.5 0 0 0 10 1Zm0 2.5A2 2 0 0 1 12 5.5V7H8V5.5A2 2 0 0 1 10 3.5Z" clip-rule="evenodd" /></svg>
-            Admin
-          </a>
-        </li>
-        <li>
-          <a href="/admin/activity" onclick={handleNavClick} class:active={active("/admin/activity")}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clip-rule="evenodd" /></svg>
-            Activity Log
-          </a>
-        </li>
-      {/if}
       {#if authCfg}
         <li class="menu-title mt-4">
           {#if user}
@@ -491,6 +456,26 @@
           {/if}
         </li>
         {#if user}
+          {#if user?.role === "admin"}
+            <li>
+              <a href="/admin" onclick={handleNavClick} class:active={active("/admin") && currentPath === "/admin"}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V7H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-1.5V5.5A4.5 4.5 0 0 0 10 1Zm0 2.5A2 2 0 0 1 12 5.5V7H8V5.5A2 2 0 0 1 10 3.5Z" clip-rule="evenodd" /></svg>
+                Dashboard
+              </a>
+            </li>
+            <li>
+              <a href="/admin/activity" onclick={handleNavClick} class:active={active("/admin/activity")}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clip-rule="evenodd" /></svg>
+                Activity
+              </a>
+            </li>
+            <li>
+              <a href="/upload" onclick={handleNavClick} class:active={active("/upload")}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path d="M9.25 13.25a.75.75 0 0 0 1.5 0V4.636l2.955 3.129a.75.75 0 0 0 1.09-1.03l-4.25-4.5a.75.75 0 0 0-1.09 0l-4.25 4.5a.75.75 0 1 0 1.09 1.03L9.25 4.636V13.25Z" /><path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" /></svg>
+                Upload
+              </a>
+            </li>
+          {/if}
           <li>
             <button
               onclick={() => {
