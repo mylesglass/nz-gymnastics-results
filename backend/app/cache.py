@@ -1,9 +1,13 @@
 """In-memory cache with granular per-event invalidation and optional TTL."""
 
+import threading
 import time
 from typing import Any, Optional
 
 _etag_version = 0
+
+_compute_guard = threading.Lock()
+_compute_locks: dict[str, threading.Lock] = {}
 
 
 class GranularTTLCache:
@@ -47,9 +51,26 @@ def cached(key_parts: tuple, fn, ttl: Optional[int] = None):
     value = cache.get(key)
     if value is not None:
         return value
-    value = fn()
-    cache.set(key, value, ttl)
-    return value
+
+    # Single-flight: when many requests miss the same key at once, only one
+    # computes and the rest reuse the result. Prevents a burst of concurrent
+    # requests (e.g. a page firing several requests) from all running the same
+    # heavy query and stalling the SQLite connection pool.
+    with _compute_guard:
+        lock = _compute_locks.get(key)
+        if lock is None:
+            lock = threading.Lock()
+            _compute_locks[key] = lock
+    with lock:
+        try:
+            value = cache.get(key)
+            if value is None:
+                value = fn()
+                cache.set(key, value, ttl)
+            return value
+        finally:
+            with _compute_guard:
+                _compute_locks.pop(key, None)
 
 
 def invalidate(event_id: Optional[int] = None):

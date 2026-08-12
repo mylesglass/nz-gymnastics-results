@@ -3,6 +3,15 @@
     "date": "11 Aug 2026",
     "entries": [
       {
+        "title": "Faster, more reliable rankings",
+        "items": [
+          "The Apparatus Rankings page could take a very long time to load or get stuck on a spinner — two underlying causes were fixed.",
+          "Requests that carried a logged-in user's token each wrote an activity-log row to the database before the response was sent; under load these writes collided and stalled every request for seconds. Activity logging is now batched in the background, so a response never waits on it.",
+          "The apparatus ranking is now cached per year/step/division for 5 minutes and concurrent requests for the same view compute it once, so switching steps or reloading is near-instant.",
+          "A subtle rendering crash (duplicate gymnast IDs in the data) could leave the page frozen on the spinner even after the data arrived — the table no longer keys off the gymnast ID."
+        ]
+      },
+      {
         "title": "Expired sessions sign you out cleanly instead of bouncing",
         "items": [
           "If your login has expired (tokens last 7 days), the site now signs you out and takes you to the Login page when you visit a rankings or admin page — previously it could get stuck in a loop that looked like you had no access even though you did.",

@@ -19,6 +19,7 @@ def _set_sqlite_pragmas(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA journal_mode=WAL;")
     cursor.execute("PRAGMA synchronous=NORMAL;")
+    cursor.execute("PRAGMA busy_timeout=30000;")
     cursor.execute("PRAGMA cache_size=-64000;")
     cursor.execute("PRAGMA foreign_keys=ON;")
     cursor.execute("PRAGMA temp_store=MEMORY;")
@@ -79,6 +80,9 @@ def init_db():
                 text("ALTER TABLE users ADD COLUMN permissions VARCHAR DEFAULT ''")
             )
         _ensure_indexes(conn)
+        # Flush any large WAL accumulated since the last start so reads don't
+        # stall on WAL pages; passive never blocks active readers/writers.
+        conn.execute(text("PRAGMA wal_checkpoint(PASSIVE)"))
         conn.commit()
 
 

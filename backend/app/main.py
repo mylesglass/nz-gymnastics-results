@@ -9,7 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 from sqlalchemy import func
-from starlette.concurrency import run_in_threadpool
+
+from app.activity_log import enqueue as enqueue_activity, flush as flush_activity, start as start_activity_writer, stop as stop_activity_writer
 
 from app.auth import (
     ALL_PERMISSIONS,
@@ -89,7 +90,9 @@ async def lifespan(app: FastAPI):
     admin = seed_admin_user()
     if admin:
         print(f"  Admin user '{admin}' ready (set ADMIN_PASSWORD to disable auth)")
+    start_activity_writer()
     yield
+    stop_activity_writer()
 
 
 app = FastAPI(title="NZ Gymnastics Results API", lifespan=lifespan)
@@ -137,22 +140,17 @@ def _log_activity(
     status_code: int | None,
     duration_ms: float | None,
 ) -> None:
-    """Insert a single activity log row (runs in a thread)."""
-    session = get_session()
-    try:
-        session.add(ActivityLog(
-            username=username,
-            role=role,
-            type=type_,
-            method=method,
-            path=path,
-            query=query,
-            status_code=status_code,
-            duration_ms=duration_ms,
-        ))
-        session.commit()
-    finally:
-        session.close()
+    """Queue one activity log row (written in the background)."""
+    enqueue_activity(
+        username=username,
+        role=role,
+        type_=type_,
+        method=method,
+        path=path,
+        query=query,
+        status_code=status_code,
+        duration_ms=duration_ms,
+    )
 
 
 @app.middleware("http")
@@ -184,20 +182,16 @@ async def log_activity(request: Request, call_next):
         return response
 
     query = request.url.query or None
-    try:
-        await run_in_threadpool(
-            _log_activity,
-            payload["sub"],
-            payload.get("role", "member"),
-            ACTIVITY_TYPE_API,
-            request.method,
-            path[:500],
-            (query or "")[:1000],
-            response.status_code,
-            round(duration_ms, 2),
-        )
-    except Exception:
-        pass
+    _log_activity(
+        payload["sub"],
+        payload.get("role", "member"),
+        ACTIVITY_TYPE_API,
+        request.method,
+        path[:500],
+        (query or "")[:1000],
+        response.status_code,
+        round(duration_ms, 2),
+    )
     return response
 
 
@@ -1677,19 +1671,17 @@ def refresh_cache(_auth=Depends(require_role("admin"))):
 
 @app.post("/api/track/page")
 def track_page(body: TrackPageRequest, _auth=Depends(get_current_user)):
-    session = get_session()
-    try:
-        session.add(ActivityLog(
-            username=_auth["username"],
-            role=_auth["role"],
-            type=ACTIVITY_TYPE_PAGE,
-            method="GET",
-            path=body.path[:500] or "/",
-        ))
-        session.commit()
-        return {"ok": True}
-    finally:
-        session.close()
+    _log_activity(
+        _auth["username"],
+        _auth["role"],
+        ACTIVITY_TYPE_PAGE,
+        "GET",
+        (body.path or "/")[:500],
+        None,
+        200,
+        None,
+    )
+    return {"ok": True}
 
 
 @app.get("/api/admin/activity", response_model=ActivityLogResponse)
@@ -1700,6 +1692,7 @@ def list_activity(
     offset: int = 0,
     _auth=Depends(require_role("admin")),
 ):
+    flush_activity()
     limit = max(1, min(limit, 500))
     offset = max(0, offset)
     session = get_session()
@@ -1740,6 +1733,7 @@ def list_activity(
 
 @app.delete("/api/admin/activity")
 def clear_activity(user: str = None, _auth=Depends(require_role("admin"))):
+    flush_activity()
     session = get_session()
     try:
         query = session.query(ActivityLog)
@@ -1911,6 +1905,7 @@ def edit_gymnast_scores(
         if updated:
             session.commit()
             cache.invalidate_prefix("wide-all")
+            cache.invalidate_prefix("apparatus-rankings")
             cache.invalidate_prefix("stats")
             cache.invalidate_prefix("gymnasts")
             cache.invalidate_prefix("clubs")
