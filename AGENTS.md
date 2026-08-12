@@ -37,7 +37,7 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   ├── scoreholder.py   # Fetch Scoreholder event JSON exports from public URLs
 │   │   ├── validate_json.py # Batch validation CLI
 │   │   └── wellington_ranking.py # Wellington regional ranking computation
-│   ├── tests/               # pytest suite (130 pass, 87 skip)
+│   ├── tests/               # pytest suite (332 pass, 87 skip)
 │   └── pyproject.toml
 │
 ├── frontend/
@@ -184,7 +184,7 @@ let { label, count = 0 }: { label: string; count?: number } = $props();
 - All tests in `backend/tests/`, one file per module
 - **Run:** `cd backend && source .venv/bin/activate && pytest`
 - **Run single:** `pytest tests/test_parser.py -v`
-- **Stats:** 156 pass, 87 skip (skipped tests rely on data-collection JSON files not always present)
+- **Stats:** 332 pass, 87 skip (skipped tests rely on data-collection JSON files not always present)
 - Plain `assert` statements (no `unittest` methods)
 - `@pytest.mark.parametrize` for data-driven tests
 - Inline fixtures (no conftest.py) — SQLite `:memory:` or temp file

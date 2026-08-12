@@ -144,7 +144,7 @@ Core logic:
 - `/` — Landing page: three plain info items (WAG & MAG, Export & Share, Smart Filtering) above clickable nav cards with live stat badges; a member-only Rankings card appears for users with national/wellington ranking access (links to `/rankings` or `/wellington-ranking`); "What's new" section from `static/patch_notes.json` (fetched, all entries in a scrollable list)
 - `/upload` — Drag-and-drop JSON upload, club mapping dialog, rich success card (gymnast/score/club counts)
 - `/login` — Username + password form, redirects to `/`
-- `/admin` — Admin dashboard (stats, user management, unified athlete ID reconciliation card with per-instance dropdowns, Quick Fix + Apply Selected buttons)
+- `/admin` — Admin dashboard (stats, user management, Identity Review card: similar names / same name / same ID / multi-ID conflicts with per-athlete evidence, plus Merge and Split actions)
 - `/admin/users` — User management table (create, delete, reset password)
 - `/rankings` — Rankings with discipline tabs, STEP dropdown, a callout card at the top (STEP 5+) explaining the ranking system, qualifying marks and the toggles, WAG-only Division dropdown (All/Over/Under, resets on step/discipline change, recomputes the ranking server-side via a `division` query param on `GET /api/rankings` so qualifier/Q/quota/exports all respect it), region quotas + qualifier filter (info tooltips; hidden for STEP 1–4 / MAG Level 1–3), STEP 5/6 use the average of the top 3 marks (three score columns), STEP 1–4 show a rightmost Q column (✓ when 52.000 reached twice), an "Apparatus Qualifiers" section below the table for STEP 8–10 / MAG Level 7+ / Junior+Senior International (gymnasts not in the qualifier-filtered AA table who hit the Wellington apparatus marks — colour-coded badges + tooltips, follows the Club/Region filters), Club/Region header funnel dropdowns filter the loaded rows client-side (exports follow), Total column hidden (bolded Average), "Can't find someone?" note under the table when the qualifier filter is on, partial AA support
 - `/events` — Event list with search bar, year filter, rename/delete, Nationals trophy toggle; a season timeline (`Timeline.svelte`, train-map style) appears at the top on desktop when a specific year is selected
@@ -183,12 +183,16 @@ Core logic:
 - Skip link, `<main id="main">`, `<nav>` landmarks, `aria-current` on active links, `aria-live`/`role="status"` toasts, `role="alert"` errors, 24px min button targets, reduced-motion gating.
 - Reports in `a11y-reports/` (rerun: `./a11y-reports/run.sh before|after [pages...]`, needs `CHROME_PATH`).
 
-## Test Suite (251 tests)- `test_decoder.py`: 14 tests — output map building, decoding, DNS detection, Start Value
-- `test_resolver.py`: 21 tests — all resolver functions
+## Test Suite (332 tests, 87 conditional skip)- `test_decoder.py`: 14 tests — output map building, decoding, DNS detection, Start Value
+- `test_resolver.py`: 34 tests — resolver + name-cleaner (McEwan/O'Sullivan/hyphens) + ID fixes
 - `test_models.py`: 4 tests — CRUD, cascade delete
-- `test_parser.py`: 35 parametrized tests + validation + equal-discarded regression — known-file tests + bulk 2025 scan + real-data + validation + edge case tests
-- `test_api.py`: 13 tests — health, upload validation, list, results, CSV/XLSX export
-- `test_reconcile.py`: 9 tests — athlete ID reconciliation logic
+- `test_parser.py`: 130 tests — parsing, validation, known files, bulk scans, edge cases
+- `test_api.py`: 34 tests — health, upload, events/results, exports, slug endpoints
+- `test_reconcile.py`: 12 tests — evidence-based athlete ID reconciliation
+- `test_athlete_identity.py`: 17 tests — athlete clustering, back-write, rebuild idempotency
+- `test_identity_review.py`: 14 tests — admin identity review + merge/split endpoints
+- `test_repair_identities.py`: 13 tests — consensus repair, dry-run, idempotency
+- `test_database.py`: 1 test — init_db migration of a pre-existing schema
 
 Run: `cd backend && source .venv/bin/activate && pytest`
 

@@ -220,8 +220,9 @@ source .venv/bin/activate
 pytest
 ```
 
-Runs 156 tests covering the decoder, resolver, parser, database models, transformer,
-reconciliation, club aliases, and API endpoints. 87 further tests are conditionally
+Runs 332 tests covering the decoder, resolver, parser, database models (incl. migrations),
+transformer, reconciliation, athlete identity (clustering, back-write, admin review/merge/split),
+club aliases, and API endpoints. 87 further tests are conditionally
 skipped when the reference data‑collection JSON files are not present.
 
 ## 📁 Project structure

@@ -2,7 +2,7 @@ All bugs reported in this session are fixed. See `git log` for details.
 
 **Known issues:**
 - Inline edit (name/GNZ ID/club) saves to DB but frontend doesn't feel reactive — cache invalidation on `wide-all` works but the table may still show stale data after save. Needs investigation into the data reload path (`doLoad()` / `applyTab()`).
-- The remaining same-ID-different-people cases that are *in the source data itself* (e.g. `252164` = Arden + Daniel) are now kept separate by the `athletes` identity table (Phase 2: shared ID + dissimilar names ⇒ distinct athletes), and the 99 events without a source file still need manual admin review. The gymnast page shows each such person under their own slug URL.
+- The remaining same-ID-different-people cases that are *in the source data itself* (e.g. `252164` = Arden + Daniel) are kept separate by the `athletes` identity table (shared ID + dissimilar names ⇒ distinct athletes). Manual review of these (and same-name duplicates) is now tooled: the admin Identity Review card lists every ID/name conflict with per-athlete evidence and provides Merge/Split — see `GET /api/admin/identity-review`.
 
 **Previously fixed:**
 - `repair_identities.py` v1 trusted each source file 100% per-event, so a single file's typo could overwrite a consistent DB ID (e.g. `Alexandra Boys` → 7-digit `6511229`, or near-ties like `emily crisp` 2:3). Diffing the result against a per-(name, club) source consensus exposed 1,016 of 1,787 ID changes moving *away* from consensus. Rewritten to be **consensus-driven**: majority ID across all source files per `(name, club)`, winner must beat runner-up ≥2x; verified the corrected end state has 0 rows differing from consensus.
