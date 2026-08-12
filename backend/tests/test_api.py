@@ -656,3 +656,23 @@ class TestAthleteSlugEndpoints:
         assert len(gymnasts) == 1
         assert gymnasts[0]["slug"] == slug
         assert gymnasts[0]["medals"]["g"] == 2
+
+    def test_wide_all_fallback_name_uses_canonical(self):
+        from app.cache import cache
+        from app.database import SessionLocal
+
+        cache.clear()
+        session = SessionLocal()
+        try:
+            self._seed(session)
+            from app.models import Athlete
+            slug = session.query(Athlete).first().slug
+        finally:
+            session.close()
+
+        # Year 1999 has no rows: the "gymnast not found" fallback name must
+        # come from the athlete's canonical spelling, not a raw variant row.
+        resp = client.get("/api/results/wide-all", params={"slug": slug, "year": 1999})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["name"] == "Eva McEwan"

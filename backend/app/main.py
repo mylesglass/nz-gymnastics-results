@@ -213,7 +213,7 @@ def _compute_stats() -> StatsResponse:
     try:
         return StatsResponse(
             total_events=session.query(func.count(Event.id)).scalar() or 0,
-            total_gymnasts=session.query(func.count(func.distinct(LongScore.gymnast_name))).scalar() or 0,
+            total_gymnasts=session.query(func.count(func.distinct(func.coalesce(LongScore.athlete_id, LongScore.gymnast_name)))).scalar() or 0,
             total_scores=session.query(func.count(LongScore.id)).scalar() or 0,
             total_clubs=session.query(func.count(func.distinct(LongScore.club_name))).scalar() or 0,
         )
@@ -2197,7 +2197,7 @@ def list_events(response: Response):
         stmt = (
             session.query(
                 Event,
-                func.count(func.distinct(LongScore.gymnast_name)).label("gymnast_count"),
+                func.count(func.distinct(func.coalesce(LongScore.athlete_id, LongScore.gymnast_name))).label("gymnast_count"),
             )
             .outerjoin(LongScore, Event.id == LongScore.event_id)
             .group_by(Event.id)
@@ -2328,31 +2328,41 @@ def _compute_wide_all(year: int | None, gnz_id: str | None, club: str | None, at
         if (resolved_id or gnz_id) and not result:
             name_row = None
             if resolved_id:
-                name_row = (
-                    session.query(LongScore.gymnast_name)
-                    .filter(
-                        LongScore.athlete_id == resolved_id,
-                        LongScore.gymnast_name.isnot(None),
-                        LongScore.gymnast_name != "",
+                athlete = session.get(Athlete, resolved_id)
+                if athlete and athlete.canonical_name:
+                    name_row = (athlete.canonical_name,)
+                else:
+                    name_row = (
+                        session.query(LongScore.gymnast_name)
+                        .filter(
+                            LongScore.athlete_id == resolved_id,
+                            LongScore.gymnast_name.isnot(None),
+                            LongScore.gymnast_name != "",
+                        )
+                        .order_by(LongScore.id.desc())
+                        .first()
                     )
-                    .order_by(LongScore.id.desc())
-                    .first()
-                )
                 if name_row:
                     result["name"] = name_row[0]
             else:
-                name_row = (
-                    session.query(LongScore.gymnast_name)
-                    .filter(
-                        LongScore.gnz_id == gnz_id,
-                        LongScore.gymnast_name.isnot(None),
-                        LongScore.gymnast_name != "",
+                athlete_id = resolve_identity(session, gnz_id=gnz_id)
+                if athlete_id is not None:
+                    athlete = session.get(Athlete, athlete_id)
+                    if athlete and athlete.canonical_name:
+                        result["name"] = athlete.canonical_name
+                if "name" not in result:
+                    name_row = (
+                        session.query(LongScore.gymnast_name)
+                        .filter(
+                            LongScore.gnz_id == gnz_id,
+                            LongScore.gymnast_name.isnot(None),
+                            LongScore.gymnast_name != "",
+                        )
+                        .order_by(LongScore.id.desc())
+                        .first()
                     )
-                    .order_by(LongScore.id.desc())
-                    .first()
-                )
-                if name_row:
-                    result["name"] = name_row[0]
+                    if name_row:
+                        result["name"] = name_row[0]
         return result
     finally:
         session.close()

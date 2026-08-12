@@ -26,7 +26,9 @@ Clustering runs a union-find over ``(normalized name, gnz_id)`` signatures:
 ``rebuild_athletes`` is idempotent and **signature-stable**: each cluster is
 keyed by a hash of its canonical ``(normalized name, gnz_id)`` pair, so an
 existing ``Athlete`` row is reused (keeping its ``id``/``slug``) across rebuilds
-unless the cluster's dominant identity actually changes.
+unless the cluster's dominant identity actually changes.  After re-clustering,
+every ``long_scores`` row is **back-written** to its cluster's canonical
+spelling, so the raw ``gymnast_name`` column stops carrying variant spellings.
 """
 
 import difflib
@@ -326,6 +328,7 @@ def rebuild_athletes(session) -> int:
     # --- Signature-stable upsert of athletes ----------------------------
     existing = {a.signature_hash: a for a in session.query(Athlete).all()}
     sig_to_athlete: dict[tuple[str, str], int] = {}
+    athlete_names: dict[int, str] = {}
     hashes_in_use: set[str] = set()
     for root, meta in component_data.items():
         digest = _signature_hash(meta["canonical_norm"], meta["gnz_id"] or "")
@@ -348,10 +351,7 @@ def rebuild_athletes(session) -> int:
             athlete.gnz_id = meta["gnz_id"]
         for key in components[root]:
             sig_to_athlete[key] = athlete.id
-
-    for digest, athlete in list(existing.items()):
-        if digest not in hashes_in_use:
-            session.delete(athlete)
+            athlete_names[athlete.id] = meta["canonical_name"]
 
     # --- Assign athlete_id to long_scores -------------------------------
     for key, athlete_id in sig_to_athlete.items():
@@ -366,6 +366,26 @@ def rebuild_athletes(session) -> int:
                 func.trim(func.lower(LongScore.gymnast_name)) == norm,
                 (LongScore.gnz_id.is_(None)) | (LongScore.gnz_id == ""),
             ).update({LongScore.athlete_id: athlete_id}, synchronize_session=False)
+
+    # Orphans are deleted only after re-pointing, so no ``long_scores`` row
+    # still references an athlete whose signature changed this rebuild.
+    for digest, athlete in list(existing.items()):
+        if digest not in hashes_in_use:
+            session.delete(athlete)
+
+    # --- Back-write: unify raw spelling to the canonical name -----------
+    # Every row of an athlete now carries the cluster's most-common spelling,
+    # so name-keyed queries, stats counts and per-event groupings stop seeing
+    # variant spellings as separate people/marks.  Idempotent: once the raw
+    # column matches ``canonical_name`` the UPDATE matches zero rows.
+    for athlete_id, canonical_name in athlete_names.items():
+        session.query(LongScore).filter(
+            LongScore.athlete_id == athlete_id,
+            LongScore.gymnast_name != canonical_name,
+        ).update(
+            {LongScore.gymnast_name: canonical_name},
+            synchronize_session=False,
+        )
 
     session.commit()
     return len(component_data)

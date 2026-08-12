@@ -242,3 +242,82 @@ class TestAthleteIdentity:
             assert sess.query(Athlete).count() == 0
         finally:
             sess.close()
+
+    def test_back_write_unifies_raw_spelling(self):
+        self._seed([
+            {"event_id": 1, "gymnast_name": "Eva Mcewan", "gnz_id": "999", "club_name": "OMNI"},
+            {"event_id": 2, "gymnast_name": "Eva McEwan", "gnz_id": "999", "club_name": "OMNI"},
+            {"event_id": 3, "gymnast_name": "Eva McEwan", "gnz_id": "999", "club_name": "OMNI"},
+        ])
+        sess = self.TestSession()
+        try:
+            rebuild_athletes(sess)
+            names = {r.gymnast_name for r in sess.query(LongScore).all()}
+        finally:
+            sess.close()
+        assert names == {"Eva McEwan"}
+
+    def test_back_write_idempotent(self):
+        self._seed([
+            {"event_id": 1, "gymnast_name": "Eva Mcewan", "gnz_id": "999", "club_name": "OMNI"},
+            {"event_id": 2, "gymnast_name": "Eva McEwan", "gnz_id": "999", "club_name": "OMNI"},
+        ])
+        sess = self.TestSession()
+        try:
+            rebuild_athletes(sess)
+            before = {(r.id, r.gymnast_name, r.athlete_id) for r in sess.query(LongScore).all()}
+            rebuild_athletes(sess)
+            after = {(r.id, r.gymnast_name, r.athlete_id) for r in sess.query(LongScore).all()}
+        finally:
+            sess.close()
+        assert before == after
+
+    def test_back_write_preserves_distinct_people_sharing_a_name(self):
+        self._seed([
+            {"event_id": 1, "gymnast_name": "Madison Lynch", "gnz_id": "249317", "club_name": "Onslow"},
+            {"event_id": 1, "gymnast_name": "Madison Lynch", "gnz_id": "716561", "club_name": "OMNI"},
+        ])
+        sess = self.TestSession()
+        try:
+            rebuild_athletes(sess)
+            rows = [(r.gnz_id, r.athlete_id) for r in sess.query(LongScore).all()]
+            by_gnz = {gid: {aid for gid2, aid in rows if gid2 == gid} for gid, _ in rows}
+            assert len(by_gnz["249317"]) == 1
+            assert len(by_gnz["716561"]) == 1
+            assert by_gnz["249317"] != by_gnz["716561"]
+            assert len({r.gymnast_name for r in sess.query(LongScore).all()}) == 1
+        finally:
+            sess.close()
+
+    def test_back_write_same_event_variant_collapses(self):
+        self._seed([
+            {"event_id": 1, "gymnast_name": "Eva Mcewan", "gnz_id": "999", "club_name": "OMNI", "apparatus": "VT"},
+            {"event_id": 1, "gymnast_name": "Eva McEwan", "gnz_id": "999", "club_name": "OMNI", "apparatus": "UB"},
+        ])
+        sess = self.TestSession()
+        try:
+            rebuild_athletes(sess)
+            ev1 = sess.query(LongScore).filter(LongScore.event_id == 1).all()
+            assert len({r.gymnast_name for r in ev1}) == 1
+            assert len({r.athlete_id for r in ev1}) == 1
+        finally:
+            sess.close()
+
+    def test_rebuild_repoints_rows_before_deleting_orphans(self):
+        # A rebuild that changes a cluster's identity must re-point rows to
+        # the new athlete before deleting the orphaned one (FK safety).
+        self._seed([
+            {"event_id": 1, "gymnast_name": "Eva McEwan", "gnz_id": "999", "club_name": "OMNI"},
+        ])
+        sess = self.TestSession()
+        try:
+            rebuild_athletes(sess)
+            assert sess.query(Athlete).count() == 1
+            sess.query(LongScore).update({"gnz_id": "888"}, synchronize_session=False)
+            sess.commit()
+            n = rebuild_athletes(sess)
+            assert n == 1
+            assert sess.query(Athlete).count() == 1
+            assert sess.query(Athlete).first().gnz_id == "888"
+        finally:
+            sess.close()
