@@ -574,3 +574,85 @@ class TestGymnasts:
         resp26 = client.get("/api/gymnasts", params={"year": 2026})
         assert resp26.status_code == 200
         assert {g["name"] for g in resp26.json()} == {"Alice"}
+
+
+class TestAthleteSlugEndpoints:
+    def _seed(self, session) -> None:
+        from app.athlete_identity import rebuild_athletes
+        from app.models import Event, LongScore
+
+        ev = Event(name="Meet 2026", start_date="2026-03-01", end_date="2026-03-02", discipline="WAG", year=2026)
+        session.add(ev)
+        session.flush()
+        session.add_all([
+            LongScore(event_id=ev.id, event_name="Meet 2026", gymnast_name="Eva Mcewan", gnz_id="999", club_name="OMNI", discipline="WAG", level_category="STEP 5", apparatus="VT", pass_number=1, pass_final_score=10.0, round_type="All Around"),
+            LongScore(event_id=ev.id, event_name="Meet 2026", gymnast_name="Eva McEwan", gnz_id="999", club_name="OMNI", discipline="WAG", level_category="STEP 5", apparatus="UB", pass_number=1, pass_final_score=11.0, round_type="All Around"),
+        ])
+        session.commit()
+        rebuild_athletes(session)
+
+    def test_gymnasts_collapse_variants_and_expose_slug(self):
+        from app.cache import cache
+        from app.database import SessionLocal
+
+        cache.clear()
+        session = SessionLocal()
+        try:
+            self._seed(session)
+        finally:
+            session.close()
+
+        resp = client.get("/api/gymnasts", params={"year": 2026})
+        assert resp.status_code == 200
+        items = resp.json()
+        assert len(items) == 1
+        assert items[0]["name"] == "Eva McEwan"
+        assert items[0]["slug"]
+        assert items[0]["slug"].startswith("a")
+
+    def test_wide_all_by_slug_and_gnz_id_back_compat(self):
+        from app.cache import cache
+        from app.database import SessionLocal
+
+        cache.clear()
+        session = SessionLocal()
+        try:
+            self._seed(session)
+            from app.models import Athlete
+            slug = session.query(Athlete).first().slug
+        finally:
+            session.close()
+
+        by_slug = client.get("/api/results/wide-all", params={"slug": slug}).json()
+        rows = (by_slug.get("wag") or {}).get("rows", [])
+        assert len(rows) == 1
+        assert rows[0]["name"] == "Eva McEwan"
+        assert rows[0]["slug"] == slug
+
+        by_gnz = client.get("/api/results/wide-all", params={"gnz_id": "999"}).json()
+        assert len((by_gnz.get("wag") or {}).get("rows", [])) == 1
+
+    def test_medals_by_slug(self):
+        from app.athlete_identity import rebuild_athletes
+        from app.cache import cache
+        from app.database import SessionLocal
+        from app.models import Athlete, LongScore
+
+        cache.clear()
+        session = SessionLocal()
+        try:
+            self._seed(session)
+            # Give the athlete an apparatus gold so medals return a row
+            session.query(LongScore).update({"apparatus_rank": 1}, synchronize_session=False)
+            session.commit()
+            rebuild_athletes(session)
+            slug = session.query(Athlete).first().slug
+        finally:
+            session.close()
+
+        resp = client.get("/api/medals", params={"slug": slug})
+        assert resp.status_code == 200
+        gymnasts = resp.json()["gymnasts"]
+        assert len(gymnasts) == 1
+        assert gymnasts[0]["slug"] == slug
+        assert gymnasts[0]["medals"]["g"] == 2

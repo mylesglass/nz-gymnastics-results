@@ -104,6 +104,7 @@ class MedalCounts(BaseModel):
 
 
 class GymnastMedals(BaseModel):
+    slug: str = ""
     gnz_id: str
     name: str
     club: str | None = None
@@ -134,6 +135,7 @@ class KnownClubItem(BaseModel):
 
 
 class GymnastItem(BaseModel):
+    slug: str = ""
     gnz_id: str
     name: str
     club: str | None
@@ -171,6 +173,7 @@ class ReconcileReport(BaseModel):
 class RankingRow(BaseModel):
     rank: str
     name: str
+    slug: str = ""
     gnz_id: str
     club: str | None
     region: str = ""
@@ -197,6 +200,7 @@ class StepsResponse(BaseModel):
 class ApparatusRankingRow(BaseModel):
     rank: str
     name: str
+    slug: str = ""
     gnz_id: str
     club: str | None
     region: str = ""
@@ -233,6 +237,7 @@ class ApparatusRow(BaseModel):
 class WellingtonRankingRow(BaseModel):
     rank: str
     name: str
+    slug: str = ""
     gnz_id: str
     club: str | None
     region: str = ""
@@ -254,6 +259,7 @@ class CheckItem(BaseModel):
 
 class WellingtonNotRankedRow(BaseModel):
     name: str
+    slug: str = ""
     gnz_id: str
     club: str | None
     region: str = ""
@@ -294,6 +300,7 @@ class ApparatusQualifyingApp(BaseModel):
 
 class ApparatusSpecialistRow(BaseModel):
     name: str
+    slug: str = ""
     gnz_id: str
     club: str | None
     region: str = ""
@@ -343,7 +350,9 @@ class MergeNamesRequest(BaseModel):
 
 
 class IntentToggle(BaseModel):
-    gnz_id: str
+    gnz_id: str | None = None
+    athlete_id: int | None = None
+    slug: str | None = None
     year: int
     submitted: bool
 

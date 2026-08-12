@@ -985,8 +985,8 @@ function appDisplayLabel(prefix: string): string {
                       if (e.key === "Enter") saveRow(rowIdx);
                     }}
                   />
-                {:else if col === "name" && row["gnz-id"]}
-                  <a href={`/gymnast/${row["gnz-id"]}`} class="link link-hover"
+                {:else if col === "name" && (row["gnz-id"] || row["slug"])}
+                  <a href={`/gymnast/${row["slug"] || row["gnz-id"]}`} class="link link-hover"
                     >{row[col] ?? ""}</a
                   >
                 {:else if col === "club" && row["club"]}

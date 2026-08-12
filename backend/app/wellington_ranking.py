@@ -7,7 +7,7 @@ selection rules, and ranks Wellington-attached gymnasts.
 from collections import defaultdict
 
 from app.database import get_session
-from app.models import Event, LongScore
+from app.models import Athlete, Event, LongScore
 from app.transformer import _find_region, _use_vault_average
 
 # ── Event name patterns ──────────────────────────────────────────────
@@ -267,7 +267,7 @@ def _dropped_reasons(
 
 
 def _unranked_row(
-    name: str, gnz_id: str, club: str, region: str,
+    name: str, slug: str, gnz_id: str, club: str, region: str,
     scores: list[float | None], competition_names: list[str],
     categories: list[str], apparatus: list[list[dict]],
     competitions: int, n_regional: int, n_club: int, n_away: int,
@@ -276,6 +276,7 @@ def _unranked_row(
     """Build a unified ``not_ranked`` row shared by all non-ranked athletes."""
     return {
         "name": name,
+        "slug": slug,
         "gnz_id": gnz_id,
         "club": club,
         "region": region,
@@ -506,6 +507,7 @@ def compute_wellington_rankings(
         rows = (
             session.query(
                 LongScore.gymnast_name,
+                LongScore.athlete_id,
                 LongScore.gnz_id,
                 LongScore.club_name,
                 LongScore.event_id,
@@ -531,11 +533,13 @@ def compute_wellington_rankings(
             .all()
         )
 
+        athletes = {a.id: a for a in session.query(Athlete).all()}
+
         # 1. Group by (gymnast, event, round_type) → competition scores
         raw_groups: dict[tuple, list] = defaultdict(list)
         for r in rows:
             key = (
-                r.gymnast_name, r.gnz_id, r.club_name,
+                r.athlete_id or r.gymnast_name, r.gymnast_name, r.gnz_id, r.club_name,
                 r.event_id, r.event_name, r.round_type,
             )
             raw_groups[key].append(r)
@@ -553,8 +557,9 @@ def compute_wellington_rankings(
         )
         gymnast_meta: dict[str, dict[str, str]] = {}
         for key, scores in raw_groups.items():
-            name = key[0]
-            event_id = key[3]
+            a_key = key[0]
+            name = key[1]
+            event_id = key[4]
             comp_score = _compute_competition_score(scores, step)
 
             apparatus = [
@@ -586,39 +591,47 @@ def compute_wellington_rankings(
                     if prev is None or p["total"] > prev:
                         event_app_scores[p["app"]] = p["total"]
             if vt_totals:
-                if _use_vault_average(step, key[5]):
+                if _use_vault_average(step, key[6]):
                     event_app_scores["VT"] = sum(vt_totals) / len(vt_totals)
                 else:
                     event_app_scores["VT"] = max(vt_totals)
             for app, score in event_app_scores.items():
-                prev = apparatus_events[name][app].get(event_id)
+                prev = apparatus_events[a_key][app].get(event_id)
                 if prev is None or score > prev["score"]:
-                    apparatus_events[name][app][event_id] = {
+                    apparatus_events[a_key][app][event_id] = {
                         "score": score,
-                        "event_name": key[4],
+                        "event_name": key[5],
                     }
 
-            if name not in gymnast_meta:
-                gymnast_meta[name] = {"gnz_id": key[1] or "", "club": key[2] or ""}
+            if a_key not in gymnast_meta:
+                gymnast_meta[a_key] = {"name": name, "gnz_id": key[2] or "", "club": key[3] or ""}
             else:
-                if not gymnast_meta[name]["gnz_id"] and key[1]:
-                    gymnast_meta[name]["gnz_id"] = key[1]
-                if not gymnast_meta[name]["club"] and key[2]:
-                    gymnast_meta[name]["club"] = key[2]
+                if not gymnast_meta[a_key]["gnz_id"] and key[2]:
+                    gymnast_meta[a_key]["gnz_id"] = key[2]
+                if not gymnast_meta[a_key]["club"] and key[3]:
+                    gymnast_meta[a_key]["club"] = key[3]
 
-            gymnast_events[name][event_id].append({
+            gymnast_events[a_key][event_id].append({
                 "score": comp_score,
-                "event_name": key[4],
+                "event_name": key[5],
                 "event_id": event_id,
-                "gnz_id": key[1] or "",
-                "club": key[2] or "",
+                "gnz_id": key[2] or "",
+                "club": key[3] or "",
                 "apparatus": apparatus,
             })
+
+        # Canonical display names for athlete-keyed gymnasts.
+        for a_key, meta in gymnast_meta.items():
+            if isinstance(a_key, int) and a_key in athletes:
+                meta["name"] = athletes[a_key].canonical_name or meta["name"]
 
         # 3. Per gymnast: take best score per event, classify, select top 3
         rankings = []
         not_ranked = []
-        for name, event_map in gymnast_events.items():
+        for a_key, event_map in gymnast_events.items():
+            meta = gymnast_meta.get(a_key, {"name": str(a_key), "gnz_id": "", "club": ""})
+            name = meta["name"]
+            slug = athletes[a_key].slug if isinstance(a_key, int) and a_key in athletes else ""
             all_events_list = []
             for eid, scores_list in event_map.items():
                 best = max(scores_list, key=lambda x: x["score"])
@@ -637,8 +650,15 @@ def compute_wellington_rankings(
             if selected is None:
                 continue
             marks_required = config.get("marks_required", 3)
+            best_gnz_id = next(
+                (s["gnz_id"] for s in all_events_list if s["gnz_id"]), "",
+            )
+            intent_submitted = (
+                intents is None
+                or a_key in intents
+                or (best_gnz_id and best_gnz_id in intents)
+            )
             if None in selected[:marks_required]:
-                meta = gymnast_meta.get(name, {"gnz_id": "", "club": ""})
                 gnz_id = meta["gnz_id"]
                 club = meta["club"]
                 region = _find_region(club)
@@ -658,7 +678,6 @@ def compute_wellington_rankings(
                     why = "No eligible competitions"
                 else:
                     why = "Can't form the required 3-mark selection — missing the regional/away event mix"
-                intent_submitted = intents is None or gnz_id in intents
                 checks = _selection_checks(config, n_regional, n_club, n_away, count)
                 checks.append({"label": "Intent submitted", "met": intent_submitted, "detail": ""})
                 checks.extend(_qualifier_checks(
@@ -667,7 +686,7 @@ def compute_wellington_rankings(
                     _is_wellington_qualified(all_events_list, config),
                 ))
                 not_ranked.append(_unranked_row(
-                    name, gnz_id, club, region,
+                    name, slug, gnz_id, club, region,
                     slot_scores, slot_names, slot_cats, slot_apps,
                     count, n_regional, n_club, n_away,
                     why, checks, intent_submitted,
@@ -690,18 +709,13 @@ def compute_wellington_rankings(
             if not wgtn_ok:
                 warnings.append(_wgtn_failure_reason(config))
 
-            # Intent check
-            best_gnz_id = next(
-                (s["gnz_id"] for s in all_events_list if s["gnz_id"]), "",
-            )
-            intent_submitted = intents is None or best_gnz_id in intents
-
             best_club = next(
                 (s["club"] for s in all_events_list if s["club"]), "",
             )
 
             entry = {
                 "name": name,
+                "slug": slug,
                 "gnz_id": best_gnz_id,
                 "club": best_club,
                 "region": _find_region(best_club),
@@ -734,7 +748,7 @@ def compute_wellington_rankings(
                 })
                 checks.extend(_qualifier_checks(config, gnz_ok, wgtn_ok))
                 not_ranked.append(_unranked_row(
-                    entry["name"], entry["gnz_id"], entry["club"], entry["region"],
+                    entry["name"], entry["slug"], entry["gnz_id"], entry["club"], entry["region"],
                     entry["scores"], entry["competitions"], entry["categories"],
                     entry["apparatus"],
                     len(all_events_list), len(regionals), len(clubs), len(aways),
@@ -784,18 +798,20 @@ def compute_wellington_rankings(
             app_threshold = config.get("apparatus_qualifying_score")
             app_scores_by_app = config.get("apparatus_qualifying_scores")
             app_count = config.get("apparatus_qualifying_count", 2)
-            aa_names = {r["name"] for r in rankings}
-            for name, app_events in apparatus_events.items():
-                if name in aa_names:
+            aa_keys = {r["name"] for r in rankings}
+            for a_key, app_events in apparatus_events.items():
+                meta = gymnast_meta.get(a_key, {"name": str(a_key), "gnz_id": "", "club": ""})
+                name = meta["name"]
+                if name in aa_keys:
                     continue
-                meta = gymnast_meta.get(name, {"gnz_id": "", "club": ""})
                 gnz_id = meta["gnz_id"]
                 club = meta["club"]
-                if intents is not None and gnz_id not in intents:
+                if intents is not None and a_key not in intents and gnz_id not in intents:
                     continue
                 region = _find_region(club)
                 if region != "Wellington":
                     continue
+                slug = athletes[a_key].slug if isinstance(a_key, int) and a_key in athletes else ""
 
                 qualifying = []
                 partial = []
@@ -829,6 +845,7 @@ def compute_wellington_rankings(
                     partial.sort(key=lambda x: (-x["best"], x["app"]))
                     apparatus_specialists.append({
                         "name": name,
+                        "slug": slug,
                         "gnz_id": gnz_id,
                         "club": club,
                         "region": region,
@@ -840,6 +857,7 @@ def compute_wellington_rankings(
                     partial.sort(key=lambda x: (-x["best"], x["app"]))
                     apparatus_specialists.append({
                         "name": name,
+                        "slug": slug,
                         "gnz_id": gnz_id,
                         "club": club,
                         "region": region,

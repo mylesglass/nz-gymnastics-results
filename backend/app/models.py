@@ -22,6 +22,22 @@ class User(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
+class Athlete(Base):
+    __tablename__ = "athletes"
+
+    __table_args__ = (
+        Index("idx_athletes_slug", "slug", unique=True),
+        Index("idx_athletes_gnz_id", "gnz_id"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    slug = Column(String, nullable=False)
+    signature_hash = Column(String, nullable=False, unique=True)
+    canonical_name = Column(String, nullable=False)
+    gnz_id = Column(String, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
 class Event(Base):
     __tablename__ = "events"
 
@@ -52,10 +68,12 @@ class LongScore(Base):
         Index("idx_long_scores_club_name", "club_name"),
         Index("idx_long_scores_event_gymnast", "event_id", "gymnast_name"),
         Index("idx_long_scores_rankings", "discipline", "level_category", "pass_final_score"),
+        Index("idx_long_scores_athlete_id", "athlete_id"),
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
+    athlete_id = Column(Integer, ForeignKey("athletes.id"), nullable=True)
 
     event_name = Column(String, nullable=False)
     gymnast_name = Column(String, nullable=False)
@@ -105,10 +123,11 @@ class WellingtonIntent(Base):
     __tablename__ = "wellington_intents"
 
     __table_args__ = (
-        UniqueConstraint("gnz_id", "year", name="uix_gnz_year"),
+        UniqueConstraint("athlete_id", "year", name="uix_athlete_year"),
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    gnz_id = Column(String, nullable=False)
+    gnz_id = Column(String, nullable=True)
+    athlete_id = Column(Integer, nullable=True)
     year = Column(Integer, nullable=False)
     submitted_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

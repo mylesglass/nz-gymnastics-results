@@ -532,7 +532,7 @@
             <tr class="group hover:bg-base-300">
               <td class="font-bold text-base md:text-lg sticky left-0 z-10 w-10 min-w-10 px-1 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}">{r.rank}</td>
               <td class="font-medium sticky left-10 z-10 border-r border-base-300 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}">
-                <a href="/gymnast/{r.gnz_id}" class="hover:link">{r.name}</a>
+                <a href="/gymnast/{r.slug || r.gnz_id}" class="hover:link">{r.name}</a>
               </td>
               <td class="text-base-content/70 text-xs hidden md:table-cell">{r.gnz_id}</td>
               <td>{r.club}</td>
@@ -622,7 +622,7 @@
         {#each filteredSpecialists as s, i}
           <tr class="group hover:bg-base-300">
             <td class="font-medium sticky left-0 z-10 border-r border-base-300 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}">
-              <a href="/gymnast/{s.gnz_id}" class="hover:link">{s.name}</a>
+              <a href="/gymnast/{s.slug || s.gnz_id}" class="hover:link">{s.name}</a>
             </td>
             <td class="text-base-content/70 text-xs hidden md:table-cell">{s.gnz_id}</td>
             <td class="hidden md:table-cell">{s.club}</td>

@@ -6,6 +6,7 @@
   import MedalBadges from "$lib/MedalBadges.svelte";
 
   interface Gymnast {
+    slug?: string;
     gnz_id: string;
     name: string;
     club: string | null;
@@ -42,7 +43,7 @@
 
   $effect(() => {
     getMedals(filterYear ? { year: parseInt(filterYear) } : {})
-      .then((r) => (gymnastMedals = Object.fromEntries(r.gymnasts.map((g) => [g.gnz_id, g]))))
+      .then((r) => (gymnastMedals = Object.fromEntries(r.gymnasts.map((g) => [g.slug || g.gnz_id, g]))))
       .catch(() => (gymnastMedals = {}));
   });
 
@@ -188,7 +189,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-1">
           {#each letterGymnasts as gr}
             <a
-              href="/gymnast/{gr.gnz_id}"
+              href="/gymnast/{gr.slug || gr.gnz_id}"
               class="flex flex-col px-3 py-1.5 rounded hover:bg-base-200 transition-colors"
             >
               <span class="flex items-center gap-1">
@@ -199,8 +200,8 @@
                   {/if}
                 </span>
                 <span class="ml-auto flex items-center gap-2 shrink-0">
-                  {#if gymnastMedals[gr.gnz_id]}
-                    <MedalBadges size="xs" showEmpty={false} medals={gymnastMedals[gr.gnz_id].medals} />
+                  {#if gymnastMedals[gr.slug || gr.gnz_id]}
+                    <MedalBadges size="xs" showEmpty={false} medals={gymnastMedals[gr.slug || gr.gnz_id].medals} />
                   {/if}
                   <span class="badge badge-ghost badge-xs font-mono">{displayIds(gr)}</span>
                 </span>

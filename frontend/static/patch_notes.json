@@ -3,6 +3,15 @@
     "date": "12 Aug 2026",
     "entries": [
       {
+        "title": "One identity per gymnast",
+        "items": [
+          "Every gymnast now has a stable identity that survives spelling differences and messy IDs — the gymnast list no longer shows duplicates like 'Eva Mcewan' and 'Eva McEwan' as two people, and genuinely different athletes who share a name or ID (e.g. two Madison Lynches) are kept apart.",
+          "Gymnast pages moved to stable links (e.g. /gymnast/a3f8b2c1d4) that don't break when an ID is corrected. Old gnz-id links still work.",
+          "Ranking tables, results tables and the Wellington rankings all group by the gymnast's identity, so spelling variants of the same person rank as one gymnast with their most common name.",
+          "Wellington intent tracking follows the gymnast identity too, so marking intent for a gymnast stays attached if their ID is ever corrected."
+        ]
+      },
+      {
         "title": "Smarter athlete identity handling",
         "items": [
           "Gymnast names keep their proper capitalization on import — names like McEwan, O'Sullivan and hyphenated surnames are no longer flattened to 'Mcewan' or 'Sullivan'.",

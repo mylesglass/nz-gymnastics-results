@@ -67,19 +67,27 @@
     if (!tabs) return [];
     return [...(tabs.wag?.rows ?? []), ...(tabs.mag?.rows ?? [])];
   });
-  let gnzId = $derived(String($page.params.gnz_id ?? metaRows[0]?.["gnz-id"] ?? ""));
+  let gnzId = $derived(String(metaRows[0]?.["gnz-id"] ?? ""));
   let club = $derived(mostCommon(metaRows.map((r) => String(r.club ?? ""))));
   let region = $derived(mostCommon(metaRows.map((r) => String(r.region ?? ""))));
   let steps = $derived([
     ...new Set(metaRows.map((r) => String(r.step ?? "")).filter((s) => s)),
   ]);
 
+  // The route param is an athlete slug (a##########); legacy gnz_id links are
+  // sent through the gnz_id param so the backend keeps resolving them.
+  function identityParams(): { slug?: string; gnz_id?: string } {
+    const p = $page.params.slug;
+    if (/^a[0-9a-f]{10}$/.test(p)) return { slug: p };
+    return { gnz_id: p };
+  }
+
   $effect(() => {
-    const gnzId = $page.params.gnz_id;
-    if (!gnzId) return;
+    const params = identityParams();
+    if (!params.slug && !params.gnz_id) return;
     medalsLoading = true;
     getMedals({
-      gnz_id: gnzId,
+      ...params,
       ...(filterYear ? { year: parseInt(filterYear) } : {}),
     })
       .then((r) => {
@@ -93,11 +101,11 @@
   });
 
   function loadDataImpl() {
-    const gnzId = $page.params.gnz_id;
-    if (!gnzId) return Promise.resolve({ title: "Gymnast", tabs: {} });
-    const params: { gnz_id: string; year?: number } = { gnz_id: gnzId };
-    if (filterYear) params.year = parseInt(filterYear);
-    return getAllWideResults(params).then((r) => {
+    const params = identityParams();
+    if (!params.slug && !params.gnz_id) return Promise.resolve({ title: "Gymnast", tabs: {} });
+    const query: { slug?: string; gnz_id?: string; year?: number } = { ...params };
+    if (filterYear) query.year = parseInt(filterYear);
+    return getAllWideResults(query).then((r) => {
       const rowsExist = Boolean(r.wag?.rows?.length || r.mag?.rows?.length);
       gymnastFound = rowsExist || Boolean(r.name);
       const name = r.name || r.wag?.rows[0]?.name || r.mag?.rows[0]?.name;
@@ -118,7 +126,7 @@
 </svelte:head>
 
 {#snippet download({columns, rows, headerLabels, pdfColumns, colFormat})}
-  <ExportMenu {columns} {rows} {headerLabels} {pdfColumns} {colFormat} title={gymnastName ? `${gymnastName} Results` : "Gymnast Results"} filename={gymnastName ? `${gymnastName} Results` : `gymnast-${$page.params.gnz_id || "unknown"}`} />
+  <ExportMenu {columns} {rows} {headerLabels} {pdfColumns} {colFormat} title={gymnastName ? `${gymnastName} Results` : "Gymnast Results"} filename={gymnastName ? `${gymnastName} Results` : `gymnast-${$page.params.slug || "unknown"}`} />
 {/snippet}
 
 {#snippet controls()}

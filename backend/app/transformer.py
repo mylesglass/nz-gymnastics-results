@@ -9,7 +9,7 @@ import pandas as pd
 
 from app.cache import cached
 from app.clubdata import ensure_seed
-from app.models import LongScore
+from app.models import Athlete, LongScore
 
 _CLUB_DATA: dict | None = None
 
@@ -134,15 +134,29 @@ def pivot_to_wide(event_id: int, session, event_name: str, event_date: str) -> p
     return df[[c for c in ordered if c in df.columns]]
 
 
-def pivot_to_wide_dict(event_id: int, session, gnz_id: str = None, club: str = None) -> dict:
+def pivot_to_wide_dict(event_id: int, session, gnz_id: str = None, club: str = None, athlete_id: int = None) -> dict:
     return cached(
-        ("event", event_id, "pivot", gnz_id or "", club or ""),
-        lambda: _compute_pivot(event_id, session, gnz_id, club),
+        ("event", event_id, "pivot", gnz_id or "", club or "", athlete_id or ""),
+        lambda: _compute_pivot(event_id, session, gnz_id, club, athlete_id),
     )
 
 
-def pivot_to_wide_dict_multi(event_ids: list[int], session, gnz_id: str = None, club: str = None) -> dict:
-    return _compute_pivot_multi(event_ids, session, gnz_id, club)
+def pivot_to_wide_dict_multi(event_ids: list[int], session, gnz_id: str = None, club: str = None, athlete_id: int = None) -> dict:
+    return _compute_pivot_multi(event_ids, session, gnz_id, club, athlete_id)
+
+
+def _slug_by_id(session) -> dict[int, str]:
+    return {a.id: a.slug for a in session.query(Athlete).all()}
+
+
+def _athlete_maps(session) -> tuple[dict[int, str], dict[int, str]]:
+    """Return ``(slug_by_id, name_by_id)`` for all athletes."""
+    slug_by_id: dict[int, str] = {}
+    name_by_id: dict[int, str] = {}
+    for a in session.query(Athlete).all():
+        slug_by_id[a.id] = a.slug
+        name_by_id[a.id] = a.canonical_name
+    return slug_by_id, name_by_id
 
 
 def _long_rows_from_session(query) -> list[dict]:
@@ -168,11 +182,12 @@ def _long_rows_from_session(query) -> list[dict]:
             "aa_score": s.aa_score,
             "aa_rank": s.aa_rank,
             "bonus": s.bonus,
+            "athlete_id": s.athlete_id,
         })
     return long_rows
 
 
-def _compute_pivot(event_id: int, session, gnz_id: str = None, club: str = None) -> dict:
+def _compute_pivot(event_id: int, session, gnz_id: str = None, club: str = None, athlete_id: int = None) -> dict:
     """Pivot long-format scores into wide-format rows per discipline.
 
     Returns dict: {wag: {columns, rows}, mag: {columns, rows}}
@@ -182,22 +197,28 @@ def _compute_pivot(event_id: int, session, gnz_id: str = None, club: str = None)
         query = query.filter(LongScore.gnz_id == gnz_id)
     if club:
         query = query.filter(LongScore.club_name == club)
+    if athlete_id:
+        query = query.filter(LongScore.athlete_id == athlete_id)
     long_rows = _long_rows_from_session(query)
     if not long_rows:
         return {}
-    return _pivot_long_rows(long_rows)
+    slug_by_id, name_by_id = _athlete_maps(session)
+    return _pivot_long_rows(long_rows, slug_by_id, name_by_id)
 
 
-def _compute_pivot_multi(event_ids: list[int], session, gnz_id: str = None, club: str = None) -> dict:
+def _compute_pivot_multi(event_ids: list[int], session, gnz_id: str = None, club: str = None, athlete_id: int = None) -> dict:
     query = session.query(LongScore).filter(LongScore.event_id.in_(event_ids))
     if gnz_id:
         query = query.filter(LongScore.gnz_id == gnz_id)
     if club:
         query = query.filter(LongScore.club_name == club)
+    if athlete_id:
+        query = query.filter(LongScore.athlete_id == athlete_id)
     scores = query.all()
     if not scores:
         return {}
 
+    slug_by_id, name_by_id = _athlete_maps(session)
     rows_by_event: dict[int, list[dict]] = {}
     event_names: dict[int, str] = {}
     for s in scores:
@@ -229,8 +250,9 @@ def _compute_pivot_multi(event_ids: list[int], session, gnz_id: str = None, club
                 "aa_score": s.aa_score,
                 "aa_rank": s.aa_rank,
                 "bonus": s.bonus,
+                "athlete_id": s.athlete_id,
             })
-        data = _pivot_long_rows(long_rows)
+        data = _pivot_long_rows(long_rows, slug_by_id, name_by_id)
         if not data:
             continue
         event_name = event_names.get(event_id, "")
@@ -259,8 +281,13 @@ def _compute_pivot_multi(event_ids: list[int], session, gnz_id: str = None, club
     return combined
 
 
-def _pivot_long_rows(long_rows: list[dict]) -> dict:
-    """Core pivot logic: given long-format rows, return wide-format per discipline."""
+def _pivot_long_rows(long_rows: list[dict], slug_by_id: dict[int, str] | None = None, name_by_id: dict[int, str] | None = None) -> dict:
+    """Core pivot logic: given long-format rows, return wide-format per discipline.
+
+    Rows are grouped by athlete identity (``athlete_id``, falling back to the
+    gymnast name for unassigned rows) so spelling variants of one person render
+    as a single row with their canonical name.
+    """
     df = pd.DataFrame(long_rows)
     present_apps = set(df["apparatus"].unique())
 
@@ -270,10 +297,11 @@ def _pivot_long_rows(long_rows: list[dict]) -> dict:
     result: dict[str, dict] = {}
 
 # Group raw data without averaging scores — keep per-pass info
-    # Build a dict: (gymnast_name, round_type) -> {apparatus -> [pass_rows]}
+    # Build a dict: (gymnast_identity, round_type) -> {apparatus -> [pass_rows]}
     gymnast_round_scores: dict = {}
     for _, row in df.iterrows():
-        key = (row["gymnast_name"], row["round_type"])
+        identity = row.get("athlete_id") or row["gymnast_name"]
+        key = (identity, row["round_type"])
         if key not in gymnast_round_scores:
             gymnast_round_scores[key] = {}
         app = row["apparatus"]
@@ -284,13 +312,20 @@ def _pivot_long_rows(long_rows: list[dict]) -> dict:
     # Build wide rows manually
     meta = df.drop_duplicates(subset=["gymnast_name", "round_type"], keep="first")[
         ["gymnast_name", "round_type", "aa_score", "gnz_id", "club_name", "level_category",
-         "division", "aa_rank", "discipline"]
+         "division", "aa_rank", "discipline", "athlete_id"]
     ].copy()
     sentinel = -999999.0
     meta["aa_score"] = meta["aa_score"].fillna(sentinel)
 
     wide_rows: list[dict] = []
-    for (name, rt), scores in gymnast_round_scores.items():
+    for (identity, rt), scores in gymnast_round_scores.items():
+        first_row = next(iter(scores.values()))[0]
+        # Canonical display name: the athlete's canonical name when the group is
+        # keyed on athlete_id, else the first row's name.
+        if isinstance(identity, int):
+            name = (name_by_id or {}).get(identity) or first_row["gymnast_name"]
+        else:
+            name = identity
         wide_row: dict[str, object] = {
             "gymnast_name": name,
             "round_type": rt,
@@ -301,7 +336,7 @@ def _pivot_long_rows(long_rows: list[dict]) -> dict:
             scores[app].sort(key=lambda r: r.get("pass_number", 1))
 
         # Find metadata for this (name, rt) pair
-        meta_row = meta[(meta["gymnast_name"] == name) & (meta["round_type"] == rt)]
+        meta_row = meta[(meta["gymnast_name"] == first_row["gymnast_name"]) & (meta["round_type"] == rt)]
         if not meta_row.empty:
             mr = meta_row.iloc[0]
             wide_row["gnz_id"] = mr.get("gnz_id", "")
@@ -311,6 +346,7 @@ def _pivot_long_rows(long_rows: list[dict]) -> dict:
             wide_row["aa_score"] = mr.get("aa_score", sentinel)
             wide_row["aa_rank"] = mr.get("aa_rank")
             wide_row["discipline"] = mr.get("discipline", "")
+            wide_row["athlete_id"] = mr.get("athlete_id")
 
         for app, passes in scores.items():
             pfx = app.lower()
@@ -377,6 +413,8 @@ def _pivot_long_rows(long_rows: list[dict]) -> dict:
             if key not in seen:
                 seen.add(key)
                 out_row = _build_wide_row(row, prefixes, columns)
+                athlete_id = row.get("athlete_id")
+                out_row["slug"] = (slug_by_id or {}).get(athlete_id) or ""
 
                 # Apparatus finals / Day 2: AA = sum of apparatus scored in this round
                 rt_lower = str(row.get("round-type", "")).lower()

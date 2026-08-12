@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from sqlalchemy import func
 
 from app.activity_log import enqueue as enqueue_activity, flush as flush_activity, start as start_activity_writer, stop as stop_activity_writer
+from app.athlete_identity import rebuild_athletes, resolve_identity
 
 from app.auth import (
     ALL_PERMISSIONS,
@@ -31,7 +32,7 @@ from app.auth import (
 from app.cache import cache, cache_headers, cached, invalidate
 from app.clubdata import active_path, ensure_seed
 from app.database import get_session, init_db
-from app.models import ACTIVITY_TYPE_API, ACTIVITY_TYPE_PAGE, ActivityLog, Event, LongScore, User, WellingtonIntent
+from app.models import ACTIVITY_TYPE_API, ACTIVITY_TYPE_PAGE, ActivityLog, Athlete, Event, LongScore, User, WellingtonIntent
 from app.parser import ParseError, _NAME_TO_CANONICAL, detect_participant_collisions, find_unknown_clubs, parse_json, reload_club_maps, suggest_club_mapping, validate_upload_structure
 from app.reconcile import reconcile_athletes
 from app.scoreholder import ScoreholderFetchError, fetch_event_json
@@ -226,23 +227,24 @@ _AA_MEDAL_ROUND_TYPES = ("All Around", "All Around - Final", "All Around - Day 2
 
 
 @app.get("/api/medals", response_model=MedalsResponse)
-def get_medals(response: Response, year: int = None, gnz_id: str = None, club: str = None):
+def get_medals(response: Response, year: int = None, gnz_id: str = None, club: str = None, athlete_id: int = None, slug: str = None):
     response.headers.update(cache_headers())
     return cached(
-        ("medals", year or "", gnz_id or "", club or ""),
-        lambda: _compute_medals(year, gnz_id, club),
+        ("medals", year or "", gnz_id or "", club or "", athlete_id or "", slug or ""),
+        lambda: _compute_medals(year, gnz_id, club, athlete_id, slug),
         ttl=300,
     )
 
 
-def _compute_medals(year: int | None, gnz_id: str | None, club: str | None) -> MedalsResponse:
+def _compute_medals(year: int | None, gnz_id: str | None, club: str | None, athlete_id: int | None = None, slug: str | None = None) -> MedalsResponse:
     """Aggregate gold/silver/bronze tallies per gymnast and club.
 
     Medals are counted by rank value (1 = gold, 2 = silver, 3 = bronze) from
     the stored apparatus/AA ranks, deduped so multi-pass vaults and the AA
     rank duplicated across a gymnast's apparatus rows count once. Every
     competition (including National Championships) and every team entry is
-    treated the same.
+    treated the same. Gymnasts are keyed on ``athlete_id`` (falling back to a
+    name key for rows with no identity assigned).
     """
     from collections import defaultdict
 
@@ -251,6 +253,7 @@ def _compute_medals(year: int | None, gnz_id: str | None, club: str | None) -> M
         query = (
             session.query(
                 LongScore.event_id,
+                LongScore.athlete_id,
                 LongScore.gnz_id,
                 LongScore.gymnast_name,
                 LongScore.club_name,
@@ -263,22 +266,37 @@ def _compute_medals(year: int | None, gnz_id: str | None, club: str | None) -> M
         )
         if year:
             query = query.filter(Event.year == year)
-        if gnz_id:
-            query = query.filter(LongScore.gnz_id == gnz_id)
+        if athlete_id:
+            query = query.filter(LongScore.athlete_id == athlete_id)
+        elif slug:
+            resolved = resolve_identity(session, slug=slug)
+            if resolved is None:
+                return MedalsResponse(year=year, gymnasts=[], clubs=[])
+            query = query.filter(LongScore.athlete_id == resolved)
+        elif gnz_id:
+            resolved = resolve_identity(session, gnz_id=gnz_id)
+            if resolved is None:
+                query = query.filter(LongScore.gnz_id == gnz_id)
+            else:
+                query = query.filter(LongScore.athlete_id == resolved)
         if club:
             query = query.filter(LongScore.club_name == club)
         rows = query.all()
 
+        slug_by_id = {a.id: a.slug for a in session.query(Athlete).all()}
         awards: list[tuple[str, int, str | None]] = []
         app_seen: set[tuple] = set()
         aa_seen: set[tuple] = set()
-        entity_meta: dict[str, tuple[str, str | None, str | None]] = {}
+        entity_meta: dict[str, tuple[str, str | None, str | None, str]] = {}
 
-        for (event_id, gid, name, club_name, apparatus, round_type,
+        for (event_id, aid, gid, name, club_name, apparatus, round_type,
              app_rank, aa_rank) in rows:
-            entity_key = f"id:{gid}" if gid else f"name:{name}"
+            if aid:
+                entity_key = f"id:{aid}"
+            else:
+                entity_key = f"name:{name.strip().lower()}"
             if entity_key not in entity_meta:
-                entity_meta[entity_key] = (name, gid, club_name)
+                entity_meta[entity_key] = (name, gid, club_name, slug_by_id.get(aid) or "")
             if app_rank in (1, 2, 3):
                 unit = (event_id, entity_key, apparatus, round_type or "")
                 if unit not in app_seen:
@@ -308,6 +326,7 @@ def _compute_medals(year: int | None, gnz_id: str | None, club: str | None) -> M
 
         gymnasts = [
             GymnastMedals(
+                slug=meta[3],
                 gnz_id=meta[1] or "",
                 name=meta[0],
                 club=meta[2],
@@ -430,7 +449,7 @@ def _compute_gymnasts(year: int | None) -> list[GymnastItem]:
     session = get_session()
     try:
         query = (
-            session.query(LongScore.gymnast_name, LongScore.gnz_id, LongScore.club_name)
+            session.query(LongScore.gymnast_name, LongScore.gnz_id, LongScore.club_name, LongScore.athlete_id)
             .join(Event, Event.id == LongScore.event_id)
             .filter(LongScore.gnz_id.isnot(None), LongScore.gnz_id != "")
             .distinct()
@@ -442,10 +461,16 @@ def _compute_gymnasts(year: int | None) -> list[GymnastItem]:
         name_groups: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
         club_groups: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
         name_casing: dict[str, str] = {}
+        athletes = {a.id: a for a in session.query(Athlete).all()}
 
-        for name, gnz_id, club in rows:
-            key = name.strip().lower()
-            name_casing[key] = name_casing.get(key, name.strip())
+        for name, gnz_id, club, athlete_id in rows:
+            if athlete_id and athlete_id in athletes:
+                key = f"id:{athlete_id}"
+                canonical = athletes[athlete_id].canonical_name or name.strip()
+            else:
+                key = name.strip().lower()
+                canonical = name.strip()
+            name_casing[key] = name_casing.get(key, canonical)
             name_groups[key][gnz_id or ""] += 1
             club_groups[key][club or ""] += 1
 
@@ -461,7 +486,13 @@ def _compute_gymnasts(year: int | None) -> list[GymnastItem]:
             best_club = sorted_clubs[0][0] or None
             alt_clubs = [c for c, _ in sorted_clubs[1:]]
 
+            slug = ""
+            if key.startswith("id:"):
+                athlete = athletes.get(int(key.split(":")[1]))
+                slug = athlete.slug if athlete else ""
+
             result.append(GymnastItem(
+                slug=slug,
                 gnz_id=best_id,
                 name=name_casing[key],
                 club=best_club,
@@ -811,30 +842,38 @@ def _is_qualifier(all_events: list[dict], club: str, step: str) -> bool:
     return True
 
 
-def _build_event_marks(rows, step: str):
+def _build_event_marks(rows, step: str, athletes: dict[int, Athlete] | None = None):
     """Aggregate raw LongScore rows into per-competition and per-apparatus marks.
 
     Rows are grouped by (gymnast, event, round_type). Each group collapses to
     one competition score (best All Around mark, else the apparatus sum with
     vault per ``_use_vault_average``) and one score per apparatus, then round
-    types merge so each (gymnast, event) contributes at most one mark.
+    types merge so each (gymnast, event) contributes at most one mark.  Gymnast
+    identity uses ``athlete_id`` (falling back to the name for unassigned
+    rows), so spelling variants of one person rank as a single gymnast.
 
-    Returns ``(per_event, apparatus_events, meta_by_name)`` where
-    ``apparatus_events`` maps name -> apparatus -> event_id -> ``{"score",
-    "event_name", "d"}`` (``d`` is the D-score of the best pass, averaged when
-    the vault is averaged) and ``meta_by_name`` holds the best gnz_id/club.
+    Returns ``(per_event, apparatus_events, meta_by_key)`` where
+    ``per_event`` maps ``(athlete_key, event_id)`` -> competition dict,
+    ``apparatus_events`` maps athlete_key -> apparatus -> event_id ->
+    ``{"score", "event_name", "d"}`` (``d`` is the D-score of the best pass,
+    averaged when the vault is averaged) and ``meta_by_key`` holds the best
+    display name/gnz_id/club.
     """
+    athletes = athletes or {}
     event_groups: dict[tuple, list] = defaultdict(list)
     for r in rows:
-        key = (r.gymnast_name, r.gnz_id, r.club_name, r.event_id, r.event_name, r.round_type)
+        key = (
+            r.athlete_id or r.gymnast_name, r.gymnast_name, r.gnz_id,
+            r.club_name, r.event_id, r.event_name, r.round_type,
+        )
         event_groups[key].append(r)
 
     per_event: dict[tuple, dict] = {}
     apparatus_events: dict[str, dict[str, dict[int, dict]]] = defaultdict(
         lambda: defaultdict(dict),
     )
-    meta_by_name: dict[str, dict[str, str]] = {}
-    for (name, gnz_id, club, eid, ename, rt), scores in event_groups.items():
+    meta_by_key: dict[str, dict[str, str]] = {}
+    for (a_key, name, gnz_id, club, eid, ename, rt), scores in event_groups.items():
         aa_values = [s.aa_score for s in scores if s.aa_score is not None]
         if aa_values:
             comp_score = float(max(aa_values))
@@ -853,7 +892,7 @@ def _build_event_marks(rows, step: str):
                 else:
                     comp_score += sum(app_scores)
 
-        key2 = (name, eid)
+        key2 = (a_key, eid)
         prev = per_event.get(key2)
         if prev is None or comp_score > prev["score"]:
             per_event[key2] = {
@@ -896,40 +935,46 @@ def _build_event_marks(rows, step: str):
                 event_app_scores["VT"] = vt_totals[best_idx]
                 event_app_ds["VT"] = vt_ds[best_idx]
         for app, score in event_app_scores.items():
-            prev_app = apparatus_events[name][app].get(eid)
+            prev_app = apparatus_events[a_key][app].get(eid)
             if prev_app is None or score > prev_app["score"]:
-                apparatus_events[name][app][eid] = {
+                apparatus_events[a_key][app][eid] = {
                     "score": score,
                     "event_name": ename,
                     "d": event_app_ds.get(app),
                 }
 
-        if name not in meta_by_name:
-            meta_by_name[name] = {"gnz_id": gnz_id or "", "club": club or ""}
+        if a_key not in meta_by_key:
+            meta_by_key[a_key] = {"name": name, "gnz_id": gnz_id or "", "club": club or ""}
         else:
-            if not meta_by_name[name]["gnz_id"] and gnz_id:
-                meta_by_name[name]["gnz_id"] = gnz_id
-            if not meta_by_name[name]["club"] and club:
-                meta_by_name[name]["club"] = club
+            if not meta_by_key[a_key]["gnz_id"] and gnz_id:
+                meta_by_key[a_key]["gnz_id"] = gnz_id
+            if not meta_by_key[a_key]["club"] and club:
+                meta_by_key[a_key]["club"] = club
 
-    return per_event, apparatus_events, meta_by_name
+    for a_key, meta in meta_by_key.items():
+        if isinstance(a_key, int) and a_key in athletes:
+            meta["name"] = athletes[a_key].canonical_name or meta["name"]
+
+    return per_event, apparatus_events, meta_by_key
 
 
 def _compute_apparatus_specialists(
     apparatus_events: dict[str, dict[str, dict[int, dict]]],
     step: str,
-    meta_by_name: dict[str, dict[str, str]],
+    meta_by_key: dict[str, dict[str, str]],
     exclude_names: set[str] | None = None,
+    athletes: dict[int, Athlete] | None = None,
 ) -> tuple[list[dict], float | None, int]:
     """Build the national apparatus-qualifier section for a step.
 
     Every gymnast who reached the step's apparatus threshold on ``count``
-    distinct competitions on the same apparatus, unless their name is in
+    distinct competitions on the same apparatus, unless their key is in
     ``exclude_names`` (the qualifier-filtered All Around table, when the
     ``qualifier`` filter is on). Returns ``(specialists, single-float mark,
     count)`` where the single-float mark is ``None`` for per-apparatus-threshold
     steps.
     """
+    athletes = athletes or {}
     cfg = _APPARATUS_QUALIFIER_CONFIG.get(step)
     if cfg is None:
         return [], None, 2
@@ -938,11 +983,14 @@ def _compute_apparatus_specialists(
     app_count = cfg.get("count", 2)
 
     specialists = []
-    for name, app_events in apparatus_events.items():
-        if exclude_names and name in exclude_names:
+    for key, app_events in apparatus_events.items():
+        if exclude_names and key in exclude_names:
             continue
-        meta = meta_by_name.get(name, {"gnz_id": "", "club": ""})
+        meta = meta_by_key.get(key, {"name": str(key), "gnz_id": "", "club": ""})
         club = meta["club"]
+        slug = ""
+        if isinstance(key, int):
+            slug = athletes[key].slug if key in athletes else ""
         qualifying: list[dict] = []
         partial: list[dict] = []
         for app, events in app_events.items():
@@ -974,7 +1022,8 @@ def _compute_apparatus_specialists(
             qualifying.sort(key=lambda x: (-x["best"], x["app"]))
             partial.sort(key=lambda x: (-x["best"], x["app"]))
             specialists.append({
-                "name": name,
+                "name": meta["name"],
+                "slug": slug,
                 "gnz_id": meta["gnz_id"],
                 "club": club,
                 "region": _find_region(club or ""),
@@ -985,7 +1034,8 @@ def _compute_apparatus_specialists(
         elif partial:
             partial.sort(key=lambda x: (-x["best"], x["app"]))
             specialists.append({
-                "name": name,
+                "name": meta["name"],
+                "slug": slug,
                 "gnz_id": meta["gnz_id"],
                 "club": club,
                 "region": _find_region(club or ""),
@@ -1023,6 +1073,7 @@ def get_rankings(
         rows = (
             session.query(
                 LongScore.gymnast_name,
+                LongScore.athlete_id,
                 LongScore.gnz_id,
                 LongScore.club_name,
                 LongScore.event_id,
@@ -1046,25 +1097,30 @@ def get_rankings(
             .all()
         )
 
+        athletes = {a.id: a for a in session.query(Athlete).all()}
+
         # One competition score per (gymnast, event, round_type), collapsed to
         # ONE mark per (gymnast, event) so the top-2 total never uses two marks
         # from the same competition (e.g. the two days of a two-day meet). Also
         # accumulates per-apparatus bests for the specialist/leaderboard views.
-        per_event, apparatus_events, meta_by_name = _build_event_marks(rows, step)
+        per_event, apparatus_events, meta_by_key = _build_event_marks(rows, step, athletes)
 
         # Build gymnast_data: aggregate competitions per gymnast, keep the best
         # gnz_id and club, and retain ALL per-event marks for the qualifier check.
-        by_name: dict[str, list[dict]] = defaultdict(list)
-        for (name, _eid), entry in per_event.items():
-            by_name[name].append(entry)
+        by_key: dict[str, list[dict]] = defaultdict(list)
+        for (key, _eid), entry in per_event.items():
+            by_key[key].append(entry)
 
         gymnast_data: dict[str, dict] = {}
-        for name, entries in by_name.items():
+        for key, entries in by_key.items():
             paired = sorted(entries, key=lambda x: -x["score"])
+            meta = meta_by_key.get(key, {"name": str(key), "gnz_id": "", "club": ""})
             best_gnz_id = next((e["gnz_id"] for e in paired if e["gnz_id"]), "")
             best_club = next((e["club"] for e in paired if e["club"]), "")
-            gymnast_data[name] = {
-                "name": name,
+            slug = athletes[key].slug if isinstance(key, int) and key in athletes else ""
+            gymnast_data[key] = {
+                "name": meta["name"],
+                "slug": slug,
                 "gnz_id": best_gnz_id,
                 "club": best_club,
                 "all_events": paired,
@@ -1138,6 +1194,7 @@ def get_rankings(
             RankingRow(
                 rank=r["rank_text"],
                 name=r["name"],
+                slug=r["slug"],
                 gnz_id=r["gnz_id"],
                 club=r["club"],
                 region=r["region"],
@@ -1155,14 +1212,16 @@ def get_rankings(
         # so the two tables never overlap. With the qualifier filter off the
         # section is empty.
         specialists_list, app_qual_score, app_qual_count = _compute_apparatus_specialists(
-            apparatus_events, step, meta_by_name,
+            apparatus_events, step, meta_by_key,
             exclude_names=set(gymnast_data) if qualifier else None,
+            athletes=athletes,
         )
         if not qualifier:
             specialists_list = []
         specialists_rows = [
             ApparatusSpecialistRow(
                 name=r["name"],
+                slug=r["slug"],
                 gnz_id=r["gnz_id"],
                 club=r["club"],
                 region=r["region"],
@@ -1232,6 +1291,7 @@ def _compute_apparatus_rankings(year: int, step: str, discipline: str, division:
         rows = (
             session.query(
                 LongScore.gymnast_name,
+                LongScore.athlete_id,
                 LongScore.gnz_id,
                 LongScore.club_name,
                 LongScore.event_id,
@@ -1255,16 +1315,19 @@ def _compute_apparatus_rankings(year: int, step: str, discipline: str, division:
             .all()
         )
 
-        _, apparatus_events, meta_by_name = _build_event_marks(rows, step)
+        athletes = {a.id: a for a in session.query(Athlete).all()}
+        _, apparatus_events, meta_by_key = _build_event_marks(rows, step, athletes)
 
         # Best season mark per (gymnast, apparatus), plus where it was set.
         by_app: dict[str, list[dict]] = defaultdict(list)
-        for name, app_events in apparatus_events.items():
-            meta = meta_by_name.get(name, {"gnz_id": "", "club": ""})
+        for key, app_events in apparatus_events.items():
+            meta = meta_by_key.get(key, {"name": str(key), "gnz_id": "", "club": ""})
+            slug = athletes[key].slug if isinstance(key, int) and key in athletes else ""
             for app, events in app_events.items():
                 best = max(events.values(), key=lambda e: e["score"])
                 by_app[app].append({
-                    "name": name,
+                    "name": meta["name"],
+                    "slug": slug,
                     "gnz_id": meta["gnz_id"],
                     "club": meta["club"],
                     "region": _find_region(meta["club"] or ""),
@@ -1304,6 +1367,7 @@ def _compute_apparatus_rankings(year: int, step: str, discipline: str, division:
                     ApparatusRankingRow(
                         rank=e["rank_text"],
                         name=e["name"],
+                        slug=e["slug"],
                         gnz_id=e["gnz_id"],
                         club=e["club"],
                         region=e["region"],
@@ -1334,8 +1398,11 @@ def get_wellington_rankings(
     session = get_session()
     try:
         intents = {
-            row.gnz_id
-            for row in session.query(WellingtonIntent.gnz_id).filter(
+            row.athlete_id or row.gnz_id
+            for row in session.query(
+                WellingtonIntent.athlete_id,
+                WellingtonIntent.gnz_id,
+            ).filter(
                 WellingtonIntent.year == year,
             ).all()
         }
@@ -1351,6 +1418,7 @@ def get_wellington_rankings(
         WellingtonRankingRow(
             rank=r["rank_text"],
             name=r["name"],
+            slug=r.get("slug", ""),
             gnz_id=r["gnz_id"],
             club=r["club"],
             region=r["region"],
@@ -1368,6 +1436,7 @@ def get_wellington_rankings(
     specialists = [
         ApparatusSpecialistRow(
             name=r["name"],
+            slug=r.get("slug", ""),
             gnz_id=r["gnz_id"],
             club=r["club"],
             region=r["region"],
@@ -1380,6 +1449,7 @@ def get_wellington_rankings(
     not_ranked = [
         WellingtonNotRankedRow(
             name=r["name"],
+            slug=r.get("slug", ""),
             gnz_id=r["gnz_id"],
             club=r["club"],
             region=r["region"],
@@ -1419,10 +1489,15 @@ def get_intents(
 ):
     session = get_session()
     try:
-        rows = session.query(WellingtonIntent.gnz_id).filter(
+        rows = session.query(WellingtonIntent.athlete_id, WellingtonIntent.gnz_id).filter(
             WellingtonIntent.year == year,
         ).all()
-        return {"gnz_ids": [row.gnz_id for row in rows]}
+        athlete_ids = sorted({r.athlete_id for r in rows if r.athlete_id is not None})
+        slugs = [
+            a.slug
+            for a in session.query(Athlete).filter(Athlete.id.in_(athlete_ids)).all()
+        ] if athlete_ids else []
+        return {"athlete_ids": athlete_ids, "slugs": slugs, "gnz_ids": [r.gnz_id for r in rows if r.gnz_id]}
     finally:
         session.close()
 
@@ -1434,12 +1509,23 @@ def toggle_intent(
 ):
     session = get_session()
     try:
+        athlete_id = body.athlete_id
+        if athlete_id is None and body.slug:
+            athlete_id = resolve_identity(session, slug=body.slug)
+        if athlete_id is None and body.gnz_id:
+            athlete_id = resolve_identity(session, gnz_id=body.gnz_id)
+        if athlete_id is None:
+            raise HTTPException(400, "athlete_id is required")
         existing = session.query(WellingtonIntent).filter(
-            WellingtonIntent.gnz_id == body.gnz_id,
+            WellingtonIntent.athlete_id == athlete_id,
             WellingtonIntent.year == body.year,
         ).first()
         if body.submitted and not existing:
-            session.add(WellingtonIntent(gnz_id=body.gnz_id, year=body.year))
+            session.add(WellingtonIntent(
+                athlete_id=athlete_id,
+                gnz_id=body.gnz_id or None,
+                year=body.year,
+            ))
             session.commit()
         elif not body.submitted and existing:
             session.delete(existing)
@@ -1605,6 +1691,7 @@ def fix_duplicates(_auth=Depends(require_role("admin"))):
 
         if fixed:
             session.commit()
+            rebuild_athletes(session)
             invalidate()
 
         return FixDuplicatesResponse(fixed=fixed, low_confidence=low_confidence)
@@ -1650,6 +1737,7 @@ def apply_duplicate_fixes(
 
         if total:
             session.commit()
+            rebuild_athletes(session)
             invalidate()
 
         return {"applied": total}
@@ -1659,6 +1747,11 @@ def apply_duplicate_fixes(
 
 @app.post("/api/admin/refresh-cache")
 def refresh_cache(_auth=Depends(require_role("admin"))):
+    session = get_session()
+    try:
+        rebuild_athletes(session)
+    finally:
+        session.close()
     invalidate()
     return {"ok": True}
 
@@ -1862,6 +1955,7 @@ def merge_names(
             session.commit()
             invalidate()
         report = reconcile_athletes()
+        rebuild_athletes(session)
         return {
             "merged": updated,
             "names_unified": report["names_unified"],
@@ -1902,6 +1996,7 @@ def edit_gymnast_scores(
 
         if updated:
             session.commit()
+            rebuild_athletes(session)
             cache.invalidate_prefix("wide-all")
             cache.invalidate_prefix("apparatus-rankings")
             cache.invalidate_prefix("stats")
@@ -2057,6 +2152,7 @@ def _ingest_event(data: dict, allow_unknown: str | None, host_club: str | None =
         )
 
         report = reconcile_athletes()
+        rebuild_athletes(session)
 
         return EventResponse(
             id=event.id,
@@ -2205,38 +2301,58 @@ def get_results_wide(event_id: int, response: Response):
 
 
 @app.get("/api/results/wide-all")
-def get_all_results_wide(response: Response, gnz_id: str = None, club: str = None, year: int = None):
+def get_all_results_wide(response: Response, gnz_id: str = None, club: str = None, year: int = None, athlete_id: int = None, slug: str = None):
     response.headers.update(cache_headers())
     return cached(
-        ("wide-all", year or "", gnz_id or "", club or ""),
-        lambda: _compute_wide_all(year, gnz_id, club),
+        ("wide-all", year or "", gnz_id or "", club or "", athlete_id or "", slug or ""),
+        lambda: _compute_wide_all(year, gnz_id, club, athlete_id, slug),
         ttl=300,
     )
 
 
-def _compute_wide_all(year: int | None, gnz_id: str | None, club: str | None) -> dict:
+def _compute_wide_all(year: int | None, gnz_id: str | None, club: str | None, athlete_id: int | None = None, slug: str | None = None) -> dict:
     session = get_session()
     try:
+        resolved_id = athlete_id
+        if not resolved_id and slug:
+            resolved_id = resolve_identity(session, slug=slug)
+        if not resolved_id and gnz_id:
+            resolved_id = resolve_identity(session, gnz_id=gnz_id)
         query = session.query(Event.id).order_by(Event.created_at.desc())
         if year:
             query = query.filter(Event.year == year)
         event_ids = [r[0] for r in query.all()]
         result = {}
         if event_ids:
-            result = pivot_to_wide_dict_multi(event_ids, session, gnz_id, club)
-        if gnz_id and not result:
-            name_row = (
-                session.query(LongScore.gymnast_name)
-                .filter(
-                    LongScore.gnz_id == gnz_id,
-                    LongScore.gymnast_name.isnot(None),
-                    LongScore.gymnast_name != "",
+            result = pivot_to_wide_dict_multi(event_ids, session, gnz_id, club, resolved_id)
+        if (resolved_id or gnz_id) and not result:
+            name_row = None
+            if resolved_id:
+                name_row = (
+                    session.query(LongScore.gymnast_name)
+                    .filter(
+                        LongScore.athlete_id == resolved_id,
+                        LongScore.gymnast_name.isnot(None),
+                        LongScore.gymnast_name != "",
+                    )
+                    .order_by(LongScore.id.desc())
+                    .first()
                 )
-                .order_by(LongScore.id.desc())
-                .first()
-            )
-            if name_row:
-                result["name"] = name_row[0]
+                if name_row:
+                    result["name"] = name_row[0]
+            else:
+                name_row = (
+                    session.query(LongScore.gymnast_name)
+                    .filter(
+                        LongScore.gnz_id == gnz_id,
+                        LongScore.gymnast_name.isnot(None),
+                        LongScore.gymnast_name != "",
+                    )
+                    .order_by(LongScore.id.desc())
+                    .first()
+                )
+                if name_row:
+                    result["name"] = name_row[0]
         return result
     finally:
         session.close()

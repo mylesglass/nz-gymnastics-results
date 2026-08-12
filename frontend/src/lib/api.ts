@@ -164,6 +164,7 @@ export interface MedalCounts {
 }
 
 export interface GymnastMedals {
+  slug?: string;
   gnz_id: string;
   name: string;
   club: string | null;
@@ -184,11 +185,15 @@ export interface MedalsResponse {
 export async function getMedals(params?: {
   year?: number;
   gnz_id?: string;
+  athlete_id?: number;
+  slug?: string;
   club?: string;
 }): Promise<MedalsResponse> {
   const qp = new URLSearchParams();
   if (params?.year !== undefined) qp.set("year", String(params.year));
   if (params?.gnz_id) qp.set("gnz_id", params.gnz_id);
+  if (params?.athlete_id !== undefined) qp.set("athlete_id", String(params.athlete_id));
+  if (params?.slug) qp.set("slug", params.slug);
   if (params?.club) qp.set("club", params.club);
   const qs = qp.toString();
   const res = await fetch(`${API_BASE}/api/medals${qs ? `?${qs}` : ""}`);
@@ -204,6 +209,8 @@ export async function getWideResults(eventId: number): Promise<WideResponse> {
 
 export async function getAllWideResults(params?: {
   gnz_id?: string;
+  athlete_id?: number;
+  slug?: string;
   club?: string;
   year?: number;
 }): Promise<{
@@ -214,6 +221,8 @@ export async function getAllWideResults(params?: {
   let url = `${API_BASE}/api/results/wide-all`;
   const qp = new URLSearchParams();
   if (params?.gnz_id) qp.set("gnz_id", params.gnz_id);
+  if (params?.athlete_id !== undefined) qp.set("athlete_id", String(params.athlete_id));
+  if (params?.slug) qp.set("slug", params.slug);
   if (params?.club) qp.set("club", params.club);
   if (params?.year) qp.set("year", String(params.year));
   const qs = qp.toString();
@@ -283,7 +292,7 @@ export async function listYears(): Promise<{ years: number[] }> {
 }
 
 export async function listGymnasts(params?: { year?: number }): Promise<
-  { gnz_id: string; name: string; club: string | null }[]
+  { slug?: string; gnz_id: string; name: string; club: string | null }[]
 > {
   const qp = new URLSearchParams();
   if (params?.year !== undefined) qp.set("year", String(params.year));
@@ -296,6 +305,7 @@ export async function listGymnasts(params?: { year?: number }): Promise<
 export interface RankingRow {
   rank: string;
   name: string;
+  slug?: string;
   gnz_id: string;
   club: string | null;
   region: string;
@@ -337,6 +347,7 @@ export async function getRankings(
 export interface ApparatusRankingRow {
   rank: string;
   name: string;
+  slug?: string;
   gnz_id: string;
   club: string | null;
   region: string;
@@ -395,6 +406,7 @@ export interface ApparatusPass {
 export interface WellingtonRankingRow {
   rank: string;
   name: string;
+  slug?: string;
   gnz_id: string;
   club: string | null;
   region: string;
@@ -418,6 +430,7 @@ export interface ApparatusQualifyingApp {
 
 export interface ApparatusSpecialistRow {
   name: string;
+  slug?: string;
   gnz_id: string;
   club: string | null;
   region: string;
@@ -434,6 +447,7 @@ export interface CheckItem {
 
 export interface WellingtonNotRankedRow {
   name: string;
+  slug?: string;
   gnz_id: string;
   club: string | null;
   region: string;
@@ -489,14 +503,14 @@ export async function getIntents(year: number): Promise<string[]> {
   });
   if (!res.ok) throw new Error(await res.text());
   const data = await res.json();
-  return data.gnz_ids;
+  return data.slugs ?? data.gnz_ids ?? [];
 }
 
-export async function toggleIntent(gnzId: string, year: number, submitted: boolean): Promise<void> {
+export async function toggleIntent(identity: string, year: number, submitted: boolean): Promise<void> {
   const res = await fetch(`${API_BASE}/api/wellington/intent`, {
     method: "POST",
     headers: { ...authHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ gnz_id: gnzId, year, submitted }),
+    body: JSON.stringify({ slug: identity, year, submitted }),
   });
   if (!res.ok) throw new Error(await res.text());
 }

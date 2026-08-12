@@ -422,7 +422,7 @@
                 class:border-l-4={configKey === 'wag_step_5_6' && i < 4}
                 class:border-l-primary={configKey === 'wag_step_5_6' && i < 4}
               >
-                <a href="/gymnast/{r.gnz_id}" class="hover:link">{r.name}</a>
+                <a href="/gymnast/{r.slug || r.gnz_id}" class="hover:link">{r.name}</a>
               </td>
               <td class="text-base-content/70 text-xs hidden md:table-cell">{r.gnz_id}</td>
               <td class="hidden md:table-cell">{r.club}</td>
@@ -436,7 +436,7 @@
                   onchange={() => {
                     const row = r;
                     notRanked = notRanked.filter((x) => x !== row);
-                    toggleIntent(row.gnz_id, Number(year), row.intent_submitted)
+                    toggleIntent(row.slug || row.gnz_id, Number(year), row.intent_submitted)
                       .then(loadRankings)
                       .catch(() => loadRankings());
                   }}
@@ -515,7 +515,7 @@
         {#each specialists as s, i}
           <tr class="group hover:bg-base-300">
             <td class="font-medium sticky left-0 z-10 border-r border-base-300 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}">
-              <a href="/gymnast/{s.gnz_id}" class="hover:link">{s.name}</a>
+              <a href="/gymnast/{s.slug || s.gnz_id}" class="hover:link">{s.name}</a>
             </td>
             <td class="text-base-content/70 text-xs hidden md:table-cell">{s.gnz_id}</td>
             <td class="hidden md:table-cell">{s.club}</td>
@@ -567,7 +567,7 @@
         {#each notRanked as r, i}
           <tr class="group hover:bg-base-300">
             <td class="font-medium sticky left-0 z-10 border-r border-base-300 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}">
-              <a href="/gymnast/{r.gnz_id}" class="hover:link">{r.name}</a>
+              <a href="/gymnast/{r.slug || r.gnz_id}" class="hover:link">{r.name}</a>
             </td>
             <td class="text-base-content/70 text-xs hidden md:table-cell">{r.gnz_id}</td>
             <td class="hidden md:table-cell">{r.club}</td>
@@ -581,7 +581,7 @@
                   onchange={() => {
                     const row = r;
                     notRanked = notRanked.filter((x) => x !== row);
-                    toggleIntent(row.gnz_id, Number(year), row.intent_submitted)
+                    toggleIntent(row.slug || row.gnz_id, Number(year), row.intent_submitted)
                       .then(loadRankings)
                       .catch(() => loadRankings());
                   }}
