@@ -3,6 +3,12 @@
     "date": "12 Aug 2026",
     "entries": [
       {
+        "title": "Reload prompt when a new version is deployed",
+        "items": [
+          "If you leave the site open in a tab while an update is deployed, a banner now appears asking you to reload so you always see the latest results and features. Fresh page loads already pick up new versions automatically."
+        ]
+      },
+      {
         "title": "Cleaner data for multi-day competitions",
         "items": [
           "Did-Not-Start (DNS) entries are no longer stored as phantom score rows when a competition is imported — a gymnast who only competed one vault on a multi-day meet now shows a single real score instead of a DNS cell, and athletes who never competed at all no longer clutter the gymnast count."

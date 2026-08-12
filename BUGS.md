@@ -29,3 +29,4 @@ All bugs reported in this session are fixed. See `git log` for details.
 - "Wanganui / Manawatu" club on `/clubs` renamed to "Manawatu - Whanganui" — it was the Manawatu - Whanganui provincial team, stored under the wrong name. Canonical name + aliases updated in clubs_and_regions.json, 306 DB rows reconciled (now 495 rows as one team, shown as the Provincial Team pill next to the header)
 
 **To do:**
+- Still a few mixups with multiple names sharing the same gnzid

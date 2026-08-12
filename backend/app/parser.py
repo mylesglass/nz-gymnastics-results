@@ -4,8 +4,8 @@ import difflib
 import json
 import re
 import unicodedata
-from pathlib import Path
 
+from app.clubdata import active_path, ensure_seed
 from app.decoder import build_output_map, decode_public_outputs
 from app.resolver import (
     fix_gnz_id,
@@ -16,12 +16,12 @@ from app.resolver import (
     resolve_units,
 )
 
-# Load club name normalisation data
-_CLUB_DATA_PATH = Path(__file__).resolve().parent.parent / "clubs_and_regions.json"
+# Load club name normalisation data (persistent copy seeded from the image).
+_CLUB_DATA_PATH = active_path()
 _NAME_TO_CANONICAL: dict[str, str] = {}
 _NAME_TO_REGION: dict[str, str] = {}
 try:
-    with open(_CLUB_DATA_PATH) as _f:
+    with open(ensure_seed()) as _f:
         _club_data = json.load(_f)
     _NAME_TO_CANONICAL = {k: v["name"] for k, v in _club_data["lookup"].items()}
     _NAME_TO_REGION = {k: v["region"] for k, v in _club_data["lookup"].items()}

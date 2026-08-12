@@ -1,13 +1,8 @@
-import os
-from pathlib import Path
-
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import Session, sessionmaker
 
+from app.clubdata import DATA_DIR, ensure_seed as ensure_club_data_seed
 from app.models import Base
-
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-os.makedirs(DATA_DIR, exist_ok=True)
 
 SQLITE_PATH = str(DATA_DIR / "results.db")
 engine = create_engine(f"sqlite:///{SQLITE_PATH}", echo=False, connect_args={"check_same_thread": False})
@@ -50,6 +45,8 @@ def _ensure_indexes(conn):
 
 def init_db():
     Base.metadata.create_all(engine)
+    # Ensure the persistent club-data copy exists (seeded from the image).
+    ensure_club_data_seed()
     with engine.connect() as conn:
         existing_cols = {
             row[1]

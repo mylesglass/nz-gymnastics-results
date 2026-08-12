@@ -7,6 +7,7 @@ const config = {
   kit: {
     adapter: adapter(),
     csrf: { checkOrigin: false },
+    version: { pollInterval: 60_000 },
   },
 };
 

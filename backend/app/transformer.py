@@ -3,15 +3,14 @@
 import io
 import json
 import math
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
 from app.cache import cached
+from app.clubdata import ensure_seed
 from app.models import LongScore
 
-_CLUB_DATA_PATH = Path(__file__).resolve().parent.parent / "clubs_and_regions.json"
 _CLUB_DATA: dict | None = None
 
 
@@ -19,7 +18,7 @@ def _load_club_data():
     global _CLUB_DATA
     if _CLUB_DATA is None:
         try:
-            with open(_CLUB_DATA_PATH) as f:
+            with open(ensure_seed()) as f:
                 _CLUB_DATA = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
             _CLUB_DATA = {"regions": {}, "lookup": {}}

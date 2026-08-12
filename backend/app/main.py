@@ -2,7 +2,6 @@ import json
 import time
 from collections import defaultdict
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, Header, Request, UploadFile, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -30,6 +29,7 @@ from app.auth import (
     verify_password,
 )
 from app.cache import cache, cache_headers, cached, invalidate
+from app.clubdata import active_path, ensure_seed
 from app.database import get_session, init_db
 from app.models import ACTIVITY_TYPE_API, ACTIVITY_TYPE_PAGE, ActivityLog, Event, LongScore, User, WellingtonIntent
 from app.parser import ParseError, _NAME_TO_CANONICAL, find_unknown_clubs, parse_json, reload_club_maps, suggest_club_mapping, validate_upload_structure
@@ -120,7 +120,7 @@ async def add_cache_control(request: Request, call_next):
         or path == "/api/years"
     ):
         if not response.headers.get("Cache-Control"):
-            response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
+            response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=60"
     elif (
         path.startswith("/api/admin")
         or request.method in ("POST", "PUT", "DELETE", "PATCH")
@@ -350,8 +350,7 @@ def list_known_clubs(response: Response):
 
 
 def _compute_known_clubs() -> list[KnownClubItem]:
-    club_data_path = Path(__file__).resolve().parent.parent / "clubs_and_regions.json"
-    with open(club_data_path) as f:
+    with open(active_path()) as f:
         club_data = json.load(f)
     items: list[KnownClubItem] = []
     for region_name, clubs in club_data.get("regions", {}).items():
@@ -374,9 +373,8 @@ def _compute_clubs() -> list[ClubItem]:
             .order_by(LongScore.club_name)
             .all()
         )
-        club_data_path = Path(__file__).resolve().parent.parent / "clubs_and_regions.json"
-        if club_data_path.exists():
-            with open(club_data_path) as f:
+        if active_path().exists():
+            with open(active_path()) as f:
                 club_data = json.load(f)
 
         def find_region(club_name: str) -> str | None:
@@ -644,7 +642,7 @@ class AliasUpdate(BaseModel):
 
 @app.post("/api/clubs/aliases")
 def save_aliases(body: AliasUpdate, _auth=Depends(require_role("admin"))):
-    path = Path(__file__).resolve().parent.parent / "clubs_and_regions.json"
+    path = ensure_seed()
     with open(path) as f:
         data = json.load(f)
     for unknown, known in body.aliases.items():

@@ -12,7 +12,7 @@
 - **Infrastructure:** Docker Compose, single-server self-hosted deployment
 - **API proxy:** `hooks.server.ts` forwards `/api/*` from frontend Node server to backend container in production; Vite dev proxy in development
 - **Cache:** GranularTTLCache with per-key TTL + per-event prefix invalidation (68 lines)
-- **HTTP caching:** `Cache-Control: public, max-age=300, stale-while-revalidate=3600` on read endpoints; `no-store` on admin/write
+- **HTTP caching:** `Cache-Control: public, max-age=300, stale-while-revalidate=60` on read endpoints; `no-store` on admin/write
 
 ---
 

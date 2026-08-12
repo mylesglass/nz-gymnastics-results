@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type { Snippet } from "svelte";
+  import { updated } from "$app/state";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { currentUser, authConfigured, logout, hasPermission, setPermissions, getToken, PERMISSIONS } from "$lib/auth";
@@ -140,6 +141,16 @@
     lastTracked = key;
     trackPage(path).catch(() => {});
   });
+
+  let updateDismissed = $state(false);
+  onMount(() => {
+    updated.check().catch(() => {});
+    const onVisible = () => {
+      if (document.visibilityState === "visible") updated.check().catch(() => {});
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  });
 </script>
 
 <div class="drawer">
@@ -151,6 +162,26 @@
     bind:checked={drawerOpen}
   />
   <div class="drawer-content flex flex-col min-h-screen">
+    {#if updated.current && !updateDismissed}
+      <div role="status" aria-live="polite" class="sticky top-0 z-[60] bg-primary text-primary-content text-sm px-4 py-2 flex items-center justify-center gap-3">
+        <span>A new version of this site is available — reload to see the latest results and features.</span>
+        <button
+          type="button"
+          class="btn btn-sm btn-secondary"
+          onclick={() => location.reload()}
+        >
+          Reload
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm btn-ghost btn-square"
+          aria-label="Dismiss update notice"
+          onclick={() => (updateDismissed = true)}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current" aria-hidden="true"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" /></svg>
+        </button>
+      </div>
+    {/if}
     <a
       href="#main"
       class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:btn focus:btn-primary focus:btn-sm"

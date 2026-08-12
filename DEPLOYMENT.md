@@ -118,3 +118,17 @@ Not the cert cause, but part of a clean domain migration:
   redeploying with a new domain).
 - The API proxy (`hooks.server.ts`) and `API_BASE` are same-origin, so they need no
   change for a domain move.
+
+## Deploying (caching & restarts)
+
+- Hashed `_app/immutable/*` bundles are served `Cache-Control: public,max-age=31536000,immutable`,
+  so a new build's bundles are fetched automatically on the next page load; the HTML shell
+  is not cached. Users with the app open in a tab are prompted to reload via the
+  `version.pollInterval`/`updated` banner (see `svelte.config.js` + `+layout.svelte`).
+- The backend in-memory cache (`GranularTTLCache`) is process-local and clears on every
+  container restart, so no server-side data goes stale across a deploy. Browser/CDN
+  caching of public API reads is capped at `max-age=300, stale-while-revalidate=60`.
+- Both services define `healthcheck`s and the frontend `depends_on backend:
+  condition: service_healthy`. With single replicas a brief 502/second window is still
+  possible while a container restarts during `docker compose up -d --build`; Cloudflare
+  sits in front and may absorb/serve cached responses during that window.

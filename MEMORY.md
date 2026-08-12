@@ -219,6 +219,7 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
 - **AA score fallback**: `_build_wide_row` now computes AA score from apparatus totals when stored `aa_score` is NULL. This handles cases where the parser's round_type mismatch prevents AA lookup.
 - **resolver regex**: `resolve_level()` uses `r"level\s*(\d+)"` (zero-or-more whitespace) — consistent with STEP regex — to handle no-space variants like `"MAG Level3"`.
 - **Region enrichment**: Club→region lookup at pivot time via `clubs_and_regions.json`. Changes to lookup file require re-upload of events. Run `reconcile_clubs.py` after adding aliases to fix existing data.
+- **Club-data persistence (`app/clubdata.py`)**: the ACTIVE file is `data/clubs_and_regions.json` (inside the `backend_data` volume) so runtime alias saves survive redeploys; the repo `backend/clubs_and_regions.json` is the seed, copied into `data/` on first run (via `ensure_seed()`, called from `init_db()` and each reader). To commit UI-saved aliases to git, copy `data/clubs_and_regions.json` over the repo seed.
 - **Unknown-club check fix**: `find_unknown_clubs()` was reading `orgId`/`participantId` fields that never exist in real Scoreholder files (real: `_id` on `eventOrganizations`, `_id`+`organizationId` on `eventParticipants`) — so it always returned `[]` and variant club names silently passed through. Fixed to use real field names; uploads now 409 with the club-mapping dialog. Regional teams (e.g. `Counties - Manukau`) are stored as club names and resolve to themselves; `Gymsport Manukau` retargets to `Counties - Manukau`.
 
 ## Docker
@@ -226,6 +227,10 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
 - Backend: `:8000`, Frontend: `:5173`
 - SQLite persists in `backend/data/` via named volume `backend_data`
 - Vite proxies `/api/*` to backend in dev mode
+
+## Deploy consistency
+- **New-version banner**: `svelte.config.js` sets `kit.version.pollInterval = 60_000`; `+layout.svelte` renders a dismissible "new version available" reload bar via `updated` from `$app/state` (`updated.check()` also on mount + tab refocus). Open-tab users are told to reload after a deploy; fresh page loads already pick up new hashed bundles automatically.
+- **Healthchecks** (`docker-compose.prod.yml`): backend python `urllib`→`/api/health`, frontend `node fetch`→`/`, frontend `depends_on backend: condition: service_healthy`. Shrinks the deploy window; with single replicas a brief 502/second gap while a container restarts is still possible.
 
 ## Cache Architecture
 - **GranularTTLCache** — in-memory dict with per-key TTL.
@@ -239,14 +244,15 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
   - `/api/clubs` — key `"clubs"`, TTL 300s
   - `/api/results/wide-all` — key `"wide-all:{year}:{gnz_id}:{club}"`, TTL 300s
   - `/api/events/{id}/results/wide` — key `"event:{id}:pivot:{gnz_id}:{club}"`, no TTL (invalidation-driven)
-- **HTTP caching:** `Cache-Control: public, max-age=300, stale-while-revalidate=3600` on GET read endpoints, set via middleware. `no-store, no-cache, private` on admin/write.
+- **HTTP caching:** `Cache-Control: public, max-age=300, stale-while-revalidate=60` on GET read endpoints, set via middleware. `no-store, no-cache, private` on admin/write.
 - **ETag** — global version counter, incremented on every invalidation. Returned in response headers for conditional requests.
 
 ## HTTP Cache-Control
 - Middleware at `main.py` `@app.middleware("http")` applies headers based on path + method:
-  - Read endpoints → `public, max-age=300, stale-while-revalidate=3600`
+  - Read endpoints → `public, max-age=300, stale-while-revalidate=60`
   - Admin/write (POST/PUT/DELETE/PATCH) → `no-store, no-cache, private`
 - Individual endpoint `cache_headers()` now only sets the ETag (removed Cache-Control).
+- `stale-while-revalidate=60` caps how long browsers/CDNs may serve stale public data while revalidating in the background (was 3600; users could otherwise sit on hour-old data after an upload/edit).
 
 ## Docs Convention
 - Whenever updating project docs (MEMORY/README/PLAN/DESIGN-DOCUMENT/BUGS) for a notable user-facing change, also prepend a matching entry to `frontend/static/patch_notes.json` (full history, newest first; landing page shows all entries in a scrollable section).
