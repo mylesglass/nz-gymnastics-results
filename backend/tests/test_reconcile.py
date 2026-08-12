@@ -131,6 +131,62 @@ class TestReconcile:
         assert ids == {"555", "666"}
         sess2.close()
 
+    def test_same_event_two_ids_no_merge(self):
+        # Two different people with the same name at the same event (Madison Lynch case)
+        sess = self.TestSession()
+        _seed(sess, [
+            {**self.BASE, "event_id": 1, "gymnast_name": "Madison Lynch", "gnz_id": "249317", "club_name": "Onslow", "level_category": "STEP 5", "apparatus": "VT", "event_name": "E1"},
+            {**self.BASE, "event_id": 1, "gymnast_name": "Madison Lynch", "gnz_id": "716561", "club_name": "OMNI", "level_category": "STEP 1", "apparatus": "VT", "event_name": "E1"},
+        ])
+        sess.close()
+        report = reconcile_athletes()
+        assert report["ids_corrected"] == 0
+        assert report["names_unified"] == 0
+        assert len(report["conflicts"]) == 1
+        assert "one event" in report["conflicts"][0]["reason"]
+        sess2 = self.TestSession()
+        remaining = sess2.query(LongScore).all()
+        ids = set(r.gnz_id for r in remaining)
+        assert ids == {"249317", "716561"}
+        sess2.close()
+
+    def test_same_event_two_ids_different_events_no_conflict(self):
+        # Same name, different IDs, but never at the same event and one discipline → merge
+        sess = self.TestSession()
+        _seed(sess, [
+            {**self.BASE, "event_id": 1, "gymnast_name": "Kenzie Papps", "gnz_id": "50092", "club_name": "C1", "apparatus": "VT", "event_name": "E1"},
+            {**self.BASE, "event_id": 1, "gymnast_name": "Kenzie Papps", "gnz_id": "50092", "club_name": "C1", "apparatus": "UB", "event_name": "E1"},
+            {**self.BASE, "event_id": 2, "gymnast_name": "Kenzie Papps", "gnz_id": "500992", "club_name": "C1", "apparatus": "VT", "event_name": "E2"},
+        ])
+        sess.close()
+        report = reconcile_athletes()
+        assert report["ids_corrected"] == 1
+        assert report["names_unified"] == 1
+        sess2 = self.TestSession()
+        remaining = sess2.query(LongScore).all()
+        for r in remaining:
+            assert r.gnz_id == "50092"
+        sess2.close()
+
+    def test_discipline_conflict_no_merge(self):
+        # Same name, two IDs, but different disciplines → distinct people
+        sess = self.TestSession()
+        _seed(sess, [
+            {**self.BASE, "event_id": 1, "gymnast_name": "Blake Taylor", "gnz_id": "122484", "discipline": "MAG", "club_name": "Hamilton City", "apparatus": "VT", "event_name": "E1"},
+            {**self.BASE, "event_id": 2, "gymnast_name": "Blake Taylor", "gnz_id": "649936", "discipline": "WAG", "club_name": "TGC", "apparatus": "VT", "event_name": "E2"},
+        ])
+        sess.close()
+        report = reconcile_athletes()
+        assert report["ids_corrected"] == 0
+        assert report["names_unified"] == 0
+        assert len(report["conflicts"]) == 1
+        assert "discipline" in report["conflicts"][0]["reason"]
+        sess2 = self.TestSession()
+        remaining = sess2.query(LongScore).all()
+        ids = set(r.gnz_id for r in remaining)
+        assert ids == {"122484", "649936"}
+        sess2.close()
+
     def test_empty_ids_ignored(self):
         sess = self.TestSession()
         _seed(sess, [

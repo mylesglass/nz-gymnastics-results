@@ -133,6 +133,44 @@ class TestResolveLevel:
         assert resolve_level("WAG DIVISION A | STEP 10, JI, SI") == "STEP 10"
 
 
+class TestCleanName:
+    def test_preserves_internal_caps(self):
+        # Mc/Mac/O' and hyphen particles are meaningful — never lowercased
+        parts = [
+            {"_id": "p1", "name": "Eva McEwan", "identifier": "1", "organizationId": "o1"},
+            {"_id": "p2", "name": "Georgia O'Sullivan", "identifier": "2", "organizationId": "o1"},
+            {"_id": "p3", "name": "Lola MacIntyre", "identifier": "3", "organizationId": "o1"},
+            {"_id": "p4", "name": "Elesiya Aranda-McCue", "identifier": "4", "organizationId": "o1"},
+            {"_id": "p5", "name": "Misha Luamanuvae-Su'a", "identifier": "5", "organizationId": "o1"},
+        ]
+        result = resolve_participants(parts)
+        assert result["p1"]["name"] == "Eva McEwan"
+        assert result["p2"]["name"] == "Georgia O'Sullivan"
+        assert result["p3"]["name"] == "Lola MacIntyre"
+        assert result["p4"]["name"] == "Elesiya Aranda-McCue"
+        assert result["p5"]["name"] == "Misha Luamanuvae-Su'a"
+
+    def test_title_cases_plain_names(self):
+        parts = [
+            {"_id": "p1", "name": "alice smith", "identifier": "1", "organizationId": "o1"},
+            {"_id": "p2", "name": "te ahorangi milstead-raika", "identifier": "2", "organizationId": "o1"},
+            {"_id": "p3", "name": "EVA JONES", "identifier": "3", "organizationId": "o1"},
+        ]
+        result = resolve_participants(parts)
+        assert result["p1"]["name"] == "Alice Smith"
+        assert result["p2"]["name"] == "Te Ahorangi Milstead-Raika"
+        assert result["p3"]["name"] == "EVA JONES"  # all-caps token untouched
+
+    def test_cleans_unicode_and_whitespace(self):
+        parts = [
+            {"_id": "p1", "name": "Jos\u00e9  Garc\u00eda", "identifier": "1", "organizationId": "o1"},
+            {"_id": "p2", "name": "Name\u00a0With\u00a0Nbsp", "identifier": "2", "organizationId": "o1"},
+        ]
+        result = resolve_participants(parts)
+        assert result["p1"]["name"] == "Jose Garcia"
+        assert result["p2"]["name"] == "Name With Nbsp"
+
+
 class TestFixGnzId:
     def test_strips_gs_prefix(self):
         assert fix_gnz_id("GS12345") == "12345"

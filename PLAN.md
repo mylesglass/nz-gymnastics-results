@@ -231,6 +231,24 @@
 - [x] **Verification:** Lighthouse baseline before/after in `a11y-reports/` (tracked, committed per tier); all 6 public pages scored **100/100** after tier 3 (home/events/results/clubs/gymnasts/login; baseline 93/99/92/96/95/100); `cd frontend && npm run build` passes after each tier
 - **Files:** `+layout.svelte`, `+page.svelte`, `upload/+page.svelte`, `NZRegionMap.svelte`, `WideResultsTable.svelte`, `ScoreTooltip.svelte`, `AATooltip.svelte`, `Dialog.svelte` (new), `regions.ts`, `RegionBadge.svelte`, all form/dialog pages
 
+### STEP 25: Athlete Identity & Name Reconciliation 🚧
+- [x] Investigated root causes (see below)
+- [x] Phase 1a — Fix `_clean_name()` capitalization (resolver.py:9 `w.capitalize()` mangles `McEwan`→`Mcewan`, `O'Sullivan`→`O'sullivan`; use NZ-aware title-casing that preserves `Mc`/`Mac`/`O'`/`D'`/hyphenated/apostrophe forms)
+- [x] Phase 1b — Make `reconcile_athletes()` evidence-based: never auto-merge same-name rows when a name has 2+ IDs *within the same event* (unambiguous different people) or when club/discipline conflict; route those to `conflicts`
+- [x] Phase 1c — Upload-time collision detection in parser: same-name-2-IDs and same-ID-2-names per event → warnings in `EventResponse`, skip those rows in reconcile
+- [x] Phase 1d — Backfill guard: only assign an ID from name lookup when the name maps to exactly one existing ID
+- [x] Phase 0 — `repair_identities.py`: source JSONs (data-collection/) as ground truth, restore correct gnz_id + capitalization, dry-run + `--apply`; **consensus-driven** (per-(name, club) majority across all source files, winner must beat runner-up ≥2x) so a single file's typo never overwrites a consistent ID — splits Madison Lynch back into two athletes, rejects the Alexandra Boys `6511229` typo; fully-unmatched athletes untouched
+- [ ] Phase 2 — `athletes` identity table (`athlete_id` FK on `long_scores`), query layers grouped by `athlete_id` (transformer, rankings, medals, gymnasts, wide-all, wellington intents), frontend gymnast URLs keyed on athlete slug
+- [ ] Phase 3 — Canonical-name auto-unify: pick most-common spelling per athlete cluster, unify variants in display + back-write
+- [ ] Phase 4 — Admin review tooling: both-direction ID/name conflicts + Split action
+- [ ] Phase 5 — Tests + docs (capitalization, no-merge rules, backfill guard, repair dry-run); update AGENTS.md/MEMORY.md + patch_notes.json
+
+**Root causes found (Aug 2026):**
+1. `_clean_name` uses `w.capitalize()` → lowercases the rest of each word, so `Eva McEwan` → `Eva Mcewan` (live DB confirmed).
+2. `reconcile_athletes()` is name-keyed and runs after every upload (main.py:2052): two different people sharing a name (e.g. Madison Lynch — OMNI STEP 1 `716561` vs Onslow STEP 5/6/7 `249317`) get irreversibly merged into one ID.
+3. Source data itself has bad identifiers: 61 collision events in `data-collection/` (same numeric ID on 2+ different names within one event; club codes like `TRI`/`ARG`/`HOW` in the `identifier` field); 3,723 DB rows have empty `gnz_id`, and the ingest backfill (main.py:2006-2027) assigns IDs by name only.
+4. Scale: 369 IDs carry 2+ distinct names — 336 are spelling variants of one person (~424 duplicate gymnast-list entries), 33 are genuinely different people sharing an ID.
+
 ### Next Steps
 - [x] Medal counts + totals for gymnasts, clubs and regional teams
   - Gold/silver/bronze (G/S/B) medal tallies per gymnast, per club, and per regional/provincial team, aggregated from `LongScore.apparatus_rank` / `aa_rank` (1 = gold, 2 = silver, 3 = bronze) across scored ranking rows. Regional teams (e.g. `Counties - Manukau`) resolve via the club→region lookup, and National Championships (`is_national` events) medals can be tallied separately as "Nationals medals" alongside season totals.

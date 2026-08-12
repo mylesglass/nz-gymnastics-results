@@ -673,6 +673,51 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
     return event_info, rows
 
 
+def detect_participant_collisions(data: dict) -> list[dict]:
+    """Detect identity collisions inside a single event export.
+
+    Returns a list of warnings for two failure signatures:
+
+    * **same name, 2+ distinct IDs** — two different people share a name (e.g.
+      two Madison Lynches at the same meet).  These must NOT be auto-merged.
+    * **same ID, 2+ distinct names** — a numeric identifier was reused for
+      different people (source data-entry error).
+
+    Club-code identifiers (``TRI``/``ARG``/``HOW``…) are ignored — they are
+    not athlete IDs.
+    """
+    participants = list(resolve_participants(data.get("eventParticipants", [])).values())
+    name_to_ids: dict[str, set[str]] = {}
+    id_to_names: dict[str, set[str]] = {}
+    for p in participants:
+        name = p.get("name", "")
+        if not name:
+            continue
+        gid = fix_gnz_id(p.get("gnz_id", ""))
+        if not gid:
+            continue
+        name_to_ids.setdefault(name.lower(), set()).add(gid)
+        id_to_names.setdefault(gid, set()).add(name)
+
+    warnings: list[dict] = []
+    for name_lower, ids in name_to_ids.items():
+        if len(ids) > 1:
+            names = sorted({p["name"] for p in participants if p["name"].lower() == name_lower})
+            warnings.append({
+                "type": "same_name_multiple_ids",
+                "name": names[0],
+                "gnz_ids": sorted(ids),
+            })
+    for gid, names in id_to_names.items():
+        if len(names) > 1:
+            warnings.append({
+                "type": "same_id_multiple_names",
+                "gnz_id": gid,
+                "names": sorted(names),
+            })
+    return warnings
+
+
 class ParseError(Exception):
     """Raised when uploaded JSON is structurally invalid for parsing."""
 

@@ -2,11 +2,27 @@ import re
 import unicodedata
 
 
+def _title_case_token(word: str) -> str:
+    """Title-case a name token without destroying intentional capitalization.
+
+    Tokens that already carry an uppercase letter after the first character
+    (``McEwan``, ``O'Sullivan``, ``MacIntyre``, ``Smith-Jones``, ``Su'a``) are
+    kept as-is, since ``Mc``/``Mac``/``O'``/hyphen particles are meaningful.
+    Only genuinely un-cased tokens (all-lowercase or all-uppercase) are
+    rebuilt, capitalising each hyphen-separated segment.
+    """
+    if not word:
+        return word
+    if any(c.isupper() for c in word[1:]):
+        return word
+    return "-".join(s.capitalize() if s else s for s in word.split("-"))
+
+
 def _clean_name(raw: str) -> str:
     name = (raw or "").replace("\ufffd", "").replace("\u00a0", " ")
     name = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii")
     name = re.sub(r"\s+", " ", name).strip()
-    return " ".join(w.capitalize() for w in name.split())
+    return " ".join(_title_case_token(w) for w in name.split())
 
 
 def resolve_clubs(event_organizations: list[dict]) -> dict[str, str]:

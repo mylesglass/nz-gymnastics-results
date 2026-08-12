@@ -13,6 +13,7 @@ from app.main import app
 
 HERE = Path(__file__).resolve().parent
 DATA_DIR = HERE.parent.parent / "data-collection" / "2026"
+DATA_DIR_2025 = HERE.parent.parent / "data-collection" / "2025"
 
 client = TestClient(app)
 
@@ -97,6 +98,28 @@ class TestUpload:
         # Only 1 event in the DB after re-upload
         resp = client.get("/api/events")
         assert len(resp.json()) == 1
+
+    def test_upload_surfaces_collision_warnings(self):
+        # manawatu-wag_2025.json contains two Madison Lynches (different GNZ
+        # IDs) at the same event plus a reused ID across two names. The upload
+        # response must surface these as warnings.
+        path = DATA_DIR_2025 / "manawatu-wag_2025.json"
+        if not path.exists():
+            pytest.skip("manawatu-wag_2025.json not found")
+
+        with open(path, "rb") as f:
+            resp = client.post("/api/upload", files={"file": ("manawatu-wag_2025.json", f, "application/json")})
+        assert resp.status_code == 200
+        data = resp.json()
+        warnings = data.get("warnings", [])
+
+        same_name = [w for w in warnings if w["type"] == "same_name_multiple_ids"]
+        assert any(w["name"] == "Madison Lynch" and set(w["gnz_ids"]) == {"249317", "716561"}
+                   for w in same_name)
+
+        same_id = [w for w in warnings if w["type"] == "same_id_multiple_names"]
+        assert any(w["gnz_id"] == "779330" and {"Avery Monaghan", "Mackenzie Hutton-Reardon"}.issubset(set(w["names"]))
+                   for w in same_id)
 
     def test_upload_replaces_all_duplicate_copies(self):
         path = DATA_DIR / "hve-2026.json"

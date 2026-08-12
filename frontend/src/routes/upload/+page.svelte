@@ -406,6 +406,23 @@
                       {/if}
                     </div>
                   {/if}
+                  {#if item.warnings && item.warnings.length > 0}
+                    <div class="mt-1 text-xs text-warning" role="status">
+                      ⚠ {item.warnings.length} identity warnings
+                      {#each item.warnings.slice(0, 3) as w}
+                        <span class="block">
+                          {#if w.type === "same_name_multiple_ids"}
+                            "{w.name}" appears with multiple IDs ({w.gnz_ids?.join(", ")}) — distinct people kept separate
+                          {:else if w.type === "same_id_multiple_names"}
+                            ID {w.gnz_id} attached to multiple names ({w.names?.join(", ")}) — check source data
+                          {/if}
+                        </span>
+                      {/each}
+                      {#if item.warnings.length > 3}
+                        <span class="block">…and {item.warnings.length - 3} more</span>
+                      {/if}
+                    </div>
+                  {/if}
                 </div>
                 <div class="card-actions mt-2">
                   <a href="/events/{item.id}" class="btn btn-primary btn-xs">View Results</a>

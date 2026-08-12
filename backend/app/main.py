@@ -32,7 +32,7 @@ from app.cache import cache, cache_headers, cached, invalidate
 from app.clubdata import active_path, ensure_seed
 from app.database import get_session, init_db
 from app.models import ACTIVITY_TYPE_API, ACTIVITY_TYPE_PAGE, ActivityLog, Event, LongScore, User, WellingtonIntent
-from app.parser import ParseError, _NAME_TO_CANONICAL, find_unknown_clubs, parse_json, reload_club_maps, suggest_club_mapping, validate_upload_structure
+from app.parser import ParseError, _NAME_TO_CANONICAL, detect_participant_collisions, find_unknown_clubs, parse_json, reload_club_maps, suggest_club_mapping, validate_upload_structure
 from app.reconcile import reconcile_athletes
 from app.scoreholder import ScoreholderFetchError, fetch_event_json
 from app.schemas import (
@@ -1970,6 +1970,8 @@ def _ingest_event(data: dict, allow_unknown: str | None, host_club: str | None =
     except ParseError as e:
         raise HTTPException(422, f"Parse error: {e}")
 
+    collision_warnings = detect_participant_collisions(data)
+
     session = get_session()
     try:
         # Re-upload: replace every existing copy of the same competition
@@ -2016,8 +2018,15 @@ def _ingest_event(data: dict, allow_unknown: str | None, host_club: str | None =
             )
             name_to_id: dict[str, str] = {}
             for name, gid in existing:
-                if gid.isdigit() and (name not in name_to_id or len(gid) > len(name_to_id[name])):
-                    name_to_id[name] = gid
+                # Guard: only backfill when the name maps to exactly one distinct
+                # numeric ID — ambiguous names must stay blank for manual review
+                # rather than risk attaching the wrong person's ID.
+                if not gid.isdigit():
+                    continue
+                if name in name_to_id and name_to_id[name] != gid:
+                    name_to_id.pop(name)
+                    continue
+                name_to_id[name] = gid
             for row in rows:
                 if not row.get("gnz_id"):
                     key = row["gymnast_name"].strip().lower()
@@ -2063,6 +2072,7 @@ def _ingest_event(data: dict, allow_unknown: str | None, host_club: str | None =
             names_unified=report["names_unified"],
             conflicts=report.get("conflicts", []),
             host_club=event.host_club,
+            warnings=collision_warnings,
         )
     finally:
         session.close()

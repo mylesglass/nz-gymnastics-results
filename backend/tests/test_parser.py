@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from app.parser import _infer_event_discipline, _normalise_apparatus, _extract_division, find_unknown_clubs, parse_json, suggest_club_mapping, validate_upload_structure
+from app.parser import _infer_event_discipline, _normalise_apparatus, _extract_division, detect_participant_collisions, find_unknown_clubs, parse_json, suggest_club_mapping, validate_upload_structure
 
 HERE = Path(__file__).resolve().parent
 DATA_DIR_2025 = HERE.parent.parent / "data-collection" / "2025" / "json"
@@ -145,6 +145,49 @@ class TestInferEventDiscipline:
     def test_both(self):
         data = {"units": [{"name": "WAG STEP 5"}, {"name": "MAG Level 4"}]}
         assert _infer_event_discipline(data) == "WAG+MAG"
+
+
+class TestDetectParticipantCollisions:
+    def test_same_name_multiple_ids(self):
+        data = {
+            "eventParticipants": [
+                {"_id": "p1", "name": "Madison Lynch", "identifier": "249317", "organizationId": "o1"},
+                {"_id": "p2", "name": "Madison Lynch", "identifier": "716561", "organizationId": "o2"},
+            ],
+        }
+        warnings = detect_participant_collisions(data)
+        assert any(w["type"] == "same_name_multiple_ids" and w["name"] == "Madison Lynch"
+                   and w["gnz_ids"] == ["249317", "716561"] for w in warnings)
+
+    def test_same_id_multiple_names(self):
+        data = {
+            "eventParticipants": [
+                {"_id": "p1", "name": "Arden Livermore-Tracey", "identifier": "252164", "organizationId": "o1"},
+                {"_id": "p2", "name": "Daniel North", "identifier": "252164", "organizationId": "o1"},
+            ],
+        }
+        warnings = detect_participant_collisions(data)
+        assert any(w["type"] == "same_id_multiple_names" and w["gnz_id"] == "252164"
+                   and set(w["names"]) == {"Arden Livermore-Tracey", "Daniel North"} for w in warnings)
+
+    def test_club_code_ids_ignored(self):
+        data = {
+            "eventParticipants": [
+                {"_id": "p1", "name": "Ava Smith", "identifier": "TRI", "organizationId": "o1"},
+                {"_id": "p2", "name": "Ava Smith", "identifier": "ARG", "organizationId": "o1"},
+            ],
+        }
+        warnings = detect_participant_collisions(data)
+        assert warnings == []
+
+    def test_no_collisions(self):
+        data = {
+            "eventParticipants": [
+                {"_id": "p1", "name": "Alice Smith", "identifier": "100", "organizationId": "o1"},
+                {"_id": "p2", "name": "Bob Jones", "identifier": "200", "organizationId": "o1"},
+            ],
+        }
+        assert detect_participant_collisions(data) == []
 
 
 class TestParseAllFiles:

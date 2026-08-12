@@ -44,6 +44,7 @@ class ConflictItem(BaseModel):
     previous_ids: list[str]
     chosen_id: str | None
     rows_updated: int
+    reason: str | None = None
 
 
 class EventResponse(BaseModel):
@@ -61,6 +62,7 @@ class EventResponse(BaseModel):
     names_unified: int = 0
     conflicts: list[ConflictItem] = []
     host_club: str | None = None
+    warnings: list[dict] = []
 
 
 class EventListItem(BaseModel):
@@ -156,6 +158,7 @@ class ConflictItem(BaseModel):
     previous_ids: list[str]
     chosen_id: str | None
     rows_updated: int
+    reason: str | None = None
 
 
 class ReconcileReport(BaseModel):

@@ -23,6 +23,7 @@ export interface EventSummary {
   ids_corrected?: number;
   names_unified?: number;
   conflicts?: Array<{ name: string; previous_ids: string[]; chosen_id: string | null; rows_updated: number }>;
+  warnings?: Array<{ type: string; name?: string; gnz_id?: string; gnz_ids?: string[]; names?: string[] }>;
 }
 
 export interface WideResponse {

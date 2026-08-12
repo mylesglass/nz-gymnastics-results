@@ -3,6 +3,15 @@
     "date": "12 Aug 2026",
     "entries": [
       {
+        "title": "Smarter athlete identity handling",
+        "items": [
+          "Gymnast names keep their proper capitalization on import — names like McEwan, O'Sullivan and hyphenated surnames are no longer flattened to 'Mcewan' or 'Sullivan'.",
+          "Importing a competition now checks for identity collisions: if two athletes share a name (e.g. two Madison Lynches) or one ID appears on multiple names, the upload flags it as a warning instead of silently merging them.",
+          "ID reconciliation is safer: athletes who share a name but competed at the same event (or in different disciplines) are never auto-merged — they're reported for manual review in the admin dashboard.",
+          "An admin repair script (python -m app.repair_identities) can restore correct GNZ IDs and name spelling from the original event exports. It cross-checks every athlete against all source files, so a typo in one competition's data never overwrites a GNZ ID that the rest of the season agrees on."
+        ]
+      },
+      {
         "title": "Reload prompt when a new version is deployed",
         "items": [
           "If you leave the site open in a tab while an update is deployed, a banner now appears asking you to reload so you always see the latest results and features. Fresh page loads already pick up new versions automatically."
