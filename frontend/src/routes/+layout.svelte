@@ -10,9 +10,6 @@
 
   let { children }: { children: Snippet } = $props();
 
-  const SHOW_UPDATE_BANNER = true;
-  let updateBannerVisible = $state(true);
-
   const THEMES = [
     "light", "dark", "cupcake", "bumblebee", "emerald", "corporate",
     "synthwave", "retro", "cyberpunk", "valentine", "halloween",
@@ -377,25 +374,6 @@
         </div>
       </div>
     </footer>
-
-    {#if SHOW_UPDATE_BANNER && updateBannerVisible}
-      <div class="toast toast-end toast-bottom z-[70]" role="status">
-        <div class="alert alert-warning shadow-lg">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 size-6" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>Currently undergoing an update. Please try logging out and back in.</span>
-          <button
-            type="button"
-            class="btn btn-ghost btn-xs btn-square shrink-0"
-            aria-label="Dismiss update notice"
-            onclick={() => (updateBannerVisible = false)}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 4.72a.75.75 0 0 1 1.06 0L10 8.44l3.72-3.72a.75.75 0 1 1 1.06 1.06L11.06 9.5l3.72 3.72a.75.75 0 1 1-1.06 1.06L10 10.56l-3.72 3.72a.75.75 0 1 1-1.06-1.06L8.94 9.5 5.22 5.78a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
-          </button>
-        </div>
-      </div>
-    {/if}
   </div>
 
   <div class="drawer-side z-50">
