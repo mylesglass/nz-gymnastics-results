@@ -24,6 +24,14 @@
     "date": "11 Aug 2026",
     "entries": [
       {
+        "title": "Fixed: missing apparatus scores on multi-day competitions",
+        "items": [
+          "Results for multi-day competitions (like Central Champs) could show an athlete with only one or two apparatus scores while still displaying an all-around mark.",
+          "On the day an athlete didn't compete an apparatus, Scoreholder records a DNS pass; a DNS pass that landed as the first of two passes used to blank out the athlete's real score on that apparatus. It now correctly falls back to the scored pass, so every apparatus the athlete actually competed shows their mark.",
+          "Existing competitions are fixed automatically — no re-upload needed."
+        ]
+      },
+      {
         "title": "New: Apparatus rankings",
         "items": [
           "A new Apparatus Rankings page (under the Rankings menu, National access) shows who scored the highest on each apparatus in a step or level.",

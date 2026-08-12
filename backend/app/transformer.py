@@ -419,7 +419,7 @@ def _build_wide_row(row: dict, prefixes: list[str], columns: list[str]) -> dict:
             completed_count += 1
             _write_app(out, p, total, row.get(f"{p}-d"), row.get(f"{p}-e"), row.get(f"{p}-n"), row.get(f"{p}-rank"))
             out[f"{p}-bonus"] = row.get(f"{p}-bonus")
-        elif pass1_total is not None:
+        elif pass1_total is not None or row.get(f"{p}-2-total") is not None:
             # Multi-pass — collect raw values
             p1_total = pass1_total
             p1_d = row.get(f"{p}-1-d")
@@ -436,7 +436,13 @@ def _build_wide_row(row: dict, prefixes: list[str], columns: list[str]) -> dict:
             p2_bonus = row.get(f"{p}-2-bonus")
 
             # Determine display aggregation rule
-            if p2_total is None:
+            if p1_total is None:
+                # Pass 1 is a DNS/placeholder pass (no final score) — use pass 2
+                best_total = float(p2_total)
+                best_d = p2_d
+                best_e = p2_e
+                best_n = p2_n
+            elif p2_total is None:
                 # Only one vault recorded — use it directly
                 best_total = float(p1_total)
                 best_d = p1_d
