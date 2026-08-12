@@ -333,6 +333,52 @@ export async function getRankings(
   return res.json();
 }
 
+export interface ApparatusRankingRow {
+  rank: string;
+  name: string;
+  gnz_id: string;
+  club: string | null;
+  region: string;
+  best: number;
+  d: number | null;
+  event: string;
+  count: number;
+}
+
+export interface ApparatusLeaderboard {
+  app: string;
+  rankings: ApparatusRankingRow[];
+}
+
+export interface ApparatusRankingsResponse {
+  year: number;
+  step: string;
+  discipline: string;
+  apparatus: ApparatusLeaderboard[];
+}
+
+export async function getApparatusRankings(
+  year: number,
+  step: string,
+  discipline: string,
+  division?: string
+): Promise<ApparatusRankingsResponse> {
+  const params = new URLSearchParams({ year: String(year), step, discipline });
+  if (division) params.set("division", division);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+  try {
+    const res = await fetch(`${API_BASE}/api/rankings/apparatus?${params}`, {
+      headers: authHeaders(),
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export interface ApparatusPass {
   app: string;
   pass_number: number;

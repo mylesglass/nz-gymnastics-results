@@ -12,6 +12,19 @@
     ]
   },
   {
+    "date": "11 Aug 2026",
+    "entries": [
+      {
+        "title": "New: Apparatus rankings",
+        "items": [
+          "A new Apparatus Rankings page (under the Rankings menu, National access) shows who scored the highest on each apparatus in a step or level.",
+          "Pick a discipline, step and apparatus to see gymnasts ranked by their best single mark on that apparatus for the season, with the D-score and a tooltip showing the competition where the best was set.",
+          "Vault follows the same aggregation rules as the All Around ranking (e.g. STEP 6/7 average both vaults), and the Over/Under division filter works exactly like the national rankings."
+        ]
+      }
+    ]
+  },
+  {
     "date": "10 Aug 2026",
     "entries": [
       {

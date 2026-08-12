@@ -36,14 +36,14 @@
 
   let requiresAuth = $derived(
     currentPath.startsWith("/admin") ||
-    currentPath === "/rankings" ||
+    currentPath.startsWith("/rankings") ||
     currentPath === "/wellington-ranking"
   );
   let authActive = $derived(authResolved && authCfg);
   let routeAllowed = $derived(
     !authActive ||
     (currentPath.startsWith("/admin") && user?.role === "admin") ||
-    (currentPath === "/rankings" && hasPermission(user, PERMISSIONS.national)) ||
+    (currentPath.startsWith("/rankings") && hasPermission(user, PERMISSIONS.national)) ||
     (currentPath === "/wellington-ranking" && hasPermission(user, PERMISSIONS.wellington))
   );
   let renderChildren = $derived(!requiresAuth || (authActive && routeAllowed));
@@ -51,7 +51,7 @@
   let showYearTabs = $derived(
     currentPath === "/events" ||
     currentPath === "/results" ||
-    currentPath === "/rankings" ||
+    currentPath.startsWith("/rankings") ||
     currentPath === "/wellington-ranking" ||
     currentPath === "/gymnasts" ||
     currentPath.startsWith("/gymnast/") ||
@@ -252,7 +252,10 @@
               </button>
               <ul role="menu" aria-label="Rankings" class="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow">
                 {#if canNational}
-                  <li role="none"><a role="menuitem" href="/rankings" class={active('/rankings') ? 'active' : ''}>National Rankings</a></li>
+                  <li role="none"><a role="menuitem" href="/rankings" class={active('/rankings') && currentPath === "/rankings" ? 'active' : ''}>National Rankings</a></li>
+                {/if}
+                {#if canNational}
+                  <li role="none"><a role="menuitem" href="/rankings/apparatus" class={active('/rankings/apparatus') ? 'active' : ''}>Apparatus Rankings</a></li>
                 {/if}
                 {#if canWellington}
                   <li role="none"><a role="menuitem" href="/wellington-ranking" class={active('/wellington-ranking') ? 'active' : ''}>Wellington Rankings</a></li>
@@ -439,7 +442,12 @@
             <ul class="ml-4 border-l border-base-300 pl-2 mt-1">
               {#if canNational}
                 <li>
-                  <a href="/rankings" onclick={handleNavClick} class:active={active("/rankings")}>National Rankings</a>
+                  <a href="/rankings" onclick={handleNavClick} class:active={active("/rankings") && currentPath === "/rankings"}>National Rankings</a>
+                </li>
+              {/if}
+              {#if canNational}
+                <li>
+                  <a href="/rankings/apparatus" onclick={handleNavClick} class:active={active("/rankings/apparatus")}>Apparatus Rankings</a>
                 </li>
               {/if}
               {#if canWellington}

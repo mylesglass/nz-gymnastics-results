@@ -191,6 +191,30 @@ class StepsResponse(BaseModel):
     steps: list[str]
 
 
+class ApparatusRankingRow(BaseModel):
+    rank: str
+    name: str
+    gnz_id: str
+    club: str | None
+    region: str = ""
+    best: float
+    d: float | None = None
+    event: str = ""
+    count: int = 0
+
+
+class ApparatusLeaderboard(BaseModel):
+    app: str
+    rankings: list[ApparatusRankingRow]
+
+
+class ApparatusRankingsResponse(BaseModel):
+    year: int
+    step: str
+    discipline: str
+    apparatus: list[ApparatusLeaderboard]
+
+
 class ApparatusRow(BaseModel):
     app: str
     pass_number: int

@@ -1,5 +1,6 @@
 import json
 import time
+from collections import defaultdict
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -34,6 +35,9 @@ from app.parser import ParseError, _NAME_TO_CANONICAL, find_unknown_clubs, parse
 from app.reconcile import reconcile_athletes
 from app.scoreholder import ScoreholderFetchError, fetch_event_json
 from app.schemas import (
+    ApparatusLeaderboard,
+    ApparatusRankingRow,
+    ApparatusRankingsResponse,
     ApparatusSpecialistRow,
     ApplyFixItem,
     ActivityLogItem,
@@ -815,6 +819,110 @@ def _is_qualifier(all_events: list[dict], club: str, step: str) -> bool:
     return True
 
 
+def _build_event_marks(rows, step: str):
+    """Aggregate raw LongScore rows into per-competition and per-apparatus marks.
+
+    Rows are grouped by (gymnast, event, round_type). Each group collapses to
+    one competition score (best All Around mark, else the apparatus sum with
+    vault per ``_use_vault_average``) and one score per apparatus, then round
+    types merge so each (gymnast, event) contributes at most one mark.
+
+    Returns ``(per_event, apparatus_events, meta_by_name)`` where
+    ``apparatus_events`` maps name -> apparatus -> event_id -> ``{"score",
+    "event_name", "d"}`` (``d`` is the D-score of the best pass, averaged when
+    the vault is averaged) and ``meta_by_name`` holds the best gnz_id/club.
+    """
+    event_groups: dict[tuple, list] = defaultdict(list)
+    for r in rows:
+        key = (r.gymnast_name, r.gnz_id, r.club_name, r.event_id, r.event_name, r.round_type)
+        event_groups[key].append(r)
+
+    per_event: dict[tuple, dict] = {}
+    apparatus_events: dict[str, dict[str, dict[int, dict]]] = defaultdict(
+        lambda: defaultdict(dict),
+    )
+    meta_by_name: dict[str, dict[str, str]] = {}
+    for (name, gnz_id, club, eid, ename, rt), scores in event_groups.items():
+        aa_values = [s.aa_score for s in scores if s.aa_score is not None]
+        if aa_values:
+            comp_score = float(max(aa_values))
+        else:
+            apparatus_scores: dict[str, list[float]] = defaultdict(list)
+            for s in scores:
+                if s.pass_final_score is not None:
+                    apparatus_scores[s.apparatus or ""].append(float(s.pass_final_score))
+            comp_score = 0.0
+            for app, app_scores in apparatus_scores.items():
+                if app == "VT" and len(app_scores) > 1:
+                    if _use_vault_average(step, rt or ""):
+                        comp_score += sum(app_scores) / len(app_scores)
+                    else:
+                        comp_score += max(app_scores)
+                else:
+                    comp_score += sum(app_scores)
+
+        key2 = (name, eid)
+        prev = per_event.get(key2)
+        if prev is None or comp_score > prev["score"]:
+            per_event[key2] = {
+                "score": comp_score,
+                "event_name": ename,
+                "gnz_id": gnz_id or "",
+                "club": club or "",
+                "host_club": scores[0].host_club or "",
+            }
+
+        # Event-level apparatus score. Vault aggregates multiple passes per the
+        # AA rules (average or best); ``d`` tracks the best pass (averaged when
+        # the vault is averaged), matching ``_build_wide_row``.
+        event_app_scores: dict[str, float] = {}
+        event_app_ds: dict[str, float | None] = {}
+        vt_totals: list[float] = []
+        vt_ds: list[float | None] = []
+        for s in scores:
+            if s.pass_final_score is None:
+                continue
+            if s.apparatus == "VT":
+                vt_totals.append(float(s.pass_final_score))
+                vt_ds.append(s.d_score)
+            else:
+                score = float(s.pass_final_score)
+                prev_app = event_app_scores.get(s.apparatus or "")
+                if prev_app is None or score > prev_app:
+                    event_app_scores[s.apparatus or ""] = score
+                    event_app_ds[s.apparatus or ""] = s.d_score
+        if vt_totals:
+            if _use_vault_average(step, rt or ""):
+                event_app_scores["VT"] = sum(vt_totals) / len(vt_totals)
+                event_app_ds["VT"] = (
+                    sum(d for d in vt_ds if d is not None) / len(vt_ds)
+                    if all(d is not None for d in vt_ds) and vt_ds
+                    else None
+                )
+            else:
+                best_idx = max(range(len(vt_totals)), key=lambda i: vt_totals[i])
+                event_app_scores["VT"] = vt_totals[best_idx]
+                event_app_ds["VT"] = vt_ds[best_idx]
+        for app, score in event_app_scores.items():
+            prev_app = apparatus_events[name][app].get(eid)
+            if prev_app is None or score > prev_app["score"]:
+                apparatus_events[name][app][eid] = {
+                    "score": score,
+                    "event_name": ename,
+                    "d": event_app_ds.get(app),
+                }
+
+        if name not in meta_by_name:
+            meta_by_name[name] = {"gnz_id": gnz_id or "", "club": club or ""}
+        else:
+            if not meta_by_name[name]["gnz_id"] and gnz_id:
+                meta_by_name[name]["gnz_id"] = gnz_id
+            if not meta_by_name[name]["club"] and club:
+                meta_by_name[name]["club"] = club
+
+    return per_event, apparatus_events, meta_by_name
+
+
 def _compute_apparatus_specialists(
     apparatus_events: dict[str, dict[str, dict[int, dict]]],
     step: str,
@@ -930,6 +1038,7 @@ def get_rankings(
                 LongScore.apparatus,
                 LongScore.pass_number,
                 LongScore.pass_final_score,
+                LongScore.d_score,
                 LongScore.aa_score,
                 LongScore.round_type,
                 Event.host_club,
@@ -945,89 +1054,11 @@ def get_rankings(
             .all()
         )
 
-        from collections import defaultdict
-
-        # Group rows by (gymnast, event, round_type)
-        event_groups: dict[tuple, list] = defaultdict(list)
-        for r in rows:
-            key = (r.gymnast_name, r.gnz_id, r.club_name, r.event_id, r.event_name, r.round_type)
-            event_groups[key].append(r)
-
-        # Compute a single competition score per (gymnast, event, round_type),
-        # then collapse to ONE mark per (gymnast, event) so the top-2 total
-        # never uses two marks from the same competition (e.g. the two days of
-        # a two-day meet).
-        per_event: dict[tuple, dict] = {}
-        # Per (gymnast, apparatus, event): best apparatus score for that
-        # competition. Multiple round types of a two-day competition merge to
-        # the best score for the event. Used for apparatus-qualifier tracking.
-        apparatus_events: dict[str, dict[str, dict[int, dict]]] = defaultdict(
-            lambda: defaultdict(dict),
-        )
-        meta_by_name: dict[str, dict[str, str]] = {}
-        for (name, gnz_id, club, eid, ename, rt), scores in event_groups.items():
-            aa_values = [s.aa_score for s in scores if s.aa_score is not None]
-            if aa_values:
-                comp_score = float(max(aa_values))
-            else:
-                apparatus_scores: dict[str, list[float]] = defaultdict(list)
-                for s in scores:
-                    if s.pass_final_score is not None:
-                        apparatus_scores[s.apparatus or ""].append(float(s.pass_final_score))
-                comp_score = 0.0
-                for app, app_scores in apparatus_scores.items():
-                    if app == "VT" and len(app_scores) > 1:
-                        if _use_vault_average(step, rt or ""):
-                            comp_score += sum(app_scores) / len(app_scores)
-                        else:
-                            comp_score += max(app_scores)
-                    else:
-                        comp_score += sum(app_scores)
-
-            key2 = (name, eid)
-            prev = per_event.get(key2)
-            if prev is None or comp_score > prev["score"]:
-                per_event[key2] = {
-                    "score": comp_score,
-                    "event_name": ename,
-                    "gnz_id": gnz_id or "",
-                    "club": club or "",
-                    "host_club": scores[0].host_club or "",
-                }
-
-            # Event-level apparatus score for specialist tracking. Vault
-            # aggregates multiple passes per the AA rules (average or best).
-            event_app_scores: dict[str, float] = {}
-            vt_totals: list[float] = []
-            for s in scores:
-                if s.pass_final_score is None:
-                    continue
-                if s.apparatus == "VT":
-                    vt_totals.append(float(s.pass_final_score))
-                else:
-                    prev_app = event_app_scores.get(s.apparatus or "")
-                    if prev_app is None or float(s.pass_final_score) > prev_app:
-                        event_app_scores[s.apparatus or ""] = float(s.pass_final_score)
-            if vt_totals:
-                if _use_vault_average(step, rt or ""):
-                    event_app_scores["VT"] = sum(vt_totals) / len(vt_totals)
-                else:
-                    event_app_scores["VT"] = max(vt_totals)
-            for app, score in event_app_scores.items():
-                prev_app = apparatus_events[name][app].get(eid)
-                if prev_app is None or score > prev_app["score"]:
-                    apparatus_events[name][app][eid] = {
-                        "score": score,
-                        "event_name": ename,
-                    }
-
-            if name not in meta_by_name:
-                meta_by_name[name] = {"gnz_id": gnz_id or "", "club": club or ""}
-            else:
-                if not meta_by_name[name]["gnz_id"] and gnz_id:
-                    meta_by_name[name]["gnz_id"] = gnz_id
-                if not meta_by_name[name]["club"] and club:
-                    meta_by_name[name]["club"] = club
+        # One competition score per (gymnast, event, round_type), collapsed to
+        # ONE mark per (gymnast, event) so the top-2 total never uses two marks
+        # from the same competition (e.g. the two days of a two-day meet). Also
+        # accumulates per-apparatus bests for the specialist/leaderboard views.
+        per_event, apparatus_events, meta_by_name = _build_event_marks(rows, step)
 
         # Build gymnast_data: aggregate competitions per gymnast, keep the best
         # gnz_id and club, and retain ALL per-event marks for the qualifier check.
@@ -1156,6 +1187,144 @@ def get_rankings(
             apparatus_qualifying_score=app_qual_score,
             apparatus_qualifying_count=app_qual_count,
         )
+    finally:
+        session.close()
+
+
+# Standard apparatus order per discipline; leaderboards follow this order and
+# only include apparatus with at least one recorded mark.
+_APPARATUS_ORDER: dict[str, list[str]] = {
+    "WAG": ["VT", "UB", "BB", "FX"],
+    "MAG": ["FX", "PH", "SR", "VT", "PB", "HB"],
+}
+
+
+@app.get("/api/rankings/apparatus", response_model=ApparatusRankingsResponse)
+def get_apparatus_rankings(
+    response: Response,
+    year: int,
+    step: str,
+    discipline: str,
+    division: str = "",
+    _auth=Depends(require_permission(PERMISSION_NATIONAL)),
+):
+    """Per-apparatus national leaderboards for a step/level.
+
+    Ranks gymnasts by their best single mark on each apparatus in the season.
+    Per-event apparatus scores are round-type-merged and vault follows
+    ``_use_vault_average``, matching the All Around rankings. Only non-national
+    events of the requested year are considered. Cached per selection for 5
+    minutes (no qualifier/intent toggles, so a short TTL is safe).
+    """
+    response.headers.update(cache_headers())
+    return cached(
+        ("apparatus-rankings", year, step, discipline, division),
+        lambda: _compute_apparatus_rankings(year, step, discipline, division),
+        ttl=300,
+    )
+
+
+def _compute_apparatus_rankings(year: int, step: str, discipline: str, division: str) -> ApparatusRankingsResponse:
+    session = get_session()
+    try:
+        event_ids = [
+            e.id
+            for e in session.query(Event).filter(
+                Event.year == year,
+                Event.is_national == False,
+            ).all()
+        ]
+        if not event_ids:
+            return ApparatusRankingsResponse(year=year, step=step, discipline=discipline, apparatus=[])
+
+        rows = (
+            session.query(
+                LongScore.gymnast_name,
+                LongScore.gnz_id,
+                LongScore.club_name,
+                LongScore.event_id,
+                LongScore.event_name,
+                LongScore.apparatus,
+                LongScore.pass_number,
+                LongScore.pass_final_score,
+                LongScore.d_score,
+                LongScore.aa_score,
+                LongScore.round_type,
+                Event.host_club,
+            )
+            .join(Event, LongScore.event_id == Event.id)
+            .filter(
+                LongScore.event_id.in_(event_ids),
+                LongScore.level_category == step,
+                LongScore.discipline == discipline,
+                LongScore.pass_final_score.isnot(None),
+                *([LongScore.division == division] if division else []),
+            )
+            .all()
+        )
+
+        _, apparatus_events, meta_by_name = _build_event_marks(rows, step)
+
+        # Best season mark per (gymnast, apparatus), plus where it was set.
+        by_app: dict[str, list[dict]] = defaultdict(list)
+        for name, app_events in apparatus_events.items():
+            meta = meta_by_name.get(name, {"gnz_id": "", "club": ""})
+            for app, events in app_events.items():
+                best = max(events.values(), key=lambda e: e["score"])
+                by_app[app].append({
+                    "name": name,
+                    "gnz_id": meta["gnz_id"],
+                    "club": meta["club"],
+                    "region": _find_region(meta["club"] or ""),
+                    "best": best["score"],
+                    "d": best.get("d"),
+                    "event": best["event_name"],
+                    "count": len(events),
+                })
+
+        order = _APPARATUS_ORDER.get(discipline, [])
+        remaining = sorted(set(by_app) - set(order))
+        leaderboards = []
+        for app in order + remaining:
+            if app not in by_app:
+                continue
+            entries = sorted(by_app[app], key=lambda x: -x["best"])
+
+            rank = 1
+            prev_val = None
+            for i, entry in enumerate(entries):
+                if prev_val is not None and entry["best"] < prev_val:
+                    rank = i + 1
+                entry["rank"] = rank
+                prev_val = entry["best"]
+
+            for i, entry in enumerate(entries):
+                if i > 0 and entry["best"] == entries[i - 1]["best"]:
+                    entry["rank_text"] = f"T{entry['rank']}"
+                elif i < len(entries) - 1 and entry["best"] == entries[i + 1]["best"]:
+                    entry["rank_text"] = f"T{entry['rank']}"
+                else:
+                    entry["rank_text"] = str(entry["rank"])
+
+            leaderboards.append(ApparatusLeaderboard(
+                app=app,
+                rankings=[
+                    ApparatusRankingRow(
+                        rank=e["rank_text"],
+                        name=e["name"],
+                        gnz_id=e["gnz_id"],
+                        club=e["club"],
+                        region=e["region"],
+                        best=round(e["best"], 3),
+                        d=round(e["d"], 1) if e["d"] is not None else None,
+                        event=e["event"],
+                        count=e["count"],
+                    )
+                    for e in entries
+                ],
+            ))
+
+        return ApparatusRankingsResponse(year=year, step=step, discipline=discipline, apparatus=leaderboards)
     finally:
         session.close()
 
