@@ -396,8 +396,8 @@
           <tr>
             <th scope="col" class="w-12">Rank</th>
             <th scope="col" class="w-12"></th>
-            <th scope="col">Name</th>
-            <th scope="col">GNZ ID</th>
+            <th scope="col" class="sticky left-0 z-10 bg-base-100">Name</th>
+            <th scope="col" class="hidden md:table-cell">GNZ ID</th>
             <th scope="col">Club</th>
             <th scope="col" class="w-10">Intent</th>
             {#each HEADER_LABELS[configKey] ?? ["Score 1", "Score 2", "Score 3"] as label}
@@ -410,17 +410,21 @@
         </thead>
         <tbody>
           {#each rankings as r, i}
-            <tr class="hover:bg-base-300" class:border-l-4={configKey === 'wag_step_5_6' && i < 4} class:border-l-primary={configKey === 'wag_step_5_6' && i < 4}>
+            <tr class="group hover:bg-base-300">
               <td class="font-bold text-lg">{r.rank}</td>
               <td class="text-center w-12">
                 {#if (configKey === 'wag_step_5_6' || STEP7_CONFIGS.has(configKey)) && i < 4}
                   <span class="inline-flex items-center justify-center size-4 rounded-full text-[10px] font-bold" style="background:#FFC72C;color:#000000">1</span>
                 {/if}
               </td>
-              <td class="font-medium">
+              <td
+                class="font-medium sticky left-0 z-10 border-r border-base-300 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}"
+                class:border-l-4={configKey === 'wag_step_5_6' && i < 4}
+                class:border-l-primary={configKey === 'wag_step_5_6' && i < 4}
+              >
                 <a href="/gymnast/{r.gnz_id}" class="hover:link">{r.name}</a>
               </td>
-              <td class="text-base-content/70 text-xs">{r.gnz_id}</td>
+              <td class="text-base-content/70 text-xs hidden md:table-cell">{r.gnz_id}</td>
               <td>{r.club}</td>
             <td class="text-center w-10">
               {#if user?.role === "admin"}
@@ -500,19 +504,19 @@
     <table class="table table-zebra">
       <thead>
         <tr>
-          <th scope="col">Name</th>
-          <th scope="col">GNZ ID</th>
+          <th scope="col" class="sticky left-0 z-10 bg-base-100">Name</th>
+          <th scope="col" class="hidden md:table-cell">GNZ ID</th>
           <th scope="col">Club</th>
           <th scope="col" class="text-right">Apparatus</th>
         </tr>
       </thead>
       <tbody>
-        {#each specialists as s}
-          <tr class="hover:bg-base-300">
-            <td class="font-medium">
+        {#each specialists as s, i}
+          <tr class="group hover:bg-base-300">
+            <td class="font-medium sticky left-0 z-10 border-r border-base-300 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}">
               <a href="/gymnast/{s.gnz_id}" class="hover:link">{s.name}</a>
             </td>
-            <td class="text-base-content/70 text-xs">{s.gnz_id}</td>
+            <td class="text-base-content/70 text-xs hidden md:table-cell">{s.gnz_id}</td>
             <td>{s.club}</td>
             <td>
               <div class="flex flex-wrap gap-1 justify-end">
@@ -546,8 +550,8 @@
     <table class="table table-zebra">
       <thead>
         <tr>
-          <th scope="col">Name</th>
-          <th scope="col">GNZ ID</th>
+          <th scope="col" class="sticky left-0 z-10 bg-base-100">Name</th>
+          <th scope="col" class="hidden md:table-cell">GNZ ID</th>
           <th scope="col">Club</th>
           <th scope="col" class="w-10">Intent</th>
           {#each HEADER_LABELS[configKey] ?? ["Score 1", "Score 2", "Score 3"] as label}
@@ -557,12 +561,12 @@
         </tr>
       </thead>
       <tbody>
-        {#each notRanked as r}
-          <tr class="hover:bg-base-300">
-            <td class="font-medium">
+        {#each notRanked as r, i}
+          <tr class="group hover:bg-base-300">
+            <td class="font-medium sticky left-0 z-10 border-r border-base-300 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}">
               <a href="/gymnast/{r.gnz_id}" class="hover:link">{r.name}</a>
             </td>
-            <td class="text-base-content/70 text-xs">{r.gnz_id}</td>
+            <td class="text-base-content/70 text-xs hidden md:table-cell">{r.gnz_id}</td>
             <td>{r.club}</td>
             <td class="text-center w-10">
               {#if user?.role === "admin"}

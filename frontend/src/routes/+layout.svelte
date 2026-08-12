@@ -158,11 +158,11 @@
       Skip to content
     </a>
     <nav class="navbar bg-base-200 shadow-sm flex-none relative z-50 overflow-visible" aria-label="Main navigation">
-      <div class="flex-1 gap-1 items-center">
+      <div class="flex-1 gap-1 items-center min-w-0">
         <button
           id="nav-menu-button"
           type="button"
-          class="btn btn-ghost btn-sm btn-square md:hidden"
+          class="btn btn-ghost btn-sm btn-square md:hidden shrink-0"
           aria-label="Open menu"
           aria-expanded={drawerOpen}
           aria-controls="nav-drawer"
@@ -172,41 +172,57 @@
             <path d="M3 6h18v2H3V6Zm0 5h18v2H3v-2Zm0 5h18v2H3v-2Z" />
           </svg>
         </button>
-        <a href="/" class="btn btn-ghost text-lg sm:text-xl">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-6 text-primary">
+        <a href="/" class="btn btn-ghost text-lg sm:text-xl min-w-0">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-6 text-primary shrink-0">
             <path fill="currentColor" d="M8 22h5v-4H6v2q0 .825.588 1.413T8 22m7 0h5q.825 0 1.413-.587T22 20v-2h-7zM2 18V4q0-.825.588-1.412T4 2h14v2H4v14zm4-2h7v-4H6zm9 0h7v-4h-7zm-9-6h16V8q0-.825-.587-1.412T20 6H8q-.825 0-1.412.588T6 8z"/>
           </svg>
-          NZ Gymnastics Results
-          <span class="badge badge-warning badge-sm">Beta</span>
+          <span class="hidden sm:inline truncate">NZ Gymnastics Results</span>
+          <span class="badge badge-warning badge-sm hidden sm:inline">Beta</span>
         </a>
       </div>
 
       {#if showYearTabs}
       <div class="flex-none">
-        <div class="tabs tabs-box tabs-xs" aria-label="Year filter">
-          {#each years as yr}
+        <div class="hidden md:block">
+          <div class="tabs tabs-box tabs-xs" aria-label="Year filter">
+            {#each years as yr}
+              <input
+                type="radio"
+                name="year_tabs"
+                class="tab checked:bg-secondary checked:text-secondary-content"
+                aria-label={yr}
+                checked={selYear === yr}
+                onchange={() => selectedYear.set(yr)}
+              />
+            {/each}
             <input
               type="radio"
               name="year_tabs"
               class="tab checked:bg-secondary checked:text-secondary-content"
-              aria-label={yr}
-              checked={selYear === yr}
-              onchange={() => selectedYear.set(yr)}
+              aria-label="All"
+              checked={selYear === null}
+              onchange={() => selectedYear.set(null)}
             />
-          {/each}
-          <input
-            type="radio"
-            name="year_tabs"
-            class="tab checked:bg-secondary checked:text-secondary-content"
-            aria-label="All"
-            checked={selYear === null}
-            onchange={() => selectedYear.set(null)}
-          />
+          </div>
+        </div>
+        <div class="md:hidden">
+          <label for="nav-year-select" class="sr-only">Select year</label>
+          <select
+            id="nav-year-select"
+            class="select select-bordered select-sm"
+            value={selYear ?? ""}
+            onchange={(e) => selectedYear.set((e.currentTarget as HTMLSelectElement).value || null)}
+          >
+            <option value="">All</option>
+            {#each years as yr}
+              <option value={yr}>{yr}</option>
+            {/each}
+          </select>
         </div>
       </div>
       {/if}
 
-      <div class="flex-1 flex justify-end gap-1 items-center">
+      <div class="flex-1 flex justify-end gap-1 items-center min-w-0">
         <div class="hidden md:flex gap-1 items-center">
           <a
             href="/events"
@@ -343,7 +359,7 @@
             </svg>
             {theme}
           </button>
-          <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box w-96 p-2 shadow flex-row flex-wrap gap-x-4 gap-y-1" style="z-index: 50">
+          <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box w-96 max-w-[calc(100vw-2rem)] p-2 shadow flex-row flex-wrap gap-x-4 gap-y-1" style="z-index: 50">
             {#each THEMES as t}
               <li class="w-1/3">
                 <button class={t === theme ? "active" : ""} onclick={() => setTheme(t)}>

@@ -206,7 +206,7 @@
       </table>
     </div>
 
-    <div class="flex items-center justify-between mt-3">
+    <div class="flex flex-wrap items-center justify-between gap-2 mt-3">
       <span role="status" class="text-sm text-base-content/70">
         Showing {offset + 1}–{offset + items.length} of {total.toLocaleString()}
       </span>

@@ -283,8 +283,8 @@
         <thead>
           <tr>
             <th scope="col" class="w-12">Rank</th>
-            <th scope="col">Name</th>
-            <th scope="col">GNZ ID</th>
+            <th scope="col" class="sticky left-0 z-10 bg-base-100">Name</th>
+            <th scope="col" class="hidden md:table-cell">GNZ ID</th>
             <th scope="col">
               <span class="inline-flex items-center gap-1">
                 Club
@@ -303,12 +303,12 @@
         </thead>
         <tbody>
           {#each filteredRows as r, i (i)}
-            <tr class="hover:bg-base-300">
+            <tr class="group hover:bg-base-300">
               <td class="font-bold text-lg">{r.rank}</td>
-              <td class="font-medium">
+              <td class="font-medium sticky left-0 z-10 border-r border-base-300 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}">
                 <a href="/gymnast/{r.gnz_id}" class="hover:link">{r.name}</a>
               </td>
-              <td class="text-base-content/70 text-xs">{r.gnz_id}</td>
+              <td class="text-base-content/70 text-xs hidden md:table-cell">{r.gnz_id}</td>
               <td>{r.club}</td>
               <td>
                 {#if r.region}

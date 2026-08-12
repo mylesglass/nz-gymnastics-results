@@ -8,6 +8,8 @@
   import { REGION_PALETTES } from "./regions";
   import { currentUser } from "$lib/auth";
   import { updateGymnast } from "$lib/api";
+  import NativeMultiSelect from "./NativeMultiSelect.svelte";
+  import { isTouchDevice } from "./touch";
   import type { ColFormat, PdfColumn } from "./export";
 
   interface TabData {
@@ -170,10 +172,20 @@
   let openDropdownX = $state(0);
   let openDropdownY = $state(0);
   let openDropdownEl: HTMLDivElement | undefined = $state();
+  let isTouch = $state(false);
 
   $effect(() => {
     if (openDropdown && openDropdownEl) {
       openDropdownEl.focus();
+    }
+  });
+
+  $effect(() => {
+    if (openDropdown && openDropdownEl) {
+      const w = openDropdownEl.offsetWidth;
+      const maxX = window.innerWidth - w - 8;
+      if (openDropdownX > maxX) openDropdownX = Math.max(8, maxX);
+      if (openDropdownX < 8) openDropdownX = 8;
     }
   });
 
@@ -195,11 +207,11 @@
   const TAIL_META = new Set(["aa-score", "aa-rank"]);
 
   const COL_MIN_CLASS: Record<string, string> = {
-    "gnz-id": "min-w-2",
+    "gnz-id": "min-w-2 hidden md:table-cell",
     step: "min-w-18",
-    name: "min-w-36",
+    name: "min-w-36 sticky left-0 z-10",
     club: "min-w-36",
-    region: "min-w-24",
+    region: "min-w-24 hidden md:table-cell",
     division: "min-w-18",
     "round-type": "min-w-18",
     event_name: "min-w-36 max-w-56 truncate",
@@ -257,6 +269,11 @@
     } else {
       arr.push(value);
     }
+  }
+
+  function setFilter(col: string, values: string[]) {
+    const arr = filterStateFor(col).selected;
+    arr.splice(0, arr.length, ...values);
   }
 
   function clearFilter(col: string) {
@@ -388,6 +405,7 @@ function appDisplayLabel(prefix: string): string {
     const onScroll = () => {
       isScrolled = window.scrollY > 60;
     };
+    isTouch = isTouchDevice();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   });
@@ -731,6 +749,43 @@ function appDisplayLabel(prefix: string): string {
     {/if}
   {/snippet}
 
+  {#snippet filterButton(col: string, opts: { tabindex?: number } = {})}
+    {@const state = filterStateFor(col)}
+    {@const label = col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
+    <NativeMultiSelect
+      options={state.options}
+      selected={state.selected}
+      onPick={(v) => setFilter(col, v)}
+      ariaLabel={`Filter ${label}`}
+    >
+      <button
+        type="button"
+        onclick={(e) => toggleDropdown(col, e)}
+        onkeydown={(e) => {
+          if (e.key === "Escape") { e.preventDefault(); openDropdown = null; }
+        }}
+        class="btn btn-ghost btn-xs px-1 h-6 min-w-6"
+        aria-label={`Filter ${label}`}
+        aria-haspopup="dialog"
+        aria-expanded={openDropdown === col}
+        tabindex={opts.tabindex ?? 0}
+      >
+        <span class="text-xs {state.selected.length ? 'text-primary' : 'opacity-60'}">▾</span>
+        {#if state.selected.length}
+          <span class="badge badge-xs badge-accent">{state.selected.length}</span>
+        {/if}
+      </button>
+    </NativeMultiSelect>
+    {#if isTouch && state.selected.length > 0}
+      <button
+        type="button"
+        class="btn btn-ghost btn-xs px-1 h-6 min-w-6 text-error"
+        aria-label={`Clear ${label} filter`}
+        onclick={() => clearFilter(col)}
+      >✕</button>
+    {/if}
+  {/snippet}
+
   <div
     class="sticky px-2 top-0 z-40 bg-base-100 transition-shadow duration-50 {isScrolled
       ? ''
@@ -777,7 +832,7 @@ function appDisplayLabel(prefix: string): string {
           <thead>
             <tr>
               {#each frontMeta as col, i}
-                <th scope="col" class={COL_MIN_CLASS[col] ?? ""} style={thStyle(i, col)}>
+                <th scope="col" class={COL_MIN_CLASS[col] ?? ""} class:bg-base-100={col === "name"} style={thStyle(i, col)}>
                   <div class="flex items-center gap-0.5">
                     <button
                       type="button"
@@ -788,26 +843,7 @@ function appDisplayLabel(prefix: string): string {
                       {#if sortCol === col}<span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>{/if}
                     </button>
                     {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
-                      <button
-                        type="button"
-                        onclick={(e) => toggleDropdown(col, e)}
-                        class="btn btn-ghost btn-xs px-1 h-6 min-w-6"
-                        aria-label={`Filter ${col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}`}
-                        aria-haspopup="dialog"
-                        aria-expanded={openDropdown === col}
-                        tabindex="-1"
-                      >
-                        <span
-                          class="text-xs {filterStateFor(col).selected.length
-                            ? 'text-primary'
-                            : 'opacity-60'}">▾</span
-                        >
-                        {#if filterStateFor(col).selected.length}
-                          <span class="badge badge-xs badge-accent"
-                            >{filterStateFor(col).selected.length}</span
-                          >
-                        {/if}
-                      </button>
+                      {@render filterButton(col, { tabindex: -1 })}
                     {/if}
                   </div>
                 </th>
@@ -842,26 +878,7 @@ function appDisplayLabel(prefix: string): string {
                       {#if sortCol === col}<span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>{/if}
                     </button>
                     {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
-                      <button
-                        type="button"
-                        onclick={(e) => toggleDropdown(col, e)}
-                        class="btn btn-ghost btn-xs px-1 h-6 min-w-6"
-                        aria-label={`Filter ${col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}`}
-                        aria-haspopup="dialog"
-                        aria-expanded={openDropdown === col}
-                        tabindex="-1"
-                      >
-                        <span
-                          class="text-xs {filterStateFor(col).selected.length
-                            ? 'text-primary'
-                            : 'opacity-60'}">▾</span
-                        >
-                        {#if filterStateFor(col).selected.length}
-                          <span class="badge badge-xs badge-accent"
-                            >{filterStateFor(col).selected.length}</span
-                          >
-                        {/if}
-                      </button>
+                      {@render filterButton(col, { tabindex: -1 })}
                     {/if}
                   </div>
                 </th>
@@ -883,6 +900,7 @@ function appDisplayLabel(prefix: string): string {
               class="cursor-pointer select-none hover:text-primary {COL_MIN_CLASS[
                 col
               ] ?? ''}"
+              class:bg-base-100={col === "name"}
               aria-sort={sortCol === col ? (sortAsc ? "ascending" : "descending") : "none"}
             >
               <div class="flex items-center gap-0.5">
@@ -897,28 +915,7 @@ function appDisplayLabel(prefix: string): string {
                   {/if}
                 </button>
                 {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
-                  <button
-                    type="button"
-                    onclick={(e) => toggleDropdown(col, e)}
-                    onkeydown={(e) => {
-                      if (e.key === "Escape") { e.preventDefault(); openDropdown = null; }
-                    }}
-                    class="btn btn-ghost btn-xs px-1 h-6 min-w-6"
-                    aria-label={`Filter ${col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}`}
-                    aria-haspopup="dialog"
-                    aria-expanded={openDropdown === col}
-                  >
-                    <span
-                      class="text-xs {filterStateFor(col).selected.length
-                        ? 'text-primary'
-                        : 'opacity-60'}">▾</span
-                    >
-                    {#if filterStateFor(col).selected.length}
-                      <span class="badge badge-xs badge-accent"
-                        >{filterStateFor(col).selected.length}</span
-                      >
-                    {/if}
-                  </button>
+                  {@render filterButton(col)}
                 {/if}
               </div>
             </th>
@@ -963,28 +960,7 @@ function appDisplayLabel(prefix: string): string {
                   {/if}
                 </button>
                 {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
-                  <button
-                    type="button"
-                    onclick={(e) => toggleDropdown(col, e)}
-                    onkeydown={(e) => {
-                      if (e.key === "Escape") { e.preventDefault(); openDropdown = null; }
-                    }}
-                    class="btn btn-ghost btn-xs px-1 h-6 min-w-6"
-                    aria-label={`Filter ${col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}`}
-                    aria-haspopup="dialog"
-                    aria-expanded={openDropdown === col}
-                  >
-                    <span
-                      class="text-xs {filterStateFor(col).selected.length
-                        ? 'text-primary'
-                        : 'opacity-60'}">▾</span
-                    >
-                    {#if filterStateFor(col).selected.length}
-                      <span class="badge badge-xs badge-accent"
-                        >{filterStateFor(col).selected.length}</span
-                      >
-                    {/if}
-                  </button>
+                  {@render filterButton(col)}
                 {/if}
               </div>
             </th>
@@ -996,9 +972,13 @@ function appDisplayLabel(prefix: string): string {
       </thead>
       <tbody>
         {#each visibleRows as row, rowIdx}
-          <tr class="hover:bg-primary/15 transition-colors">
+          <tr class="group hover:bg-primary/15 transition-colors">
             {#each frontMeta as col}
-              <td class="whitespace-nowrap py-1.5 {COL_MIN_CLASS[col] ?? ''}">
+              <td
+                class="whitespace-nowrap py-1.5 {COL_MIN_CLASS[col] ?? ''} {col === 'name'
+                  ? `border-r border-base-300 group-hover:bg-primary/15 ${rowIdx % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}`
+                  : ''}"
+              >
                 {#if editMode && (col === "name" || col === "gnz-id" || col === "club")}
                   <input
                     type="text"
@@ -1079,7 +1059,7 @@ function appDisplayLabel(prefix: string): string {
   </div>
 
   {#if totalPages > 1}
-    <div class="flex items-center justify-between gap-2 mt-2">
+    <div class="flex flex-wrap items-center justify-between gap-2 mt-2">
       <div class="join">
         <button
           class="btn btn-sm join-item"

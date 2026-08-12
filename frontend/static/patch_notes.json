@@ -3,6 +3,15 @@
     "date": "12 Aug 2026",
     "entries": [
       {
+        "title": "Mobile-friendly navigation and tables",
+        "items": [
+          "The navigation bar no longer gets squashed on phones: the year filter is now a compact native selector (using your phone's own picker), the logo shrinks to an icon on small screens, and the theme menu fits any screen width.",
+          "Result and ranking tables keep the gymnast's name pinned to the left while you scroll sideways, and low-value columns like GNZ ID are hidden on small screens to reduce scrolling.",
+          "On phones and tablets, the club/region filters and the column-header filters on results tables open your device's native multi-select picker instead of a custom menu — tap the funnel and your system's picker appears.",
+          "Filter popovers are now clamped to the screen edge so they never run off the right side, and pagination controls wrap cleanly on narrow screens."
+        ]
+      },
+      {
         "title": "Rankings filters: pick multiple clubs or regions",
         "items": [
           "The Club and Region filters on the National and Apparatus Rankings pages now let you select more than one club or region at once — the menu stays open while you tick options.",
