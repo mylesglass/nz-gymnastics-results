@@ -119,13 +119,10 @@
     if (year) loadSteps();
   }
 
-  let prevStepKey = "";
   $effect(() => {
-    const stepKey = `${discipline}|${selectedStep}`;
-    if ((prevStepKey && prevStepKey !== stepKey) || divisionDisabled) {
+    if (divisionDisabled) {
       divisionFilter = "";
     }
-    prevStepKey = stepKey;
   });
 
   // Stale-response guard. Plain `let` (NOT $state) — incrementing it inside
@@ -153,11 +150,31 @@
     }
   }
 
+  let prevYear = "";
+  let prevDiscipline = "";
   $effect(() => {
     if (year && selectedStep && discipline) {
-      clubFilters = [];
-      regionFilters = [];
+      if (year !== prevYear || discipline !== prevDiscipline) {
+        clubFilters = [];
+        regionFilters = [];
+      }
+      prevYear = year;
+      prevDiscipline = discipline;
       loadLeaderboards();
+    }
+  });
+
+  $effect(() => {
+    const validClubs = new Set(clubOptions);
+    if (clubFilters.some((c) => !validClubs.has(c))) {
+      clubFilters = clubFilters.filter((c) => validClubs.has(c));
+    }
+  });
+
+  $effect(() => {
+    const validRegions = new Set(regionOptions);
+    if (regionFilters.some((r) => !validRegions.has(r))) {
+      regionFilters = regionFilters.filter((r) => validRegions.has(r));
     }
   });
 

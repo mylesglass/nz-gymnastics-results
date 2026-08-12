@@ -8,6 +8,13 @@
           "The Club and Region filters on the National and Apparatus Rankings pages now let you select more than one club or region at once — the menu stays open while you tick options.",
           "Each funnel icon shows a count badge of how many clubs or regions are currently selected, so it's easy to see that a filter is applied. A Clear option sits at the bottom of each menu; choosing nothing shows everyone."
         ]
+      },
+      {
+        "title": "Rankings filters stay applied when you change step or division",
+        "items": [
+          "Club, Region and Over/Under selections are now kept when you switch step or division on the rankings pages instead of being reset.",
+          "If a selected club or region has no gymnasts in the new step it's dropped automatically so you never land on an empty table. Filters reset only when you change year or switch between WAG and MAG."
+        ]
       }
     ]
   },

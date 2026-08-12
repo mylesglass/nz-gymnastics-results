@@ -253,20 +253,37 @@
     if (year) loadSteps();
   }
 
-  let prevStepKey = "";
+  let prevYear = "";
+  let prevDiscipline = "";
   $effect(() => {
-    const stepKey = `${discipline}|${selectedStep}`;
-    if ((prevStepKey && prevStepKey !== stepKey) || divisionDisabled) {
-      divisionFilter = "";
+    if (year && selectedStep && discipline) {
+      if (year !== prevYear || discipline !== prevDiscipline) {
+        clubFilters = [];
+        regionFilters = [];
+      }
+      prevYear = year;
+      prevDiscipline = discipline;
+      loadRankings();
     }
-    prevStepKey = stepKey;
   });
 
   $effect(() => {
-    if (year && selectedStep && discipline) {
-      clubFilters = [];
-      regionFilters = [];
-      loadRankings();
+    const validClubs = new Set(clubOptions);
+    if (clubFilters.some((c) => !validClubs.has(c))) {
+      clubFilters = clubFilters.filter((c) => validClubs.has(c));
+    }
+  });
+
+  $effect(() => {
+    const validRegions = new Set(regionOptions);
+    if (regionFilters.some((r) => !validRegions.has(r))) {
+      regionFilters = regionFilters.filter((r) => validRegions.has(r));
+    }
+  });
+
+  $effect(() => {
+    if (divisionDisabled) {
+      divisionFilter = "";
     }
   });
 
