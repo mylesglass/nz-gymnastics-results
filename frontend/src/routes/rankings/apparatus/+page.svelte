@@ -397,10 +397,7 @@
                     role="tooltip"
                     class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs whitespace-nowrap"
                   >
-                    Best {selectedApp}: {r.best.toFixed(3)} — set at {r.event || "unknown competition"}
-                    {#if r.count > 1}
-                      <br />Marks at {r.count} competitions this season
-                    {/if}
+                    Set at {r.event || "unknown competition"}
                   </div>
                 </div>
               </td>
