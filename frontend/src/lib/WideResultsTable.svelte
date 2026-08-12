@@ -8,8 +8,7 @@
   import { REGION_PALETTES } from "./regions";
   import { currentUser } from "$lib/auth";
   import { updateGymnast } from "$lib/api";
-  import NativeMultiSelect from "./NativeMultiSelect.svelte";
-  import { isTouchDevice } from "./touch";
+  import RegionCheck from "./RegionCheck.svelte";
   import type { ColFormat, PdfColumn } from "./export";
 
   interface TabData {
@@ -34,6 +33,7 @@
     loadData,
     loadKey = "",
     showEventFilter = false,
+    stickyCol = "name",
     extraHeadLabels = {} as Record<string, string>,
     download,
     empty,
@@ -47,6 +47,7 @@
     loadData: () => Promise<LoadDataResult>;
     loadKey?: string;
     showEventFilter?: boolean;
+    stickyCol?: string;
     extraHeadLabels?: Record<string, string>;
     download?: Snippet<[DownloadArgs]>;
     empty?: Snippet;
@@ -172,7 +173,7 @@
   let openDropdownX = $state(0);
   let openDropdownY = $state(0);
   let openDropdownEl: HTMLDivElement | undefined = $state();
-  let isTouch = $state(false);
+  let isMobileSheet = $state(false);
 
   $effect(() => {
     if (openDropdown && openDropdownEl) {
@@ -181,7 +182,7 @@
   });
 
   $effect(() => {
-    if (openDropdown && openDropdownEl) {
+    if (openDropdown && openDropdownEl && window.innerWidth >= 768) {
       const w = openDropdownEl.offsetWidth;
       const maxX = window.innerWidth - w - 8;
       if (openDropdownX > maxX) openDropdownX = Math.max(8, maxX);
@@ -209,13 +210,17 @@
   const COL_MIN_CLASS: Record<string, string> = {
     "gnz-id": "min-w-2 hidden md:table-cell",
     step: "min-w-18",
-    name: "min-w-36 sticky left-0 z-10",
+    name: "min-w-36",
     club: "min-w-36",
-    region: "min-w-24 hidden md:table-cell",
+    region: "min-w-10 md:min-w-24",
     division: "min-w-18",
     "round-type": "min-w-18",
-    event_name: "min-w-36 max-w-56 truncate",
+    event_name: "min-w-36 max-w-40 md:max-w-56 truncate",
   };
+
+  function stickyClass(col: string): string {
+    return col === stickyCol ? "sticky left-0 z-10" : "";
+  }
 
   const FILTERABLE_COLS = new Set([
     "step",
@@ -271,11 +276,6 @@
     }
   }
 
-  function setFilter(col: string, values: string[]) {
-    const arr = filterStateFor(col).selected;
-    arr.splice(0, arr.length, ...values);
-  }
-
   function clearFilter(col: string) {
     filterStateFor(col).selected.length = 0;
   }
@@ -287,6 +287,7 @@
     }
     const btn = event.currentTarget as HTMLElement;
     const rect = btn.getBoundingClientRect();
+    isMobileSheet = window.innerWidth < 768;
     openDropdownX = rect.left;
     openDropdownY = rect.bottom + 2;
     openDropdown = col;
@@ -405,7 +406,6 @@ function appDisplayLabel(prefix: string): string {
     const onScroll = () => {
       isScrolled = window.scrollY > 60;
     };
-    isTouch = isTouchDevice();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   });
@@ -752,38 +752,23 @@ function appDisplayLabel(prefix: string): string {
   {#snippet filterButton(col: string, opts: { tabindex?: number } = {})}
     {@const state = filterStateFor(col)}
     {@const label = col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
-    <NativeMultiSelect
-      options={state.options}
-      selected={state.selected}
-      onPick={(v) => setFilter(col, v)}
-      ariaLabel={`Filter ${label}`}
+    <button
+      type="button"
+      onclick={(e) => toggleDropdown(col, e)}
+      onkeydown={(e) => {
+        if (e.key === "Escape") { e.preventDefault(); openDropdown = null; }
+      }}
+      class="btn btn-ghost btn-xs px-1 h-6 min-w-6"
+      aria-label={`Filter ${label}`}
+      aria-haspopup="dialog"
+      aria-expanded={openDropdown === col}
+      tabindex={opts.tabindex ?? 0}
     >
-      <button
-        type="button"
-        onclick={(e) => toggleDropdown(col, e)}
-        onkeydown={(e) => {
-          if (e.key === "Escape") { e.preventDefault(); openDropdown = null; }
-        }}
-        class="btn btn-ghost btn-xs px-1 h-6 min-w-6"
-        aria-label={`Filter ${label}`}
-        aria-haspopup="dialog"
-        aria-expanded={openDropdown === col}
-        tabindex={opts.tabindex ?? 0}
-      >
-        <span class="text-xs {state.selected.length ? 'text-primary' : 'opacity-60'}">▾</span>
-        {#if state.selected.length}
-          <span class="badge badge-xs badge-accent">{state.selected.length}</span>
-        {/if}
-      </button>
-    </NativeMultiSelect>
-    {#if isTouch && state.selected.length > 0}
-      <button
-        type="button"
-        class="btn btn-ghost btn-xs px-1 h-6 min-w-6 text-error"
-        aria-label={`Clear ${label} filter`}
-        onclick={() => clearFilter(col)}
-      >✕</button>
-    {/if}
+      <span class="text-xs {state.selected.length ? 'text-primary' : 'opacity-60'}">▾</span>
+      {#if state.selected.length}
+        <span class="badge badge-xs badge-accent">{state.selected.length}</span>
+      {/if}
+    </button>
   {/snippet}
 
   <div
@@ -832,15 +817,17 @@ function appDisplayLabel(prefix: string): string {
           <thead>
             <tr>
               {#each frontMeta as col, i}
-                <th scope="col" class={COL_MIN_CLASS[col] ?? ""} class:bg-base-100={col === "name"} style={thStyle(i, col)}>
+                <th scope="col" class="{COL_MIN_CLASS[col] ?? ''} {stickyClass(col)}" class:bg-base-100={col === stickyCol} style={thStyle(i, col)}>
                   <div class="flex items-center gap-0.5">
                     <button
                       type="button"
                       onclick={() => toggleSort(col)}
                       class="hover:text-primary text-xs font-bold min-h-6"
                     >
-                      {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
-                      {#if sortCol === col}<span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>{/if}
+                      <span class={col === 'region' ? 'hidden md:inline' : ''}>
+                        {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
+                        {#if sortCol === col}<span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>{/if}
+                      </span>
                     </button>
                     {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
                       {@render filterButton(col, { tabindex: -1 })}
@@ -874,8 +861,10 @@ function appDisplayLabel(prefix: string): string {
                       onclick={() => toggleSort(col)}
                       class="hover:text-primary text-xs font-bold min-h-6"
                     >
-                      {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
-                      {#if sortCol === col}<span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>{/if}
+                      <span class={col === 'region' ? 'hidden md:inline' : ''}>
+                        {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
+                        {#if sortCol === col}<span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>{/if}
+                      </span>
                     </button>
                     {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
                       {@render filterButton(col, { tabindex: -1 })}
@@ -899,8 +888,8 @@ function appDisplayLabel(prefix: string): string {
               scope="col"
               class="cursor-pointer select-none hover:text-primary {COL_MIN_CLASS[
                 col
-              ] ?? ''}"
-              class:bg-base-100={col === "name"}
+              ] ?? ''} {stickyClass(col)}"
+              class:bg-base-100={col === stickyCol}
               aria-sort={sortCol === col ? (sortAsc ? "ascending" : "descending") : "none"}
             >
               <div class="flex items-center gap-0.5">
@@ -909,10 +898,12 @@ function appDisplayLabel(prefix: string): string {
                   onclick={() => toggleSort(col)}
                   class="hover:text-primary text-xs font-bold min-h-6"
                 >
-                  {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
-                  {#if sortCol === col}
-                    <span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>
-                  {/if}
+                  <span class={col === 'region' ? 'hidden md:inline' : ''}>
+                    {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
+                    {#if sortCol === col}
+                      <span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>
+                    {/if}
+                  </span>
                 </button>
                 {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
                   {@render filterButton(col)}
@@ -954,10 +945,12 @@ function appDisplayLabel(prefix: string): string {
                   onclick={() => toggleSort(col)}
                   class="hover:text-primary text-xs font-bold min-h-6"
                 >
-                  {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
-                  {#if sortCol === col}
-                    <span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>
-                  {/if}
+                  <span class={col === 'region' ? 'hidden md:inline' : ''}>
+                    {col === "step" ? stepLabel : (HEADER_LABELS[col] ?? col)}
+                    {#if sortCol === col}
+                      <span class="text-accent">{sortAsc ? " ▲" : " ▼"}</span>
+                    {/if}
+                  </span>
                 </button>
                 {#if FILTERABLE_COLS.has(col) && (col !== "event_name" || showEventFilter)}
                   {@render filterButton(col)}
@@ -975,7 +968,7 @@ function appDisplayLabel(prefix: string): string {
           <tr class="group hover:bg-primary/15 transition-colors">
             {#each frontMeta as col}
               <td
-                class="whitespace-nowrap py-1.5 {COL_MIN_CLASS[col] ?? ''} {col === 'name'
+                class="whitespace-nowrap py-1.5 {COL_MIN_CLASS[col] ?? ''} {stickyClass(col)} {col === stickyCol
                   ? `border-r border-base-300 group-hover:bg-primary/15 ${rowIdx % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}`
                   : ''}"
               >
@@ -1004,16 +997,19 @@ function appDisplayLabel(prefix: string): string {
                 {:else if col === "region" && row[col]}
                   {@const pal = REGION_PALETTES[String(row[col])]}
                   {#if pal}
-                    <span class="inline-flex items-center gap-1">
+                    <span class="hidden md:inline-flex items-center gap-1">
                       <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background: {pal[0]}"></span>
                       <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background: {pal[1]}"></span>
                       {row[col]}
+                    </span>
+                    <span class="md:hidden">
+                      <RegionCheck region={String(row[col])} colors={pal} />
                     </span>
                   {:else}
                     {row[col]}
                   {/if}
                 {:else if col === "event_name"}
-                  <span class="truncate block max-w-56">{row[col] ?? ""}</span>
+                  <span class="truncate block max-w-40 md:max-w-56">{row[col] ?? ""}</span>
                 {:else}
                   {row[col] ?? ""}
                 {/if}
@@ -1106,8 +1102,10 @@ function appDisplayLabel(prefix: string): string {
       aria-label={`Filter ${filterStateFor(openDropdown).label}`}
       tabindex="-1"
       bind:this={openDropdownEl}
-      class="fixed z-50 bg-base-100 border border-base-300 rounded-box shadow-xl p-2 min-w-44 max-h-60 overflow-y-auto"
-      style="top:{openDropdownY}px; left:{openDropdownX}px"
+      class="fixed z-50 bg-base-100 border border-base-300 shadow-xl p-2 overflow-y-auto {isMobileSheet
+        ? 'inset-x-3 bottom-3 top-auto max-h-[60vh] rounded-box'
+        : 'min-w-44 max-h-60 rounded-box'}"
+      style={isMobileSheet ? "top:auto" : `top:${openDropdownY}px; left:${openDropdownX}px`}
       onkeydown={(e) => {
         if (e.key === "Escape") {
           e.preventDefault();
@@ -1115,36 +1113,58 @@ function appDisplayLabel(prefix: string): string {
         }
       }}
     >
-      <div class="flex justify-between px-1 pb-1 border-b border-base-200 mb-1">
+      <div class="flex items-center justify-between px-1 pb-1 border-b border-base-200 mb-1">
         <span class="font-bold text-xs"
           >{filterStateFor(openDropdown).label}</span
         >
-        {#if filterStateFor(openDropdown).selected.length}
+        <span class="flex items-center gap-2">
+          {#if filterStateFor(openDropdown).selected.length}
+            <button
+              type="button"
+              onclick={() => {
+                clearFilter(openDropdown);
+                openDropdown = null;
+              }}
+              class="text-xs link link-hover"
+            >
+              Clear
+            </button>
+          {/if}
           <button
             type="button"
-            onclick={() => {
-              clearFilter(openDropdown);
-              openDropdown = null;
-            }}
-            class="text-xs link link-hover"
+            class="text-xs btn btn-ghost btn-xs"
+            onclick={() => (openDropdown = null)}
           >
-            Clear
+            Done
           </button>
-        {/if}
+        </span>
       </div>
       {#each filterStateFor(openDropdown).options as opt}
         <label
-          class="flex items-center gap-1.5 px-1 py-0.5 text-xs cursor-pointer hover:bg-base-200 rounded"
+          class="flex items-center gap-1.5 px-1 text-xs cursor-pointer hover:bg-base-200 rounded {isMobileSheet
+            ? 'py-2'
+            : 'py-0.5'}"
         >
           <input
             type="checkbox"
             checked={filterStateFor(openDropdown).selected.includes(opt)}
             onchange={() => toggleFilterOption(openDropdown, opt)}
-            class="checkbox checkbox-xs"
+            class="checkbox {isMobileSheet ? 'checkbox-sm' : 'checkbox-xs'}"
           />
           {opt}
         </label>
       {/each}
+      {#if isMobileSheet && filterStateFor(openDropdown).selected.length > 0}
+        <div class="sticky bottom-0 bg-base-100 border-t border-base-200 mt-1 -mx-2 -mb-2 p-2">
+          <button
+            type="button"
+            class="btn btn-primary btn-sm btn-block"
+            onclick={() => (openDropdown = null)}
+          >
+            Close ({filterStateFor(openDropdown).selected.length} selected)
+          </button>
+        </div>
+      {/if}
     </div>
   {/if}
 {/if}

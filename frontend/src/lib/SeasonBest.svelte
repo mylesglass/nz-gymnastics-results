@@ -150,11 +150,11 @@
 </script>
 
 {#if bests.length}
-  <section class="card bg-base-200 border border-base-300 shadow-sm w-fit" aria-label="{year} season best">
+  <section class="card bg-base-200 border border-base-300 shadow-sm w-fit max-md:w-full" aria-label="{year} season best">
     <div class="card-body p-3 gap-1">
       <h2 class="card-title text-sm">{year} Personal Bests</h2>
       <p class="text-xs text-base-content/70">Best score on each apparatus this season, plus the Best Possible AA</p>
-      <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
+      <div class="flex flex-wrap items-center gap-x-5 gap-y-2 max-md:justify-center max-md:gap-x-3 max-md:gap-y-3">
         {#each bests as b}
           <div class="dropdown dropdown-hover dropdown-bottom dropdown-end">
             <button
@@ -227,8 +227,9 @@
             </div>
           </div>
         {/if}
-        <div class="divider divider-horizontal ml-auto mr-0" aria-hidden="true"></div>
-        <div class="dropdown dropdown-hover dropdown-bottom dropdown-end">
+        <div class="divider divider-horizontal ml-auto mr-0 max-md:hidden" aria-hidden="true"></div>
+        <div class="md:hidden w-full h-px bg-base-300 my-2" aria-hidden="true"></div>
+        <div class="dropdown dropdown-hover dropdown-bottom dropdown-end max-md:mx-auto">
           <button
             type="button"
             class="flex flex-col items-center cursor-pointer border-b border-dotted border-base-content/40 hover:border-base-content/70"

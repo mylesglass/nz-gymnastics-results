@@ -129,9 +129,10 @@ Core logic:
 **Tech:** SvelteKit 5 (runes: `$state`, `$effect`, `$derived`), Tailwind CSS v4 (Vite plugin), DaisyUI v5 (dark theme).
 
 **Shared components:**
-- `WideResultsTable.svelte` — encapsulate all table rendering, filtering, sorting, sticky headers, scroll sync, duplicate header column width alignment, region column with colored dots, truncated event names. Used by all result pages.
+- `WideResultsTable.svelte` — encapsulate all table rendering, filtering, sorting, sticky headers, scroll sync, duplicate header column width alignment, configurable pinned column (`stickyCol` prop, default `name`), region column with colored dots (checker square on mobile), truncated event names. Used by all result pages.
 - `Dialog.svelte` — a11y dialog: `role="dialog"` + `aria-modal`, labelled heading, initial-focus move, Tab/Shift+Tab focus trap, Escape close, focus restore to opener, backdrop click. Used by all 5 modals.
 - `RegionBadge.svelte` — region pill with 2x2 checkerboard (primary+secondary colors) on primary fill, `whitespace-nowrap`, used in rankings and clubs pages
+- `RegionCheck.svelte` — compact 20px 2x2 checkerboard square + hover/focus tooltip (`data-tip`) with the region name; used on mobile for the region column in results tables and the Apparatus Rankings table
 - `NZRegionMap.svelte` — interactive SVG map of 15 regions; hovered/selected regions fill with a scrolling checker pattern (each region has its own CSS-var-driven direction + duration; seamless loop, respects `prefers-reduced-motion`). Regions are keyboard-focusable `role="button"`s with `focus-visible` outline, `aria-pressed` on the active region, `aria-live` announcement on selection.
 - `regions.ts` — `REGION_PALETTES` constant mapping 15 NZ regions to 2-3 hex colors (NZ sports team inspired), plus `REGION_ORDER` (north→south). `textColor()`/`gradientTextColor()` pick `#000` vs `#fff` via WCAG relative-luminance contrast.
 - `ScoreTooltip.svelte` — DaisyUI `dropdown-hover` tooltip (opens on hover + focus-within) showing D, E, N, Bonus, Rank per apparatus; `<button>` trigger with `aria-label` (visible text + context) + `aria-describedby` → `role="tooltip"` panel
@@ -169,9 +170,10 @@ Core logic:
 - Client-side CSV/XLSX/PDF export via `export.ts` + `ExportMenu.svelte` (SheetJS + jsPDF lazy-loaded; XLSX supports hidden columns and widths via `colFormat`)
 - Row hover highlight (`hover:bg-base-300 transition-colors`), `py-1.5` vertical padding
 - `whitespace-nowrap` on apparatus score cells
-- `truncate max-w-56` on event_name column
+- `truncate max-w-40 md:max-w-56` on event_name column (tighter truncation on mobile)
 - `min-w-full` table fills container width
 - Region column filterable via column header dropdown
+- **Mobile (below `md`):** low-value columns hidden (`gnz-id`, sometimes `club`/`region`); rank + name (or `stickyCol`, default `name`) pinned together via `sticky left-*` with zebra-aware backgrounds; region cells collapse to a compact checker square (`RegionCheck.svelte`); column-header filters and `FilterDropdown` (rankings Club/Region) open as full-width bottom sheets with a sticky `Close (n selected)` button; `event_name` truncates at `max-w-40`
 
 ### Accessibility (STEP 24 — complete, all 6 public pages 100/100 on Lighthouse)
 - Shared `Dialog.svelte` for all modals: `role="dialog"`/`aria-modal`, focus trap, Escape, focus restore, labelled heading.

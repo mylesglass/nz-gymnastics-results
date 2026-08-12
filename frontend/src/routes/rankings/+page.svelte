@@ -476,8 +476,8 @@
       <table class="table table-zebra">
         <thead>
           <tr>
-            <th scope="col" class="w-12">Rank</th>
-            <th scope="col" class="sticky left-0 z-10 bg-base-100">Name</th>
+            <th scope="col" class="sticky left-0 z-10 bg-base-100 w-10 min-w-10 px-1">Rank</th>
+            <th scope="col" class="sticky left-10 z-10 bg-base-100">Name</th>
             <th scope="col" class="hidden md:table-cell">GNZ ID</th>
             <th scope="col">
               <span class="inline-flex items-center gap-1">
@@ -530,8 +530,8 @@
         <tbody>
           {#each filteredRankings as r, i}
             <tr class="group hover:bg-base-300">
-              <td class="font-bold text-lg">{r.rank}</td>
-              <td class="font-medium sticky left-0 z-10 border-r border-base-300 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}">
+              <td class="font-bold text-base md:text-lg sticky left-0 z-10 w-10 min-w-10 px-1 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}">{r.rank}</td>
+              <td class="font-medium sticky left-10 z-10 border-r border-base-300 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}">
                 <a href="/gymnast/{r.gnz_id}" class="hover:link">{r.name}</a>
               </td>
               <td class="text-base-content/70 text-xs hidden md:table-cell">{r.gnz_id}</td>
@@ -607,12 +607,13 @@
       {specialistNote}
       Best score per apparatus across the season is shown.
     </p>
+    <div class="overflow-x-auto">
     <table class="table table-zebra">
       <thead>
         <tr>
           <th scope="col" class="sticky left-0 z-10 bg-base-100">Name</th>
           <th scope="col" class="hidden md:table-cell">GNZ ID</th>
-          <th scope="col">Club</th>
+          <th scope="col" class="hidden md:table-cell">Club</th>
           <th scope="col">Region</th>
           <th scope="col" class="text-right">Apparatus</th>
         </tr>
@@ -624,7 +625,7 @@
               <a href="/gymnast/{s.gnz_id}" class="hover:link">{s.name}</a>
             </td>
             <td class="text-base-content/70 text-xs hidden md:table-cell">{s.gnz_id}</td>
-            <td>{s.club}</td>
+            <td class="hidden md:table-cell">{s.club}</td>
             <td>
               {#if s.region}
                 <RegionBadge region={s.region} colors={REGION_PALETTES[s.region] ?? []} />
@@ -644,7 +645,7 @@
                       {#if qual}
                         <span class="badge badge-sm {appBadgeClass(a.app)}">{a.app} {a.best.toFixed(3)}</span>
                       {:else}
-                        <span class="badge badge-sm badge-outline text-base-content/60">{a.app} {a.best.toFixed(3)}</span>
+                        <span class="badge badge-sm badge-outline border-dashed text-base-content/60">{a.app} {a.best.toFixed(3)}</span>
                       {/if}
                     </button>
                     <div
@@ -679,5 +680,6 @@
         {/each}
       </tbody>
     </table>
+    </div>
   {/if}
 </div>

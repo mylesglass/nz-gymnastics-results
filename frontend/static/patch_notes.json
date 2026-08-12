@@ -5,10 +5,12 @@
       {
         "title": "Mobile-friendly navigation and tables",
         "items": [
-          "The navigation bar no longer gets squashed on phones: the year filter is now a compact native selector (using your phone's own picker), the logo shrinks to an icon on small screens, and the theme menu fits any screen width.",
-          "Result and ranking tables keep the gymnast's name pinned to the left while you scroll sideways, and low-value columns like GNZ ID are hidden on small screens to reduce scrolling.",
-          "On phones and tablets, the club/region filters and the column-header filters on results tables open your device's native multi-select picker instead of a custom menu — tap the funnel and your system's picker appears.",
-          "Filter popovers are now clamped to the screen edge so they never run off the right side, and pagination controls wrap cleanly on narrow screens."
+          "The navigation bar no longer gets squashed on phones: the year filter is now a compact native selector (using your phone's own picker), the logo shrinks to an icon on small screens, and the theme menu fits any screen width. The mobile menu's brand header and icons were tidied up.",
+          "Result and ranking tables are easier to scan on a phone: the Rank and Name columns stay pinned together while you swipe sideways (on a gymnast page the competition name is pinned instead), low-value columns like GNZ ID are hidden on small screens, and the rank column is narrower.",
+          "Region columns use a compact colour-checker square on mobile with a tap-to-see tooltip for the region name (full badge on desktop), so score columns appear in the viewport sooner.",
+          "On phones and tablets, the club/region filters on the rankings pages and the column-header filters on results tables open as a full-width bottom sheet with larger tap targets, easy to use one-handed — pick your options and a Close button appears at the bottom of the sheet. The year, step and division selectors use your device's native picker.",
+          "The gymnast page's Personal Bests card, the Wellington tables and the Apparatus Qualifiers section all adapt cleanly to small screens, and 'not yet qualified' specialist badges use a dashed outline to look more temporary.",
+          "Filter popovers are clamped to the screen edge so they never run off the right side, and pagination controls wrap cleanly on narrow screens."
         ]
       },
       {

@@ -390,15 +390,15 @@
       </div>
     </div>
   {:else}
-    <div class="transition-opacity duration-200" class:opacity-50={loadingRankings && rankings.length > 0}>
+    <div class="transition-opacity duration-200 overflow-x-auto" class:opacity-50={loadingRankings && rankings.length > 0}>
       <table class="table table-zebra">
         <thead>
           <tr>
-            <th scope="col" class="w-12">Rank</th>
-            <th scope="col" class="w-12"></th>
-            <th scope="col" class="sticky left-0 z-10 bg-base-100">Name</th>
+            <th scope="col" class="sticky left-0 z-10 bg-base-100 w-10 min-w-10 px-1">Rank</th>
+            <th scope="col" class="w-10 min-w-10"></th>
+            <th scope="col" class="sticky left-10 z-10 bg-base-100">Name</th>
             <th scope="col" class="hidden md:table-cell">GNZ ID</th>
-            <th scope="col">Club</th>
+            <th scope="col" class="hidden md:table-cell">Club</th>
             <th scope="col" class="w-10">Intent</th>
             {#each HEADER_LABELS[configKey] ?? ["Score 1", "Score 2", "Score 3"] as label}
               <th scope="col" class="text-right">{label}</th>
@@ -411,21 +411,21 @@
         <tbody>
           {#each rankings as r, i}
             <tr class="group hover:bg-base-300">
-              <td class="font-bold text-lg">{r.rank}</td>
-              <td class="text-center w-12">
+              <td class="font-bold text-base md:text-lg sticky left-0 z-10 w-10 min-w-10 px-1 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}">{r.rank}</td>
+              <td class="text-center w-10 min-w-10">
                 {#if (configKey === 'wag_step_5_6' || STEP7_CONFIGS.has(configKey)) && i < 4}
                   <span class="inline-flex items-center justify-center size-4 rounded-full text-[10px] font-bold" style="background:#FFC72C;color:#000000">1</span>
                 {/if}
               </td>
               <td
-                class="font-medium sticky left-0 z-10 border-r border-base-300 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}"
+                class="font-medium sticky left-10 z-10 border-r border-base-300 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}"
                 class:border-l-4={configKey === 'wag_step_5_6' && i < 4}
                 class:border-l-primary={configKey === 'wag_step_5_6' && i < 4}
               >
                 <a href="/gymnast/{r.gnz_id}" class="hover:link">{r.name}</a>
               </td>
               <td class="text-base-content/70 text-xs hidden md:table-cell">{r.gnz_id}</td>
-              <td>{r.club}</td>
+              <td class="hidden md:table-cell">{r.club}</td>
             <td class="text-center w-10">
               {#if user?.role === "admin"}
                 <input
@@ -501,12 +501,13 @@
       {specialistNote}
       Best score per apparatus across the season is shown.
     </p>
+    <div class="overflow-x-auto">
     <table class="table table-zebra">
       <thead>
         <tr>
           <th scope="col" class="sticky left-0 z-10 bg-base-100">Name</th>
           <th scope="col" class="hidden md:table-cell">GNZ ID</th>
-          <th scope="col">Club</th>
+          <th scope="col" class="hidden md:table-cell">Club</th>
           <th scope="col" class="text-right">Apparatus</th>
         </tr>
       </thead>
@@ -517,7 +518,7 @@
               <a href="/gymnast/{s.gnz_id}" class="hover:link">{s.name}</a>
             </td>
             <td class="text-base-content/70 text-xs hidden md:table-cell">{s.gnz_id}</td>
-            <td>{s.club}</td>
+            <td class="hidden md:table-cell">{s.club}</td>
             <td>
               <div class="flex flex-wrap gap-1 justify-end">
                 {#each s.apparatus as a}
@@ -530,7 +531,7 @@
                     {#if a.count >= appQualCount}
                       <span class="badge badge-sm {appBadgeClass(a.app)}">{a.app} {a.best.toFixed(3)}</span>
                     {:else}
-                      <span class="badge badge-sm badge-outline text-base-content/60">{a.app} {a.best.toFixed(3)}</span>
+                      <span class="badge badge-sm badge-outline border-dashed text-base-content/60">{a.app} {a.best.toFixed(3)}</span>
                     {/if}
                   </button>
                 {/each}
@@ -540,6 +541,7 @@
         {/each}
       </tbody>
     </table>
+    </div>
   {/if}
 
   {#if notRanked.length > 0}
@@ -547,12 +549,13 @@
     <p class="text-base-content/70 mb-4">
       Wellington athletes in this level who aren't on the ranking above, and why. Mark intent to track them for selection.
     </p>
+    <div class="overflow-x-auto">
     <table class="table table-zebra">
       <thead>
         <tr>
           <th scope="col" class="sticky left-0 z-10 bg-base-100">Name</th>
           <th scope="col" class="hidden md:table-cell">GNZ ID</th>
-          <th scope="col">Club</th>
+          <th scope="col" class="hidden md:table-cell">Club</th>
           <th scope="col" class="w-10">Intent</th>
           {#each HEADER_LABELS[configKey] ?? ["Score 1", "Score 2", "Score 3"] as label}
             <th scope="col" class="text-right">{label}</th>
@@ -567,7 +570,7 @@
               <a href="/gymnast/{r.gnz_id}" class="hover:link">{r.name}</a>
             </td>
             <td class="text-base-content/70 text-xs hidden md:table-cell">{r.gnz_id}</td>
-            <td>{r.club}</td>
+            <td class="hidden md:table-cell">{r.club}</td>
             <td class="text-center w-10">
               {#if user?.role === "admin"}
                 <input
@@ -680,5 +683,6 @@
         {/each}
       </tbody>
     </table>
+    </div>
   {/if}
 </div>

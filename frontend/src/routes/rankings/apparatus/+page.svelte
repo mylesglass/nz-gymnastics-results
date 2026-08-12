@@ -3,6 +3,7 @@
   import { getApparatusRankings, getRankingSteps, type ApparatusLeaderboard, type ApparatusRankingRow } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
   import RegionBadge from "$lib/RegionBadge.svelte";
+  import RegionCheck from "$lib/RegionCheck.svelte";
   import { REGION_ORDER, REGION_PALETTES } from "$lib/regions";
   import ExportMenu from "$lib/ExportMenu.svelte";
   import FilterDropdown from "$lib/FilterDropdown.svelte";
@@ -282,8 +283,8 @@
       <table class="table table-zebra">
         <thead>
           <tr>
-            <th scope="col" class="w-12">Rank</th>
-            <th scope="col" class="sticky left-0 z-10 bg-base-100">Name</th>
+            <th scope="col" class="sticky left-0 z-10 bg-base-100 w-10 min-w-10 px-1">Rank</th>
+            <th scope="col" class="sticky left-10 z-10 bg-base-100">Name</th>
             <th scope="col" class="hidden md:table-cell">GNZ ID</th>
             <th scope="col">
               <span class="inline-flex items-center gap-1">
@@ -293,26 +294,31 @@
             </th>
             <th scope="col">
               <span class="inline-flex items-center gap-1">
-                Region
+                <span class="hidden md:inline">Region</span>
                 <FilterDropdown label="region" options={regionOptions} selected={regionFilters} onPick={(v) => (regionFilters = v)} ariaLabel="Filter by region" />
               </span>
             </th>
-            <th scope="col" class="text-right">D-Score</th>
+            <th scope="col" class="text-right">D</th>
             <th scope="col" class="text-right">Best</th>
           </tr>
         </thead>
         <tbody>
           {#each filteredRows as r, i (i)}
             <tr class="group hover:bg-base-300">
-              <td class="font-bold text-lg">{r.rank}</td>
-              <td class="font-medium sticky left-0 z-10 border-r border-base-300 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}">
+              <td class="font-bold text-base md:text-lg sticky left-0 z-10 w-10 min-w-10 px-1 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}">{r.rank}</td>
+              <td class="font-medium sticky left-10 z-10 border-r border-base-300 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}">
                 <a href="/gymnast/{r.gnz_id}" class="hover:link">{r.name}</a>
               </td>
               <td class="text-base-content/70 text-xs hidden md:table-cell">{r.gnz_id}</td>
               <td>{r.club}</td>
               <td>
                 {#if r.region}
-                  <RegionBadge region={r.region} colors={REGION_PALETTES[r.region] ?? []} />
+                  <span class="hidden md:inline-flex">
+                    <RegionBadge region={r.region} colors={REGION_PALETTES[r.region] ?? []} />
+                  </span>
+                  <span class="md:hidden">
+                    <RegionCheck region={r.region} colors={REGION_PALETTES[r.region] ?? []} />
+                  </span>
                 {/if}
               </td>
               <td class="text-right text-base-content/70 font-mono">
@@ -326,7 +332,7 @@
                 <div class="dropdown dropdown-hover dropdown-top dropdown-end">
                   <button
                     type="button"
-                    class="cursor-pointer font-mono font-semibold"
+                    class="cursor-pointer font-mono font-bold"
                     aria-label={`Best ${selectedApp} score for ${r.name}`}
                     aria-describedby={`app-best-${i}`}
                   >

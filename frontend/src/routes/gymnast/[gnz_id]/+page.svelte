@@ -174,6 +174,7 @@
     loadData={loadDataImpl}
     loadKey={filterYear ?? ""}
     showEventFilter={true}
+    stickyCol="event_name"
     extraHeadLabels={{ event_name: "Event" }}
     {download}
     {empty}

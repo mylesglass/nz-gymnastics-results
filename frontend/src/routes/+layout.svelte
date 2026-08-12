@@ -381,21 +381,24 @@
     <label for="nav-drawer" class="drawer-overlay" aria-label="Close menu"></label>
     <nav aria-label="Mobile menu" class="h-full">
       <ul class="menu bg-base-200 min-h-full w-72 p-4 gap-1 text-base-content">
-      <li class="menu-title text-lg mb-2">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-5 -ml-1 text-primary">
-          <path fill="currentColor" d="M8 22h5v-4H6v2q0 .825.588 1.413T8 22m7 0h5q.825 0 1.413-.587T22 20v-2h-7zM2 18V4q0-.825.588-1.412T4 2h14v2H4v14zm4-2h7v-4H6zm9 0h7v-4h-7zm-9-6h16V8q0-.825-.587-1.412T20 6H8q-.825 0-1.412.588T6 8z"/>
-        </svg>
-        NZ Gymnastics Results
+      <li class="mb-2">
+        <a href="/" class="flex items-center gap-2 py-2" onclick={handleNavClick} aria-label="NZ Gymnastics Results home">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-6 text-primary shrink-0">
+            <path fill="currentColor" d="M8 22h5v-4H6v2q0 .825.588 1.413T8 22m7 0h5q.825 0 1.413-.587T22 20v-2h-7zM2 18V4q0-.825.588-1.412T4 2h14v2H4v14zm4-2h7v-4H6zm9 0h7v-4h-7zm-9-6h16V8q0-.825-.587-1.412T20 6H8q-.825 0-1.412.588T6 8z"/>
+          </svg>
+          <span class="text-lg font-bold leading-tight">NZ Gymnastics Results</span>
+          <span class="badge badge-warning badge-sm">Beta</span>
+        </a>
       </li>
       <li>
         <a href="/events" onclick={handleNavClick} class:active={active("/events")} aria-current={active("/events") ? "page" : undefined}>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="M15.988 3.012A2.25 2.25 0 0 1 18 5.25v6.5A2.25 2.25 0 0 1 15.75 14H13.5v-3.379a3 3 0 0 0-.879-2.121l-2.121-2.121a3 3 0 0 0-2.121-.879H5.25a2.25 2.25 0 0 1 2.25-2.25h6.5a2.25 2.25 0 0 1 1.988 1.012ZM5.25 5.5a.75.75 0 0 0-.75.75v9.5c0 .414.336.75.75.75h1.125a.75.75 0 0 0 0-1.5H5.5v-1.5h.875a.75.75 0 0 0 0-1.5H5.5v-1.5h.875a.75.75 0 0 0 0-1.5H5.5V6.25a.75.75 0 0 0-.75-.75h-.5a.75.75 0 0 0 0 1.5h.5v1.5h-.5a.75.75 0 0 0 0 1.5h.5v1.5h-.5a.75.75 0 0 0 0 1.5h.5v1.5h-.5a.75.75 0 0 0 0 1.5H5.25a2.25 2.25 0 0 0 2.25 2.25h6.5A2.5 2.5 0 0 0 16 16.5V8.25a2.25 2.25 0 0 0-2.25-2.25h-3.379a1.5 1.5 0 0 1-1.06-.44L7.19 3.44a1.5 1.5 0 0 0-1.06-.44H5.25Z" clip-rule="evenodd" /></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-4 fill-current"><path fill="currentColor" d="M14.5 18q-1.05 0-1.775-.725T12 15.5t.725-1.775T14.5 13t1.775.725T17 15.5t-.725 1.775T14.5 18M5 22q-.825 0-1.412-.587T3 20V6q0-.825.588-1.412T5 4h1V2h2v2h8V2h2v2h1q.825 0 1.413.588T21 6v14q0 .825-.587 1.413T19 22zm0-2h14V10H5z"/></svg>
           Events
         </a>
       </li>
       <li>
         <a href="/results" onclick={handleNavClick} class:active={active("/results")} aria-current={active("/results") ? "page" : undefined}>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clip-rule="evenodd" /></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-4 fill-current"><path fill="currentColor" d="M21 5c0-1.103-.897-2-2-2H5c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h14c1.103 0 2-.897 2-2zM5 19V5h14l.002 14z"/><path fill="currentColor" d="M7 7h1.998v2H7zm4 0h6v2h-6zm-4 4h1.998v2H7zm4 0h6v2h-6zm-4 4h1.998v2H7zm4 0h6v2h-6z"/></svg>
           Results
         </a>
       </li>
@@ -407,7 +410,7 @@
       </li>
       <li>
         <a href="/clubs" onclick={handleNavClick} class:active={active("/clubs") || currentPath.startsWith("/club/")} aria-current={active("/clubs") || currentPath.startsWith("/club/") ? "page" : undefined}>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="m3.528 2.47 5.5 5.5a.75.75 0 0 1 0 1.06l-5.5 5.5a.75.75 0 0 1-1.06-1.06L7.44 8.5 2.47 3.53a.75.75 0 0 1 1.06-1.06Z" clip-rule="evenodd" /><path fill-rule="evenodd" d="m9.528 2.47 5.5 5.5a.75.75 0 0 1 0 1.06l-5.5 5.5a.75.75 0 0 1-1.06-1.06L13.44 8.5 8.47 3.53a.75.75 0 0 1 1.06-1.06Z" clip-rule="evenodd" /></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-4 fill-current"><path fill="currentColor" d="M4 21v-9.375L2.2 13L1 11.4L12 3l11 8.4l-1.2 1.575l-1.8-1.35V21zm4-6q-.425 0-.712-.288T7 14t.288-.712T8 13t.713.288T9 14t-.288.713T8 15m4 0q-.425 0-.712-.288T11 14t.288-.712T12 13t.713.288T13 14t-.288.713T12 15m4 0q-.425 0-.712-.288T15 14t.288-.712T16 13t.713.288T17 14t-.288.713T16 15"/></svg>
           Clubs
         </a>
       </li>
@@ -415,7 +418,7 @@
         <li>
           <details class="w-full">
             <summary class="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-base-300 transition-colors cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="M10 1a.75.75 0 0 1 .75.75V3h2.692A2.25 2.25 0 0 1 15.5 4.808v.442a2.25 2.25 0 0 1-1.5 2.09v.163a2.25 2.25 0 0 1 1.5 2.09v.442a2.25 2.25 0 0 1-2.058 2.247V15.5a.75.75 0 0 1-.75.75H10v.75a.75.75 0 0 0-1.5 0v-.75H6.308A2.25 2.25 0 0 1 4.5 14.692v-.442a2.25 2.25 0 0 1 1.5-2.09v-.163a2.25 2.25 0 0 1-1.5-2.09v-.442a2.25 2.25 0 0 1 2.058-2.247V3.75H10V1.75A.75.75 0 0 1 10 1ZM6.308 4.5h2.442v.203c0 .356.155.694.425.929l.415.36.415-.36a1.25 1.25 0 0 0 .425-.93V4.5h2.442a.75.75 0 0 1 .75.75v.442a.75.75 0 0 1-.75.75h-4.2a.75.75 0 0 1 0-1.5h1.2v-.392a1.4 1.4 0 0 0-.081-.46.75.75 0 0 0-.319-.402l-.315-.18-.315.18a.75.75 0 0 0-.319.402c-.05.15-.078.303-.081.46h-1.2a.75.75 0 0 1-.75-.75v-.442a.75.75 0 0 1 .75-.75Zm4.2 3.5h-1.016a2.25 2.25 0 0 0-1.723.77l-.187.222a1.25 1.25 0 0 0 .24 1.744l.658.513a1.25 1.25 0 0 0 .847.281h2.146a1.25 1.25 0 0 0 .847-.28l.658-.514a1.25 1.25 0 0 0 .24-1.744l-.187-.222A2.25 2.25 0 0 0 10.508 8Zm-2.732 4A2.25 2.25 0 0 0 5.66 11.27l-.375.624a.75.75 0 0 0 .267 1.003l.81.486c.55.33 1.184.507 1.832.517h1.612c.648-.01 1.282-.187 1.832-.517l.81-.486a.75.75 0 0 0 .267-1.003l-.375-.624A2.25 2.25 0 0 0 12.224 12H7.776Z" clip-rule="evenodd" /></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-4 fill-current"><path fill="currentColor" d="m8 18l4-3.05L16 18l-1.5-4.95l4-2.85h-4.9L12 5l-1.6 5.2H5.5l4 2.85zm4 4q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20m0-8"/></svg>
               Rankings
             </summary>
             <ul class="ml-4 border-l border-base-300 pl-2 mt-1">
@@ -475,13 +478,13 @@
           {#if user?.role === "admin"}
             <li>
               <a href="/admin" onclick={handleNavClick} class:active={active("/admin") && currentPath === "/admin"}>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V7H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-1.5V5.5A4.5 4.5 0 0 0 10 1Zm0 2.5A2 2 0 0 1 12 5.5V7H8V5.5A2 2 0 0 1 10 3.5Z" clip-rule="evenodd" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-4 fill-current"><path fill="currentColor" d="M13 9V3h8v6zM3 13V3h8v10zm10 8V11h8v10zM3 21v-6h8v6z"/></svg>
                 Dashboard
               </a>
             </li>
             <li>
               <a href="/admin/activity" onclick={handleNavClick} class:active={active("/admin/activity")}>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clip-rule="evenodd" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-4 fill-current"><path fill="currentColor" d="M1 21v-2h22v2zm3-3q-.825 0-1.412-.587T2 16v-5h5.375L9.1 14.45q.125.25.363.4t.512.15t.525-.125t.375-.375l3.075-5.375l.65 1.325q.125.275.375.413T15.5 11H22v5q0 .825-.587 1.412T20 18zm6.075-6.125L8.9 9.55q-.125-.25-.375-.4T8 9H2V5q0-.825.588-1.412T4 3h16q.825 0 1.413.588T22 5v4h-5.875L14.9 6.55q-.125-.275-.375-.413T14 6t-.5.138t-.35.362z"/></svg>
                 Activity
               </a>
             </li>
