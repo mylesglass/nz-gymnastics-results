@@ -16,11 +16,11 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 warn "Starting backend..."
-(cd "$SCRIPT_DIR/backend" && source .venv/bin/activate && uvicorn app.main:app --reload --port 8000) &
+(cd "$SCRIPT_DIR/backend" && source .venv/bin/activate && uvicorn app.main:app --host 0.0.0.0 --reload --port 8000) &
 BACKEND_PID=$!
 
 warn "Starting frontend..."
-(cd "$SCRIPT_DIR/frontend" && npm run dev) &
+(cd "$SCRIPT_DIR/frontend" && npm run dev -- --host) &
 FRONTEND_PID=$!
 
 info "Backend  → http://localhost:8000"

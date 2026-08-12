@@ -17,10 +17,10 @@ QDBUS="/usr/lib/qt6/bin/qdbus"
 $QDBUS "$SERVICE" "$WIN" org.kde.konsole.Window.createSplit 0 true
 
 $QDBUS "$SERVICE" /Sessions/1 org.kde.konsole.Session.runCommand \
-  "cd '$SCRIPT_DIR/backend' && source .venv/bin/activate && uvicorn app.main:app --reload --port 8000; exec bash"
+  "cd '$SCRIPT_DIR/backend' && source .venv/bin/activate && uvicorn app.main:app --host 0.0.0.0 --reload --port 8000; exec bash"
 
 $QDBUS "$SERVICE" /Sessions/2 org.kde.konsole.Session.runCommand \
-  "cd '$SCRIPT_DIR/frontend' && npm run dev; exec bash"
+  "cd '$SCRIPT_DIR/frontend' && npm run dev -- --host; exec bash"
 
 sleep 1
 $QDBUS "$SERVICE" "/Sessions/1" org.kde.konsole.Session.setTitle 0 "Backend"
