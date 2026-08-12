@@ -5,6 +5,7 @@
   import RegionBadge from "$lib/RegionBadge.svelte";
   import { REGION_ORDER, REGION_PALETTES } from "$lib/regions";
   import ExportMenu from "$lib/ExportMenu.svelte";
+  import FilterDropdown from "$lib/FilterDropdown.svelte";
 
   const SCORE_KEYS = ["score1", "comp1", "score2", "comp2", "score3", "comp3"];
 
@@ -89,10 +90,8 @@
 
   let scoreCols = $derived(["STEP 5", "STEP 6"].includes(selectedStep) ? 3 : 2);
 
-  let clubFilter = $state("");
-  let regionFilter = $state("");
-  let clubMenuOpen = $state(false);
-  let regionMenuOpen = $state(false);
+  let clubFilters = $state<string[]>([]);
+  let regionFilters = $state<string[]>([]);
 
   let specialists = $state<ApparatusSpecialistRow[]>([]);
   let appQualScore = $state<number | null>(null);
@@ -146,8 +145,8 @@
   let filteredSpecialists = $derived(
     specialists.filter(
       (s) =>
-        (!clubFilter || s.club === clubFilter) &&
-        (!regionFilter || s.region === regionFilter)
+        (clubFilters.length === 0 || clubFilters.includes(s.club)) &&
+        (regionFilters.length === 0 || regionFilters.includes(s.region))
     )
   );
 
@@ -160,8 +159,8 @@
   let filteredRankings = $derived(
     rankings.filter(
       (r) =>
-        (!clubFilter || r.club === clubFilter) &&
-        (!regionFilter || r.region === regionFilter)
+        (clubFilters.length === 0 || clubFilters.includes(r.club)) &&
+        (regionFilters.length === 0 || regionFilters.includes(r.region))
     )
   );
 
@@ -265,10 +264,8 @@
 
   $effect(() => {
     if (year && selectedStep && discipline) {
-      clubFilter = "";
-      regionFilter = "";
-      clubMenuOpen = false;
-      regionMenuOpen = false;
+      clubFilters = [];
+      regionFilters = [];
       loadRankings();
     }
   });
@@ -283,66 +280,6 @@
 <svelte:head>
   <title>National Rankings — NZ Gymnastics Results</title>
 </svelte:head>
-
-{#snippet filterDropdown(label: string, options: string[], value: string, onPick: (v: string) => void, open: boolean, onToggle: () => void, ariaLabel: string)}
-  <span class="dropdown dropdown-bottom dropdown-end {open ? "dropdown-open" : ""}">
-    <button
-      type="button"
-      class="inline-flex items-center cursor-pointer"
-      aria-label={ariaLabel}
-      aria-haspopup="menu"
-      aria-expanded={open}
-      onclick={() => onToggle()}
-      onkeydown={(e) => {
-        if (e.key === "Escape") onToggle();
-      }}
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.5"
-        class="size-3.5 {value ? 'text-primary' : 'text-base-content/50'}"
-        aria-hidden="true"
-      >
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
-      </svg>
-    </button>
-    <ul role="menu" class="dropdown-content z-50 bg-base-100 border border-base-300 rounded-box shadow-xl p-1 max-h-72 overflow-y-auto w-52 text-sm">
-      <li role="none">
-        <button
-          type="button"
-          role="menuitemradio"
-          aria-checked={value === ""}
-          class="w-full text-left px-2 py-1.5 rounded hover:bg-base-200 {value === "" ? 'font-semibold' : ''}"
-          onclick={() => {
-            onPick("");
-            onToggle();
-          }}
-        >
-          All {label}s
-        </button>
-      </li>
-      {#each options as opt}
-        <li role="none">
-          <button
-            type="button"
-            role="menuitemradio"
-            aria-checked={value === opt}
-            class="w-full text-left px-2 py-1.5 rounded hover:bg-base-200 {value === opt ? 'font-semibold' : ''}"
-            onclick={() => {
-              onPick(opt);
-              onToggle();
-            }}
-          >
-            {opt}
-          </button>
-        </li>
-      {/each}
-    </ul>
-  </span>
-{/snippet}
 
 <div class="max-w-6xl mx-auto">
   <h1 class="text-3xl font-bold mb-6">National Rankings</h1>
@@ -512,7 +449,7 @@
     <div class="card bg-base-200">
       <div class="card-body items-center text-center py-12">
         <p class="text-base-content/70">No gymnasts match this filter.</p>
-        <button class="btn btn-ghost btn-sm mt-2" onclick={() => { clubFilter = ""; regionFilter = ""; }}>
+        <button class="btn btn-ghost btn-sm mt-2" onclick={() => { clubFilters = []; regionFilters = []; }}>
           Clear filters
         </button>
       </div>
@@ -528,13 +465,13 @@
             <th scope="col">
               <span class="inline-flex items-center gap-1">
                 Club
-                {@render filterDropdown("club", clubOptions, clubFilter, (v) => (clubFilter = v), clubMenuOpen, () => (clubMenuOpen = !clubMenuOpen), "Filter by club")}
+                <FilterDropdown label="club" options={clubOptions} selected={clubFilters} onPick={(v) => (clubFilters = v)} ariaLabel="Filter by club" />
               </span>
             </th>
             <th scope="col">
               <span class="inline-flex items-center gap-1">
                 Region
-                {@render filterDropdown("region", regionOptions, regionFilter, (v) => (regionFilter = v), regionMenuOpen, () => (regionMenuOpen = !regionMenuOpen), "Filter by region")}
+                <FilterDropdown label="region" options={regionOptions} selected={regionFilters} onPick={(v) => (regionFilters = v)} ariaLabel="Filter by region" />
               </span>
             </th>
             {#each Array(scoreCols) as _, i}
