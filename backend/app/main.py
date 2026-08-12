@@ -57,16 +57,25 @@ from app.schemas import (
     GymnastEditResponse,
     GymnastItem,
     GymnastMedals,
+    IdConflict,
+    IdentityReviewResponse,
     ImportUrlRequest,
     IntentToggle,
     KnownClubItem,
     LoginRequest,
     MedalCounts,
     MedalsResponse,
+    MergeAthletesRequest,
+    MergeAthletesResponse,
     MergeNamesRequest,
+    MultiIdAthlete,
+    NameConflict,
     RankingsResponse,
     RankingRow,
     ResultsResponse,
+    SimilarAthletes,
+    SplitAthleteRequest,
+    SplitAthleteResponse,
     StatsResponse,
     StepsResponse,
     SuggestedMerge,
@@ -2006,6 +2015,385 @@ def edit_gymnast_scores(
             invalidate(req.event_id)
 
         return GymnastEditResponse(updated=updated)
+    finally:
+        session.close()
+
+
+def _split_csv(value) -> list[str]:
+    """Split a SQLite group_concat string into a non-empty list."""
+    if not value:
+        return []
+    return [v for v in str(value).split(",") if v]
+
+
+def _fresh_synthetic_id(session) -> str:
+    """Return a unique admin-generated gnz_id for split-off athletes."""
+    import uuid
+
+    while True:
+        gid = "S" + uuid.uuid4().hex[:8]
+        taken = (
+            session.query(LongScore)
+            .filter(LongScore.gnz_id == gid)
+            .first()
+        )
+        if taken is None:
+            return gid
+
+
+def _fresh_override_token() -> str:
+    """Return a unique identity_override token marking an admin force-split."""
+    import uuid
+
+    return "split-" + uuid.uuid4().hex[:12]
+
+
+def _build_identity_review(session) -> dict:
+    """Aggregate athlete-level identity conflicts for admin review.
+
+    Returns ``{similar_names, name_conflicts, id_conflicts, multi_id_athletes}``
+    where each athlete entry carries the evidence an admin needs to judge
+    whether two records are the same person.
+    """
+    from collections import defaultdict
+
+    agg_rows = (
+        session.query(
+            LongScore.athlete_id,
+            func.count(LongScore.id).label("row_count"),
+            func.count(func.distinct(LongScore.event_id)).label("event_count"),
+            func.group_concat(func.distinct(LongScore.event_id)).label("event_ids"),
+            func.group_concat(func.distinct(LongScore.club_name)).label("clubs"),
+            func.group_concat(func.distinct(LongScore.discipline)).label("discs"),
+            func.group_concat(func.distinct(Event.year)).label("years"),
+        )
+        .join(Event, Event.id == LongScore.event_id)
+        .filter(LongScore.athlete_id.isnot(None))
+        .group_by(LongScore.athlete_id)
+        .all()
+    )
+    agg_by_id = {aid: {
+        "rows": row_count,
+        "events": event_count,
+        "event_ids": event_ids,
+        "clubs": clubs,
+        "discs": discs,
+        "years": years,
+    } for aid, row_count, event_count, event_ids, clubs, discs, years in agg_rows}
+
+    id_rows = (
+        session.query(
+            LongScore.athlete_id,
+            LongScore.gnz_id,
+            func.count(LongScore.id),
+        )
+        .filter(
+            LongScore.athlete_id.isnot(None),
+            LongScore.gnz_id.isnot(None),
+            LongScore.gnz_id != "",
+        )
+        .group_by(LongScore.athlete_id, LongScore.gnz_id)
+        .all()
+    )
+
+    intent_rows = (
+        session.query(WellingtonIntent.athlete_id, WellingtonIntent.year)
+        .filter(WellingtonIntent.athlete_id.isnot(None))
+        .all()
+    )
+
+    athletes = {a.id: a for a in session.query(Athlete).all()}
+    intents: dict[int, list[int]] = defaultdict(list)
+    for aid, year in intent_rows:
+        intents[aid].append(year)
+
+    def _info(aid: int) -> dict:
+        a = athletes.get(aid)
+        agg = agg_by_id.get(aid, {})
+        return {
+            "athlete_id": aid,
+            "slug": a.slug if a else "",
+            "name": (a.canonical_name if a else "") or "",
+            "gnz_id": (a.gnz_id if a else None),
+            "clubs": sorted(set(_split_csv(agg.get("clubs")))),
+            "events": agg.get("events", 0),
+            "event_ids": [int(e) for e in sorted(set(_split_csv(agg.get("event_ids"))))],
+            "years": [int(y) for y in sorted(set(_split_csv(agg.get("years"))))],
+            "disciplines": sorted(set(_split_csv(agg.get("discs")))),
+            "rows": agg.get("rows", 0),
+            "intent_years": sorted(intents.get(aid, [])),
+        }
+
+    info_by_id = {aid: _info(aid) for aid in athletes}
+
+    # --- Name conflicts: same canonical name, multiple athletes ----------
+    by_name: dict[str, list[dict]] = defaultdict(list)
+    for info in info_by_id.values():
+        if info["name"]:
+            by_name[info["name"]].append(info)
+    name_conflicts = [
+        {"name": name, "athletes": infos}
+        for name, infos in by_name.items()
+        if len(infos) > 1
+    ]
+    name_conflicts.sort(key=lambda g: -sum(x["rows"] for x in g["athletes"]))
+
+    # --- ID conflicts: same gnz_id, multiple athletes --------------------
+    by_gid: dict[str, list[dict]] = defaultdict(list)
+    for info in info_by_id.values():
+        if info["gnz_id"]:
+            by_gid[info["gnz_id"]].append(info)
+    id_conflicts = [
+        {"gnz_id": gid, "athletes": infos}
+        for gid, infos in by_gid.items()
+        if len(infos) > 1
+    ]
+    id_conflicts.sort(key=lambda g: -sum(x["rows"] for x in g["athletes"]))
+
+    # --- Multi-ID athletes: one athlete carrying 2+ gnz_ids (Split review)
+    gid_counts: dict[int, dict[str, int]] = defaultdict(dict)
+    for aid, gid, cnt in id_rows:
+        gid_counts[aid][gid] = gid_counts[aid].get(gid, 0) + cnt
+    multi_id = []
+    for aid, gids in gid_counts.items():
+        if len(gids) > 1:
+            info = info_by_id[aid]
+            multi_id.append({
+                "athlete_id": aid,
+                "slug": info["slug"],
+                "name": info["name"],
+                "gnz_ids": dict(sorted(gids.items(), key=lambda kv: -kv[1])),
+                "clubs": info["clubs"],
+                "events": info["events"],
+                "event_ids": info["event_ids"],
+                "years": info["years"],
+                "disciplines": info["disciplines"],
+                "rows": info["rows"],
+            })
+    multi_id.sort(key=lambda m: -m["rows"])
+
+    # --- Similar names: fuzzy canonical-name pairs (single-athlete names) -
+    import difflib
+
+    name_to_athletes: dict[str, list[int]] = defaultdict(list)
+    for aid, a in athletes.items():
+        if a.canonical_name:
+            name_to_athletes[a.canonical_name].append(aid)
+    single = {name: aids[0] for name, aids in name_to_athletes.items() if len(aids) == 1}
+    names = sorted(single.keys())
+
+    token_groups: dict[str, list[str]] = defaultdict(list)
+    for name in names:
+        for t in name.lower().split():
+            if len(t) >= 3:
+                token_groups[t].append(name)
+
+    similar = []
+    seen: set[tuple[str, str]] = set()
+    for token, group in token_groups.items():
+        if len(group) < 2:
+            continue
+        for i in range(len(group)):
+            for j in range(i + 1, len(group)):
+                a, b = group[i], group[j]
+                key = (a, b) if a < b else (b, a)
+                if key in seen:
+                    continue
+                seen.add(key)
+                matcher = difflib.SequenceMatcher(None, a.lower(), b.lower())
+                if matcher.quick_ratio() < 0.85:
+                    continue
+                ratio = matcher.ratio()
+                if ratio < 0.85:
+                    continue
+                info_a, info_b = info_by_id[single[a]], info_by_id[single[b]]
+                if info_a["gnz_id"] and info_a["gnz_id"] == info_b["gnz_id"]:
+                    continue
+                similar.append({
+                    "name_a": a,
+                    "name_b": b,
+                    "score": round(ratio, 4),
+                    "athlete_a": info_a,
+                    "athlete_b": info_b,
+                })
+    similar.sort(key=lambda s: -s["score"])
+
+    return {
+        "similar_names": similar[:200],
+        "name_conflicts": name_conflicts,
+        "id_conflicts": id_conflicts,
+        "multi_id_athletes": multi_id,
+    }
+
+
+@app.get("/api/admin/identity-review", response_model=IdentityReviewResponse)
+def get_identity_review(_auth=Depends(require_role("admin"))):
+    session = get_session()
+    try:
+        return _build_identity_review(session)
+    finally:
+        session.close()
+
+
+@app.post("/api/admin/athletes/merge", response_model=MergeAthletesResponse)
+def merge_athletes(
+    req: MergeAthletesRequest,
+    _auth=Depends(require_role("admin")),
+):
+    if req.athlete_id == req.merge_id:
+        raise HTTPException(400, "Cannot merge an athlete into itself")
+
+    session = get_session()
+    try:
+        survivor = session.get(Athlete, req.athlete_id)
+        merged = session.get(Athlete, req.merge_id)
+        if survivor is None or merged is None:
+            raise HTTPException(404, "Athlete not found")
+
+        name = survivor.canonical_name
+        gid = survivor.gnz_id
+        if not gid:
+            gid = merged.gnz_id
+            survivor.gnz_id = gid
+
+        updated = (
+            session.query(LongScore)
+            .filter(LongScore.athlete_id == merged.id)
+            .update(
+                {
+                    LongScore.gymnast_name: name,
+                    LongScore.gnz_id: gid,
+                    LongScore.identity_override: None,
+                },
+                synchronize_session=False,
+            )
+        )
+        # The survivor's rows are unmarked too, so the merge fully commits
+        # (an override would otherwise keep the two athletes hard-separated).
+        session.query(LongScore).filter(
+            LongScore.athlete_id == survivor.id,
+        ).update(
+            {LongScore.identity_override: None},
+            synchronize_session=False,
+        )
+
+        # Move Wellington intents from merged -> survivor (unique per year).
+        existing_years = {
+            i.year
+            for i in session.query(WellingtonIntent)
+            .filter(WellingtonIntent.athlete_id == survivor.id)
+            .all()
+        }
+        for intent in (
+            session.query(WellingtonIntent)
+            .filter(WellingtonIntent.athlete_id == merged.id)
+            .all()
+        ):
+            if intent.year in existing_years:
+                session.delete(intent)
+            else:
+                intent.athlete_id = survivor.id
+                intent.gnz_id = gid
+                existing_years.add(intent.year)
+
+        session.commit()
+        rebuild_athletes(session)
+        invalidate()
+
+        # The survivor's Athlete row may be re-created (new signature) when its
+        # gnz_id was empty and got promoted; locate it by the merged identity.
+        result = (
+            session.query(Athlete)
+            .filter(
+                Athlete.canonical_name == name,
+                Athlete.gnz_id == gid,
+            )
+            .first()
+        )
+        if result is None:
+            raise HTTPException(500, "Merge did not produce a surviving athlete")
+
+        return MergeAthletesResponse(
+            merged_rows=updated,
+            survivor_id=result.id,
+            survivor_slug=result.slug,
+        )
+    finally:
+        session.close()
+
+
+@app.post("/api/admin/athletes/split", response_model=SplitAthleteResponse)
+def split_athlete(
+    req: SplitAthleteRequest,
+    _auth=Depends(require_role("admin")),
+):
+    session = get_session()
+    try:
+        athlete = session.get(Athlete, req.athlete_id)
+        if athlete is None:
+            raise HTTPException(404, "Athlete not found")
+
+        base = session.query(LongScore).filter(LongScore.athlete_id == athlete.id)
+        total = base.count()
+        if total == 0:
+            raise HTTPException(400, "Athlete has no rows")
+
+        if req.split_by == "gnz_id":
+            subset = base.filter(LongScore.gnz_id == req.value)
+        elif req.split_by == "event_id":
+            try:
+                event_id = int(req.value)
+            except ValueError:
+                raise HTTPException(400, "event_id must be a number")
+            subset = base.filter(LongScore.event_id == event_id)
+        elif req.split_by == "club_name":
+            subset = base.filter(LongScore.club_name == req.value)
+        else:
+            raise HTTPException(
+                400,
+                f"Unknown split_by {req.split_by!r} (use gnz_id, event_id or club_name)",
+            )
+
+        count = subset.count()
+        if count == 0:
+            raise HTTPException(400, "No rows match that value")
+        if count == total:
+            raise HTTPException(400, "Cannot split off every row of the athlete")
+
+        # Identify rows by id so the two athletes can be found after the
+        # rebuild re-keyed them (the original athlete row is recreated when
+        # the split-off ID was the cluster's canonical ID).
+        subset_ids = {r[0] for r in subset.with_entities(LongScore.id).all()}
+        all_ids = {r[0] for r in base.with_entities(LongScore.id).all()}
+        remainder_ids = all_ids - subset_ids
+
+        new_gid = req.new_gnz_id or _fresh_synthetic_id(session)
+        override = _fresh_override_token()
+        subset.update(
+            {
+                LongScore.gnz_id: new_gid,
+                LongScore.identity_override: override,
+            },
+            synchronize_session=False,
+        )
+        session.commit()
+        rebuild_athletes(session)
+        invalidate()
+
+        created_id = session.get(LongScore, next(iter(subset_ids))).athlete_id
+        original_id = session.get(LongScore, next(iter(remainder_ids))).athlete_id
+        created = session.get(Athlete, created_id)
+        original = session.get(Athlete, original_id)
+        if original is None or created is None:
+            raise HTTPException(500, "Split did not produce two athletes")
+
+        return SplitAthleteResponse(
+            split_rows=count,
+            original_id=original.id,
+            original_slug=original.slug,
+            created_id=created.id,
+            created_slug=created.slug,
+        )
     finally:
         session.close()
 

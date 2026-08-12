@@ -74,6 +74,7 @@ class LongScore(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
     athlete_id = Column(Integer, ForeignKey("athletes.id"), nullable=True)
+    identity_override = Column(String, nullable=True)
 
     event_name = Column(String, nullable=False)
     gymnast_name = Column(String, nullable=False)

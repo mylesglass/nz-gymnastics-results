@@ -369,6 +369,84 @@ class GymnastEditResponse(BaseModel):
     updated: int
 
 
+class AthleteReviewInfo(BaseModel):
+    athlete_id: int
+    slug: str
+    name: str
+    gnz_id: str | None = None
+    clubs: list[str] = []
+    events: int = 0
+    event_ids: list[int] = []
+    years: list[int] = []
+    disciplines: list[str] = []
+    rows: int = 0
+    intent_years: list[int] = []
+
+
+class SimilarAthletes(BaseModel):
+    name_a: str
+    name_b: str
+    score: float
+    athlete_a: AthleteReviewInfo
+    athlete_b: AthleteReviewInfo
+
+
+class NameConflict(BaseModel):
+    name: str
+    athletes: list[AthleteReviewInfo]
+
+
+class IdConflict(BaseModel):
+    gnz_id: str
+    athletes: list[AthleteReviewInfo]
+
+
+class MultiIdAthlete(BaseModel):
+    athlete_id: int
+    slug: str
+    name: str
+    gnz_ids: dict[str, int]
+    clubs: list[str] = []
+    events: int = 0
+    event_ids: list[int] = []
+    years: list[int] = []
+    disciplines: list[str] = []
+    rows: int = 0
+
+
+class IdentityReviewResponse(BaseModel):
+    similar_names: list[SimilarAthletes] = []
+    name_conflicts: list[NameConflict] = []
+    id_conflicts: list[IdConflict] = []
+    multi_id_athletes: list[MultiIdAthlete] = []
+
+
+class MergeAthletesRequest(BaseModel):
+    athlete_id: int
+    merge_id: int
+
+
+class SplitAthleteRequest(BaseModel):
+    athlete_id: int
+    split_by: str
+    value: str
+    new_gnz_id: str | None = None
+
+
+class MergeAthletesResponse(BaseModel):
+    merged_rows: int
+    survivor_id: int
+    survivor_slug: str
+
+
+class SplitAthleteResponse(BaseModel):
+    split_rows: int
+    original_id: int
+    original_slug: str
+    created_id: int
+    created_slug: str
+
+
 class TrackPageRequest(BaseModel):
     path: str
 

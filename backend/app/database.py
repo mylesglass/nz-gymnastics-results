@@ -79,6 +79,10 @@ def init_db():
             conn.execute(
                 text("ALTER TABLE long_scores ADD COLUMN athlete_id INTEGER REFERENCES athletes(id)")
             )
+        if "identity_override" not in score_cols:
+            conn.execute(
+                text("ALTER TABLE long_scores ADD COLUMN identity_override VARCHAR")
+            )
         _ensure_indexes(conn)
         conn.commit()
 

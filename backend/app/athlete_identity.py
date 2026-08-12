@@ -22,6 +22,10 @@ Clustering runs a union-find over ``(normalized name, gnz_id)`` signatures:
   their normalized names are close (difflib ``SequenceMatcher.ratio >= 0.85``),
   so spelling variants of one person (``Eva Mcewan`` / ``Eva McEwan``) collapse
   while genuinely different people sharing a bad ID stay separate.
+* **Admin override** — a non-empty ``identity_override`` token on a row is a
+  hard force-split boundary (set by the admin Split action): each distinct
+  token is its own athlete and unmarked rows cluster among themselves with the
+  normal rules.  Merge clears the token so the two halves join back up.
 
 ``rebuild_athletes`` is idempotent and **signature-stable**: each cluster is
 keyed by a hash of its canonical ``(normalized name, gnz_id)`` pair, so an
@@ -93,11 +97,27 @@ def _cluster_name_signatures(signatures: list[dict]) -> list[set[str]]:
     """Cluster one name's signatures into athlete groups (union-find).
 
     ``signatures`` are dicts with ``key`` (the ``(norm_name, gnz_id)`` tuple),
-    ``id``, ``events``, ``disciplines``, ``clubs`` and ``count``.  Returns a
-    list of signature-key sets — one per distinct person the name represents.
-    Empty-ID signatures attach to the group containing the most frequent
-    non-empty ID (or form their own group when the name has no IDs).
+    ``id``, ``events``, ``disciplines``, ``clubs``, ``count`` and ``override``.
+    Returns a list of signature-key sets — one per distinct person the name
+    represents.  Empty-ID signatures attach to the group containing the most
+    frequent non-empty ID (or form their own group when the name has no IDs).
+
+    Rows carrying a non-empty ``identity_override`` (an admin force-split) are
+    a hard boundary: each distinct token is its own person, and unmarked rows
+    cluster among themselves with the normal rules.
     """
+    marked = [s for s in signatures if s.get("override")]
+    if marked:
+        groups: list[set[str]] = []
+        unmarked = [s for s in signatures if not s.get("override")]
+        if unmarked:
+            groups.extend(_cluster_name_signatures(unmarked))
+        by_token: dict[str, set[str]] = defaultdict(set)
+        for s in marked:
+            by_token[s["override"]].add(s["key"])
+        groups.extend(set(g) for g in by_token.values())
+        return groups
+
     non_empty = sorted({s["id"] for s in signatures if s["id"]})
     keys_by_id: dict[str, list[str]] = defaultdict(list)
     for s in signatures:
@@ -208,6 +228,7 @@ def rebuild_athletes(session) -> int:
             LongScore.event_id,
             LongScore.discipline,
             LongScore.club_name,
+            LongScore.identity_override,
             func.count(LongScore.id).label("cnt"),
         )
         .filter(
@@ -221,12 +242,13 @@ def rebuild_athletes(session) -> int:
             LongScore.event_id,
             LongScore.discipline,
             LongScore.club_name,
+            LongScore.identity_override,
         )
         .all()
     )
 
     sig_data: dict[tuple[str, str], dict] = {}
-    for norm, spelling, gid, eid, disc, club, cnt in rows:
+    for norm, spelling, gid, eid, disc, club, override, cnt in rows:
         key = (norm, gid or "")
         if key not in sig_data:
             sig_data[key] = {
@@ -238,6 +260,7 @@ def rebuild_athletes(session) -> int:
                 "disciplines": set(),
                 "clubs": set(),
                 "spellings": Counter(),
+                "override": override or "",
             }
         d = sig_data[key]
         d["count"] += cnt
@@ -248,6 +271,8 @@ def rebuild_athletes(session) -> int:
         if club:
             d["clubs"].add(club)
         d["spellings"][spelling.strip()] += cnt
+        if override:
+            d["override"] = override
 
     if not sig_data:
         existing = session.query(Athlete).all()

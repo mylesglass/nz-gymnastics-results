@@ -619,6 +619,100 @@ export async function updateGymnast(data: {
   return res.json();
 }
 
+export interface AthleteReviewInfo {
+  athlete_id: number;
+  slug: string;
+  name: string;
+  gnz_id: string | null;
+  clubs: string[];
+  events: number;
+  event_ids: number[];
+  years: number[];
+  disciplines: string[];
+  rows: number;
+  intent_years: number[];
+}
+
+export interface SimilarAthletes {
+  name_a: string;
+  name_b: string;
+  score: number;
+  athlete_a: AthleteReviewInfo;
+  athlete_b: AthleteReviewInfo;
+}
+
+export interface NameConflict {
+  name: string;
+  athletes: AthleteReviewInfo[];
+}
+
+export interface IdConflict {
+  gnz_id: string;
+  athletes: AthleteReviewInfo[];
+}
+
+export interface MultiIdAthlete {
+  athlete_id: number;
+  slug: string;
+  name: string;
+  gnz_ids: Record<string, number>;
+  clubs: string[];
+  events: number;
+  event_ids: number[];
+  years: number[];
+  disciplines: string[];
+  rows: number;
+}
+
+export interface IdentityReview {
+  similar_names: SimilarAthletes[];
+  name_conflicts: NameConflict[];
+  id_conflicts: IdConflict[];
+  multi_id_athletes: MultiIdAthlete[];
+}
+
+export async function getIdentityReview(): Promise<IdentityReview> {
+  const res = await fetch(`${API_BASE}/api/admin/identity-review`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function mergeAthletes(
+  athlete_id: number,
+  merge_id: number
+): Promise<{ merged_rows: number; survivor_id: number; survivor_slug: string }> {
+  const res = await fetch(`${API_BASE}/api/admin/athletes/merge`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ athlete_id, merge_id }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function splitAthlete(data: {
+  athlete_id: number;
+  split_by: string;
+  value: string;
+  new_gnz_id?: string;
+}): Promise<{
+  split_rows: number;
+  original_id: number;
+  original_slug: string;
+  created_id: number;
+  created_slug: string;
+}> {
+  const res = await fetch(`${API_BASE}/api/admin/athletes/split`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export async function trackPage(path: string): Promise<void> {
   await fetch(`${API_BASE}/api/track/page`, {
     method: "POST",

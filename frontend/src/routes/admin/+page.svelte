@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getStats, checkDuplicates, fixDuplicates, applyFixes, getSuggestedMerges, mergeNames, refreshCache } from "$lib/api";
-  import type { DuplicateGroup, DuplicateInstance, SuggestedMerge } from "$lib/api";
+  import { getStats, getIdentityReview, mergeAthletes, splitAthlete, refreshCache } from "$lib/api";
+  import type { AthleteReviewInfo, IdentityReview, MultiIdAthlete } from "$lib/api";
 
   let stats = $state<{
     total_events: number;
@@ -12,92 +12,40 @@
   let loading = $state(true);
   let error = $state<string | null>(null);
 
-  let duplicates = $state<DuplicateGroup[]>([]);
-  let dupLoading = $state(true);
-  let dupError = $state<string | null>(null);
-  let showDuplicates = $state(false);
-  let fixing = $state(false);
-  let fixResult = $state<{ fixed: number } | null>(null);
-  let lowConfidence = $state<DuplicateGroup[]>([]);
-  let selections = $state<Record<string, string>>({});
-  let applying = $state(false);
-  let applyResult = $state<{ applied: number } | null>(null);
-
-  let merges = $state<SuggestedMerge[]>([]);
-  let mergesLoading = $state(true);
-  let mergesError = $state<string | null>(null);
-  let showMerges = $state(false);
-  let mergeToast = $state<string | null>(null);
+  let review = $state<IdentityReview | null>(null);
+  let reviewLoading = $state(true);
+  let reviewError = $state<string | null>(null);
+  let reviewToast = $state<string | null>(null);
   let cacheToast = $state<string | null>(null);
   let declinedKeys = $state<Set<string>>(new Set());
+  let showSection = $state<Record<string, boolean>>({ similar: true, names: true, ids: true, multi: true });
 
   let toastTimer: ReturnType<typeof setTimeout> | undefined;
+  let busy = $state(false);
 
-  function instanceKey(inst: DuplicateInstance, name: string): string {
-    return `${name}|${inst.club}|${inst.level_category}`;
+  const totalCount = $derived(
+    (review?.similar_names.length ?? 0) +
+    (review?.name_conflicts.length ?? 0) +
+    (review?.id_conflicts.length ?? 0) +
+    (review?.multi_id_athletes.length ?? 0)
+  );
+
+  function groupKey(group: { name?: string; gnz_id?: string }): string {
+    return group.name ?? group.gnz_id ?? "";
   }
 
-  function bestId(inst: DuplicateInstance): string {
-    const sorted = Object.entries(inst.id_counts).sort(
-      (a, b) => b[1] - a[1] || (b[0].localeCompare(a[0]))
-    );
-    return sorted[0][0];
+  function isDismissed(group: { name?: string; gnz_id?: string }): boolean {
+    return declinedKeys.has(groupKey(group));
   }
 
-  function groupBestId(instances: DuplicateInstance[]): string {
-    const all: Record<string, number> = {};
-    for (const inst of instances) {
-      for (const [id, cnt] of Object.entries(inst.id_counts)) {
-        all[id] = (all[id] || 0) + cnt;
-      }
-    }
-    const sorted = Object.entries(all).sort(
-      (a, b) => b[1] - a[1] || (b[0].localeCompare(a[0]))
-    );
-    return sorted[0][0];
+  function visiblePair(m: { name_a: string; name_b: string }): boolean {
+    return !declinedKeys.has(`${m.name_a}|${m.name_b}`);
   }
 
-  function isLowConfidence(d: DuplicateGroup): boolean {
-    return lowConfidence.some(l => l.name === d.name);
-  }
-
-  function mergeKey(m: SuggestedMerge): string {
-    return `${m.name_a}|${m.name_b}`;
-  }
-
-  let visibleMerges = $derived(merges.filter(m => !declinedKeys.has(mergeKey(m))));
-
-  async function runMerge(keep: string, merge: string) {
-    merges = merges.filter(m => !(m.name_a === merge && m.name_b === keep));
-    clearTimeout(toastTimer);
-    try {
-      const res = await mergeNames(merge, keep);
-      merges = await getSuggestedMerges();
-      duplicates = await checkDuplicates();
-      mergeToast = `Merged ${res.merged} rows, ${res.names_unified} names unified, ${res.ids_corrected} IDs corrected`;
-    } catch (e) {
-      mergeToast = `Error: ${e}`;
-      merges = await getSuggestedMerges();
-    }
-    toastTimer = setTimeout(() => { mergeToast = null; }, 4000);
-  }
-
-  async function runRefresh() {
-    clearTimeout(toastTimer);
-    try {
-      await refreshCache();
-      stats = await getStats();
-      cacheToast = "Cache refreshed — all data is now fresh";
-    } catch (e) {
-      cacheToast = `Error: ${e}`;
-    }
-    toastTimer = setTimeout(() => { cacheToast = null; }, 4000);
-  }
-
-  function runDecline(m: SuggestedMerge) {
-    declinedKeys.add(mergeKey(m));
-    declinedKeys = new Set(declinedKeys);
-  }
+  const visibleSimilar = $derived((review?.similar_names ?? []).filter(visiblePair));
+  const visibleNameConflicts = $derived((review?.name_conflicts ?? []).filter(g => !isDismissed(g)));
+  const visibleIdConflicts = $derived((review?.id_conflicts ?? []).filter(g => !isDismissed(g)));
+  const visibleMultiId = $derived((review?.multi_id_athletes ?? []).filter(m => !isDismissed({ name: m.name })));
 
   onMount(async () => {
     try {
@@ -107,74 +55,125 @@
     } finally {
       loading = false;
     }
-    try {
-      duplicates = await checkDuplicates();
-      for (const d of duplicates) {
-        for (const inst of d.instances) {
-          selections[instanceKey(inst, d.name)] = bestId(inst);
-        }
-      }
-    } catch (e) {
-      dupError = String(e);
-    } finally {
-      dupLoading = false;
-    }
-    try {
-      merges = await getSuggestedMerges();
-    } catch (e) {
-      mergesError = String(e);
-    } finally {
-      mergesLoading = false;
-    }
+    await loadReview();
   });
 
-  async function runFix() {
-    fixing = true;
-    fixResult = null;
-    lowConfidence = [];
+  async function loadReview() {
+    reviewLoading = true;
     try {
-      const result = await fixDuplicates();
-      if (result.fixed > 0) fixResult = { fixed: result.fixed };
-      lowConfidence = result.low_confidence;
-      duplicates = await checkDuplicates();
-      for (const d of duplicates) {
-        for (const inst of d.instances) {
-          selections[instanceKey(inst, d.name)] = bestId(inst);
-        }
-      }
+      review = await getIdentityReview();
+      reviewError = null;
     } catch (e) {
-      dupError = String(e);
+      reviewError = String(e);
     } finally {
-      fixing = false;
+      reviewLoading = false;
     }
   }
 
-  async function runApply() {
-    applying = true;
-    applyResult = null;
+  function showToast(kind: "success" | "error", message: string) {
+    clearTimeout(toastTimer);
+    reviewToast = `${kind === "success" ? "✅" : "⚠"} ${message}`;
+    toastTimer = setTimeout(() => { reviewToast = null; }, 5000);
+  }
+
+  async function runMerge(survivor: AthleteReviewInfo, merged: AthleteReviewInfo) {
+    busy = true;
     try {
-      const fixes: Array<{ name: string; club: string; level_category: string; chosen_id: string }> = [];
-      for (const d of duplicates) {
-        for (const inst of d.instances) {
-          const key = instanceKey(inst, d.name);
-          const chosen = selections[key];
-          if (chosen && chosen !== bestId(inst)) {
-            fixes.push({ name: d.name, club: inst.club, level_category: inst.level_category, chosen_id: chosen });
-          }
-        }
-      }
-      if (fixes.length > 0) applyResult = await applyFixes(fixes);
-      lowConfidence = [];
-      duplicates = await checkDuplicates();
-      for (const d of duplicates) {
-        for (const inst of d.instances) {
-          selections[instanceKey(inst, d.name)] = bestId(inst);
-        }
-      }
+      const res = await mergeAthletes(survivor.athlete_id, merged.athlete_id);
+      showToast("success", `Merged ${res.merged_rows} rows — kept "${survivor.name}"`);
+      await loadReview();
     } catch (e) {
-      dupError = String(e);
+      showToast("error", String(e));
     } finally {
-      applying = false;
+      busy = false;
+    }
+  }
+
+  async function mergeGroupInto(group: { name?: string; gnz_id?: string; athletes: AthleteReviewInfo[] }, survivor: AthleteReviewInfo) {
+    busy = true;
+    try {
+      let total = 0;
+      for (const other of group.athletes) {
+        if (other.athlete_id === survivor.athlete_id) continue;
+        const res = await mergeAthletes(survivor.athlete_id, other.athlete_id);
+        total += res.merged_rows;
+      }
+      showToast("success", `Merged ${total} rows — kept "${survivor.name}"`);
+      await loadReview();
+    } catch (e) {
+      showToast("error", String(e));
+    } finally {
+      busy = false;
+    }
+  }
+
+  function runDismiss(group: { name?: string; gnz_id?: string }) {
+    declinedKeys.add(groupKey(group));
+    declinedKeys = new Set(declinedKeys);
+  }
+
+  function runDismissPair(m: { name_a: string; name_b: string }) {
+    declinedKeys.add(`${m.name_a}|${m.name_b}`);
+    declinedKeys = new Set(declinedKeys);
+  }
+
+  async function runRefresh() {
+    clearTimeout(toastTimer);
+    try {
+      await refreshCache();
+      stats = await getStats();
+      await loadReview();
+      cacheToast = "Cache refreshed — all data is now fresh";
+    } catch (e) {
+      cacheToast = `Error: ${e}`;
+    }
+    toastTimer = setTimeout(() => { cacheToast = null; }, 4000);
+  }
+
+  // --- Split ------------------------------------------------------------
+  let splitTarget = $state<MultiIdAthlete | null>(null);
+  let splitBy = $state<"gnz_id" | "event_id" | "club_name">("gnz_id");
+  let splitValue = $state<string>("");
+  let splitNewId = $state<string>("");
+  let splitError = $state<string | null>(null);
+
+  const splitOptions = $derived.by(() => {
+    if (!splitTarget) return [];
+    if (splitBy === "gnz_id") return Object.entries(splitTarget.gnz_ids).map(([id, cnt]) => ({ value: id, label: `GNZ ID ${id} (${cnt} rows)` }));
+    if (splitBy === "event_id") return splitTarget.event_ids.map(eid => ({ value: String(eid), label: `Event #${eid}` }));
+    return splitTarget.clubs.map(c => ({ value: c, label: `Club: ${c}` }));
+  });
+
+  function openSplit(athlete: MultiIdAthlete) {
+    splitTarget = athlete;
+    splitBy = "gnz_id";
+    splitNewId = "";
+    splitError = null;
+    splitValue = Object.keys(athlete.gnz_ids)[0] ?? "";
+  }
+
+  function closeSplit() {
+    splitTarget = null;
+  }
+
+  async function runSplit() {
+    if (!splitTarget) return;
+    busy = true;
+    splitError = null;
+    try {
+      const res = await splitAthlete({
+        athlete_id: splitTarget.athlete_id,
+        split_by: splitBy,
+        value: splitValue,
+        new_gnz_id: splitNewId.trim() || undefined,
+      });
+      showToast("success", `Split ${res.split_rows} rows into a new athlete`);
+      closeSplit();
+      await loadReview();
+    } catch (e) {
+      splitError = String(e);
+    } finally {
+      busy = false;
     }
   }
 </script>
@@ -244,195 +243,268 @@
 
     <div class="card bg-base-200 border border-base-300">
       <div class="card-body">
-        <div class="flex items-center gap-3 mb-3">
-          <h2 class="card-title">🔍 Athlete ID Reconciliation</h2>
-          {#if !dupLoading && duplicates.length > 0}
-            <div class="badge badge-warning gap-1">{duplicates.length}</div>
+        <div class="flex items-center gap-3 mb-2">
+          <h2 class="card-title">🆔 Identity Review</h2>
+          {#if !reviewLoading && totalCount > 0}
+            <div class="badge badge-warning gap-1">{totalCount}</div>
           {/if}
         </div>
         <p class="text-sm text-base-content/70 mb-3">
-          Gymnast names with multiple GNZ IDs — likely data entry errors where the wrong ID was assigned.
-          Groups with strong evidence (one ID >2x more common) are auto-fixed; others need manual review.
+          Athlete-level identity conflicts in both directions — similar names that may be one
+          gymnast, the same name on multiple athletes, the same ID on multiple athletes, and
+          athletes carrying more than one ID. Review the evidence, then merge confirmed
+          duplicates or split athletes that actually contain two people.
         </p>
 
-        {#if dupLoading}
+        {#if reviewLoading}
           <span class="loading loading-spinner loading-sm"></span>
-        {:else if dupError}
+        {:else if reviewError}
           <div role="alert" class="alert alert-error mb-3">
-            <span>{dupError}</span>
+            <span>{reviewError}</span>
           </div>
-        {:else if duplicates.length > 0}
-          <button class="btn btn-ghost btn-xs self-start mb-2" onclick={() => (showDuplicates = !showDuplicates)}>
-            {showDuplicates ? "Hide" : "View"} {duplicates.length} athlete groups
-          </button>
+        {:else}
+          <!-- Similar names -->
+          {#if visibleSimilar.length > 0}
+            <div class="flex items-center justify-between mt-2">
+              <h3 class="font-semibold text-sm">Similar names</h3>
+              <button class="btn btn-ghost btn-xs" onclick={() => (showSection.similar = !showSection.similar)} aria-expanded={showSection.similar}>
+                {showSection.similar ? "Hide" : "Show"} {visibleSimilar.length}
+              </button>
+            </div>
+            {#if showSection.similar}
+              <div class="overflow-x-auto mb-3">
+                <table class="table table-xs">
+                  <thead>
+                    <tr>
+                      <th>Name A</th>
+                      <th>Name B</th>
+                      <th>Similarity</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {#each visibleSimilar as m}
+                      <tr>
+                        <td>{@render evidence(m.athlete_a)}</td>
+                        <td>{@render evidence(m.athlete_b)}</td>
+                        <td>{m.score.toFixed(2)}</td>
+                        <td class="flex flex-col gap-1 min-w-44">
+                          <button class="btn btn-primary btn-xs" onclick={() => runMerge(m.athlete_b, m.athlete_a)} disabled={busy}>Keep {m.name_a}</button>
+                          <button class="btn btn-ghost btn-xs" onclick={() => runMerge(m.athlete_a, m.athlete_b)} disabled={busy}>Keep {m.name_b}</button>
+                          <button class="btn btn-ghost btn-xs text-error" onclick={() => runDismissPair(m)}>Dismiss</button>
+                        </td>
+                      </tr>
+                    {/each}
+                  </tbody>
+                </table>
+              </div>
+            {/if}
+          {/if}
 
-          {#if showDuplicates}
-            <div class="overflow-x-auto mb-3">
-              <table class="table table-xs">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Club / Step</th>
-                    <th>IDs (count)</th>
-                    <th>Correct ID</th>
-                    <th>Rows</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {#each duplicates as d}
-                    {@const low = isLowConfidence(d)}
-                    {#each d.instances as inst, i}
-                      <tr class={low ? "bg-warning/5" : ""}>
-                        {#if i === 0}
-                          <td class="font-medium align-top" rowspan={d.instances.length}>{d.name}</td>
-                        {/if}
-                        <td class="text-xs">{inst.club}<br><span class="text-base-content/70">{inst.level_category}</span></td>
+          <!-- Same name, multiple athletes -->
+          {#if visibleNameConflicts.length > 0}
+            <div class="flex items-center justify-between mt-2">
+              <h3 class="font-semibold text-sm">Same name, multiple athletes</h3>
+              <button class="btn btn-ghost btn-xs" onclick={() => (showSection.names = !showSection.names)} aria-expanded={showSection.names}>
+                {showSection.names ? "Hide" : "Show"} {visibleNameConflicts.length}
+              </button>
+            </div>
+            {#if showSection.names}
+              <div class="overflow-x-auto mb-3">
+                <table class="table table-xs">
+                  <thead>
+                    <tr>
+                      <th>Gymnast</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {#each visibleNameConflicts as g}
+                      <tr>
+                        <td>
+                          <div class="space-y-2">
+                            {#each g.athletes as a}
+                              {@render evidence(a)}
+                            {/each}
+                          </div>
+                        </td>
+                        <td class="align-top">
+                          <div class="flex flex-col gap-1 min-w-44">
+                            {#each g.athletes as survivor}
+                              <button class="btn btn-primary btn-xs" onclick={() => mergeGroupInto(g, survivor)} disabled={busy}>
+                                Merge others into {survivor.name}
+                              </button>
+                            {/each}
+                            <button class="btn btn-ghost btn-xs text-error" onclick={() => runDismiss(g)}>Separate people — dismiss</button>
+                          </div>
+                        </td>
+                      </tr>
+                    {/each}
+                  </tbody>
+                </table>
+              </div>
+            {/if}
+          {/if}
+
+          <!-- Same ID, multiple athletes -->
+          {#if visibleIdConflicts.length > 0}
+            <div class="flex items-center justify-between mt-2">
+              <h3 class="font-semibold text-sm">Same GNZ ID, multiple athletes</h3>
+              <button class="btn btn-ghost btn-xs" onclick={() => (showSection.ids = !showSection.ids)} aria-expanded={showSection.ids}>
+                {showSection.ids ? "Hide" : "Show"} {visibleIdConflicts.length}
+              </button>
+            </div>
+            {#if showSection.ids}
+              <div class="overflow-x-auto mb-3">
+                <table class="table table-xs">
+                  <thead>
+                    <tr>
+                      <th>GNZ ID</th>
+                      <th>Gymnast</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {#each visibleIdConflicts as g}
+                      <tr>
+                        <td class="font-medium align-top">{g.gnz_id}</td>
+                        <td>
+                          <div class="space-y-2">
+                            {#each g.athletes as a}
+                              {@render evidence(a)}
+                            {/each}
+                          </div>
+                        </td>
+                        <td class="align-top">
+                          <div class="flex flex-col gap-1 min-w-44">
+                            {#each g.athletes as survivor}
+                              <button class="btn btn-primary btn-xs" onclick={() => mergeGroupInto(g, survivor)} disabled={busy}>
+                                Merge others into {survivor.name}
+                              </button>
+                            {/each}
+                            <button class="btn btn-ghost btn-xs text-error" onclick={() => runDismiss(g)}>Different people — dismiss</button>
+                          </div>
+                        </td>
+                      </tr>
+                    {/each}
+                  </tbody>
+                </table>
+              </div>
+            {/if}
+          {/if}
+
+          <!-- One athlete, multiple IDs -->
+          {#if visibleMultiId.length > 0}
+            <div class="flex items-center justify-between mt-2">
+              <h3 class="font-semibold text-sm">One athlete with multiple IDs — may need a split</h3>
+              <button class="btn btn-ghost btn-xs" onclick={() => (showSection.multi = !showSection.multi)} aria-expanded={showSection.multi}>
+                {showSection.multi ? "Hide" : "Show"} {visibleMultiId.length}
+              </button>
+            </div>
+            {#if showSection.multi}
+              <div class="overflow-x-auto mb-3">
+                <table class="table table-xs">
+                  <thead>
+                    <tr>
+                      <th>Gymnast</th>
+                      <th>IDs (rows)</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {#each visibleMultiId as m}
+                      <tr>
+                        <td>{@render evidence({ athlete_id: m.athlete_id, slug: m.slug, name: m.name, gnz_id: Object.keys(m.gnz_ids)[0], clubs: m.clubs, events: m.events, event_ids: m.event_ids, years: m.years, disciplines: m.disciplines, rows: m.rows, intent_years: [] })}</td>
                         <td class="text-xs">
-                          {#each Object.entries(inst.id_counts) as [id, cnt], j}
-                            {j > 0 ? ", " : ""}<a href="/gymnast/{id}" class="link link-hover">{id}</a><span class="text-base-content/70"> ({cnt})</span>
+                          {#each Object.entries(m.gnz_ids) as [id, cnt], j}
+                            {j > 0 ? ", " : ""}<span class="font-mono">{id}</span><span class="text-base-content/70"> ({cnt})</span>
                           {/each}
                         </td>
                         <td>
-                          <label for="fix-id-{instanceKey(inst, d.name)}" class="sr-only">Correct ID</label>
-                          <select
-                            id="fix-id-{instanceKey(inst, d.name)}"
-                            class="select select-bordered select-xs w-28"
-                            bind:value={selections[instanceKey(inst, d.name)]}
-                          >
-                            {#each Object.keys(inst.id_counts) as id}
-                              <option value={id}>{id}</option>
-                            {/each}
-                          </select>
+                          <button class="btn btn-outline btn-xs" onclick={() => openSplit(m)} disabled={busy}>Split…</button>
                         </td>
-                        <td class="text-xs">{inst.total_rows}</td>
                       </tr>
                     {/each}
-                  {/each}
-                </tbody>
-              </table>
-            </div>
+                  </tbody>
+                </table>
+              </div>
+            {/if}
           {/if}
 
-          {#if fixResult}
-            <div role="alert" class="alert alert-success mb-2">
-              <span>✅ Auto-fixed {fixResult.fixed} rows (high confidence)</span>
-            </div>
+          {#if totalCount === 0}
+            <p class="text-sm text-base-content/70">No identity conflicts found. All athletes have consistent names and IDs.</p>
           {/if}
-
-          {#if applyResult}
-            <div role="alert" class="alert alert-success mb-2">
-              <span>✅ Applied {applyResult.applied} manual fixes</span>
-            </div>
-          {/if}
-
-          {#if lowConfidence.length > 0}
-            <div role="alert" class="alert alert-warning mb-2">
-              <span>⚠ {lowConfidence.length} groups need manual review — confidence too low to auto-fix. Use the dropdowns above to select the correct ID, then click "Apply Selected Fixes".</span>
-            </div>
-          {/if}
-
-          <div class="flex gap-2">
-            <button
-              class="btn btn-primary btn-sm"
-              onclick={runFix}
-              disabled={fixing}
-            >
-              {fixing ? "Running..." : "Quick Fix"}
-            </button>
-            <button
-              class="btn btn-outline btn-sm"
-              onclick={runApply}
-              disabled={applying || duplicates.length === 0}
-            >
-              {applying ? "Applying..." : "Apply Selected Fixes"}
-            </button>
-          </div>
-        {:else}
-          <p class="text-sm text-base-content/70">No ID inconsistencies found. All gymnasts have consistent GNZ IDs.</p>
-        {/if}
-      </div>
-    </div>
-
-    <div class="card bg-base-200 border border-base-300 mt-4">
-      <div class="card-body">
-        <h2 class="card-title">🔗 Suggested Merges</h2>
-        <p class="text-sm text-base-content/70 mb-3">
-          Names that may refer to the same gymnast — review and merge if correct.
-        </p>
-
-        {#if mergesLoading}
-          <span class="loading loading-spinner loading-sm"></span>
-        {:else if mergesError}
-          <div role="alert" class="alert alert-error mb-3">
-            <span>{mergesError}</span>
-          </div>
-        {:else if visibleMerges.length > 0}
-          <button class="btn btn-ghost btn-xs self-start mb-2" onclick={() => (showMerges = !showMerges)} aria-expanded={showMerges}>
-            {showMerges ? "Hide" : "View"} {visibleMerges.length} suggestions
-          </button>
-          {#if showMerges}
-            <div class="overflow-x-auto">
-              <table class="table table-xs">
-                <thead>
-                  <tr>
-                    <th>Name A</th>
-                    <th>Name B</th>
-                    <th>Similarity</th>
-                    <th>IDs</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {#each visibleMerges as m}
-                    <tr>
-                      <td class="font-medium">{m.name_a}<span class="text-xs text-base-content/70 ml-1">({m.rows_a})</span></td>
-                      <td class="font-medium">{m.name_b}<span class="text-xs text-base-content/70 ml-1">({m.rows_b})</span></td>
-                      <td>{m.score.toFixed(2)}</td>
-                      <td class="text-xs">
-                        {#each m.gnz_ids_a as id, i}{i > 0 ? ", " : ""}<a href="/gymnast/{id}" class="link link-hover">{id}</a>{/each}
-                        &rarr;
-                        {#each m.gnz_ids_b as id, i}{i > 0 ? ", " : ""}<a href="/gymnast/{id}" class="link link-hover">{id}</a>{/each}
-                      </td>
-                      <td class="flex gap-1">
-                        <button
-                          class="btn btn-ghost btn-xs"
-                          onclick={() => runMerge(m.name_a, m.name_b)}
-                        >
-                          Keep A
-                        </button>
-                        <button
-                          class="btn btn-primary btn-xs"
-                          onclick={() => runMerge(m.name_b, m.name_a)}
-                        >
-                          Keep B
-                        </button>
-                        <button
-                          class="btn btn-ghost btn-xs text-error"
-                          onclick={() => runDecline(m)}
-                        >
-                          Decline
-                        </button>
-                      </td>
-                    </tr>
-                  {/each}
-                </tbody>
-              </table>
-            </div>
-          {/if}
-        {:else if merges.length > 0 && visibleMerges.length === 0}
-          <p class="text-sm text-base-content/70">All suggestions dismissed. Refresh the page to see new suggestions.</p>
-        {:else}
-          <p class="text-sm text-base-content/70">No similar name pairs found.</p>
         {/if}
       </div>
     </div>
   {/if}
 </div>
 
-{#if mergeToast}
+{#if splitTarget}
+  <div class="card bg-base-200 border border-base-300 mt-4 mx-auto max-w-4xl" role="dialog" aria-modal="false" aria-labelledby="split-title">
+    <div class="card-body">
+      <div class="flex items-center justify-between">
+        <h3 id="split-title" class="card-title text-lg">Split "{splitTarget.name}"</h3>
+        <button class="btn btn-ghost btn-xs" onclick={closeSplit} aria-label="Close split panel">✕</button>
+      </div>
+      <p class="text-sm text-base-content/70 mb-2">
+        Move one group of this athlete's rows into a brand-new athlete. The new athlete keeps the
+        same name; if no GNZ ID is supplied a synthetic one (starting with "S") is generated and
+        can be corrected later with an inline edit.
+      </p>
+
+      <label for="split-by" class="text-sm font-medium">Split off rows by</label>
+      <select id="split-by" class="select select-bordered select-sm mb-2" bind:value={splitBy} onchange={() => (splitValue = splitOptions[0]?.value ?? "")}>
+        <option value="gnz_id">GNZ ID</option>
+        <option value="event_id">Event</option>
+        <option value="club_name">Club</option>
+      </select>
+
+      <label for="split-value" class="text-sm font-medium">Which rows move to the new athlete?</label>
+      <select id="split-value" class="select select-bordered select-sm mb-2" bind:value={splitValue}>
+        {#each splitOptions as opt}
+          <option value={opt.value}>{opt.label}</option>
+        {/each}
+      </select>
+
+      <label for="split-new-id" class="text-sm font-medium">New GNZ ID (optional)</label>
+      <input id="split-new-id" class="input input-bordered input-sm mb-2" placeholder="e.g. 123456 — leave blank for a synthetic ID" bind:value={splitNewId} />
+
+      {#if splitError}
+        <div role="alert" class="alert alert-error mb-2 text-sm py-2">
+          <span>{splitError}</span>
+        </div>
+      {/if}
+
+      <div class="flex gap-2">
+        <button class="btn btn-primary btn-sm" onclick={runSplit} disabled={busy || !splitValue}>
+          {busy ? "Splitting..." : "Split into new athlete"}
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick={closeSplit} disabled={busy}>Cancel</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+{#snippet evidence(a: AthleteReviewInfo)}
+  <div class="text-xs space-y-0.5">
+    <div>
+      <a href="/gymnast/{a.slug}" class="link link-hover font-medium">{a.name}</a>
+      {#if a.gnz_id}<span class="text-base-content/60"> · {a.gnz_id}</span>{/if}
+      {#if a.intent_years.length > 0}<span class="badge badge-primary badge-xs ml-1">intent</span>{/if}
+    </div>
+    <div class="text-base-content/70">
+      {a.clubs.join(", ") || "no club"} · {a.events} event{a.events === 1 ? "" : "s"}
+      {#if a.years.length > 0} ({a.years.join(", ")}){/if} · {a.rows} rows
+      {#if a.disciplines.length > 0} · {a.disciplines.join("/")}{/if}
+    </div>
+  </div>
+{/snippet}
+
+{#if reviewToast}
   <div class="toast toast-bottom toast-end z-50" role="status">
     <div class="alert alert-success text-sm">
-      <span>{mergeToast}</span>
+      <span>{reviewToast}</span>
     </div>
   </div>
 {/if}

@@ -3,6 +3,14 @@
     "date": "12 Aug 2026",
     "entries": [
       {
+        "title": "Admin: one identity review to merge and split gymnasts",
+        "items": [
+          "The admin dashboard's identity tools were merged into a single review that shows conflicts in both directions: similar-sounding names that may be one gymnast, the same name on multiple athletes, the same GNZ ID on multiple athletes, and one athlete carrying several IDs — each with the clubs, events and years as evidence.",
+          "Admins can now merge two athlete records into one (their results are combined under a single name and ID) or split one athlete that actually contains two people, moving selected rows into a new athlete. Splits stay in place across data rebuilds until explicitly merged.",
+          "The old 'Athlete ID Reconciliation' and 'Suggested Merges' cards were removed in favour of this view."
+        ]
+      },
+      {
         "title": "One consistent spelling for every gymnast",
         "items": [
           "All of a gymnast's results are now stored under a single spelling of their name — variants like 'Eva Mcewan' / 'Eva McEwan', 'Rolston-larking' / 'Rolston-Larking' and 'Josh' / 'Joshua' Teitelbaum collapse to the most common form everywhere, including exports.",
