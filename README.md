@@ -279,7 +279,7 @@ skipped when the reference data‑collection JSON files are not present.
 │   │   │   └── AATooltip.svelte             # All‑around score tooltip
 │   │   └── routes/
 │   │       ├── +layout.svelte               # Nav bar, theme toggle, year tabs
-│   │       ├── +page.svelte                 # Landing page: info items above nav cards w/ stat badges, What's new
+│   │       ├── +page.svelte                 # Landing page: info items above nav cards w/ stat badges, member-only Rankings card, What's new
 │   │       ├── upload/+page.svelte          # JSON upload + import‑from‑URL
 │   │       ├── login/+page.svelte           # Username + password login
 │   │       ├── admin/+page.svelte           # Admin dashboard

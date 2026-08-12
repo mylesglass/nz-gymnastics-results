@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { fly, fade } from "svelte/transition";
   import { getStats } from "$lib/api";
-  import { currentUser } from "$lib/auth";
+  import { currentUser, hasPermission, PERMISSIONS } from "$lib/auth";
 
   let stats = $state<{
     total_events: number;
@@ -13,6 +13,10 @@
   let patchNotes = $state<{ date: string; entries: { title: string; items: string[] }[] }[]>([]);
   let motion = $state(true);
   let user = $state<{ username: string; role: string; permissions: string[] } | null>(null);
+
+  let canRankings = $derived(
+    user && (hasPermission(user, PERMISSIONS.national) || hasPermission(user, PERMISSIONS.wellington))
+  );
 
   function reveal(
     node: Element,
@@ -52,12 +56,21 @@
     </p>
   </div>
 
-  <div in:reveal={{ delay: 50 }} class="alert alert-warning max-w-2xl mx-auto mb-12" role="status">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6" aria-hidden="true">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+  <div in:reveal={{ delay: 50 }} class="alert alert-warning max-w-2xl mx-auto mb-4" role="status">
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="shrink-0 w-6 h-6" aria-hidden="true">
+      <path fill="currentColor" d="M2.725 21q-.275 0-.5-.137t-.35-.363t-.137-.488t.137-.512l9.25-16q.15-.25.388-.375T12 3t.488.125t.387.375l9.25 16q.15.25.138.513t-.138.487t-.35.363t-.5.137zm1.725-2h15.1L12 6zm8.263-1.287Q13 17.425 13 17t-.288-.712T12 16t-.712.288T11 17t.288.713T12 18t.713-.288m0-3Q13 14.425 13 14v-3q0-.425-.288-.712T12 10t-.712.288T11 11v3q0 .425.288.713T12 15t.713-.288M12 12.5"></path>
     </svg>
     <span>
       This site is in beta. Results are provided as-is and may contain errors or inaccuracies.
+    </span>
+  </div>
+
+  <div in:reveal={{ delay: 70 }} class="alert alert-info max-w-2xl mx-auto mb-12" role="status">
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="shrink-0 w-6 h-6" aria-hidden="true">
+      <path fill="currentColor" d="M12.713 16.713Q13 16.425 13 16v-4q0-.425-.288-.712T12 11t-.712.288T11 12v4q0 .425.288.713T12 17t.713-.288m0-8Q13 8.425 13 8t-.288-.712T12 7t-.712.288T11 8t.288.713T12 9t.713-.288M12 22q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20m0-8"></path>
+    </svg>
+    <span>
+      This is an unofficial community-built project and is not affiliated with or endorsed by Gymnastics New Zealand.
     </span>
   </div>
 
@@ -80,12 +93,15 @@
       <span class="text-2xl mb-1 block" aria-hidden="true">🔍</span>
       <p class="font-semibold text-sm">Smart Filtering</p>
       <p class="text-xs text-base-content/70">
-        Filter by year, level, club, region, division, or round type with column-header dropdowns.
+        Filter by year, level, club, region, division, or round type.
       </p>
     </div>
   </div>
 
-  <div in:reveal={{ dist: 14, delay: 200 }} class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+  <div
+    in:reveal={{ dist: 14, delay: 200 }}
+    class="grid grid-cols-2 gap-4 mb-8 {canRankings ? 'md:grid-cols-5' : 'md:grid-cols-4'}"
+  >
     <a
       href="/events"
       class="card bg-base-200 hover:bg-base-300 border border-base-300 hover:border-base-content/20 hover:-translate-y-1 hover:shadow-lg transition-all cursor-pointer group"
@@ -138,6 +154,18 @@
         <p class="text-xs text-base-content/70">Explore clubs and their competition results</p>
       </div>
     </a>
+    {#if canRankings}
+      <a
+        href={hasPermission(user, PERMISSIONS.national) ? "/rankings" : "/wellington-ranking"}
+        class="card bg-base-200 hover:bg-base-300 border border-base-300 hover:border-base-content/20 hover:-translate-y-1 hover:shadow-lg transition-all cursor-pointer group"
+      >
+        <div class="card-body items-center text-center py-6">
+          <span class="text-3xl mb-1" aria-hidden="true">🏅</span>
+          <h2 class="card-title text-base">Rankings</h2>
+          <p class="text-xs text-base-content/70">National and apparatus rankings by level</p>
+        </div>
+      </a>
+    {/if}
   </div>
 
   {#if user}

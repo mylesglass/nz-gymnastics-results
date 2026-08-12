@@ -3,6 +3,12 @@
     "date": "12 Aug 2026",
     "entries": [
       {
+        "title": "Rankings card on the homepage",
+        "items": [
+          "Logged-in members now see a Rankings card on the homepage alongside Events, Results, Gymnasts and Clubs — a direct shortcut to the ranking pages."
+        ]
+      },
+      {
         "title": "Mobile-friendly navigation and tables",
         "items": [
           "The navigation bar no longer gets squashed on phones: the year filter is now a compact native selector (using your phone's own picker), the logo shrinks to an icon on small screens, and the theme menu fits any screen width. The mobile menu's brand header and icons were tidied up.",

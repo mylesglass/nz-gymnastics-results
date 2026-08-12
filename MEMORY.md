@@ -141,7 +141,7 @@ Core logic:
 - `ExportMenu.svelte` — DaisyUI export dropdown (CSV/XLSX/PDF); `export.ts` builds files, XLSX honors `colFormat` (hidden columns + widths), PDF renders table-like columns with header + page numbers, libraries lazy-loaded
 
 **Routes:**
-- `/` — Landing page: three plain info items (WAG & MAG, Export & Share, Smart Filtering) above clickable nav cards with live stat badges; "What's new" section from `static/patch_notes.json` (fetched, all entries in a scrollable list)
+- `/` — Landing page: three plain info items (WAG & MAG, Export & Share, Smart Filtering) above clickable nav cards with live stat badges; a member-only Rankings card appears for users with national/wellington ranking access (links to `/rankings` or `/wellington-ranking`); "What's new" section from `static/patch_notes.json` (fetched, all entries in a scrollable list)
 - `/upload` — Drag-and-drop JSON upload, club mapping dialog, rich success card (gymnast/score/club counts)
 - `/login` — Username + password form, redirects to `/`
 - `/admin` — Admin dashboard (stats, user management, unified athlete ID reconciliation card with per-instance dropdowns, Quick Fix + Apply Selected buttons)
