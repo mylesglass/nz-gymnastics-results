@@ -324,20 +324,6 @@
       </div>
     </div>
   {:else}
-    <div class="card bg-base-200 border border-base-300 mb-4">
-      <div class="card-body py-3 px-4">
-        <div class="flex items-start gap-3">
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="size-6 shrink-0 mt-0.5 fill-info">
-            <path fill="currentColor" d="M11 17h2v-6h-2zm1.713-8.287Q13 8.425 13 8t-.288-.712T12 7t-.712.288T11 8t.288.713T12 9t.713-.288M12 22q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22"/>
-          </svg>
-          <div class="text-xs text-base-content/70">
-            <span class="font-semibold text-base-content/90">{selectedApp} — {selectedStep}:</span>
-            ranked by each gymnast's best score on this apparatus this season. Vault follows the same aggregation rules as the All Around ranking (e.g. STEP 6/7 average both vaults).
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="overflow-x-auto">
       <table class="table table-zebra">
         <thead>
