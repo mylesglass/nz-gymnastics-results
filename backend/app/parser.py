@@ -317,6 +317,15 @@ def _infer_round_type(unit_name: str, node_name: str) -> str:
             return "All Around - Final"
         return "Apparatus Finals"
 
+    # Multi-day meets can encode the day in the node name (e.g. "All-around - Day 2",
+    # "Balance Beam - Day 2") while the unit name stays generic.
+    if "day 2" in lower_node or "day two" in lower_node:
+        if "all-around" in lower_node or "all around" in lower_node:
+            return "All Around - Day 2"
+        if "apparatus" in lower_node or "apps" in lower_node or "final" in lower_node:
+            return "Apparatus Finals"
+        return "Day 2"
+
     # Determine base round from unit name
     lower = unit_name.lower()
     if "apparatus finals" in lower:

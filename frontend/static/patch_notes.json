@@ -3,6 +3,13 @@
     "date": "12 Aug 2026",
     "entries": [
       {
+        "title": "Two-day competitions show both days as separate rows",
+        "items": [
+          "Results for multi-day meets (like Central Champs) now show each day as its own row with that day's apparatus scores and all-around mark — previously the two days were merged into a single row with the days' scores mixed together and the wrong all-around shown.",
+          "Each day keeps its correct apparatus scores, D-scores, ranks and all-around total (e.g. a gymnast's Day 1 41.900 and Day 2 43.516 now appear as two clean rows)."
+        ]
+      },
+      {
         "title": "Admin: one identity review to merge and split gymnasts",
         "items": [
           "The admin dashboard's identity tools were merged into a single review that shows conflicts in both directions: similar-sounding names that may be one gymnast, the same name on multiple athletes, the same GNZ ID on multiple athletes, and one athlete carrying several IDs — each with the clubs, events and years as evidence.",

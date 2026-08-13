@@ -93,10 +93,10 @@ class TestDNSPassFirst:
 
         row = None
         for r in data["wag"]["rows"]:
-            if r.get("name") == "Cleo Bell" and r.get("round-type") == "All Around":
+            if r.get("name") == "Cleo Bell" and r.get("round-type") == "All Around - Day 2":
                 row = r
                 break
-        assert row is not None, "Cleo Bell All Around row not found"
+        assert row is not None, "Cleo Bell All Around - Day 2 row not found"
 
         # Day 2 scores must survive even though each apparatus has a DNS pass 1
         assert float(row["vt-total"]) == pytest.approx(10.9, abs=0.001)
@@ -104,3 +104,39 @@ class TestDNSPassFirst:
         assert float(row["bb-total"]) == pytest.approx(10.65, abs=0.001)
         assert float(row["fx-total"]) == pytest.approx(11.75, abs=0.001)
         assert float(row["aa-score"]) == pytest.approx(44.2, abs=0.001)
+
+
+class TestMultiDayRounds:
+    """Multi-day meets must split Day 1 and Day 2 into separate round rows."""
+
+    def test_ingrid_sims_gets_two_day_rows(self):
+        path = DATA_DIR_2026 / "centrals-2026.json"
+        if not path.exists():
+            pytest.skip("centrals-2026.json not found")
+
+        with open(path, "rb") as f:
+            upload_resp = client.post("/api/upload?allow_unknown=1", files={"file": ("centrals-2026.json", f, "application/json")})
+        assert upload_resp.status_code == 200, upload_resp.text
+        event_id = upload_resp.json()["id"]
+
+        resp = client.get(f"/api/events/{event_id}/results/wide")
+        assert resp.status_code == 200, resp.text
+        data = resp.json()
+        assert "wag" in data
+
+        ingrid = [r for r in data["wag"]["rows"] if r.get("name") == "Ingrid Sims"]
+        assert len(ingrid) == 2, f"expected 2 round rows for Ingrid Sims, got {len(ingrid)}"
+
+        day1 = next(r for r in ingrid if r.get("round-type") == "All Around")
+        assert float(day1["vt-total"]) == pytest.approx(12.4, abs=0.001)
+        assert float(day1["ub-total"]) == pytest.approx(8.75, abs=0.001)
+        assert float(day1["bb-total"]) == pytest.approx(9.5, abs=0.001)
+        assert float(day1["fx-total"]) == pytest.approx(11.25, abs=0.001)
+        assert float(day1["aa-score"]) == pytest.approx(41.9, abs=0.001)
+
+        day2 = next(r for r in ingrid if r.get("round-type") == "All Around - Day 2")
+        assert float(day2["vt-total"]) == pytest.approx(12.166, abs=0.001)
+        assert float(day2["ub-total"]) == pytest.approx(9.65, abs=0.001)
+        assert float(day2["bb-total"]) == pytest.approx(10.8, abs=0.001)
+        assert float(day2["fx-total"]) == pytest.approx(10.9, abs=0.001)
+        assert float(day2["aa-score"]) == pytest.approx(43.516, abs=0.001)
