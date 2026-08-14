@@ -99,7 +99,6 @@
   });
 </script>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
   <div class="card bg-base-200 border border-base-300">
     <div class="card-body">
       <h3 class="card-title text-base">Traffic over time</h3>
@@ -197,4 +196,3 @@
       {/if}
     </div>
   </div>
-</div>

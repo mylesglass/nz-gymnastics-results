@@ -33,6 +33,7 @@ from app.auth import (
 )
 from app.cache import cache, cache_headers, cached, invalidate
 from app.clubdata import active_path, ensure_seed
+from app.cloudflare import CloudflareFetchError, fetch_zone_summary, is_configured as cloudflare_is_configured
 from app.database import get_session, init_db
 from app.models import ACTIVITY_TYPE_API, ACTIVITY_TYPE_PAGE, ActivityLog, Athlete, Event, LongScore, TrafficDaily, User, WellingtonIntent
 from app.parser import ParseError, _NAME_TO_CANONICAL, detect_participant_collisions, find_unknown_clubs, parse_json, reload_club_maps, suggest_club_mapping, validate_upload_structure
@@ -49,6 +50,7 @@ from app.schemas import (
     ActivitySummaryResponse,
     ActivityTotals,
     ClubMedals,
+    CloudflareSummaryResponse,
     ClubItem,
     ConflictItem,
     DuplicateGroup,
@@ -2074,6 +2076,34 @@ def clear_activity(user: str = None, _auth=Depends(require_role("admin"))):
         return {"deleted": deleted}
     finally:
         session.close()
+
+
+@app.get("/api/admin/cloudflare/summary", response_model=CloudflareSummaryResponse)
+def cloudflare_summary(
+    days: int = 30,
+    _auth=Depends(require_role("admin")),
+):
+    """Cloudflare edge HTTP traffic analytics for the admin dashboard.
+
+    Pulls per-day rollups (requests, bytes, threats, cached bytes, unique
+    visitors) from the Cloudflare GraphQL Analytics API, plus top-country and
+    status-code breakdowns from the adaptive dataset (clamped to the last 7
+    days, matching its retention). Returns ``configured: False`` when the
+    ``CLOUDFLARE_ZONE_ID``/``CLOUDFLARE_API_TOKEN`` env vars are missing, and
+    a ``configured: True`` payload with an ``error`` field on fetch failures.
+    """
+    if days not in (7, 30):
+        days = 30
+    if not cloudflare_is_configured():
+        return CloudflareSummaryResponse(configured=False, days=days)
+    try:
+        return cached(
+            ("cloudflare", days),
+            lambda: fetch_zone_summary(days),
+            ttl=300,
+        )
+    except CloudflareFetchError as e:
+        return CloudflareSummaryResponse(configured=True, days=days, error=str(e))
 
 
 def _find_similar_names(session, threshold: float = 0.85) -> list[dict]:

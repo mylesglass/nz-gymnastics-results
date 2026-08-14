@@ -14,7 +14,7 @@
   } = $props();
 </script>
 
-<div class="flex flex-col items-center justify-center gap-0.5 rounded-box bg-base-200 border border-base-300 {sub ? 'w-28 min-h-28 px-2 py-2' : 'w-24 h-24'}">
+<div class="flex flex-col items-center justify-center gap-0.5 px-4 py-1.5">
   <span class="material-symbols-outlined text-primary" aria-hidden="true">{icon}</span>
   <span class="{valueClass} font-bold leading-none">{value}</span>
   <span class="text-[10px] text-base-content/70 text-center leading-tight">{label}</span>

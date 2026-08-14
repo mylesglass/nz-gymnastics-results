@@ -48,7 +48,7 @@
     <span>{error}</span>
   </div>
 {:else}
-  <div class="flex flex-wrap gap-3">
+  <div class="flex flex-wrap items-center gap-x-6 gap-y-4 bg-base-200/50 rounded-2xl p-4">
     <StatTile icon="event" label="Events" value={stats?.total_events != null ? stats.total_events.toLocaleString() : "—"} />
     <StatTile icon="groups" label="Gymnasts" value={(stats?.total_gymnasts ?? 0).toLocaleString()} />
     <StatTile icon="scoreboard" label="Scores" value={(stats?.total_scores ?? 0).toLocaleString()} />

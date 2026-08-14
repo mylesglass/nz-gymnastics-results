@@ -13,6 +13,9 @@ services:
       # - ADMIN_PASSWORD=your-password-here
       # - ADMIN_USERNAME=admin
       # JWT_SECRET is auto-generated and persisted in the data volume
+      # Cloudflare zone analytics for the admin dashboard (zone-scoped Analytics:Read token):
+      # - CLOUDFLARE_ZONE_ID=your-zone-id
+      # - CLOUDFLARE_API_TOKEN=your-api-token
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:

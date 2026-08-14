@@ -516,3 +516,54 @@ class ActivitySummaryResponse(BaseModel):
     top_pages: list[TopPath]
     top_api: list[TopPath]
     top_users: list[TopUser]
+
+
+class CloudflareDay(BaseModel):
+    date: str
+    requests: int = 0
+    bytes: int = 0
+    threats: int = 0
+    cached_requests: int = 0
+    unique_visitors: int = 0
+
+
+class CloudflareTopCountry(BaseModel):
+    country: str
+    requests: int = 0
+
+
+class CloudflareStatusCode(BaseModel):
+    code: int | None
+    requests: int = 0
+
+
+class CloudflareNamedCount(BaseModel):
+    name: str
+    count: int = 0
+
+
+class CloudflareHourPoint(BaseModel):
+    hour: int
+    requests: int = 0
+
+
+class CloudflareTotals(BaseModel):
+    requests: int
+    bytes: int
+    unique_visitors: int
+    threats: int
+    cache_hit_ratio: float | None
+
+
+class CloudflareSummaryResponse(BaseModel):
+    configured: bool
+    days: int
+    error: str | None = None
+    totals: CloudflareTotals | None = None
+    daily: list[CloudflareDay] = []
+    top_countries: list[CloudflareTopCountry] = []
+    status_codes: list[CloudflareStatusCode] = []
+    top_paths: list[CloudflareNamedCount] = []
+    cache_status: list[CloudflareNamedCount] = []
+    device_type: list[CloudflareNamedCount] = []
+    hourly: list[CloudflareHourPoint] = []

@@ -821,3 +821,62 @@ export async function getActivitySummary(days: number): Promise<ActivitySummary>
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+export interface CloudflareDay {
+  date: string;
+  requests: number;
+  bytes: number;
+  threats: number;
+  cached_requests: number;
+  unique_visitors: number;
+}
+
+export interface CloudflareTopCountry {
+  country: string;
+  requests: number;
+}
+
+export interface CloudflareStatusCode {
+  code: number | null;
+  requests: number;
+}
+
+export interface CloudflareNamedCount {
+  name: string;
+  count: number;
+}
+
+export interface CloudflareHourPoint {
+  hour: number;
+  requests: number;
+}
+
+export interface CloudflareTotals {
+  requests: number;
+  bytes: number;
+  unique_visitors: number;
+  threats: number;
+  cache_hit_ratio: number | null;
+}
+
+export interface CloudflareSummary {
+  configured: boolean;
+  days: number;
+  error: string | null;
+  totals: CloudflareTotals | null;
+  daily: CloudflareDay[];
+  top_countries: CloudflareTopCountry[];
+  status_codes: CloudflareStatusCode[];
+  top_paths: CloudflareNamedCount[];
+  cache_status: CloudflareNamedCount[];
+  device_type: CloudflareNamedCount[];
+  hourly: CloudflareHourPoint[];
+}
+
+export async function getCloudflareSummary(days: number): Promise<CloudflareSummary> {
+  const res = await fetch(`${API_BASE}/api/admin/cloudflare/summary?days=${days}`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}

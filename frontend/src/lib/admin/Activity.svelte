@@ -111,7 +111,7 @@
     <span class="loading loading-spinner loading-lg text-primary"></span>
   </div>
 {:else if totals}
-  <div class="flex flex-wrap gap-3">
+  <div class="flex flex-wrap items-center gap-x-6 gap-y-4 bg-base-200/50 rounded-2xl p-4">
     <StatTile
       icon="visibility"
       label="Page views"

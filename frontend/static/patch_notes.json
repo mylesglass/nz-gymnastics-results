@@ -3,6 +3,13 @@
     "date": "14 Aug 2026",
     "entries": [
       {
+        "title": "Admin: Cloudflare traffic at a glance",
+        "items": [
+          "The admin Graphs section now also shows the edge traffic Cloudflare sees for the site — total requests, bandwidth, unique visitors, blocked threats and cache-hit percentage over 7 or 30 days, plus per-day requests, response status codes and top visitor countries.",
+          "This covers everything the server-side dashboard can't see, like static assets and pages served through Cloudflare."
+        ]
+      },
+      {
         "title": "Admin: everything on one page",
         "items": [
           "All admin tools now live on a single Admin page — site stats and refresh on the left, the live usage dashboard (page views, API requests, errors, average response time) on the right, and all four usage graphs below spanning the full width.",
