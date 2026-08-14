@@ -1,5 +1,18 @@
 [
   {
+    "date": "14 Aug 2026",
+    "entries": [
+      {
+        "title": "Cleaner athlete identities on the live site",
+        "items": [
+          "The live database was re-checked against the original event exports, and every gymnast's name spelling and GNZ ID was corrected to what the source results agree on.",
+          "Gymnasts that were accidentally lumped together now appear separately again — for example the two Madison Lynches (OMNI and Onslow) are distinct athletes with their own pages, and over a thousand athletes had their correct ID restored.",
+          "Spelling variants (like McEwan/Mcewan) are now consistently the most common form everywhere on the site."
+        ]
+      }
+    ]
+  },
+  {
     "date": "12 Aug 2026",
     "entries": [
       {

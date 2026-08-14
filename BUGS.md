@@ -1,5 +1,8 @@
 All bugs reported in this session are fixed. See `git log` for details.
 
+**Production fixes applied (14 Aug 2026):**
+- The one-time identity repair (`python -m app.repair_identities --apply`) was run against the **production** DB. Prod had never received the repair dev had, so its identity layer differed (e.g. the two Madison Lynches were a single athlete carrying both OMNI STEP 1/2 and Onslow STEP 4–7 rows under one `249317`). Result: **1,237 ID fixes + 13,159 name/casing fixes across 14,254 rows**, athlete count 5,128 → **5,156**, and Madison Lynch split into two athletes (OMNI `716561` / Onslow `249317`) — same slugs as dev. Procedure: `docker compose -f docker-compose.prod.yml stop backend` → `run --rm -v ./data-collection:/data-collection backend python -m app.repair_identities --apply` (the image does **not** contain `data-collection/`) → `start backend` (rebuilds athletes + clears cache). Backups in the volume: `results.pre-identity.db`, `results.pre-identity-fix.db`.
+
 **Known issues:**
 - Inline edit (name/GNZ ID/club) saves to DB but frontend doesn't feel reactive — cache invalidation on `wide-all` works but the table may still show stale data after save. Needs investigation into the data reload path (`doLoad()` / `applyTab()`).
 - The remaining same-ID-different-people cases that are *in the source data itself* (e.g. `252164` = Arden + Daniel) are kept separate by the `athletes` identity table (shared ID + dissimilar names ⇒ distinct athletes). Manual review of these (and same-name duplicates) is now tooled: the admin Identity Review card lists every ID/name conflict with per-athlete evidence and provides Merge/Split — see `GET /api/admin/identity-review`.
