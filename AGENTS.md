@@ -257,9 +257,9 @@ docker compose -f docker-compose.prod.yml up --build -d
 
 - **docker-compose.prod.yml** — production config using external `yams_default` network (shared with Nginx Proxy Manager)
 - **frontend/Dockerfile.prod** — multi-stage production build (adapter-node, no dev dependencies)
-- **Nginx Proxy Manager** proxies `scores.mylesglass.com → frontend:3000`
+- **Nginx Proxy Manager** proxies `results.coach.tools → frontend:3000`
 - **API proxy**: `hooks.server.ts` proxies `/api` requests from frontend server to backend container
-- **Env vars required**: `ADMIN_PASSWORD`, `ORIGIN` (e.g. `https://scores.mylesglass.com`)
+- **Env vars required**: `ADMIN_PASSWORD`, `ORIGIN` (e.g. `https://results.coach.tools`)
 - **Body size**: `BODY_SIZE_LIMIT=52428800` (50MB) needed for JSON uploads — the adapter-node default is 512KB
 - **Healthchecks**: both services define `healthcheck`s (backend python `urllib` → `/api/health`; frontend `node fetch` → `/`), and the frontend `depends_on backend: condition: service_healthy` so it never boots ahead of a ready API. With single replicas a brief 502/second gap is still possible while a container restarts during `docker compose up -d --build`.
 - **New-version banner**: `svelte.config.js` sets `version: { pollInterval: 60_000 }`; `+layout.svelte` shows a dismissible "reload" bar when `updated.current` (from `$app/state`) flips true, and calls `updated.check()` on mount + tab refocus. Fresh page loads get new hashed bundles automatically after a deploy; this covers users with the app open in a tab.

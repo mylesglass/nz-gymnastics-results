@@ -29,7 +29,7 @@ That one data point tells you which branch below you're in:
 | Certificate shows | Cause | Fix |
 |---|---|---|
 | `CN=Nginx Proxy Manager` (self-signed) | NPM has SSL enabled but no real cert saved → serves its built-in default | Step 4 — request/reinstall cert |
-| Subject is `mylesglass.com` or another domain | Wrong/old cert selected in NPM host | Step 4 — select the correct cert |
+| Subject is for a different host (e.g. the old `scores.mylesglass.com` cert still selected) | Wrong/old cert selected in NPM host | Step 4 — select the correct cert |
 | Issuer is a real CA but **expired** | Let's Encrypt renewal failed | Step 4 — renew cert |
 | A valid cert for `results.coach.tools` | Browser isn't reaching NPM via this host; device/network interception or stale DNS | Step 2 & 3 |
 

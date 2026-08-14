@@ -115,7 +115,7 @@ Manager container).
 
 ```bash
 # Example command — adjust env vars as needed
-ORIGIN=https://scores.mylessglass.com ADMIN_PASSWORD=*** \
+ORIGIN=https://results.coach.tools ADMIN_PASSWORD=*** \
   docker compose -f docker-compose.prod.yml up --build -d
 ```
 
