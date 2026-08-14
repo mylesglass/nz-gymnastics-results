@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Index, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, Column, Date, DateTime, Float, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, relationship
 
 ACTIVITY_TYPE_API = "api"
@@ -117,6 +117,28 @@ class ActivityLog(Base):
     query = Column(String, nullable=True)
     status_code = Column(Integer, nullable=True)
     duration_ms = Column(Float, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class TrafficDaily(Base):
+    __tablename__ = "traffic_daily"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "date", "hour", "kind", "path_group", "anonymous",
+            name="uq_traffic_daily",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    date = Column(Date, nullable=False)
+    hour = Column(Integer, nullable=False)
+    kind = Column(String, nullable=False)
+    path_group = Column(String, nullable=False)
+    anonymous = Column(Boolean, nullable=False, default=False)
+    count = Column(Integer, nullable=False, default=0)
+    error_count = Column(Integer, nullable=False, default=0)
+    total_duration_ms = Column(Float, nullable=False, default=0.0)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 

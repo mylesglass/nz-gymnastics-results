@@ -467,3 +467,52 @@ class ActivityLogItem(BaseModel):
 class ActivityLogResponse(BaseModel):
     items: list[ActivityLogItem]
     total: int
+
+
+class TrafficPoint(BaseModel):
+    date: str
+    page_views: int = 0
+    api_requests: int = 0
+    errors: int = 0
+
+
+class HourPoint(BaseModel):
+    hour: int
+    page_views: int = 0
+    api_requests: int = 0
+
+
+class TopPath(BaseModel):
+    path: str
+    count: int = 0
+    errors: int = 0
+
+
+class TopUser(BaseModel):
+    username: str
+    role: str
+    page_views: int = 0
+    api_requests: int = 0
+
+
+class ActivityTotals(BaseModel):
+    page_views: int
+    api_requests: int
+    errors: int
+    avg_duration_ms: float | None
+    active_days: int
+    anon_page_views: int
+    auth_page_views: int
+    anon_api_requests: int
+    auth_api_requests: int
+
+
+class ActivitySummaryResponse(BaseModel):
+    range_days: int
+    totals: ActivityTotals
+    daily_series: list[TrafficPoint]
+    auth_daily_series: list[TrafficPoint]
+    hourly_series: list[HourPoint]
+    top_pages: list[TopPath]
+    top_api: list[TopPath]
+    top_users: list[TopUser]

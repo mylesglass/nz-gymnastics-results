@@ -118,6 +118,28 @@ async def get_current_user(
     return {"username": payload["sub"], "role": payload["role"]}
 
 
+async def get_optional_user(
+    authorization: str | None = Header(None),
+) -> dict | None:
+    """Like :func:`get_current_user` but returns ``None`` for anonymous requests.
+
+    Used by endpoints that serve both logged-in and public traffic (e.g. the
+    page-tracking beacon) so anonymous activity can be aggregated without
+    failing.
+    """
+    if not _is_auth_enabled():
+        return None
+    if not authorization:
+        return None
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer":
+        return None
+    payload = decode_token(token)
+    if payload is None:
+        return None
+    return {"username": payload["sub"], "role": payload["role"]}
+
+
 def is_auth_configured() -> bool:
     return _is_auth_enabled()
 

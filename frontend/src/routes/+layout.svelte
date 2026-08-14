@@ -133,10 +133,9 @@
 
   let lastTracked = "";
   $effect(() => {
-    const u = user;
-    if (!u || !authCfg) return;
+    if (!authCfg) return;
     const path = currentPath + $page.url.search;
-    const key = `${u.username}|${path}`;
+    const key = user ? `${user.username}|${path}` : `anon|${path}`;
     if (key === lastTracked) return;
     lastTracked = key;
     trackPage(path).catch(() => {});

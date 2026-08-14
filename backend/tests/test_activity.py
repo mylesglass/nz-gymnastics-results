@@ -11,7 +11,8 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.auth import seed_admin_user
 from app.database import init_db
 from app.main import app
-from app.models import ActivityLog, Base
+from app.models import ActivityLog, Base, TrafficDaily
+from app.traffic import is_bot, normalize_path
 
 client = TestClient(app)
 
@@ -88,10 +89,33 @@ class TestActivityAPI:
         finally:
             sess.close()
 
-    def test_track_page_requires_auth(self):
-        resp = client.post("/api/track/page", json={"path": "/rankings"})
-        assert resp.status_code == 401
+    def _traffic(self) -> list[TrafficDaily]:
+        sess = self.TestSession()
+        try:
+            return sess.query(TrafficDaily).all()
+        finally:
+            sess.close()
+
+    def _traffic_for(self, path_group: str) -> TrafficDaily | None:
+        sess = self.TestSession()
+        try:
+            return (
+                sess.query(TrafficDaily)
+                .filter(TrafficDaily.path_group == path_group)
+                .first()
+            )
+        finally:
+            sess.close()
+
+    def test_track_page_anonymous_aggregated(self):
+        resp = client.post("/api/track/page", json={"path": "/rankings?year=2024"})
+        assert resp.status_code == 200
         assert self._rows() == []
+        row = self._traffic_for("/rankings")
+        assert row is not None
+        assert row.kind == "page"
+        assert row.anonymous is True
+        assert row.count == 1
 
     def test_track_page_logs_row(self):
         token = _admin_token()
@@ -108,6 +132,9 @@ class TestActivityAPI:
         assert row.username == "admin"
         assert row.path == "/rankings?year=2024"
         assert row.method == "GET"
+        traffic = self._traffic_for("/rankings")
+        assert traffic is not None
+        assert traffic.anonymous is False
 
     def test_track_page_not_double_logged(self):
         token = _admin_token()
@@ -133,10 +160,28 @@ class TestActivityAPI:
         assert row.query is not None and "year=2024" in row.query
         assert row.status_code == 200
         assert row.duration_ms is not None
+        traffic = self._traffic_for("/api/rankings/steps")
+        assert traffic is not None
+        assert traffic.anonymous is False
+        assert traffic.count == 1
 
-    def test_middleware_skips_anonymous(self):
+    def test_middleware_aggregates_anonymous(self):
         client.get("/api/events")
         assert self._rows() == []
+        traffic = self._traffic_for("/api/events")
+        assert traffic is not None
+        assert traffic.kind == "api"
+        assert traffic.anonymous is True
+        assert traffic.count == 1
+
+    def test_middleware_skips_bots(self):
+        client.get("/api/events", headers={"User-Agent": "Googlebot/2.1 (+http://www.google.com/bot.html)"})
+        assert self._rows() == []
+        assert self._traffic() == []
+
+    def test_middleware_skips_health(self):
+        client.get("/api/health")
+        assert self._traffic() == []
 
     def test_activity_list_requires_admin(self):
         token = _member_token()
@@ -203,3 +248,108 @@ class TestActivityAPI:
         item = resp.json()["items"][0]
         for field in ("client_ip", "user_agent"):
             assert field not in item
+
+    def test_activity_list_days_filter(self):
+        token = _admin_token()
+        client.post(
+            "/api/track/page",
+            json={"path": "/results"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        resp = client.get(
+            "/api/admin/activity",
+            params={"days": 7},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 200
+        assert any(item["path"] == "/results" for item in resp.json()["items"])
+
+    def test_activity_summary_requires_admin(self):
+        token = _member_token()
+        resp = client.get("/api/admin/activity/summary", headers={"Authorization": f"Bearer {token}"})
+        assert resp.status_code == 403
+
+    def test_activity_summary_no_token(self):
+        resp = client.get("/api/admin/activity/summary")
+        assert resp.status_code == 401
+
+    def test_activity_summary_shape_and_totals(self):
+        token = _admin_token()
+        client.post(
+            "/api/track/page",
+            json={"path": "/results"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        client.get("/api/events")
+        resp = client.get(
+            "/api/admin/activity/summary",
+            params={"days": 7},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["range_days"] == 7
+        totals = data["totals"]
+        assert totals["page_views"] >= 1
+        assert totals["api_requests"] >= 1
+        assert totals["auth_page_views"] >= 1
+        assert totals["anon_api_requests"] >= 1
+        assert totals["active_days"] >= 1
+        assert data["daily_series"], "expected at least one daily point"
+        assert 1 <= len(data["hourly_series"]) <= 24
+        assert all(0 <= h["hour"] <= 23 for h in data["hourly_series"])
+        assert any(p["path"] == "/results" for p in data["top_pages"])
+        assert any(u["username"] == "admin" for u in data["top_users"])
+        # Errors are computed but zero in this happy path.
+        assert totals["errors"] >= 0
+
+    def test_activity_summary_error_counting(self):
+        token = _admin_token()
+        client.get("/api/nonexistent-route")
+        resp = client.get(
+            "/api/admin/activity/summary",
+            params={"days": 7},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        data = resp.json()
+        # The 404 itself was counted as an anonymous request, plus the summary
+        # call is admin-authenticated and excluded; error count must include the 404.
+        assert data["totals"]["errors"] >= 1
+
+    def test_activity_summary_clamps_days(self):
+        token = _admin_token()
+        resp = client.get(
+            "/api/admin/activity/summary",
+            params={"days": 12345},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["range_days"] == 30
+
+
+class TestTrafficNormalization:
+    def test_normalize_numeric(self):
+        assert normalize_path("/api/events/123/results/wide") == "/api/events/[id]/results/wide"
+        assert normalize_path("/events/123") == "/events/[id]"
+
+    def test_normalize_slug(self):
+        assert normalize_path("/api/results/wide-all?slug=a1b2c3d4e5") == "/api/results/wide-all"
+
+    def test_normalize_strips_query(self):
+        assert normalize_path("/api/rankings?year=2024&step=STEP%201") == "/api/rankings"
+
+    def test_normalize_keeps_club_paths(self):
+        assert normalize_path("/club/Christchurch%20Gym%20Sports") == "/club/Christchurch%20Gym%20Sports"
+
+    def test_normalize_hex_slug(self):
+        assert normalize_path("/gymnast/a1b2c3d4e5") == "/gymnast/[slug]"
+
+    def test_normalize_empty(self):
+        assert normalize_path("") == "/"
+
+    def test_is_bot(self):
+        assert is_bot("Mozilla/5.0 (compatible; Googlebot/2.1)")
+        assert is_bot("python-requests/2.31")
+        assert is_bot("curl/8.0")
+        assert not is_bot("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
+        assert not is_bot(None)

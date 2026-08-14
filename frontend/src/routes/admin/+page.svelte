@@ -235,8 +235,8 @@
       </button>
       <a href="/admin/activity" class="card bg-base-200 hover:bg-base-300 border border-base-300 transition-all cursor-pointer">
         <div class="card-body">
-          <h2 class="card-title">📋 Activity Log</h2>
-          <p class="text-sm text-base-content/70">Pages and API requests made by logged-in users</p>
+          <h2 class="card-title">📊 Activity</h2>
+          <p class="text-sm text-base-content/70">Site-wide usage graphs (all visitors) plus the detailed logged-in-user log</p>
         </div>
       </a>
     </div>

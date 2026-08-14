@@ -19,6 +19,7 @@
   "dependencies": {
     "@svg-maps/new-zealand": "^2.0.0",
     "@tailwindcss/vite": "^4.3.0",
+    "chart.js": "^4.5.1",
     "daisyui": "^5.5.20",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",

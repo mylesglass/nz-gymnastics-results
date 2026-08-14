@@ -739,12 +739,14 @@ export async function getActivityLogs(params?: {
   type?: string;
   limit?: number;
   offset?: number;
+  days?: number;
 }): Promise<{ items: ActivityLogItem[]; total: number }> {
   const qp = new URLSearchParams();
   if (params?.user) qp.set("user", params.user);
   if (params?.type) qp.set("type", params.type);
   if (params?.limit !== undefined) qp.set("limit", String(params.limit));
   if (params?.offset !== undefined) qp.set("offset", String(params.offset));
+  if (params?.days !== undefined) qp.set("days", String(params.days));
   const qs = qp.toString();
   const res = await fetch(`${API_BASE}/api/admin/activity?${qs}`, {
     headers: authHeaders(),
@@ -757,6 +759,63 @@ export async function clearActivityLogs(user?: string): Promise<{ deleted: numbe
   const qs = user ? `?user=${encodeURIComponent(user)}` : "";
   const res = await fetch(`${API_BASE}/api/admin/activity${qs}`, {
     method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export interface TrafficPoint {
+  date: string;
+  page_views: number;
+  api_requests: number;
+  errors: number;
+}
+
+export interface HourPoint {
+  hour: number;
+  page_views: number;
+  api_requests: number;
+}
+
+export interface TopPath {
+  path: string;
+  count: number;
+  errors: number;
+}
+
+export interface TopUser {
+  username: string;
+  role: string;
+  page_views: number;
+  api_requests: number;
+}
+
+export interface ActivityTotals {
+  page_views: number;
+  api_requests: number;
+  errors: number;
+  avg_duration_ms: number | null;
+  active_days: number;
+  anon_page_views: number;
+  auth_page_views: number;
+  anon_api_requests: number;
+  auth_api_requests: number;
+}
+
+export interface ActivitySummary {
+  range_days: number;
+  totals: ActivityTotals;
+  daily_series: TrafficPoint[];
+  auth_daily_series: TrafficPoint[];
+  hourly_series: HourPoint[];
+  top_pages: TopPath[];
+  top_api: TopPath[];
+  top_users: TopUser[];
+}
+
+export async function getActivitySummary(days: number): Promise<ActivitySummary> {
+  const res = await fetch(`${API_BASE}/api/admin/activity/summary?days=${days}`, {
     headers: authHeaders(),
   });
   if (!res.ok) throw new Error(await res.text());

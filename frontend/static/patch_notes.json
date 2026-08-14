@@ -3,6 +3,14 @@
     "date": "14 Aug 2026",
     "entries": [
       {
+        "title": "Admin: Activity page is now a usage dashboard",
+        "items": [
+          "The admin Activity page now shows usage across the whole site, not just logged-in users — anonymous visitors and logged-in users are both counted (bots and scrapers are filtered out).",
+          "New graphs give an at-a-glance view: traffic over time, busiest hours of the day, most-viewed pages and most active users, plus totals for page views, API requests, errors and average response time — switch between 7 days, 30 days, 90 days or all time.",
+          "Page views from anonymous visitors are now recorded, and the dashboard works on mobile with the detail log collapsing into cards."
+        ]
+      },
+      {
         "title": "Cleaner athlete identities on the live site",
         "items": [
           "The live database was re-checked against the original event exports, and every gymnast's name spelling and GNZ ID was corrected to what the source results agree on.",

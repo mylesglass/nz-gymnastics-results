@@ -2,14 +2,15 @@ import json
 import time
 from collections import defaultdict
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
 
 from fastapi import FastAPI, File, HTTPException, Header, Request, UploadFile, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
-from sqlalchemy import func
+from sqlalchemy import case, func
 
-from app.activity_log import enqueue as enqueue_activity, flush as flush_activity, start as start_activity_writer, stop as stop_activity_writer
+from app.activity_log import enqueue as enqueue_activity, flush as flush_activity, start as start_activity_writer, stop as stop_activity_writer, enqueue_traffic as enqueue_traffic_activity
 from app.athlete_identity import rebuild_athletes, resolve_identity
 
 from app.auth import (
@@ -21,6 +22,7 @@ from app.auth import (
     decode_token,
     effective_permissions,
     get_current_user,
+    get_optional_user,
     get_user_permissions,
     hash_password,
     is_auth_configured,
@@ -32,7 +34,7 @@ from app.auth import (
 from app.cache import cache, cache_headers, cached, invalidate
 from app.clubdata import active_path, ensure_seed
 from app.database import get_session, init_db
-from app.models import ACTIVITY_TYPE_API, ACTIVITY_TYPE_PAGE, ActivityLog, Athlete, Event, LongScore, User, WellingtonIntent
+from app.models import ACTIVITY_TYPE_API, ACTIVITY_TYPE_PAGE, ActivityLog, Athlete, Event, LongScore, TrafficDaily, User, WellingtonIntent
 from app.parser import ParseError, _NAME_TO_CANONICAL, detect_participant_collisions, find_unknown_clubs, parse_json, reload_club_maps, suggest_club_mapping, validate_upload_structure
 from app.reconcile import reconcile_athletes
 from app.scoreholder import ScoreholderFetchError, fetch_event_json
@@ -44,6 +46,8 @@ from app.schemas import (
     ApplyFixItem,
     ActivityLogItem,
     ActivityLogResponse,
+    ActivitySummaryResponse,
+    ActivityTotals,
     ClubMedals,
     ClubItem,
     ConflictItem,
@@ -57,6 +61,7 @@ from app.schemas import (
     GymnastEditResponse,
     GymnastItem,
     GymnastMedals,
+    HourPoint,
     IdConflict,
     IdentityReviewResponse,
     ImportUrlRequest,
@@ -80,7 +85,10 @@ from app.schemas import (
     StepsResponse,
     SuggestedMerge,
     TokenResponse,
+    TopPath,
+    TopUser,
     TrackPageRequest,
+    TrafficPoint,
     UploadValidationResponse,
     UserCreate,
     UserPermissionsUpdate,
@@ -90,6 +98,7 @@ from app.schemas import (
     WellingtonRankingRow,
     WellingtonRankingResponse,
 )
+from app.traffic import is_bot, normalize_path
 from app.transformer import _find_region, _guess_host_club, _use_vault_average, export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict, pivot_to_wide_dict_multi
 from app.wellington_ranking import compute_wellington_rankings
 
@@ -165,30 +174,45 @@ def _log_activity(
 
 @app.middleware("http")
 async def log_activity(request: Request, call_next):
-    """Record every authenticated API request for admin review.
+    """Record API traffic for admin review.
 
-    Only requests carrying a valid Bearer token are logged; anonymous
-    traffic and the page-tracking beacon are skipped. Failures never
-    affect the request itself.
+    Authenticated requests are written as detail rows to ``activity_logs`` (who
+    did what when) and every request is counted into the ``traffic_daily``
+    aggregates (page vs API, anonymous vs logged-in) so usage of the whole site
+    is visible. Anonymous bot user-agents are excluded. The page-tracking
+    beacon and admin activity views are handled separately and never
+    self-log. Failures never affect the request itself.
     """
     start = time.perf_counter()
     response = await call_next(request)
     duration_ms = (time.perf_counter() - start) * 1000.0
 
     path = request.url.path
-    if path == "/api/track/page" or path.startswith("/api/admin/activity"):
-        return response
-    if not path.startswith("/api"):
+    if (
+        path == "/api/track/page"
+        or path.startswith("/api/admin/activity")
+        or path == "/api/health"
+        or not path.startswith("/api")
+    ):
         return response
 
     authorization = request.headers.get("authorization")
-    if not authorization:
-        return response
-    scheme, _, token = authorization.partition(" ")
-    if scheme.lower() != "bearer":
-        return response
-    payload = decode_token(token)
+    payload = None
+    if authorization:
+        scheme, _, token = authorization.partition(" ")
+        if scheme.lower() == "bearer":
+            payload = decode_token(token)
+
     if payload is None:
+        if is_bot(request.headers.get("user-agent")):
+            return response
+        enqueue_traffic_activity(
+            ACTIVITY_TYPE_API,
+            normalize_path(path),
+            anonymous=True,
+            status_code=response.status_code,
+            duration_ms=round(duration_ms, 2),
+        )
         return response
 
     query = request.url.query or None
@@ -201,6 +225,13 @@ async def log_activity(request: Request, call_next):
         (query or "")[:1000],
         response.status_code,
         round(duration_ms, 2),
+    )
+    enqueue_traffic_activity(
+        ACTIVITY_TYPE_API,
+        normalize_path(path),
+        anonymous=False,
+        status_code=response.status_code,
+        duration_ms=round(duration_ms, 2),
     )
     return response
 
@@ -1770,16 +1801,33 @@ def refresh_cache(_auth=Depends(require_role("admin"))):
 # ---------------------------------------------------------------------------
 
 @app.post("/api/track/page")
-def track_page(body: TrackPageRequest, _auth=Depends(get_current_user)):
+def track_page(body: TrackPageRequest, user: dict | None = Depends(get_optional_user)):
+    path = (body.path or "/")[:500]
+    if user is None:
+        enqueue_traffic_activity(
+            ACTIVITY_TYPE_PAGE,
+            normalize_path(path),
+            anonymous=True,
+            status_code=200,
+            duration_ms=None,
+        )
+        return {"ok": True}
     _log_activity(
-        _auth["username"],
-        _auth["role"],
+        user["username"],
+        user["role"],
         ACTIVITY_TYPE_PAGE,
         "GET",
-        (body.path or "/")[:500],
+        path,
         None,
         200,
         None,
+    )
+    enqueue_traffic_activity(
+        ACTIVITY_TYPE_PAGE,
+        normalize_path(path),
+        anonymous=False,
+        status_code=200,
+        duration_ms=None,
     )
     return {"ok": True}
 
@@ -1790,6 +1838,7 @@ def list_activity(
     type: str = None,
     limit: int = 100,
     offset: int = 0,
+    days: int = None,
     _auth=Depends(require_role("admin")),
 ):
     flush_activity()
@@ -1802,6 +1851,10 @@ def list_activity(
             query = query.filter(ActivityLog.username == user)
         if type:
             query = query.filter(ActivityLog.type == type)
+        if days:
+            days = max(1, min(days, 3650))
+            cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+            query = query.filter(ActivityLog.created_at >= cutoff)
         total = query.count()
         rows = (
             query.order_by(ActivityLog.created_at.desc(), ActivityLog.id.desc())
@@ -1826,6 +1879,183 @@ def list_activity(
                 for r in rows
             ],
             total=total,
+        )
+    finally:
+        session.close()
+
+
+@app.get("/api/admin/activity/summary", response_model=ActivitySummaryResponse)
+def activity_summary(
+    days: int = 30,
+    _auth=Depends(require_role("admin")),
+):
+    """Aggregate traffic analytics for the admin usage dashboard.
+
+    ``days`` of 7/30/90 select a trailing window (0 = all time). Totals, daily
+    and hourly series, top pages/API paths and top users are computed from the
+    ``traffic_daily`` counters (all traffic) plus the ``activity_logs`` table
+    (authenticated history, so logged-in trends are visible immediately).
+    """
+    flush_activity()
+    if days not in (0, 7, 30, 90):
+        days = 30
+    session = get_session()
+    try:
+        today = datetime.now().date()
+        start = today - timedelta(days=days - 1) if days else None
+
+        def _series_query():
+            q = session.query(
+                TrafficDaily.date,
+                TrafficDaily.kind,
+                func.coalesce(func.sum(TrafficDaily.count), 0),
+                func.coalesce(func.sum(TrafficDaily.error_count), 0),
+                TrafficDaily.anonymous,
+            )
+            if start:
+                q = q.filter(TrafficDaily.date >= start)
+            return q.group_by(TrafficDaily.date, TrafficDaily.kind, TrafficDaily.anonymous).all()
+
+        rows = _series_query()
+        daily: dict[str, dict] = {}
+        hourly: dict[str, dict] = {}
+        totals = {
+            "page_views": 0, "api_requests": 0, "errors": 0,
+            "anon_page_views": 0, "auth_page_views": 0,
+            "anon_api_requests": 0, "auth_api_requests": 0,
+        }
+        active_days: set[str] = set()
+        for date, kind, count, errors, anonymous in rows:
+            date_s = date.isoformat()
+            active_days.add(date_s)
+            bucket = daily.setdefault(date_s, {"page_views": 0, "api_requests": 0, "errors": 0})
+            bucket["errors"] += errors or 0
+            totals["errors"] += errors or 0
+            if kind == "page":
+                bucket["page_views"] += count
+                totals["page_views"] += count
+                if anonymous:
+                    totals["anon_page_views"] += count
+                else:
+                    totals["auth_page_views"] += count
+            else:
+                bucket["api_requests"] += count
+                totals["api_requests"] += count
+                if anonymous:
+                    totals["anon_api_requests"] += count
+                else:
+                    totals["auth_api_requests"] += count
+
+        # Per-hour volume over the selected window.
+        hour_q = session.query(
+            TrafficDaily.hour,
+            TrafficDaily.kind,
+            func.coalesce(func.sum(TrafficDaily.count), 0),
+        )
+        if start:
+            hour_q = hour_q.filter(TrafficDaily.date >= start)
+        for hour, kind, count in hour_q.group_by(TrafficDaily.hour, TrafficDaily.kind).all():
+            slot = hourly.setdefault(hour, {"page_views": 0, "api_requests": 0})
+            slot["page_views" if kind == "page" else "api_requests"] += count
+
+        # Average response time over the window (api rows carry durations).
+        dur_q = session.query(
+            func.coalesce(func.sum(TrafficDaily.count), 0),
+            func.coalesce(func.sum(TrafficDaily.total_duration_ms), 0.0),
+        )
+        if start:
+            dur_q = dur_q.filter(TrafficDaily.date >= start)
+        api_count, api_ms = dur_q.first()
+        avg_duration_ms = round(api_ms / api_count, 2) if api_count else None
+
+        # Top paths from the aggregate counters.
+        def _top(kind: str) -> list[TopPath]:
+            q = session.query(
+                TrafficDaily.path_group,
+                func.coalesce(func.sum(TrafficDaily.count), 0),
+                func.coalesce(func.sum(TrafficDaily.error_count), 0),
+            ).filter(TrafficDaily.kind == kind)
+            if start:
+                q = q.filter(TrafficDaily.date >= start)
+            return [
+                TopPath(path=path, count=count, errors=errors)
+                for path, count, errors in q.group_by(TrafficDaily.path_group)
+                .order_by(func.sum(TrafficDaily.count).desc())
+                .limit(15)
+                .all()
+            ]
+
+        top_pages = _top(ACTIVITY_TYPE_PAGE)
+        top_api = _top(ACTIVITY_TYPE_API)
+
+        # Authenticated history from the detail log (backfills pre-dashboard
+        # dates for logged-in traffic).
+        auth_q = session.query(
+            func.date(ActivityLog.created_at),
+            ActivityLog.type,
+            func.count(ActivityLog.id),
+        )
+        if start:
+            auth_q = auth_q.filter(ActivityLog.created_at >= datetime.combine(start, datetime.min.time()))
+        auth_rows = auth_q.group_by(func.date(ActivityLog.created_at), ActivityLog.type).all()
+        auth_daily: dict[str, dict] = {}
+        for date_s, kind, count in auth_rows:
+            bucket = auth_daily.setdefault(date_s, {"page_views": 0, "api_requests": 0, "errors": 0})
+            if kind == ACTIVITY_TYPE_PAGE:
+                bucket["page_views"] += count
+            else:
+                bucket["api_requests"] += count
+
+        # Top users from the detail log.
+        user_q = session.query(
+            ActivityLog.username,
+            ActivityLog.role,
+            func.sum(case((ActivityLog.type == ACTIVITY_TYPE_PAGE, 1), else_=0)),
+            func.sum(case((ActivityLog.type == ACTIVITY_TYPE_API, 1), else_=0)),
+        )
+        if start:
+            user_q = user_q.filter(ActivityLog.created_at >= datetime.combine(start, datetime.min.time()))
+        user_rows = user_q.group_by(ActivityLog.username, ActivityLog.role).all()
+        top_users = [
+            TopUser(username=username, role=role, page_views=page_views, api_requests=api_requests)
+            for username, role, page_views, api_requests in user_rows
+        ]
+        top_users.sort(key=lambda u: u.page_views + u.api_requests, reverse=True)
+        top_users = top_users[:10]
+
+        def _fill_daily(dates: dict) -> list[TrafficPoint]:
+            return [
+                TrafficPoint(
+                    date=d,
+                    page_views=dates[d]["page_views"],
+                    api_requests=dates[d]["api_requests"],
+                    errors=dates[d]["errors"],
+                )
+                for d in sorted(dates)
+            ]
+
+        return ActivitySummaryResponse(
+            range_days=days,
+            totals=ActivityTotals(
+                page_views=totals["page_views"],
+                api_requests=totals["api_requests"],
+                errors=totals["errors"],
+                avg_duration_ms=avg_duration_ms,
+                active_days=len(active_days),
+                anon_page_views=totals["anon_page_views"],
+                auth_page_views=totals["auth_page_views"],
+                anon_api_requests=totals["anon_api_requests"],
+                auth_api_requests=totals["auth_api_requests"],
+            ),
+            daily_series=_fill_daily(daily),
+            auth_daily_series=_fill_daily(auth_daily),
+            hourly_series=[
+                HourPoint(hour=h, **hourly[h])
+                for h in sorted(hourly)
+            ],
+            top_pages=top_pages,
+            top_api=top_api,
+            top_users=top_users,
         )
     finally:
         session.close()
