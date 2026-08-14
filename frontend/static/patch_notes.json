@@ -3,6 +3,12 @@
     "date": "15 Aug 2026",
     "entries": [
       {
+        "title": "Fix: gymnast levels no longer picked up from unused result tables",
+        "items": [
+          "A gymnast registered against extra competition tables they never scored in could be assigned the wrong level — for example a STEP 10 gymnast at CSG Classic 2026 was showing as Senior International because the source data listed Senior International tables first for her. Levels (and divisions) are now taken from the tables a gymnast actually has results in, so this class of data-entry mistake no longer corrupts rankings."
+        ]
+      },
+      {
         "title": "SEO: pages are now search-engine friendly",
         "items": [
           "Every public page now serves real content in the initial HTML (event names, gymnast and club profiles, counts) instead of a blank loading spinner — titles, meta descriptions, canonical URLs and Open Graph tags are generated per page.",

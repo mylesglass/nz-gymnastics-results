@@ -425,29 +425,58 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
     # Second map: entity_id -> division from performanceIndividuals
     entity_division: dict[str, str | None] = {}
     entity_level: dict[str, str | None] = {}
+    # Result-table ids that actually carry a published result for each entity.
+    # The resultTableConfigs registration list can include tables the gymnast
+    # never scored in (e.g. a STEP 10 gymnast registered against Senior
+    # International tables first), so the level/division must come from a table
+    # the gymnast actually competed in.
+    entity_result_tables: dict[str, set[str]] = {}
+    for _prt in data.get("performanceResultTables", []):
+        _rtid = _prt.get("resultTableId")
+        if not _rtid:
+            continue
+        for _rs in _prt.get("resultSets", []):
+            for _rank in _rs.get("primaryRanking", []):
+                _eid = _rank.get("entityId")
+                if _eid:
+                    entity_result_tables.setdefault(_eid, set()).add(_rtid)
     for ind in data.get("performanceIndividuals", []):
         eid = ind.get("_id")
         if not eid:
             continue
-        div = None
-        lv = None
-        for config in ind.get("resultTableConfigs", []):
-            rtid = config.get("resultTableId")
-            if rtid and rtid in node_division:
-                found = node_division[rtid]
-                if found:
-                    div = found
-                    break
-            # Also try from the old-style resultId via the division map
-            rid = config.get("resultId")
-            if rid and rid in division_map and division_map[rid]:
-                div = division_map[rid]
-                break
-        for config in ind.get("resultTableConfigs", []):
+        configs = ind.get("resultTableConfigs", [])
+        present = entity_result_tables.get(eid, set())
+        # Level: prefer the first config backed by an actual result that names a
+        # level; otherwise fall back to the first config naming a level at all.
+        level_cfg = None
+        for config in configs:
             rtid = config.get("resultTableId")
             if rtid and rtid in node_level and node_level[rtid]:
-                lv = node_level[rtid]
-                break
+                if level_cfg is None:
+                    level_cfg = rtid
+                if rtid in present:
+                    level_cfg = rtid
+                    break
+        lv = node_level.get(level_cfg) if level_cfg else None
+        # Division comes from the same node that determined the level so a stale
+        # registration config never leaks its division onto the wrong gymnast;
+        # without a level config, keep the first-config-with-division fallback.
+        div = None
+        if level_cfg:
+            div = node_division.get(level_cfg)
+        else:
+            for config in configs:
+                rtid = config.get("resultTableId")
+                if rtid and rtid in node_division and node_division[rtid]:
+                    div = node_division[rtid]
+                    break
+            # Also try from the old-style resultId via the division map
+            if div is None:
+                for config in configs:
+                    rid = config.get("resultId")
+                    if rid and rid in division_map and division_map[rid]:
+                        div = division_map[rid]
+                        break
         entity_division[eid] = div
         entity_level[eid] = lv
 

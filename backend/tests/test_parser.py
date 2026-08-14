@@ -302,6 +302,15 @@ class TestParseRealData:
                     f"{r['gymnast_name']} International has division={r['division']}"
                 )
 
+    def test_csg_classic_step10_not_mislabeled_as_international(self):
+        data = load("csg-2026.json")
+        _, rows = parse_json(data)
+        levels = {r["gymnast_name"]: r["level_category"] for r in rows}
+        assert levels.get("Claudia Renaud") == "STEP 10"
+        for r in rows:
+            if r["gymnast_name"] == "Claudia Renaud":
+                assert r["division"] is None
+
     def test_csg_classic_apparatus_finals_no_aa(self):
         data = load("csg-classic_2025.json")
         _, rows = parse_json(data)
