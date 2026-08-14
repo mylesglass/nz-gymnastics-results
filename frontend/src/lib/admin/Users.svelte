@@ -191,110 +191,101 @@
   }
 </script>
 
-<svelte:head>
-  <title>User Management — NZ Gymnastics Results</title>
-</svelte:head>
+<div class="flex items-center justify-between mb-4">
+  <p class="text-sm text-base-content/70">Manage accounts and permissions</p>
+  <button class="btn btn-primary btn-sm" onclick={() => (showAdd = true)}>
+    Add User
+  </button>
+</div>
 
-<div class="max-w-4xl mx-auto">
-  <div class="flex items-center justify-between mb-4">
-    <div>
-      <h1 class="text-3xl font-bold">User Management</h1>
-      <p class="text-base-content/70 text-sm mt-1">Manage accounts and permissions</p>
-    </div>
-    <button class="btn btn-primary btn-sm" onclick={() => (showAdd = true)}>
-      Add User
-    </button>
+{#if loading}
+  <div class="flex justify-center py-12">
+    <span class="loading loading-spinner loading-lg text-primary"></span>
   </div>
-
-  {#if loading}
-    <div class="flex justify-center py-12">
-      <span class="loading loading-spinner loading-lg text-primary"></span>
-    </div>
-  {:else if error}
-    <div role="alert" class="alert alert-error">
-      <span>{error}</span>
-    </div>
-  {:else}
-    <div class="overflow-x-auto">
-      <table class="table table-zebra">
-        <thead>
+{:else if error}
+  <div role="alert" class="alert alert-error">
+    <span>{error}</span>
+  </div>
+{:else}
+  <div class="overflow-x-auto">
+    <table class="table table-zebra">
+      <thead>
+        <tr>
+          <th scope="col">Username</th>
+          <th scope="col">Role</th>
+          <th scope="col">Permissions</th>
+          <th scope="col">Created</th>
+          <th scope="col" class="w-40">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each users as u}
           <tr>
-            <th scope="col">Username</th>
-            <th scope="col">Role</th>
-            <th scope="col">Permissions</th>
-            <th scope="col">Created</th>
-            <th scope="col" class="w-40">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each users as u}
-            <tr>
-              <td class="font-medium">
-                {u.username}
-                {#if u.username === currentUsername}
-                  <span class="text-xs text-base-content/70 ml-1">(you)</span>
-                {/if}
-              </td>
-              <td><span class={roleBadge(u.role)}>{u.role}</span></td>
-              <td>
-                {#if u.role === "admin"}
-                  <span class="text-xs text-base-content/70">Full access</span>
-                {:else}
-                  <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
-                    {#each PERMISSION_OPTIONS as opt}
-                      <label class="flex items-center gap-1.5 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          class="checkbox checkbox-xs"
-                          checked={(permDrafts[u.id] ?? []).includes(opt.key)}
-                          onchange={() => togglePerm(u.id, opt.key)}
-                        />
-                        <span class="text-sm">{opt.label}</span>
-                      </label>
-                    {/each}
-                    {#if permChanged[u.id]}
-                      <button
-                        class="btn btn-primary btn-xs"
-                        disabled={savingPermId === u.id}
-                        onclick={() => savePerms(u)}
-                      >
-                        {savingPermId === u.id ? "Saving..." : "Save"}
-                      </button>
-                    {/if}
-                    {#if permError[u.id]}
-                      <span class="text-xs text-error">{permError[u.id]}</span>
-                    {/if}
-                  </div>
-                {/if}
-              </td>
-              <td class="text-sm text-base-content/70">{new Date(u.created_at).toLocaleDateString()}</td>
-              <td>
-                <div class="flex gap-1">
-                  <button
-                    class="btn btn-ghost btn-xs"
-                    aria-label={`Reset password for ${u.username}`}
-                    onclick={() => { resetTarget = u; resetPassword = ""; resetError = null; }}
-                  >
-                    <span aria-hidden="true">🔑</span>
-                  </button>
-                  {#if u.username !== currentUsername}
+            <td class="font-medium">
+              {u.username}
+              {#if u.username === currentUsername}
+                <span class="text-xs text-base-content/70 ml-1">(you)</span>
+              {/if}
+            </td>
+            <td><span class={roleBadge(u.role)}>{u.role}</span></td>
+            <td>
+              {#if u.role === "admin"}
+                <span class="text-xs text-base-content/70">Full access</span>
+              {:else}
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+                  {#each PERMISSION_OPTIONS as opt}
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        class="checkbox checkbox-xs"
+                        checked={(permDrafts[u.id] ?? []).includes(opt.key)}
+                        onchange={() => togglePerm(u.id, opt.key)}
+                      />
+                      <span class="text-sm">{opt.label}</span>
+                    </label>
+                  {/each}
+                  {#if permChanged[u.id]}
                     <button
-                      class="btn btn-ghost btn-xs text-error"
-                      aria-label={`Delete user ${u.username}`}
-                      onclick={() => { deleteTarget = u; }}
+                      class="btn btn-primary btn-xs"
+                      disabled={savingPermId === u.id}
+                      onclick={() => savePerms(u)}
                     >
-                      <span aria-hidden="true">🗑️</span>
+                      {savingPermId === u.id ? "Saving..." : "Save"}
                     </button>
                   {/if}
+                  {#if permError[u.id]}
+                    <span class="text-xs text-error">{permError[u.id]}</span>
+                  {/if}
                 </div>
-              </td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
-    </div>
-  {/if}
-</div>
+              {/if}
+            </td>
+            <td class="text-sm text-base-content/70">{new Date(u.created_at).toLocaleDateString()}</td>
+            <td>
+              <div class="flex gap-1">
+                <button
+                  class="btn btn-ghost btn-xs"
+                  aria-label={`Reset password for ${u.username}`}
+                  onclick={() => { resetTarget = u; resetPassword = ""; resetError = null; }}
+                >
+                  <span aria-hidden="true">🔑</span>
+                </button>
+                {#if u.username !== currentUsername}
+                  <button
+                    class="btn btn-ghost btn-xs text-error"
+                    aria-label={`Delete user ${u.username}`}
+                    onclick={() => { deleteTarget = u; }}
+                  >
+                    <span aria-hidden="true">🗑️</span>
+                  </button>
+                {/if}
+              </div>
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </div>
+{/if}
 
 <!-- Add User Modal -->
 {#if showAdd}

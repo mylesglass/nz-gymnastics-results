@@ -163,7 +163,7 @@
       <div class="card bg-base-200 mt-4">
         <div class="card-body items-center text-center py-12">
           <p class="text-base-content/70">No events uploaded yet.</p>
-          <a href="/upload" class="btn btn-primary btn-sm mt-2">Upload an event</a>
+          <a href="/admin#upload" class="btn btn-primary btn-sm mt-2">Upload an event</a>
         </div>
       </div>
     </div>

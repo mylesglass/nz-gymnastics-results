@@ -330,3 +330,92 @@ labels every Nth day.
   needed for v1.
 - The detailed log remains authenticated-only; anonymous usage is visible in the
   graphs/counters.
+
+---
+
+# Phase 2 — Consolidate admin into one tabbed page
+
+## Goal
+
+All administrator functionality (dashboard/overview, activity usage dashboard,
+upload, user management) on a single page at `/admin`, organised as tabs.
+Old routes `/upload`, `/admin/activity` and `/admin/users` are deleted.
+
+Decisions confirmed with the user:
+
+- Include user management as a tab too (all admin stuff on one page).
+- **Tabs** layout (not collapsible sections).
+- **Delete** the old routes (no redirects).
+- Use **Material Symbols** for icons (self-hosted `material-symbols` npm
+  package, `@import "material-symbols/outlined.css"` in `app.css`).
+
+## 1. Components (`frontend/src/lib/admin/`)
+
+Each area is extracted into a component (minus its `<svelte:head>`, page
+wrapper and h1; headings become `h2`):
+
+- `Overview.svelte` — from `/admin`: stats cards, Refresh Cache button,
+  Identity Review (merge/split/dismiss + toasts). Quick-action cards removed
+  (the tabs replace them).
+- `Activity.svelte` — from `/admin/activity`: range tabs, filters, stat cards,
+  Chart.js graphs, detail table + mobile cards, clear-log dialog. "Back to
+  Admin" link removed.
+- `Upload.svelte` — from `/upload`: host-club datalist, dropzone, URL import,
+  upload status list, club-mapping dialog. `authCfg && !loggedIn` gate + auth
+  state removed (page is admin-only now).
+- `Users.svelte` — from `/admin/users`: user table, add/reset/delete dialogs,
+  permission checkboxes, toasts.
+
+## 2. Tabbed shell (`/admin/+page.svelte`)
+
+- `TABS` = overview (space_dashboard), activity (monitoring), upload
+  (upload_file), users (group).
+- `activeTab` derived from `$page.url.searchParams.get("tab")`, falling back to
+  `overview` for missing/invalid — URL is the single source of truth, so
+  back/forward and deep links (`/admin?tab=activity`) work.
+- daisyUI `tabs tabs-box` of real `<a class="tab">` links (icon + label,
+  `aria-current="page"` on active, no `role=tab`), wrapped in `overflow-x-auto`
+  for mobile.
+- Panels `{#if activeTab === …}` → components mount only when active (charts,
+  known-clubs, identity review and the activity auto-refresh interval all load
+  on demand and clean up on unmount).
+
+## 3. Navigation (`+layout.svelte`)
+
+- New `adminTab(key)` helper (pathname `/admin` + `?tab=` match).
+- Desktop admin dropdown + mobile drawer: Dashboard → `/admin`,
+  Activity → `/admin?tab=activity`, Upload → `/admin?tab=upload`,
+  Users → `/admin?tab=users`, with Material Symbols icons.
+
+## 4. Route deletions + link updates
+
+- Delete `src/routes/upload/`, `src/routes/admin/activity/`,
+  `src/routes/admin/users/` (all client-only pages, no `+page.server.ts`).
+- `events/+page.svelte` and `results/+page.svelte` empty-state "Upload an
+  event" buttons → `/admin?tab=upload`.
+
+## 5. Icons
+
+- `npm install material-symbols`; `@import "material-symbols/outlined.css"` in
+  `app.css` plus a `.material-symbols-outlined` base rule (font-size 1.25em,
+  line-height 1, vertical-align middle, FILL 0/wght 400/GRAD 0/opsz 24).
+- Icons are decorative: `<span class="material-symbols-outlined"
+  aria-hidden="true">name</span>` with a visible text label.
+
+## 6. Docs
+
+- `AGENTS.md`: routes tree (drop the three routes, add `lib/admin/` +
+  `charts/ChartJs.svelte`), Activity-tracking UI URL → `/admin?tab=activity`,
+  Material Symbols note in Styling.
+- `README.md` + `MEMORY.md`: route-tree / routes list updated.
+- `patch_notes.json`: "Admin: everything on one page" entry.
+
+## 7. Verification
+
+- `cd frontend && npm run build`.
+- Preview-server smoke test: `/admin` + `/admin?tab=users` → 200; removed
+  routes → 404. Full tab behaviour is client-side (admin pages are
+  client-gated until auth resolves, so SSR shows only the shell).
+- Manual: tab switching + deep links, back/forward, mobile (~375px) tab bar,
+  responsive activity cards/charts, upload + club-mapping dialog,
+  identity merge/split, user add/reset/delete.

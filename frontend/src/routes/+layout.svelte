@@ -113,6 +113,13 @@
     return currentPath === path || currentPath.startsWith(path + "/")
   }
 
+  let currentHash = $derived($page.url.hash);
+
+  function adminTab(key: string) {
+    if (key === "overview") return currentPath === "/admin" && (!currentHash || currentHash === "#overview");
+    return currentPath === "/admin" && currentHash === `#${key}`;
+  }
+
   let drawerOpen = $state(false);
 
   function closeDrawer() {
@@ -323,9 +330,10 @@
               <ul tabindex="0" role="menu" aria-label="User menu" class="dropdown-content menu bg-base-100 rounded-box w-48 p-2 shadow" style="z-index: 50">
                 <li role="none"><span class="text-xs text-base-content/70 px-3 py-1">{user.role}</span></li>
                 {#if user?.role === "admin"}
-                  <li role="none"><a role="menuitem" href="/admin" class={active("/admin") && currentPath === "/admin" ? 'active' : ''}>Dashboard</a></li>
-                  <li role="none"><a role="menuitem" href="/admin/activity" class={active("/admin/activity") ? 'active' : ''}>Activity</a></li>
-                  <li role="none"><a role="menuitem" href="/upload" class={active("/upload") ? 'active' : ''}>Upload</a></li>
+                  <li role="none"><a role="menuitem" href="/admin" class={adminTab('overview') ? 'active' : ''}><span class="material-symbols-outlined" aria-hidden="true">space_dashboard</span>Dashboard</a></li>
+                  <li role="none"><a role="menuitem" href="/admin#activity" class={adminTab('activity') ? 'active' : ''}><span class="material-symbols-outlined" aria-hidden="true">monitoring</span>Activity</a></li>
+                  <li role="none"><a role="menuitem" href="/admin" class={adminTab('upload') ? 'active' : ''}><span class="material-symbols-outlined" aria-hidden="true">upload_file</span>Upload</a></li>
+                  <li role="none"><a role="menuitem" href="/admin" class={adminTab('users') ? 'active' : ''}><span class="material-symbols-outlined" aria-hidden="true">group</span>Users</a></li>
                 {/if}
                 <li role="none" class="border-t border-base-300 mt-1 pt-1">
                   <button role="menuitem" onclick={() => { logout(); goto("/"); }}>
@@ -507,21 +515,27 @@
         {#if user}
           {#if user?.role === "admin"}
             <li>
-              <a href="/admin" onclick={handleNavClick} class:active={active("/admin") && currentPath === "/admin"}>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-4 fill-current"><path fill="currentColor" d="M13 9V3h8v6zM3 13V3h8v10zm10 8V11h8v10zM3 21v-6h8v6z"/></svg>
+              <a href="/admin" onclick={handleNavClick} class:active={adminTab("overview")}>
+                <span class="material-symbols-outlined" aria-hidden="true">space_dashboard</span>
                 Dashboard
               </a>
             </li>
             <li>
-              <a href="/admin/activity" onclick={handleNavClick} class:active={active("/admin/activity")}>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-4 fill-current"><path fill="currentColor" d="M1 21v-2h22v2zm3-3q-.825 0-1.412-.587T2 16v-5h5.375L9.1 14.45q.125.25.363.4t.512.15t.525-.125t.375-.375l3.075-5.375l.65 1.325q.125.275.375.413T15.5 11H22v5q0 .825-.587 1.412T20 18zm6.075-6.125L8.9 9.55q-.125-.25-.375-.4T8 9H2V5q0-.825.588-1.412T4 3h16q.825 0 1.413.588T22 5v4h-5.875L14.9 6.55q-.125-.275-.375-.413T14 6t-.5.138t-.35.362z"/></svg>
+              <a href="/admin#activity" onclick={handleNavClick} class:active={adminTab("activity")}>
+                <span class="material-symbols-outlined" aria-hidden="true">monitoring</span>
                 Activity
               </a>
             </li>
             <li>
-              <a href="/upload" onclick={handleNavClick} class:active={active("/upload")}>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="size-4 fill-current"><path d="M9.25 13.25a.75.75 0 0 0 1.5 0V4.636l2.955 3.129a.75.75 0 0 0 1.09-1.03l-4.25-4.5a.75.75 0 0 0-1.09 0l-4.25 4.5a.75.75 0 1 0 1.09 1.03L9.25 4.636V13.25Z" /><path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" /></svg>
+              <a href="/admin" onclick={handleNavClick} class:active={adminTab("upload")}>
+                <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
                 Upload
+              </a>
+            </li>
+            <li>
+              <a href="/admin" onclick={handleNavClick} class:active={adminTab("users")}>
+                <span class="material-symbols-outlined" aria-hidden="true">group</span>
+                Users
               </a>
             </li>
           {/if}

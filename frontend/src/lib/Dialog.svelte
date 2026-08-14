@@ -33,6 +33,7 @@
   function onKeydown(e: KeyboardEvent) {
     if (e.key === "Escape") {
       e.preventDefault();
+      e.stopPropagation();
       onClose();
       return;
     }
@@ -44,9 +45,11 @@
     const active = document.activeElement as HTMLElement | null;
     if (e.shiftKey && (active === first || active === panelEl || !panelEl?.contains(active))) {
       e.preventDefault();
+      e.stopPropagation();
       last.focus();
     } else if (!e.shiftKey && (active === last || active === panelEl || !panelEl?.contains(active))) {
       e.preventDefault();
+      e.stopPropagation();
       first.focus();
     }
   }

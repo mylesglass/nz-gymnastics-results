@@ -3,6 +3,14 @@
     "date": "14 Aug 2026",
     "entries": [
       {
+        "title": "Admin: everything on one page",
+        "items": [
+          "All admin tools now live on a single Admin page — site stats and refresh on the left, the live usage dashboard (page views, API requests, errors, average response time) on the right, and all four usage graphs below spanning the full width.",
+          "Upload, Users, Identity Review and the logged-in activity log each open in a dialog from the buttons under the stats, keeping the dashboard clean.",
+          "The old separate /upload, /admin/activity and /admin/users pages are gone; the admin menu jumps straight to each tool."
+        ]
+      },
+      {
         "title": "Admin: Activity page is now a usage dashboard",
         "items": [
           "The admin Activity page now shows usage across the whole site, not just logged-in users — anonymous visitors and logged-in users are both counted (bots and scrapers are filtered out).",

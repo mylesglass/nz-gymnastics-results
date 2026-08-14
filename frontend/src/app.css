@@ -1,4 +1,12 @@
 @import "tailwindcss";
+@import "material-symbols/outlined.css";
 @plugin "daisyui" {
   themes: all;
+}
+
+.material-symbols-outlined {
+  font-size: 1.25em;
+  line-height: 1;
+  vertical-align: middle;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
 }

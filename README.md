@@ -281,10 +281,8 @@ skipped when the reference data‑collection JSON files are not present.
 │   │   └── routes/
 │   │       ├── +layout.svelte               # Nav bar, theme toggle, year tabs
 │   │       ├── +page.svelte                 # Landing page: info items above nav cards w/ stat badges, member-only Rankings card, What's new
-│   │       ├── upload/+page.svelte          # JSON upload + import‑from‑URL
 │   │       ├── login/+page.svelte           # Username + password login
-│   │       ├── admin/+page.svelte           # Admin dashboard
-│   │       ├── admin/users/+page.svelte     # User management
+│   │       ├── admin/+page.svelte           # Single admin page — two-column Dashboard/Activity split + dialog buttons for Upload/Users/IdentityReview/Logged-in activity + full-width charts
 │   │       ├── rankings/+page.svelte        # National rankings (member+)
 │   │       ├── wellington-ranking/+page.svelte  # Wellington rankings
 │   │       ├── events/+page.svelte          # Event list (search / rename / delete)
