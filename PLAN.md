@@ -1,421 +1,392 @@
-# PLAN — Admin Activity → Usage Dashboard
-
-## Goal
-
-Turn the admin activity page into a usage dashboard:
-
-1. Capture **all** usage (anonymous public traffic + logged-in users) without
-   storing IPs or user-agents.
-2. Add **graphs** (Chart.js, lazy-loaded so it stays out of the entry bundle).
-3. Make the page **mobile responsive** (cards under `md`, charts single column).
-
-Decisions confirmed with the user:
-
-- Anonymous capture = **aggregated counters** in a new `traffic_daily` table
-  (per day/hour/path-group). The detailed `activity_logs` table stays
-  authenticated-only (audit trail stays small).
-- **Bot filtering**: anonymous requests with bot-like user-agents are excluded
-  from aggregation (UA is checked in the middleware, never stored).
-- **Chart.js** (lazy-loaded via dynamic `import()`), wrapped in a small Svelte
-  component.
-
----
-
-## 1. Backend — data capture
-
-### 1.1 New model `TrafficDaily` (`backend/app/models.py`)
-
-Add after `ActivityLog`:
-
-```python
-class TrafficDaily(Base):
-    __tablename__ = "traffic_daily"
-
-    __table_args__ = (
-        UniqueConstraint(
-            "date", "hour", "kind", "path_group", "anonymous",
-            name="uq_traffic_daily",
-        ),
-    )
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    date = Column(Date, nullable=False)
-    hour = Column(Integer, nullable=False)
-    kind = Column(String, nullable=False)          # 'page' | 'api'
-    path_group = Column(String, nullable=False)    # normalized path
-    anonymous = Column(Boolean, nullable=False, default=False)
-    count = Column(Integer, nullable=False, default=0)
-    error_count = Column(Integer, nullable=False, default=0)
-    total_duration_ms = Column(Float, nullable=False, default=0.0)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-```
-
-- The `UniqueConstraint` backs the SQLite UPSERT key.
-- `init_db()` in `database.py` already runs `Base.metadata.create_all(engine)`
-  so the table is created automatically; no ALTER migration needed.
-
-### 1.2 Path normalization (`backend/app/traffic.py`, new module)
-
-Module-level docstring + `normalize_path(path: str) -> str`:
-
-- Strip the query string (`?` onwards).
-- Replace pure-numeric segments (`/\d+`) with `/[id]`.
-- Replace 10-char hex segments (`/[0-9a-fA-F]{10}`) with `/[slug]`.
-- Leave everything else verbatim (e.g. `/club/Some%20Club`).
-- Also `is_bot(user_agent: str | None) -> bool`: regex on
-  `bot|spider|crawl|slurp|curl|wget|python-requests|Go-http-client|HeadlessChrome|UptimeRobot|pingdom`.
-
-### 1.3 Batched writer (`backend/app/activity_log.py`)
-
-- Queue items already are `dict`s; add a `_target` discriminator:
-  - `{"_target": "activity", username, role, type, ...}` — existing ActivityLog row.
-  - `{"_target": "traffic", date, hour, kind, path_group, anonymous, status_code, duration_ms}` — aggregate upsert.
-- `_insert(rows)`: split into activity rows and traffic rows. For traffic,
-  aggregate counts/error_count/total_ms in Python per key
-  `(date, hour, kind, path_group, anonymous)`, then run one parameterized
-  upsert per key:
-
-  ```sql
-  INSERT INTO traffic_daily (date, hour, kind, path_group, anonymous, count,
-                             error_count, total_duration_ms, created_at)
-  VALUES (:date, :hour, :kind, :path_group, :anonymous, :count, :error_count,
-          :total_duration_ms, :created_at)
-  ON CONFLICT(date, hour, kind, path_group, anonymous)
-  DO UPDATE SET count = count + :count,
-                error_count = error_count + :error_count,
-                total_duration_ms = total_duration_ms + :total_duration_ms
-  ```
-
-- New public `enqueue_traffic(kind, path_group, anonymous, status_code, duration_ms) -> None`:
-  computes `date`/`hour` from local `datetime.now()`, tags `_target="traffic"`,
-  and either queues it or writes synchronously (when the writer isn't started,
-  i.e. test contexts), mirroring `enqueue()`.
-- An `error` is a status code `>= 400`.
-- `duration_ms` may be `None` for page views → treat as 0 in totals.
-
-### 1.4 Optional-auth dependency (`backend/app/auth.py`)
-
-Add `get_optional_user`:
-
-```python
-async def get_optional_user(authorization: str | None = Header(None)) -> dict | None:
-    """Like get_current_user but returns None instead of raising for anonymous."""
-    if not _is_auth_enabled():
-        return None
-    if not authorization:
-        return None
-    scheme, _, token = authorization.partition(" ")
-    if scheme.lower() != "bearer":
-        return None
-    payload = decode_token(token)
-    if payload is None:
-        return None
-    return {"username": payload["sub"], "role": payload["role"]}
-```
-
-### 1.5 Middleware (`backend/app/main.py`)
-
-Rewrite `log_activity` (the `@app.middleware("http")` at `main.py:166`):
-
-- Keep `start = time.perf_counter()` / duration measurement.
-- Skip paths:
-  - `/api/track/page` (handled in the endpoint itself — body has the path)
-  - `/api/admin/activity*` (no self-logging)
-  - `/api/health` (Docker healthcheck pings would pollute counts)
-  - non-`/api` paths
-- Decode the Bearer token if present.
-- Anonymous (no valid token):
-  - If `is_bot(user_agent)` → return response (no count).
-  - Else `enqueue_traffic("api", normalize_path(path), anonymous=True, status, duration)`.
-- Authenticated:
-  - `_log_activity(...)` detail row (as today).
-  - `enqueue_traffic("api", normalize_path(path), anonymous=False, status, duration)`.
-
-### 1.6 Page-view endpoint (`backend/app/main.py`)
-
-`track_page` changes:
-
-- Dependency: `Depends(get_optional_user)` (import it).
-- No user → `enqueue_traffic("page", normalize_path(body.path), anonymous=True, 200, None)`.
-- User present → existing `_log_activity` detail row **and**
-  `enqueue_traffic("page", normalize_path(body.path), anonymous=False, 200, None)`.
-
-The middleware already skips `/api/track/page`, so no double counting.
-
-### 1.7 Timezone (`docker-compose.yml` + `docker-compose.prod.yml`)
-
-Add `TZ: Pacific/Auckland` to the backend service `environment:` so production
-day/hour buckets match the admin's local day. Dev (`./.dev.sh`) runs on the host
-which is already local time.
-
----
-
-## 2. Backend — analytics endpoint
-
-### 2.1 Schemas (`backend/app/schemas.py`)
-
-```python
-class TrafficPoint(BaseModel):
-    date: str                    # YYYY-MM-DD
-    page_views: int = 0
-    api_requests: int = 0
-    errors: int = 0
-
-class HourPoint(BaseModel):
-    hour: int
-    page_views: int = 0
-    api_requests: int = 0
-
-class TopPath(BaseModel):
-    path: str
-    count: int = 0
-    errors: int = 0
-
-class TopUser(BaseModel):
-    username: str
-    role: str
-    page_views: int = 0
-    api_requests: int = 0
-
-class ActivityTotals(BaseModel):
-    page_views: int
-    api_requests: int
-    errors: int
-    avg_duration_ms: float | None
-    active_days: int
-    anon_page_views: int
-    auth_page_views: int
-    anon_api_requests: int
-    auth_api_requests: int
-
-class ActivitySummaryResponse(BaseModel):
-    range_days: int
-    totals: ActivityTotals
-    daily_series: list[TrafficPoint]
-    auth_daily_series: list[TrafficPoint]
-    hourly_series: list[HourPoint]
-    top_pages: list[TopPath]
-    top_api: list[TopPath]
-    top_users: list[TopUser]
-```
-
-### 2.2 Endpoint `GET /api/admin/activity/summary` (`backend/app/main.py`)
-
-- `require_role("admin")`, `days: int = 30` clamped to `{7, 30, 90, 0}` (0 = all time).
-- `flush_activity()` first so queued rows appear.
-- Queries against `traffic_daily`:
-  - **totals** (range): sum count by kind × anonymous, sum error_count,
-    avg_duration = `sum(total_duration_ms)/sum(count)` when any count.
-  - **daily_series**: `GROUP BY date, kind` → map to `{date, page_views, api_requests, errors}`.
-  - **hourly_series**: `GROUP BY hour, kind`.
-  - **top_pages**: `kind='page'` `GROUP BY path_group ORDER BY SUM(count) DESC LIMIT 15`.
-  - **top_api**: `kind='api'` same + `errors`.
-- Queries against `activity_logs` (authenticated history, full range):
-  - **auth_daily_series**: `GROUP BY date(created_at)` split page/api/errors.
-  - **top_users**: `GROUP BY username`, type split, last role seen. Limit 10.
-- Build the response. Range is applied to `traffic_daily` via `date >= today - days + 1`.
-
-### 2.3 `days` filter on the existing log list
-
-`GET /api/admin/activity` gains optional `days: int = None`; when set, filter
-`ActivityLog.created_at >= now - days`.
-
----
-
-## 3. Frontend
-
-### 3.1 Install Chart.js
-
-`cd frontend && npm install chart.js` (runtime dep; lazy-imported).
-
-### 3.2 `lib/charts/ChartJs.svelte` (new)
-
-Generic Svelte 5 wrapper:
-
-- Props `{ type, data, options }` typed via `import type { Chart, ChartConfiguration } from "chart.js"`.
-- `onMount`: `const mod = await import("chart.js/auto")`, instantiate
-  `new mod.default(canvas, { type, data, options })`.
-- `$effect`: when `data`/`options` change, `chart.data = data; chart.options = options; chart.update()`.
-- `onDestroy`: `chart.destroy()`.
-- Accessibility: canvas gets `role="img"` + `aria-label` (title + one-line summary), plus a visually-hidden `<div>` fallback listing the data.
-- `maintainAspectRatio: false` default; the wrapper sets an explicit responsive height via a container class (e.g. `h-64`).
-
-### 3.3 `lib/api.ts`
-
-- `getActivitySummary(days: number)` → `ActivitySummary` (typed interfaces mirroring the response).
-
-### 3.4 Beacon for anonymous page views (`src/routes/+layout.svelte`)
-
-In the `$effect` at `+layout.svelte:134`:
-
-- Fire when `authCfg` is true regardless of login state.
-- Dedupe key: `${u.username}|${path}` when logged in, `anon|${path}` otherwise.
-- `trackPage(path)` already sends `authHeaders()` (empty for guests) — no api.ts change needed.
-
-### 3.5 `admin/activity/+page.svelte` redesign
-
-Layout (top → bottom):
-
-1. **Back link + title + total badge** (keep).
-2. **Range selector**: radio-input tabs styled like the year tabs — `7 days / 30 days / 90 days / All`. One selector drives both the summary and the detail table.
-3. **Stat cards** `grid-cols-2 md:grid-cols-5` (DaisyUI `stat` cards like the admin dashboard):
-   - Page views — sub-line `anon X · logged-in Y`
-   - API requests — sub-line `anon X · logged-in Y`
-   - Errors — value + `(rate%)`
-   - Avg response — `123 ms`
-   - Active days — out of the selected range
-4. **Charts** `grid-cols-1 md:grid-cols-2`:
-   1. "Traffic over time" — line chart, two datasets (Page views, API requests) from `daily_series`.
-   2. "Hour of day" — bar chart (24 buckets) from `hourly_series`.
-   3. "Top pages" — horizontal bar (`indexAxis: "y"`) from `top_pages`.
-   4. "Top users" — horizontal bar from `top_users` (logged-in only).
-5. **Detail log** (existing table + filters), mobile-responsive:
-   - `md+`: existing `table` with `overflow-x-auto`.
-   - `<md`: each row renders as a stacked card — time, user + role badge, type badge, wrapped path + query, status, ms. No horizontal scroll.
-   - Keep username/type filters, pagination, auto-refresh, clear-log dialog.
-   - Auto-refresh reloads the summary too.
-6. Loading / error / empty states for both the summary and the table.
-
-Note: "All time" on the summary may show big date ranges — the daily line chart
-labels every Nth day.
-
----
-
-## 4. Tests (`backend/tests/test_activity.py`)
-
-- Update:
-  - `test_middleware_skips_anonymous` → assert no `activity_logs` rows but a
-    `traffic_daily` row exists (`kind='api'`, `anonymous=True`).
-  - `test_track_page_requires_auth` → rename/rework: anonymous beacon now returns
-    200 and writes a `traffic_daily` row (no `activity_logs` row).
-- Add:
-  - authenticated request → detail row **and** traffic row (`anonymous=False`).
-  - bot UA (e.g. `Googlebot/2.1`) → no `traffic_daily` row for anonymous request.
-  - `/api/health` → no traffic row.
-  - `normalize_path`: numeric → `[id]`, hex slug → `[slug]`, query stripped, club paths kept.
-  - summary endpoint: shape, range filter, totals, top_pages/top_users, errors, 403 for member, 401 for no token.
-  - `days` param on the log list endpoint.
-- Run: `cd backend && source .venv/bin/activate && pytest` (expect all pass).
-
----
-
-## 5. Docs
-
-- Update the **Activity tracking** section of `AGENTS.md` (it currently states
-  anonymous traffic is skipped). Document `traffic_daily`, bot filtering,
-  `/api/health` exclusion, TZ bucketing, summary endpoint.
-- Prepend a patch-notes entry to `frontend/static/patch_notes.json`
-  (admin-facing "Activity dashboard" entry).
-- Optionally note in `MEMORY.md` if the existing entry references the old behavior.
-
----
-
-## 6. Verification
-
-1. `cd backend && source .venv/bin/activate && pytest`.
-2. `cd frontend && npm run build`.
-3. Manual smoke test (dev server):
-   - Browse the site logged-out (a few pages) → summary shows anonymous counts.
-   - Log in as admin → activity page shows graphs + anon/auth split; detailed log
-     still shows only logged-in rows.
-   - Resize to ~375px → charts stack, log rows become cards, no horizontal scroll.
-   - Range tabs switch summary + table range; auto-refresh still works.
-
-## Notes / caveats
-
-- Anonymous stats start accumulating from the deploy date (historical anonymous
-  traffic was never captured). Logged-in history is backfilled from
-  `activity_logs`.
-- `traffic_daily` growth is bounded (per day/hour/path-group); no retention
-  needed for v1.
-- The detailed log remains authenticated-only; anonymous usage is visible in the
-  graphs/counters.
-
----
-
-# Phase 2 — Consolidate admin into one tabbed page
-
-## Goal
-
-All administrator functionality (dashboard/overview, activity usage dashboard,
-upload, user management) on a single page at `/admin`, organised as tabs.
-Old routes `/upload`, `/admin/activity` and `/admin/users` are deleted.
-
-Decisions confirmed with the user:
-
-- Include user management as a tab too (all admin stuff on one page).
-- **Tabs** layout (not collapsible sections).
-- **Delete** the old routes (no redirects).
-- Use **Material Symbols** for icons (self-hosted `material-symbols` npm
-  package, `@import "material-symbols/outlined.css"` in `app.css`).
-
-## 1. Components (`frontend/src/lib/admin/`)
-
-Each area is extracted into a component (minus its `<svelte:head>`, page
-wrapper and h1; headings become `h2`):
-
-- `Overview.svelte` — from `/admin`: stats cards, Refresh Cache button,
-  Identity Review (merge/split/dismiss + toasts). Quick-action cards removed
-  (the tabs replace them).
-- `Activity.svelte` — from `/admin/activity`: range tabs, filters, stat cards,
-  Chart.js graphs, detail table + mobile cards, clear-log dialog. "Back to
-  Admin" link removed.
-- `Upload.svelte` — from `/upload`: host-club datalist, dropzone, URL import,
-  upload status list, club-mapping dialog. `authCfg && !loggedIn` gate + auth
-  state removed (page is admin-only now).
-- `Users.svelte` — from `/admin/users`: user table, add/reset/delete dialogs,
-  permission checkboxes, toasts.
-
-## 2. Tabbed shell (`/admin/+page.svelte`)
-
-- `TABS` = overview (space_dashboard), activity (monitoring), upload
-  (upload_file), users (group).
-- `activeTab` derived from `$page.url.searchParams.get("tab")`, falling back to
-  `overview` for missing/invalid — URL is the single source of truth, so
-  back/forward and deep links (`/admin?tab=activity`) work.
-- daisyUI `tabs tabs-box` of real `<a class="tab">` links (icon + label,
-  `aria-current="page"` on active, no `role=tab`), wrapped in `overflow-x-auto`
-  for mobile.
-- Panels `{#if activeTab === …}` → components mount only when active (charts,
-  known-clubs, identity review and the activity auto-refresh interval all load
-  on demand and clean up on unmount).
-
-## 3. Navigation (`+layout.svelte`)
-
-- New `adminTab(key)` helper (pathname `/admin` + `?tab=` match).
-- Desktop admin dropdown + mobile drawer: Dashboard → `/admin`,
-  Activity → `/admin?tab=activity`, Upload → `/admin?tab=upload`,
-  Users → `/admin?tab=users`, with Material Symbols icons.
-
-## 4. Route deletions + link updates
-
-- Delete `src/routes/upload/`, `src/routes/admin/activity/`,
-  `src/routes/admin/users/` (all client-only pages, no `+page.server.ts`).
-- `events/+page.svelte` and `results/+page.svelte` empty-state "Upload an
-  event" buttons → `/admin?tab=upload`.
-
-## 5. Icons
-
-- `npm install material-symbols`; `@import "material-symbols/outlined.css"` in
-  `app.css` plus a `.material-symbols-outlined` base rule (font-size 1.25em,
-  line-height 1, vertical-align middle, FILL 0/wght 400/GRAD 0/opsz 24).
-- Icons are decorative: `<span class="material-symbols-outlined"
-  aria-hidden="true">name</span>` with a visible text label.
-
-## 6. Docs
-
-- `AGENTS.md`: routes tree (drop the three routes, add `lib/admin/` +
-  `charts/ChartJs.svelte`), Activity-tracking UI URL → `/admin?tab=activity`,
-  Material Symbols note in Styling.
-- `README.md` + `MEMORY.md`: route-tree / routes list updated.
-- `patch_notes.json`: "Admin: everything on one page" entry.
-
-## 7. Verification
-
-- `cd frontend && npm run build`.
-- Preview-server smoke test: `/admin` + `/admin?tab=users` → 200; removed
-  routes → 404. Full tab behaviour is client-side (admin pages are
-  client-gated until auth resolves, so SSR shows only the shell).
-- Manual: tab switching + deep links, back/forward, mobile (~375px) tab bar,
-  responsive activity cards/charts, upload + club-mapping dialog,
-  identity merge/split, user add/reset/delete.
+# NZ Gymnastics Results — Implementation Plan
+
+## Architecture Overview
+- **Backend:** Python/FastAPI, SQLAlchemy + SQLite, Pandas
+- **Frontend:** SvelteKit (adapter-node)
+- **Infrastructure:** Docker Compose
+
+## Steps
+
+### Step 1: Project Scaffolding ✅
+- [x] Create `backend/` directory with `pyproject.toml` (fastapi, uvicorn, sqlalchemy, pandas, openpyxl, python-multipart, pytest, httpx)
+- [x] Create `backend/app/__init__.py`
+- [x] Create `frontend/` with SvelteKit via `npm create svelte@latest`
+- [x] Create `docker-compose.yml` with backend + frontend services
+- [x] Create `.gitignore` (Python + Node patterns)
+- [x] **Test:** Backend starts and responds on :8000
+
+### Step 2: Database Models ✅
+- [x] Create `backend/app/models.py` — `Event`, `LongScore` SQLAlchemy models
+- [x] Create `backend/app/database.py` — engine, session, `init_db()`
+- [x] Create `backend/app/schemas.py` — Pydantic models for API
+- [x] **Test:** 4/4 `pytest` — DB creates tables, CRUD operations work
+
+### Step 3: Node-Tree Decoder ✅
+- [x] Create `backend/app/decoder.py` — maps opaque `publicOutputs` keys to field names
+- [x] Build from `performanceRules[].scores[].nodeTree.interface.outputs[]`
+- [x] Handle 4-key (normal) and 5-key (DNS) variants
+- [x] **Test:** 13/13 unit tests + verified against real hve-2026.json data
+
+### Step 4: ID Resolver ✅
+- [x] Create `backend/app/resolver.py` — lookup maps for the flat JSON structure
+- [x] `eventParticipants` -> name, GNZ ID, club
+- [x] `performanceIndividuals` -> link entity IDs to participants and units
+- [x] `eventOrganizations` -> club name
+- [x] `units` -> unit name, discipline
+- [x] **Test:** 21/21 unit tests with mock data
+
+### Step 5: JSON Parser (Long Format) ✅
+- [x] Create `backend/app/parser.py`
+- [x] Parse uploaded JSON, resolve all IDs, decode scores, extract rankings
+- [x] Produce long-format rows: one per gymnast per apparatus pass
+- [x] Handle DNS, Zero, multi-pass vaults, multi-unit gymnasts
+- [x] Store in SQLite via SQLAlchemy
+- [x] Re-upload: delete existing event data, re-parse
+- [x] **Test:** 51/51 tests (13 parser tests against hve-2026.json and mgi-wag-2026.json)
+
+### Step 6: FastAPI Endpoints ✅
+- [x] Create `backend/app/main.py`
+- [x] `POST /api/upload` — JSON file upload -> parse -> store -> return summary
+- [x] `GET /api/events` — list stored events
+- [x] `GET /api/events/{id}/results` — long-format JSON
+- [x] `GET /api/events/{id}/export/csv`
+- [x] `GET /api/events/{id}/export/xlsx`
+- [x] **Test:** 9/9 httpx integration tests against real data (60/60 total)
+
+### Step 7: Pandas Transformer ✅
+- [x] Create `backend/app/transformer.py`
+- [x] Query long-format from SQLite
+- [x] Pivot to wide format: apparatus columns per gymnast per round
+- [x] WAG: VT, UB, BB, FX + AA
+- [x] MAG: FX, PH, SR, VT, PB, HB + AA
+- [x] Generate CSV/XLSX byte streams
+- [x] **Test:** 63/63 total (export endpoints test CSV and XLSX downloads)
+
+### Step 8: Frontend — Upload Page ✅
+- [x] `routes/+page.svelte` — drag-and-drop JSON upload
+- [x] File validation, loading state, success/error feedback
+- [x] `src/lib/api.ts` — typed fetch wrappers
+- [x] **Test:** Builds successfully with `npm run build`
+
+### Step 9: Frontend — Events & Results ✅
+- [x] `routes/events/+page.svelte` — event list table
+- [x] `routes/events/[id]/+page.svelte` — wide-format results table
+- [x] Sortable columns, CSV/XLSX download buttons
+- [x] **Test:** Builds successfully with `npm run build`
+
+### Step 10: Docker & Polish ✅
+- [x] Backend Dockerfile (python:3.12-slim, ~17s build)
+- [x] Frontend Dockerfile (node:20-alpine, ~7min first build with npm install)
+- [x] docker-compose.yml with volume mounts for dev hot-reload
+- [x] Volume mount for SQLite persistence
+- [x] **Test:** Full `docker compose up` end-to-end verified
+
+### Step 11: Frontend Styling — Tailwind + DaisyUI ✅
+- [x] Install tailwindcss v4, @tailwindcss/vite, daisyui v5
+- [x] Configure Vite plugin, remove postcss config
+- [x] Dark theme via `data-theme="dark"`
+- [x] Global nav bar in layout (Upload / Events)
+- [x] Restyle upload page (DaisyUI card, alert, loading spinner)
+- [x] Restyle events list (zebra table, loading, empty state)
+- [x] Restyle results page (DaisyUI tabs, zebra table, sort indicators)
+- [x] Apparatus columns grouped into single cells with hover tooltips
+- [x] **Test:** Builds successfully with `npm run build`
+
+### Step 12: Backend Polish ✅
+- [x] Decode `Bonus` field from publicOutputs
+- [x] Propagate bonus across all passes in same (entityId, unitEventId) group
+- [x] Clarify vault aggregation rules (STEP 6/7 avg, high-level AA best, high-level Apps avg)
+- [x] Change `_fmt3` from round to truncate (floor), with floating-point noise cleanup
+- [x] **Test:** 191/251 pytest passing
+
+### Step 13: Parser Robustness ✅
+- [x] Fix `"equal-discarded"` status not being filtered — causes duplicate rows from tied-then-discarded scores (31/40 files affected)
+- [x] Add `validate_upload_structure(data)` to check for required top-level keys before parsing, returning clear error messages instead of silent empty results
+- [x] Wrap `parse_json()` in try/except in the upload endpoint with user-friendly error responses (`ParseError` + 422 response)
+- [x] Map `"Start Value"` output in decoder.py (vault-specific field in kaitaia_2025.json) — stored as `start_value` column in LongScore
+- [x] Add batch validation CLI: `python -m app.validate_json path/to/file.json`
+- [x] Add regression tests for all known edge cases (equal-discarded, Start Value, Open division, unit name patterns, known structural variations)
+- [x] **Test:** 201/201 pytest passing; batch CLI validates all 40 files cleanly
+
+### STEP 14: Frontend UI Improvements ✅
+- [x] Integrate filter dropdowns into column headers (remove separate MultiSelect buttons)
+- [x] Add per-column min-width system via `COL_MIN_CLASS` (Tailwind classes)
+- [x] Hide Division column in MAG view
+- [x] Left-align apparatus columns
+- [x] Responsive column sizing (columns shrink/grow with viewport)
+- [x] Add footer with GitHub link and Ko-fi donation support
+- [x] Sticky footer layout (min-height flex, footer at bottom on short pages)
+- [x] Last apparatus column tooltip opens left to avoid clipping
+- [x] Additional bottom padding for table tooltip clearance
+
+### STEP 15: Feature Polishing ✅
+- [x] Event page — discipline badges (daisyUI `badge-primary`/`badge-secondary`), clickable rows with `goto()`, remove View button column
+- [x] AA Tooltip — new `AATooltip.svelte` component with summed D/E/N across apparatus; integrated into `aa-score` column
+- [x] Show equals in rankings — backend appends "T" to tied rank values via `rank_text` (`T{rank}` when total equals a neighbour); surfaced as `RankingRow.rank`
+
+### STEP 16: Athlete ID Reconciliation ✅
+- [x] Create `backend/app/reconcile.py` — name-based ID unification logic
+- [x] Add `POST /api/admin/reconcile-athletes` endpoint (admin-only)
+- [x] Add `ReconcileReport` + `ConflictItem` schemas
+- [x] Add `reconcileAthletes()` to frontend API client
+- [x] Add reconciliation card to /admin page with conflict viewer
+- [x] Write 9 tests for reconciliation logic
+- [x] **Test:** 9/9 reconcile tests pass; 242 total tests pass
+- [x] Update BUGS.md with remaining edge cases
+
+### STEP 17: Auth Overhaul (Password → JWT) ✅
+- [x] Add `User` SQLAlchemy model (id, username, hashed_password, role, created_at)
+- [x] Rewrite `auth.py` with bcrypt hashing, JWT create/decode (HS256, 7-day expiry)
+- [x] Add `require_role()` FastAPI dependency factory
+- [x] Add `seed_admin_user()` from env vars (ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_ROLE)
+- [x] Auto-generate JWT_SECRET persisted to `data/jwt_secret.txt`
+- [x] Add endpoints: POST /api/auth/login, POST /api/auth/register, GET /api/auth/users, POST /api/auth/users/{id}/reset-password, DELETE /api/auth/users/{id}
+- [x] Add GET /api/rankings (member+ placeholder)
+- [x] Replace frontend auth: JWT in localStorage, currentUser store with role
+- [x] Update login page with username+password fields
+- [x] Add admin user management page at /admin/users
+- [x] Nav bar: role-based visibility for Upload/Admin/Rankings, user badge dropdown
+- [x] **Test:** 251/251 tests pass; frontend builds
+
+### STEP 18: UI/UX Improvements ✅
+- [x] Move theme toggle from nav to footer bottom-right
+- [x] Add `pt-6` to main content for breathing room
+- [x] Replace "More" dropdown with direct Gymnasts/Clubs links in nav
+- [x] Fix dropdown z-index issue (inline `style="z-index: 50"`)
+- [x] Global year toggle in nav (DaisyUI `tabs tabs-box` radio inputs)
+- [x] Add GET /api/years endpoint; shared selectedYear store
+- [x] Landing page: Upload card hidden for non-admins; grid switches to 2 columns
+- [x] Fix sort-revert bug in WideResultsTable ($effect cycle → loaded flag)
+- [x] Add region column to wide results (enriched at pivot time, filterable)
+- [x] Table improvements: max-w-full layout, min-w-full, whitespace-nowrap cells, hover:bg-base-300, py-1.5
+- [x] Event name truncation (truncate max-w-56)
+- [x] Add name cleaning regex: strips (L#), (STEP 10), (YI) at parse time
+- [x] Add "Levin Gymsports" and "Kapiti" club aliases to clubs_and_regions.json
+- [x] Fix clubs_and_regions.json: Franklin Gymsports, ARGOS alias cleanup, Buller restoration
+
+### STEP 19: Season Rankings + Nationals Flag ✅
+- [x] Add `is_national` boolean column to Event model with DB migration
+- [x] Add Nationals toggle to events page (admin-only badge/button in action column)
+- [x] Add `events` list API: include `is_national` in response
+- [x] Extend `PATCH /api/events/{id}` to update `is_national` (alongside existing rename)
+- [x] Build `GET /api/rankings` endpoint (member+): best 2 comps per gymnast per STEP per year (excludes Nationals events), summed total, tie detection with "T" prefix
+- [x] Build `GET /api/rankings/steps` endpoint: list available STEP levels per year/discipline
+- [x] Rankings page with year selector, discipline tabs, STEP dropdown, rankings table with competition-name tooltips
+- [x] **Test:** 251/251 tests pass; frontend builds cleanly
+
+### STEP 20: Incomplete AA in Rankings ✅
+- [x] Include gymnasts who don't have a complete All-Around aggregate in rankings by computing partial AA from individual apparatus passes
+  - When no `aa_score` exists for a gymnast+event, sum per-apparatus `pass_final_score` values (applying `_use_vault_average()` rules for vault)
+  - Changed rankings query to fetch all score rows (not just those with non-null AA) and aggregate in Python
+  - **File:** `backend/app/main.py`
+
+### STEP 21: Duplicate Detection in Admin Dashboard ✅
+- [x] Unified Reconcile + Duplicates into single "Athlete ID Reconciliation" card grouped by name
+- [x] Per-instance (club/level) ID dropdowns with >2x confidence auto-fix
+- [x] "Quick Fix" and "Apply Selected Fixes" buttons
+- **Files:** `backend/app/main.py`, `backend/app/schemas.py`, `frontend/src/routes/admin/+page.svelte`, `frontend/src/lib/api.ts`
+
+### STEP 22: Import JSON from URL ✅
+- [x] `POST /api/import-url` endpoint (admin) accepting `{ url, allow_unknown }` — fetches the Scoreholder public export via `app/scoreholder.py`, validates, parses, stores
+- [x] Frontend: URL input field on upload page alongside drag-and-drop area, same success/error UX
+- [x] Handles timeouts, invalid URLs, fetch errors (502), non-JSON responses gracefully
+- [x] Reuses the club mapping dialog for unknown clubs (`allow_unknown` retry path)
+- [x] Handles Scoreholder 307 redirect + Brotli (`Content-Encoding: br`) compression
+- **Files:** `backend/app/main.py`, `backend/app/scoreholder.py`, `frontend/src/routes/upload/+page.svelte`, `frontend/src/lib/api.ts`
+
+### Minor Polish
+- [x] RegionBadge component — 2x2 checkerboard (primary+secondary) + primary fill + whitespace-nowrap
+- [x] Region color palettes (NZ sports team inspired, 15 regions, 2-3 colors each)
+- [x] Region color dots (two 6px circles) in wide results table region column
+- [x] Truncate competition names in wide results table (max-w-56, ellipsis)
+- [x] Refresh docs
+
+### STEP 23: Wellington Regional Rankings ✅
+- [x] New `backend/app/wellington_ranking.py` module with event classification (regional/club/away), per-step-range selection rules, distinct-event enforcement, GNZ + Wellington dual qualifier filters
+- [x] `GET /api/rankings/wellington` endpoint (auth: member+)
+- [x] Wellington Rankings page with WAG/MAG tabs, STEP selector, qualifier toggles, CSV export, apparatus tooltips
+- [x] Rankings nav dropdown with National Rankings / Wellington Rankings
+- [x] Config: WAG STEP 5-6 (GNZ 50.0 2×+away, Wgtn 53.0), WAG STEP 7-10 (GNZ 43.0 1×), MAG Level 4-6 (Wgtn 58.0), MAG Level 7+ (Wgtn 63.0)
+- [x] Not-on-the-ranking table: `compute_wellington_rankings` returns a single `not_ranked` list of every Wellington athlete who isn't on the ranking with a `why` headline + `checks` ✓/✗ requirements checklist (competition mix via `_selection_checks()`, intent, and GNZ/Wellington marks via `_qualifier_checks()`, each with "x of y" detail). Frontend renders it as "Not on the Ranking", sorted alphabetically, with a trailing column whose tooltip shows the checklist; no filter toggles — the main table always shows only qualified + intended athletes, and ticking Intent moves selection-capable athletes up immediately. Score columns are slot-aligned (the 4 selectors return `None`-placeholder slots; partial selections fill the correct category column with dashes elsewhere).
+
+### STEP 24: Accessibility (a11y) ✅
+- [x] **Tier 1 — High-value quick wins**
+  - [x] Layout/nav: skip-to-content link + `id="main"`; wrap navbar + mobile drawer in `<nav>`; `aria-current="page"` on active nav links; mobile hamburger `<label>` → `<button aria-expanded aria-controls>` (`+layout.svelte:78`)
+  - [x] Landing page: route both `in:fly` animations through reduced-motion-aware `reveal()`; init `motion` synchronously from `matchMedia` (`+page.svelte:42,73`)
+  - [x] Upload: dropzone `onclick`+`onkeydown` → `fileInput.click()`; `aria-label` on file input; keep input reachable (`upload/+page.svelte:258-277`)
+  - [x] NZ map: remove `role="img"` from root `<svg>`; visible focus indicator replacing `outline:none`; `aria-pressed` on active region; single name source (`NZRegionMap.svelte:73,102,122,170`)
+  - [x] Tables: keyboard sort on apparatus `<th>`s; `aria-sort` on active column; `aria-label` on `« »`/filter triggers; `aria-expanded` + Escape on filter menus (`WideResultsTable.svelte`)
+  - [x] Tooltips: `role="tooltip"`/`aria-describedby`; fix `AATooltip` `role="menu"` misuse; keyboard+focus open for `ScoreTooltip`/`AATooltip`; make wellington/rankings hover-only tooltips reachable
+  - [x] Labels/live regions: login, user modals, edit-event, step/page-size/"Correct ID" selects, intent checkboxes, table search; `role="status"`/`aria-live` on admin toasts, edit toast, upload status; `role="alert"` on rankings/wellington errors; `aria-label` on icon-only buttons; events clickable `<td>` → real link
+  - [x] Contrast quick wins: `text-base-content/40–60` bumps; `ScoreTooltip` header `opacity-70`
+- [x] **Tier 2 — Dialogs, tabs, map focus**
+  - [x] New shared `frontend/src/lib/Dialog.svelte` — `role="dialog"`, `aria-modal`, labelled heading, initial-focus move, focus trap, Escape close, focus restore, backdrop click
+  - [x] Migrate all 5 modals to `Dialog.svelte` (upload club dialog, add/reset/delete user, edit/delete event)
+  - [x] Tabs: remove `role="tab"` from radio year selector + WAG/MAG radios (native `checked` announced); rankings/Wellington button tabs → `aria-pressed` buttons
+  - [x] Map→card: `aria-live` announcement + focus move on region select; accordion `aria-expanded`/`aria-controls`; stop nesting links inside `role="button"` card
+  - [x] Filter dropdowns: focus into menu on open, focus return, Escape
+- [x] **Tier 3 — Contrast + polish**
+  - [x] `RegionBadge`/`textColor` palette contrast → WCAG relative-luminance contrast selection (pure `#000` vs `#fff`); map boundary stroke kept on hover/active
+  - [x] `aria-hidden` on decorative emojis; heading-order fix on landing (feature h3 → p); patch-notes scroll region `tabindex`+`role="region"`; `scope="col"` on tables; `aria-hidden` on sticky dup header; drawer Escape-close; user/rankings dropdowns → real buttons with `role="menu"`/`aria-haspopup`
+- [x] **Verification:** Lighthouse baseline before/after in `a11y-reports/` (tracked, committed per tier); all 6 public pages scored **100/100** after tier 3 (home/events/results/clubs/gymnasts/login; baseline 93/99/92/96/95/100); `cd frontend && npm run build` passes after each tier
+- **Files:** `+layout.svelte`, `+page.svelte`, `upload/+page.svelte`, `NZRegionMap.svelte`, `WideResultsTable.svelte`, `ScoreTooltip.svelte`, `AATooltip.svelte`, `Dialog.svelte` (new), `regions.ts`, `RegionBadge.svelte`, all form/dialog pages
+
+### STEP 25: Athlete Identity & Name Reconciliation ✅
+- [x] Investigated root causes (see below)
+- [x] Phase 1a — Fix `_clean_name()` capitalization (resolver.py:9 `w.capitalize()` mangles `McEwan`→`Mcewan`, `O'Sullivan`→`O'sullivan`; use NZ-aware title-casing that preserves `Mc`/`Mac`/`O'`/`D'`/hyphenated/apostrophe forms)
+- [x] Phase 1b — Make `reconcile_athletes()` evidence-based: never auto-merge same-name rows when a name has 2+ IDs *within the same event* (unambiguous different people) or when club/discipline conflict; route those to `conflicts`
+- [x] Phase 1c — Upload-time collision detection in parser: same-name-2-IDs and same-ID-2-names per event → warnings in `EventResponse`, skip those rows in reconcile
+- [x] Phase 1d — Backfill guard: only assign an ID from name lookup when the name maps to exactly one existing ID
+- [x] Phase 0 — `repair_identities.py`: source JSONs (data-collection/) as ground truth, restore correct gnz_id + capitalization, dry-run + `--apply`; **consensus-driven** (per-(name, club) majority across all source files, winner must beat runner-up ≥2x) so a single file's typo never overwrites a consistent ID — splits Madison Lynch back into two athletes, rejects the Alexandra Boys `6511229` typo; fully-unmatched athletes untouched
+- [x] Phase 2 — `athletes` identity table (`athlete_id` FK on `long_scores`), query layers grouped by `athlete_id` (transformer, rankings, medals, gymnasts, wide-all, wellington intents), frontend gymnast URLs keyed on athlete slug
+  - **`athletes` table** (`Athlete` model: `slug`, `signature_hash`, `canonical_name`, `gnz_id`) + `long_scores.athlete_id` FK, migrated/seeded in `init_db()` (`python -m app.athlete_identity` to rebuild manually). Clustering lives in `backend/app/athlete_identity.py`: union-find over `(normalized name, gnz_id)` signatures — within a name, split on same-event ID collision / discipline conflict / disjoint clubs (the two Madison Lynches), merge otherwise; across names, two athletes sharing a numeric gnz_id merge only when names are similar (`difflib` ≥ 0.85, so `Eva Mcewan`/`Eva McEwan` collapse while the 33 distinct-people-shared-ID cases stay separate). Empty-ID rows join their name's dominant ID. `rebuild_athletes()` is **idempotent and signature-stable** (reuses athlete rows by hash so slugs survive re-uploads) and runs after every ingest, inline edit, name merge, duplicate fix, refresh-cache, and at startup.
+  - **Query layers re-keyed on `athlete_id`**: transformer pivot groups by athlete identity (canonical name + `slug` in wide rows), medals/gymnasts/wide-all accept `athlete_id`/`slug`, rankings/apparatus/wellington group by athlete key (variant spellings rank as one gymnast). Gymnast URLs are `/gymnast/{slug}` (opaque `a` + sha1 hex, back-compat accepts a legacy gnz_id). Wellington intents re-keyed to `athlete_id` (table rebuilt with `UNIQUE(athlete_id, year)`, backfilled from gnz_id).
+- [x] Phase 3 — Canonical-name auto-unify: pick most-common spelling per athlete cluster, unify variants in display + back-write
+  - `rebuild_athletes()` **back-writes** each `long_scores` row to its cluster's canonical (most-frequent) spelling after re-clustering, so the raw `gymnast_name` column stops carrying variants (idempotent — the UPDATE matches zero rows once applied; live DB normalized ~3,000 rows across 304 athletes). Orphan `Athlete` rows are now deleted **after** the `athlete_id` reassignment (a rebuild that changes a cluster's identity would otherwise try to delete an athlete still referenced by old rows → FK violation). `_compute_wide_all`'s "gymnast not found" fallback `name` now comes from `Athlete.canonical_name` instead of the last raw spelling. Gymnast counts (`/api/stats` `total_gymnasts`, event-list `gymnast_count`) count `distinct COALESCE(athlete_id, gymnast_name)` so variant spellings and same-name different-people each count once.
+- [x] Phase 4 — Admin review tooling: both-direction ID/name conflicts + Split action
+  - `GET /api/admin/identity-review` (admin) returns athlete-level conflicts in four sections: `similar_names` (fuzzy canonical-name pairs, athlete-level, replaces the old Suggested Merges), `name_conflicts` (same canonical name on 2+ athletes), `id_conflicts` (same gnz_id on 2+ athletes), and `multi_id_athletes` (one athlete carrying 2+ gnz_ids — the Split candidates). Each athlete carries evidence (slug, gnz_id, clubs, events/event_ids, years, disciplines, rows, wellington intent years).
+  - `POST /api/admin/athletes/merge` — sets the merged athlete's rows to the survivor's canonical name + gnz_id, clears `identity_override` on both sides, moves Wellington intents (UNIQUE(athlete_id, year): dropped on conflict), then rebuilds; the survivor's Athlete row is reused (re-created if its gnz_id was promoted). `POST /api/admin/athletes/split` — assigns the chosen rows (by gnz_id/event_id/club_name) a fresh synthetic gnz_id (`S…`, or an admin-supplied real ID) **plus** a unique `identity_override` token, then rebuilds.
+  - New `long_scores.identity_override` column (nullable, ALTER TABLE in `init_db()`) — the admin force-split boundary: `_cluster_name_signatures()` treats each distinct override token as its own person (hard no-merge) and clusters unmarked rows with the normal rules, so a split survives rebuilds/re-uploads until a merge clears the token. The synthetic gnz_id alone can't force separation when the two halves share a club (the primary live case — e.g. `Te Ahorangi Milsted-Raika` 3 IDs at 1 club), hence the marker.
+  - Admin UI: `/admin` "Athlete ID Reconciliation" + "Suggested Merges" cards **replaced** by a single "Identity Review" card (four collapsible sections, Merge-into-X per athlete, client-side Dismiss, per-athlete Split panel with dimension/value selects + optional real-ID field). The old endpoints (`/api/admin/duplicates*`, `/api/admin/suggested-merges`, `/api/admin/merge-names`) remain in the API (still tested) but are no longer called by the UI.
+- [x] Phase 5 — Tests + docs (capitalization, no-merge rules, backfill guard, repair dry-run); update AGENTS.md/MEMORY.md + patch_notes.json
+  - The four listed test areas were already covered by the per-phase suites: capitalization (`test_resolver.py::TestCleanName`), no-merge rules (`test_reconcile.py` same-event/discipline + `test_athlete_identity.py` disjoint-clubs), backfill guard (`test_ingest.py`), repair dry-run + consensus (`test_repair_identities.py`). Added the one missing regression test — `test_database.py` verifies `init_db()` migrates a **pre-existing** old schema (adds `athlete_id`/`identity_override`/`host_club`/`is_national`/`permissions`, re-keys wellington intents, seeds athletes) while preserving seeded rows. Full suite **332 pass / 87 skip**; frontend builds clean. Docs swept: AGENTS.md + README.md test counts updated, MEMORY.md admin/test sections refreshed, BUGS.md known-issue reworded to point at the Identity Review tool, patch_notes already carries the Phase 2/3/4 user-facing entries.
+- [x] **Production deployment (14 Aug 2026)** — prod had never received the identity work's one-time repair, so its clustering differed from dev (the two Madison Lynches were a single athlete under one ID). Ran `repair_identities --apply` on prod (mounting `data-collection/`, backend stopped first): 1,237 ID + 13,159 name fixes, athletes 5,128 → 5,156, Madison Lynch split with the same slugs as dev. Rollback backups kept in the `backend_data` volume (`results.pre-identity.db`, `results.pre-identity-fix.db`).
+
+**Root causes found (Aug 2026):**
+1. `_clean_name` uses `w.capitalize()` → lowercases the rest of each word, so `Eva McEwan` → `Eva Mcewan` (live DB confirmed).
+2. `reconcile_athletes()` is name-keyed and runs after every upload (main.py:2052): two different people sharing a name (e.g. Madison Lynch — OMNI STEP 1 `716561` vs Onslow STEP 5/6/7 `249317`) get irreversibly merged into one ID.
+3. Source data itself has bad identifiers: 61 collision events in `data-collection/` (same numeric ID on 2+ different names within one event; club codes like `TRI`/`ARG`/`HOW` in the `identifier` field); 3,723 DB rows have empty `gnz_id`, and the ingest backfill (main.py:2006-2027) assigns IDs by name only.
+4. Scale: 369 IDs carry 2+ distinct names — 336 are spelling variants of one person (~424 duplicate gymnast-list entries), 33 are genuinely different people sharing an ID.
+
+### STEP 26: Admin Activity → Usage Dashboard ✅ (14 Aug 2026)
+- [x] Capture **all** usage (anonymous public traffic + logged-in users) without storing IPs or user-agents:
+  - New `traffic_daily` aggregate table (`TrafficDaily` model) — per `date`/`hour`/`kind`/`path_group`/`anonymous` counters with a `UniqueConstraint` backing the SQLite UPSERT (`INSERT … ON CONFLICT DO UPDATE`). Created automatically by `init_db()` (`Base.metadata.create_all`), no ALTER migration.
+  - New `backend/app/traffic.py`: `normalize_path()` (query stripped, pure-numeric segments → `[id]`, 10-char hex slugs → `[slug]`) + `is_bot()` regex (`bot|spider|crawl|slurp|curl|wget|python-requests|Go-http-client|HeadlessChrome|UptimeRobot|pingdom`; UA inspected, never stored).
+  - `activity_log.py` batched writer extended with a `_target` discriminator (`"activity"` vs `"traffic"`); traffic rows aggregated in Python per key, then one parameterized upsert per key. New public `enqueue_traffic(kind, path_group, anonymous, status_code, duration_ms)` — queues, or writes synchronously when the writer isn't started (test contexts). Errors = status ≥ 400; `duration_ms=None` (page views) → 0.
+  - Optional-auth dependency `get_optional_user` in `auth.py` (returns `None` for anonymous, never raises).
+  - `log_activity` middleware rewritten: skips `/api/track/page` (handled in the endpoint), `/api/admin/activity*` (no self-logging), `/api/health` (Docker healthcheck noise), and non-`/api` paths; anonymous bot user-agents are excluded; every other `/api` request is counted as `kind='api'`; authenticated requests also keep their existing detail `activity_logs` row.
+  - `track_page` beacon now fires for all visitors (via `get_optional_user`) — guests get a 200 + `kind='page'` traffic row instead of 401.
+  - `TZ: Pacific/Auckland` added to the backend service in both compose files so day/hour buckets match the admin's local day.
+- [x] Analytics endpoint:
+  - `GET /api/admin/activity/summary?days=7|30|90|0` (admin; 0 = all time) — `flush_activity()` first so queued rows appear; totals split anonymous vs logged-in (page/api/errors/avg duration/active days), `daily_series`, `auth_daily_series` (from `activity_logs`, so logged-in history predates the dashboard), `hourly_series` (0–23), `top_pages`, `top_api`, `top_users`.
+  - `GET /api/admin/activity` gains an optional `days` filter.
+- [x] Frontend dashboard:
+  - `npm install chart.js` (runtime dep, lazy-imported).
+  - New `lib/charts/ChartJs.svelte` wrapper: `onMount` dynamic `import("chart.js/auto")`, `$effect` on data/options updates, `onDestroy` destroy; canvas `role="img"` + `aria-label` + visually-hidden data fallback; `maintainAspectRatio: false` + explicit container height (`h-64`).
+  - `getActivitySummary(days)` in `lib/api.ts`; beacon `$effect` in `+layout.svelte` fires when auth is configured regardless of login state, deduped with a plain `let` keyed `username|path` (users) / `anon|path` (guests).
+  - `/admin/activity` redesigned as a responsive dashboard: range tabs (7/30/90/All) driving both summary and detail table, 5 stat cards (`grid-cols-2 md:grid-cols-5`), 4 Chart.js graphs (traffic over time, hour of day, top pages, top users), detail log rows → stacked cards below `md` (no horizontal scroll), auto-refresh reloads the summary too.
+- [x] **Tests:** `test_activity.py` updated/extended — anonymous request → traffic row (no detail row), guest beacon → 200 + traffic row, authenticated → detail **and** traffic row, bot UA excluded, `/api/health` skipped, `normalize_path` cases, summary shape/range/totals/top-lists/errors, 403 for member, `days` param. Full suite **332 pass / 87 skip**; frontend builds.
+- **Files:** `backend/app/{activity_log,auth,main,models,schemas,traffic}.py`, `backend/tests/test_activity.py`, `docker-compose.yml`, `docker-compose.prod.yml`, `frontend/src/lib/charts/ChartJs.svelte` (new), `frontend/src/lib/api.ts`, `frontend/src/routes/+layout.svelte`, `frontend/src/routes/admin/activity/+page.svelte`, `frontend/static/patch_notes.json`
+
+### STEP 27: Consolidated Admin Dashboard ✅ (14 Aug 2026)
+- [x] All administrator functionality on a single `/admin` page; old routes `/upload`, `/admin/activity` and `/admin/users` **deleted** (no redirects).
+- [x] Layout — four labelled bands fitting above the fold on desktop: **Site stats** (Events/Gymnasts/Scores/Clubs stat tiles) and **Manage tools** (Refresh Cache + Upload/Users/Identity Review/Logged-in activity dialog buttons) share one row; **Usage** band (range tabs, auto-refresh, five usage stat tiles); **Graphs** band (4-across Chart.js, `h-44`). Each group sits in a subtle rounded flex band.
+- [x] Areas extracted into `frontend/src/lib/admin/` components: `Overview.svelte`, `Activity.svelte`, `ActivityCharts.svelte`, `ActivityLog.svelte`, `Upload.svelte`, `Users.svelte`, `IdentityReview.svelte`, `StatTile.svelte`.
+- [x] Material Symbols icon font (self-hosted `material-symbols` npm package; `@import "material-symbols/outlined.css"` + a `.material-symbols-outlined` base rule in `app.css`). Icons are decorative: `<span class="material-symbols-outlined" aria-hidden="true">…</span>` with a visible text label.
+- [x] Upload/Users/Identity Review/Logged-in activity open as dialogs from Manage tools; `Dialog.svelte` got Escape/Tab **stop-propagation** so nested inner dialogs (club mapping, add user) close independently.
+- [x] Activity chart data lifted to the page via an `onData` callback so the graph band can span full width.
+- [x] Nav (desktop dropdown + mobile drawer) → `/admin` + `?tab=…` via a new `adminTab()` helper; `events/+page.svelte` + `results/+page.svelte` empty-state buttons → `/admin?tab=upload`.
+- **Files:** `frontend/src/routes/admin/+page.svelte`, `frontend/src/lib/admin/*` (new), `frontend/src/routes/+layout.svelte`, `frontend/src/app.css`, `frontend/src/lib/Dialog.svelte`, deleted `frontend/src/routes/{upload,admin/activity,admin/users}/`
+
+### STEP 28: Cloudflare Edge Analytics ✅ (14 Aug 2026)
+- [x] `GET /api/admin/cloudflare/summary?days=7|30` (admin-only) shows the HTTP traffic Cloudflare sees at the edge — everything the server-side tracking misses (HTML pages, static assets, bots).
+- [x] New `backend/app/cloudflare.py` posts GraphQL to `https://api.cloudflare.com/client/v4/graphql`: `httpRequests1dGroups` for the window (requests/bytes/cached/threats + `uniq.uniques`), and `httpRequestsAdaptiveGroups` **clamped to the last 24 hours** (the adaptive quota rejects wider ranges — the breakdown queries failed with a GraphQL quota error at 7 days) grouped by country/status code/path/cache status/device type plus a `datetimeHour` series (the Analytics:Read token can't access `httpRequests1mGroups`, hence `datetimeHour`).
+- [x] Config via `CLOUDFLARE_ZONE_ID` + `CLOUDFLARE_API_TOKEN` (zone-scoped, Analytics:Read, read from env/`.env`); unset → `{configured: False}`. Server-cached via `cached(("cloudflare", days), ttl=300)` (single-flight so rate limits aren't hit); fetch failures return `{configured: True, error}` and are **not** cached.
+- [x] Frontend: `/admin` regrouped by data source — **Server usage** band (range tabs + usage stat tiles + 4 site charts) and **Cloudflare** band (stat tiles + 9 charts: requests/day, status codes, top countries, unique visitors/day, bandwidth/day, hourly requests, top paths, cache-status mix, device split). Cloudflare range follows the shared tabs, clamped to 7/30 (90/all-time → 30). `StatTile` now borderless content inside the rounded bands.
+- [x] **Tests:** `test_cloudflare.py` — config gating, query building, `parse_zone_response()`/`_parse_breakdown()`. Live fetch path isn't unit-tested (needs real credentials).
+- **Files:** `backend/app/cloudflare.py` (new), `backend/app/{main,schemas}.py`, `backend/tests/test_cloudflare.py` (new), `docker-compose.yml`, `docker-compose.prod.yml`, `frontend/src/lib/admin/{StatTile,CloudflareCharts}.svelte`, `frontend/src/routes/admin/+page.svelte`
+
+### STEP 29: SEO — SSR content, readable gymnast URLs, sitemap + robots ✅ (15 Aug 2026)
+- [x] `+page.server.ts` SSR loads for all public pages (home, events, event detail, results, gymnasts, gymnast, clubs, club) via a new `lib/backend.ts` helper (`BACKEND_URL = PROXY_TARGET || dev localhost:8000 || backend:8000`, works in dev, dev-Docker and prod). Loads fetch lightweight cached endpoints (`/api/stats`, `/api/events`, `/api/gymnasts`, `/api/clubs`, `/api/gymnast`) — never the heavy wide pivots — so the server-rendered HTML carries real headings, entity names and counts instead of a spinner shell.
+- [x] Shared `lib/Seo.svelte` head component: `<title>`, meta description, canonical, `og:*` + `twitter:card`, optional JSON-LD. JSON-LD injected as `{@html \`<script type="application/ld+json">…</script>\`}` at the `svelte:head` level (`{@html}` is NOT evaluated inside a `<script>` element). `lib/seo.ts`: `pageTitle`/`kebabName`/`gymnastPath`/`SITE_NAME`/`SITE_DESCRIPTION`.
+- [x] **Readable gymnast URLs** — `/gymnast/{slug}-{kebab-name}` is canonical; plain-slug and legacy gnz_id URLs 301-redirect to the readable form; unknown identities 404. `lib/seo.ts::gymnastPath()` generates links (WideResultsTable, gymnasts list, ranking pages, IdentityReview, sitemap).
+- [x] New lightweight `GET /api/gymnast` identity endpoint (by `slug` or `gnz_id`; cached; falls back to a raw `long_scores` name row when no athlete cluster exists) + tests — `/api/medals` only returns medalists, so it can't be used for name lookup.
+- [x] Dynamic `robots.txt` and `sitemap.xml` routes: static pages + all events + gymnasts (readable URLs, gnz_id fallback) + clubs, XML-escaped; robots disallows `/api`, `/login`, `/admin`, `/upload`, `/rankings`, `/wellington-ranking`.
+- [x] `SEO_VERIFICATION_META` env hook: `+layout.server.ts` reads the raw string, `+layout.svelte` injects it via `{@html}` in `svelte:head` — Google/Bing site verification without code changes.
+- [x] Internal gymnast links updated to readable URLs; patch notes + docs (AGENTS.md SEO section).
+- **Files:** `frontend/src/lib/{Seo.svelte,seo.ts,backend.ts}` (new), `frontend/src/routes/{+layout.server.ts,+layout.svelte,+page.server.ts,+page.svelte}` + SSR loads on `events/`, `events/[id]/`, `results/`, `gymnasts/`, `gymnast/[slug]/`, `clubs/`, `club/[club]/`; `frontend/src/routes/{robots.txt,sitemap.xml}/+server.ts` (new); `backend/app/main.py` (`/api/gymnast`), `backend/tests/test_api.py`
+
+### Next Steps
+- [x] Medal counts + totals for gymnasts, clubs and regional teams
+  - Gold/silver/bronze (G/S/B) medal tallies per gymnast, per club, and per regional/provincial team, aggregated from `LongScore.apparatus_rank` / `aa_rank` (1 = gold, 2 = silver, 3 = bronze) across scored ranking rows. Regional teams (e.g. `Counties - Manukau`) resolve via the club→region lookup, and National Championships (`is_national` events) medals can be tallied separately as "Nationals medals" alongside season totals.
+  - Decide scope: per-year vs all-time, whether apparatus ranks count alongside AA (or AA only), and whether Nationals medals are broken out separately. Ties in the source rankings need a rule (e.g. both athletes share gold, or count by distinct rank value).
+  - Backend: aggregation endpoint(s) — e.g. `GET /api/medals?year=` returning per-gymnast, per-club and per-region counts (golds, silvers, bronzes, total, plus a nationals breakdown), cached like `/api/stats`.
+  - Frontend: medal badges/totals on the gymnast page (`/gymnast/[gnz_id]`), club page (`/club/[club]`), the `/clubs` region lists, and optionally the `/gymnasts` list; exportable alongside existing tables.
+  - **Files:** `backend/app/main.py`, `backend/app/schemas.py`, `backend/app/cache.py`, `frontend/src/lib/api.ts`, `frontend/src/routes/gymnast/[gnz_id]/+page.svelte`, `frontend/src/routes/club/[club]/+page.svelte`, `frontend/src/routes/gymnasts/+page.svelte`, `frontend/src/routes/clubs/+page.svelte`
+- [ ] Edit row functionality for admin
+  - Inline edit of gymnast name / GNZ ID / club already saves to DB, but the results table doesn't feel reactive after save — needs investigation into the data reload path (`doLoad()` / `applyTab()`). Cache invalidation on `wide-all` works but the frontend may still show stale rows.
+  - **Files:** `frontend/src/lib/WideResultsTable.svelte`, `frontend/src/lib/api.ts`, cache invalidation in `backend/app/main.py`
+- [x] MAG Wellington ranking thresholds
+  - MAG per-step-range qualifying scores configured in the Wellington ranking module.
+- [x] Look at not-admin logged in functionality
+  - Per-user ranking-page access: `User.permissions` (comma-separated `rankings.national`, `rankings.wellington`) editable from User Management (`PATCH /api/auth/users/{id}/permissions`, admin); new members default to National only, admins always full.
+  - Backend enforcement via `require_permission()` in `auth.py` (DB lookup, admins bypass): `/api/rankings`→national, `/api/rankings/wellington` + intents→wellington, `/api/rankings/steps`→either. `GET /api/auth/me` returns DB-fresh permissions.
+  - Client-side route guard in `+layout.svelte`: signed-out users and members lacking the required role/permission are redirected to `/` from `/admin` (admin role), `/rankings` (national), and `/wellington-ranking` (wellington), with no flash while the auth check resolves.
+  - Nav gating in `+layout.svelte`: Rankings links (desktop + mobile) shown only per permission; Upload/Admin links remain admin-role only; Login button now shown on every page.
+  - **Files:** `backend/app/auth.py`, `backend/app/main.py`, `backend/app/schemas.py`, `backend/app/models.py`, `frontend/src/lib/auth.ts`, `frontend/src/lib/api.ts`, `+layout.svelte`, `admin/users/+page.svelte`, `rankings/+page.svelte`, `wellington-ranking/+page.svelte`
+- [x] Apparatus Specialist Wellington Qualifying
+  - WAG STEP 8-10 fallback: athletes not in the AA table who reach ≥11.000 TWICE at DIFFERENT COMPETITIONS on the same apparatus are returned as `apparatus_specialists` (best per apparatus across eligible events, per-competition best tracked in `apparatus_events`). Athletes who reached the mark only once appear as `qualified: False` rows rendered with greyed-out `badge-outline` ghost badges (tooltip explains they need a second competition). MAG Level 7+ (11.500 × 1) and the International per-apparatus marks (× 1) are unaffected since 1 mark qualifies. May need expansion to other STEP ranges.
+  - **Files:** `backend/app/wellington_ranking.py`, `backend/app/schemas.py`, `backend/app/main.py`, `backend/app/transformer.py`, `frontend/src/routes/wellington-ranking/+page.svelte`, `frontend/src/lib/api.ts`
+- [x] International Divisions Wellington Qual
+  - WAG International divisions (Youth/Junior/Senior International) now appear on the Wellington rankings page: ranked by the single highest All Around mark (no competition-mix selection), Gymnastics NZ qualifying 42.500 / 43.000 / 45.000 on one occasion. Junior + Senior also qualify via per-apparatus specialist marks (count 1): JI VT 12.2/UB 10.4/BB 10.5/FX 11.4, SI VT 12.50/UB 11.30/BB 11.20/FX 11.40 (vault is avg of two). MAG Level 7+ (L7–10, U18, Senior Open) now also computes apparatus specialists at 11.500 (count 1). Apparatus specialist thresholds support a per-apparatus dict (`apparatus_qualifying_scores`) alongside the existing single float; vault specialist scores apply `_use_vault_average` rules per event. New `marks_required` config field (default 3, International = 1) drives the can't-form-selection check and `_selection_checks` (empty for single-mark configs). Step dropdown no longer excludes "international".
+  - **Files:** `backend/app/wellington_ranking.py`, `frontend/src/routes/wellington-ranking/+page.svelte`
+- [x] Order /clubs by region (Northland → Southland)
+  - Desktop uses the interactive NZ map (geographic selection). Mobile replaced the map with a collapsible accordion of the region cards, so a latitudinal ordering is needed again — `REGION_ORDER` in `frontend/src/lib/regions.ts` drives the `grouped` sort on `/clubs` (north→south, "Other" last). Rendered via the shared `RegionCard` snippet.
+  - **Files:** `frontend/src/routes/clubs/+page.svelte`, `frontend/src/lib/regions.ts`
+- [x] Put provincial teams next to header, separate from clubs
+  - Distinguish regional/provincial teams (e.g. `Counties - Manukau`) from regular clubs on the /clubs page — show them next to the region header rather than mixed into the club list.
+  - **Files:** `frontend/src/routes/clubs/+page.svelte`
+- [x] xlsx format export
+  - Client-side CSV/XLSX/PDF export dropdown on all result/ranking pages. `frontend/src/lib/export.ts` builds CSV, XLSX (SheetJS `xlsx`), and PDF (jsPDF + autotable); `ExportMenu.svelte` is the shared dropdown. Libraries lazy-loaded via dynamic `import()` so they only download on first export click. Backend `/api/events/{id}/export/csv|xlsx` endpoints unchanged.
+  - XLSX honors a `colFormat` map: hides `region`, per-pass vault cols (`vt-1-*`, `vt-2-*`) and all `*-bonus`, widens name/club (30) + event_name (45). PDF renders the table view (one column per apparatus, D/Total), with title header + `Page X of Y` footer. Filenames are descriptive and kebab-cased via `slugifyFilename()`.
+  - **Files:** `frontend/src/lib/export.ts`, `frontend/src/lib/ExportMenu.svelte`, the 4 `WideResultsTable` pages + `rankings` + `wellington-ranking`
+- [ ] a11y — see **STEP 24** (tiered plan with Lighthouse baseline/comparison; tracked reports in `a11y-reports/`)
+- [x] Index remix: update index page, combine stats with badges, add Patch notes, streamline, add animation?
+  - Live stat counts moved onto the nav cards as badges (Events/Gymnasts/Scores/Clubs), separate stats row removed. Added a "What's new" patch-notes section driven by `frontend/static/patch_notes.json` (full history, newest first; the page fetches it and renders everything in a scrollable list). Feature cards kept but copy tightened (CSV/XLSX/PDF). Subtle staggered fade/fly on-load reveal, gated on `prefers-reduced-motion`.
+  - **Files:** `frontend/src/routes/+page.svelte`, `frontend/static/patch_notes.json`
+- [x] Vetical sticky alphabet searcher on Gymnasts page.
+- [ ] Rethink how Year Selector works
+- [x] Interactive season timeline (train-map style)
+  - A reusable `Timeline` component (`frontend/src/lib/Timeline.svelte`) embedded at the top of the `/events` page (hidden on mobile via `hidden md:block`, desktop only): a horizontally-scrollable chart of every competition in the selected year, drawn like a London Underground map — theme-aware "ink" lines (`var(--color-base-content)`, dark in light mode / light in dark mode) with a consistent stroke width, 45° elbow joins, inline station-style labels. No backend changes needed: the events page already loads `listEvents()` + `listKnownClubs()` and passes both as props, so the component makes no fetches of its own.
+  - Layout: a full-width SVG with a fixed-pitch week column along the x-axis (month labels + faint gridlines). The chart spans from **1 week before the first event to 1 week after the last event** (no long empty off-season stretch). A main line runs horizontally; each week that hosts a competition gets a white (base-100) station dot on the line (painted above the branches), and each competition branches off its week's dot with a 45° elbow to an inline label showing the event name (truncated to 22 chars on the chart, full name in the tooltip) with a small date line below.
+  - Colouring: each competition's region identity is carried by a 2×2 rounded checkerboard marker (first two colours of its host club's `REGION_PALETTES` entry, club→region resolved via `listKnownClubs()`, same pattern as the events page host-club badge) sitting at the elbow end of its branch. Nationals (`is_national`) and events with no/unknown host club fall back to a neutral grey checkerboard; a National Championships week keeps an accent ring around its dot. Branch lines, dots and labels are drawn in three layers (all lines → all labels/checkerboards → week dots) so no diagonal can overpaint a checkerboard or date label; bottom-half dates are offset right so the next stacked diagonal doesn't cross them. WAG/MAG and multi-day spans noted via the tooltip. No legend under the chart.
+  - Interaction: clicking a competition label/dot navigates to `/events/{id}`; hover/focus highlights that branch and dims the rest; a fixed-position tooltip shows date, host club, region and a WAG/MAG badge (content duplicated in the element's `aria-label`).
+  - Year selector: the timeline reads `selectedYear` read-only and is hidden when "All" (null) is selected — the /events page keeps its normal All tab and the timeline only appears for a specific year, so the chart and the events table always show the same year. The standalone `/timeline` route was removed (no nav link).
+  - A11y: competition labels are focusable SVG `<a>` elements with `aria-label` (WCAG 2.5.3), min 24px target size; label text drawn with a halo stroke so overlaps stay readable; tooltip content duplicated in the `aria-label` for keyboard/screen-reader users.
+  - **Files:** `frontend/src/lib/Timeline.svelte` (new component), `frontend/src/routes/events/+page.svelte` (embeds the timeline, hidden on mobile), `frontend/src/routes/+layout.svelte` (removed `/timeline` nav links + year-selector handling), `frontend/static/patch_notes.json` (notable user-facing change)
+- [x] Gymnast page Personal Bests card + season meta
+  - `SeasonBest.svelte` renders at the top of `/gymnast/[gnz_id]` when a specific year is selected (not "All"): the best score on each apparatus that season (secondary-coloured box + D-score underneath, tooltip shows the competition/round), the best all-around actually achieved (`aa-score` max, excluding apparatus-finals/day-2 rounds), and the Best Possible AA (sum of the per-apparatus bests, primary-coloured box, with an explanatory tooltip). A vertical divider separates the apparatus from the Best Possible AA.
+  - When a year is selected, the gymnast's GNZ ID, club (linked), region badge and the step(s) they competed in are shown under the name (`nameBadge`/`nameMeta` snippets); the page now defaults to the current year (most recent year with data as a fallback) by setting the global `selectedYear` once if still unset.
+  - **Files:** `frontend/src/lib/SeasonBest.svelte` (new), `frontend/src/lib/WideResultsTable.svelte` (new optional `onData` callback + `afterHeader`/`nameBadge`/`nameMeta` snippets), `frontend/src/routes/gymnast/[gnz_id]/+page.svelte`
+- [x] Event page Nationals badge should show next to name, not discipline, also use accent badge
+- [x] Parser: skip DNS / no-score passes at ingest time
+  - Scoreholder emits an explicit DNS score item (`pass_final_score` decodes to `"dns"`, `d_score=0`, `e_score=10`) for every apparatus/day an athlete didn't compete on multi-day meets. The parser previously stored these as normal `long_scores` rows (`_sanitise_float("dns")` → NULL total), creating phantom 2+ pass structures. `_build_wide_row` (transformer.py) tolerates a DNS pass-1 (a DNS pass never hides a real pass-2 score and is never averaged into vault aggregation), and the wide table renders missing apparatus as "DNS" anyway, so dropping the rows at ingest is safe. The parser emission loop now skips any score item whose decoded `pass_final_score` is not numeric (parser.py, in the `for si in source_items:` loop) — this drops `"dns"`/`"dnf"`/`"zero"` strings and missing scores before a row is built. The `scores_by_id` indexing loops are untouched so pass numbering and bonus propagation still work. Existing stored DNS rows intentionally left in place — harmless since the transformer handles them.
+  - **Files:** `backend/app/parser.py`, `backend/tests/test_parser.py` (regression test `TestSkipDnsRows`, parametrized over mgi-wag-2026.json + hve-2026.json)
+
+### Deployment: Homeserver infra upgrade (tunnel + auto-deploys + R2 backups)
+Maintenance-window task — run late at night when traffic is ~0. Rollback-safe: keep NPM + port-forward until the tunnel is verified, then remove.
+
+- [ ] **Cloudflare Tunnel (replaces NPM + port-forward, kills all cert management)**
+  - Cloudflare Zero Trust → Networks → Tunnels → create "home" tunnel → copy connector token → put in server `.env` as `TUNNEL_TOKEN`.
+  - Add `cloudflared` service to `docker-compose.prod.yml` (same internal network as `frontend`; `command: tunnel run`; `restart: unless-stopped`).
+  - Add public hostname on the tunnel: `results.coach.tools` → HTTP → `frontend:3000` (Cloudflare creates the DNS route + serves its own edge cert — no Let's Encrypt, no origin cert, no renewals).
+  - Cutover: `docker compose up -d` → verify `https://results.coach.tools` + `/api/health` through the tunnel → then delete NPM proxy host + remove router 80/443 port-forward. Roll back by re-enabling NPM/port-forward.
+  - **Files:** `docker-compose.prod.yml`, server `.env`, Cloudflare dashboard
+- [ ] **Pull-based automated deploys (no inbound SSH needed)**
+  - CI: on push to `main`, build backend + frontend images → push to GHCR as `latest` + `sha-<short>` (public images → anonymous pull on the server).
+  - Server cron every ~5 min runs `scripts/deploy.sh`: compare remote GHCR digest of `latest` vs a stamp file → if changed, `docker compose pull && docker compose up -d` → verify `/api/health` → update stamp.
+  - `docker-compose.prod.yml` services pinned to GHCR `image:` tags (server never builds).
+  - **Files:** `.github/workflows/build.yml` (new), `scripts/deploy.sh` (new), `docker-compose.prod.yml`
+- [ ] **Nightly off-site backups → Cloudflare R2**
+  - `scripts/backup.sh` (cron 02:30): one-off container mounts `backend_data` volume → `sqlite3 .backup` (WAL-safe) + tar `clubs_and_regions.json` + `jwt_secret.txt` → `rclone copy` → R2 bucket `nz-gymnastics-backups`. Retention 14 daily + 12 monthly. Optional healthchecks.io ping so a silent failure is noticed.
+  - `scripts/restore.sh`: list R2 backups, restore a chosen one into the volume.
+  - **Files:** `scripts/backup.sh` (new), `scripts/restore.sh` (new)
+- [ ] **Monitoring**
+  - Cloudflare health check on `https://results.coach.tools/api/health` (catches box/power/internet outages).
+  - Watchdog in `deploy.sh`/cron: restart any container stuck unhealthy.
+  - **Files:** Cloudflare dashboard, `scripts/deploy.sh`
+- [ ] **Docs**
+  - Update `DEPLOYMENT.md` (tunnel runbook replaces the NPM cert-diagnosis runbook) + `AGENTS.md` (deploy/backup/restore/monitor commands + scaling notes).
+  - **Files:** `DEPLOYMENT.md`, `AGENTS.md`
+
+Note: no app code changes. The tunnel, GHCR pull and R2 backup are all independent of each other — each can ship alone if a step stalls.
