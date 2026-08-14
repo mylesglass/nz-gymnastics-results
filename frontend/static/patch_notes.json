@@ -1,5 +1,20 @@
 [
   {
+    "date": "15 Aug 2026",
+    "entries": [
+      {
+        "title": "SEO: pages are now search-engine friendly",
+        "items": [
+          "Every public page now serves real content in the initial HTML (event names, gymnast and club profiles, counts) instead of a blank loading spinner — titles, meta descriptions, canonical URLs and Open Graph tags are generated per page.",
+          "Gymnast profile pages now appear in search results under the athlete's real name, and old /gymnast/{id} links automatically redirect to a readable address like /gymnast/a1b2c3d4e5-eva-mcewan.",
+          "Added a sitemap.xml covering every event, gymnast and club page, plus a robots.txt that keeps login and admin pages out of search results.",
+          "Event pages carry structured data (SportsEvent) and gymnast/club pages include Person/SportsOrganization markup so search engines can surface richer results.",
+          "Missing gymnasts, clubs and events now return a proper 404 instead of a page that looks fine to search engines but shows 'not found' only in the browser."
+        ]
+      }
+    ]
+  },
+  {
     "date": "14 Aug 2026",
     "entries": [
       {

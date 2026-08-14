@@ -6,6 +6,7 @@
   import AATooltip from "./AATooltip.svelte";
   import MedalDot from "./MedalDot.svelte";
   import { REGION_PALETTES } from "./regions";
+  import { gymnastPath } from "./seo";
   import { currentUser } from "$lib/auth";
   import { updateGymnast } from "$lib/api";
   import RegionCheck from "./RegionCheck.svelte";
@@ -43,6 +44,7 @@
     afterHeader,
     nameBadge,
     nameMeta,
+    initialTitle = "",
   }: {
     loadData: () => Promise<LoadDataResult>;
     loadKey?: string;
@@ -57,6 +59,7 @@
     afterHeader?: Snippet;
     nameBadge?: Snippet;
     nameMeta?: Snippet;
+    initialTitle?: string;
   } = $props();
 
   let loading = $state(true);
@@ -67,7 +70,7 @@
   let columns = $state<string[]>([]);
   let rows = $state<Record<string, unknown>[]>([]);
   let allData = $state<Record<string, TabData>>({});
-  let title = $state("");
+  let title = $state(initialTitle);
   let sortCol = $state<string | null>(null);
   let sortAsc = $state(true);
   let errorMessage = $state<string | null>(null);
@@ -986,7 +989,7 @@ function appDisplayLabel(prefix: string): string {
                     }}
                   />
                 {:else if col === "name" && (row["gnz-id"] || row["slug"])}
-                  <a href={`/gymnast/${row["slug"] || row["gnz-id"]}`} class="link link-hover"
+                  <a href={gymnastPath(String(row["slug"] || ""), String(row["gnz-id"] || ""), String(row["name"] || ""))} class="link link-hover"
                     >{row[col] ?? ""}</a
                   >
                 {:else if col === "club" && row["club"]}

@@ -1,18 +1,34 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { fly, fade } from "svelte/transition";
+  import { page } from "$app/stores";
   import { getStats } from "$lib/api";
   import { currentUser, hasPermission, PERMISSIONS } from "$lib/auth";
+  import Seo from "$lib/Seo.svelte";
 
-  let stats = $state<{
-    total_events: number;
-    total_gymnasts: number;
-    total_scores: number;
-    total_clubs: number;
-  } | null>(null);
+  let {
+    data,
+  }: {
+    data: {
+      stats: {
+        total_events: number;
+        total_gymnasts: number;
+        total_scores: number;
+        total_clubs: number;
+      } | null;
+    };
+  } = $props();
+
+  let stats = $state(data.stats);
   let patchNotes = $state<{ date: string; entries: { title: string; items: string[] }[] }[]>([]);
   let motion = $state(true);
   let user = $state<{ username: string; role: string; permissions: string[] } | null>(null);
+
+  let homeDescription = $derived(
+    stats
+      ? `Browse ${stats.total_events.toLocaleString()} events, ${stats.total_gymnasts.toLocaleString()} gymnast profiles, ${stats.total_clubs.toLocaleString()} clubs, and ${stats.total_scores.toLocaleString()} scores from New Zealand gymnastics competitions.`
+      : "Search, browse, and share New Zealand Artistic Gymnastics competition results."
+  );
 
   let canRankings = $derived(
     user && (hasPermission(user, PERMISSIONS.national) || hasPermission(user, PERMISSIONS.wellington))
@@ -44,9 +60,20 @@
   });
 </script>
 
-<svelte:head>
-  <title>NZ Gymnastics Results</title>
-</svelte:head>
+<Seo
+  title="NZ Gymnastics Results"
+  path="/"
+  origin={$page.url.origin}
+  description={homeDescription}
+  jsonLd={{
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "NZ Gymnastics Results",
+    url: `${$page.url.origin}/`,
+    description: "Search, browse, and share New Zealand Artistic Gymnastics competition results.",
+    inLanguage: "en",
+  }}
+/>
 
 <div class="max-w-6xl mx-auto">
   <div in:reveal={{ dist: -10, delay: 0 }} class="text-center mb-12 mt-4">

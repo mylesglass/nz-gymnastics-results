@@ -1,12 +1,26 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { page } from "$app/stores";
   import { getAllWideResults } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
   import WideResultsTable from "$lib/WideResultsTable.svelte";
   import ExportMenu from "$lib/ExportMenu.svelte";
+  import Seo from "$lib/Seo.svelte";
+
+  let {
+    data,
+  }: {
+    data: { totalScores: number | null };
+  } = $props();
+
+  let resultsDescription = $derived(
+    data.totalScores
+      ? `View all ${data.totalScores.toLocaleString()} gymnastics scores across every event in one place — WAG & MAG, per-apparatus breakdowns and all-around totals.`
+      : "View all gymnastics scores across every New Zealand event in one place — WAG & MAG."
+  );
 
   let filterYear = $state<string | null>(null);
-  let ready = $state(false);
+  let ready = $state(true);
 
   onMount(async () => {
     const unsub1 = selectedYear.subscribe((v) => {
@@ -33,9 +47,12 @@
   }
 </script>
 
-<svelte:head>
-  <title>All Results — NZ Gymnastics Results</title>
-</svelte:head>
+<Seo
+  title="All Results"
+  path="/results"
+  origin={$page.url.origin}
+  description={resultsDescription}
+/>
 
 {#snippet download({columns, rows, headerLabels, pdfColumns, colFormat})}
   <ExportMenu {columns} {rows} {headerLabels} {pdfColumns} {colFormat} title={filterYear ? `All Results ${filterYear}` : "All Results"} filename={filterYear ? `All Results ${filterYear}` : "All Results"} />
@@ -56,6 +73,7 @@
     loadKey={filterYear ?? ""}
     showEventFilter={true}
     extraHeadLabels={{ event_name: "Event" }}
+    initialTitle="All Results"
     {download}
     {empty}
   />

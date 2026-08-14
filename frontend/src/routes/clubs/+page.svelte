@@ -1,13 +1,30 @@
 <script lang="ts">
   import { fade } from "svelte/transition";
   import { onMount } from "svelte";
+  import { page } from "$app/stores";
   import { listClubs } from "$lib/api";
   import NZRegionMap from "$lib/NZRegionMap.svelte";
   import { REGION_PALETTES, REGION_ORDER, gradientBackground, gradientTextColor, headingColor, textColor } from "$lib/regions";
+  import Seo from "$lib/Seo.svelte";
+  import type { ClubData } from "./+page.server";
 
-  let clubs = $state<{ name: string; gymnast_count: number; region: string | null; is_region: boolean }[]>([]);
-  let loading = $state(true);
+  type Club = { name: string; gymnast_count: number; region: string | null; is_region: boolean };
+
+  let {
+    data,
+  }: {
+    data: { clubs: ClubData[] };
+  } = $props();
+
+  let clubs = $state<Club[]>(data.clubs);
+  let loading = $state(data.clubs.length === 0);
   let active = $state<string | null>(null);
+
+  let clubsDescription = $derived(
+    data.clubs.length
+      ? `Explore ${data.clubs.length} New Zealand gymnastics clubs by region — results, gymnast counts, and competition history.`
+      : "Explore New Zealand gymnastics clubs by region."
+  );
 
   onMount(() => {
     listClubs()
@@ -70,9 +87,12 @@
   });
 </script>
 
-<svelte:head>
-  <title>Clubs — NZ Gymnastics Results</title>
-</svelte:head>
+<Seo
+  title="Clubs"
+  path="/clubs"
+  origin={$page.url.origin}
+  description={clubsDescription}
+/>
 
 <div class="max-w-7xl mx-auto px-4">
   {#if loading}    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

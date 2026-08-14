@@ -9,7 +9,7 @@
   import { selectedYear, yearOptions } from "$lib/year";
   import "../app.css";
 
-  let { children }: { children: Snippet } = $props();
+  let { data, children }: { data: { verification: string | null }; children: Snippet } = $props();
 
   const THEMES = [
     "light", "dark", "cupcake", "bumblebee", "emerald", "corporate",
@@ -158,6 +158,12 @@
     return () => document.removeEventListener("visibilitychange", onVisible);
   });
 </script>
+
+<svelte:head>
+  {#if data.verification}
+    {@html data.verification}
+  {/if}
+</svelte:head>
 
 <div class="drawer">
   <input

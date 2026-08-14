@@ -10,15 +10,28 @@
   import SeasonBest from "$lib/SeasonBest.svelte";
   import RegionBadge from "$lib/RegionBadge.svelte";
   import { REGION_PALETTES } from "$lib/regions";
+  import Seo from "$lib/Seo.svelte";
+
+  let {
+    data,
+  }: {
+    data: { name: string; slug: string };
+  } = $props();
 
   let filterYear = $state<string | null>(null);
-  let ready = $state(false);
-  let gymnastFound = $state(false);
-  let gymnastName = $state("");
+  let ready = $state(true);
+  let gymnastFound = $state(Boolean(data.name));
+  let gymnastName = $state(data.name);
   let medals = $state<MedalCounts | null>(null);
   let medalsLoading = $state(true);
   let tabs = $state<Record<string, { columns: string[]; rows: Record<string, unknown>[] }> | null>(null);
   let defaultYearApplied = false;
+
+  let gymnastDescription = $derived(
+    gymnastName
+      ? `Results, scores, and medals for ${gymnastName} — a New Zealand artistic gymnast.`
+      : "New Zealand artistic gymnast results."
+  );
 
   function applyDefaultYear() {
     if (defaultYearApplied) return;
@@ -74,11 +87,13 @@
     ...new Set(metaRows.map((r) => String(r.step ?? "")).filter((s) => s)),
   ]);
 
-  // The route param is an athlete slug (a##########); legacy gnz_id links are
-  // sent through the gnz_id param so the backend keeps resolving them.
+  // The route param is an athlete slug (a########## optionally followed by a
+  // name suffix) or a legacy gnz_id. The slug portion is sent to the backend;
+  // everything else is passed through as a gnz_id.
   function identityParams(): { slug?: string; gnz_id?: string } {
     const p = $page.params.slug;
-    if (/^a[0-9a-f]{10}$/.test(p)) return { slug: p };
+    const m = p.match(/^(a[0-9a-f]{10})(?:-[a-z0-9-]+)?$/);
+    if (m) return { slug: m[1] };
     return { gnz_id: p };
   }
 
@@ -121,9 +136,18 @@
   }
 </script>
 
-<svelte:head>
-  <title>Gymnast — NZ Gymnastics Results</title>
-</svelte:head>
+<Seo
+  title={gymnastName || "Gymnast"}
+  path={`/gymnast/${$page.params.slug}`}
+  origin={$page.url.origin}
+  description={gymnastDescription}
+  jsonLd={{
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: gymnastName || undefined,
+    url: `${$page.url.origin}/gymnast/${$page.params.slug}`,
+  }}
+/>
 
 {#snippet download({columns, rows, headerLabels, pdfColumns, colFormat})}
   <ExportMenu {columns} {rows} {headerLabels} {pdfColumns} {colFormat} title={gymnastName ? `${gymnastName} Results` : "Gymnast Results"} filename={gymnastName ? `${gymnastName} Results` : `gymnast-${$page.params.slug || "unknown"}`} />
@@ -184,6 +208,7 @@
     showEventFilter={true}
     stickyCol="event_name"
     extraHeadLabels={{ event_name: "Event" }}
+    initialTitle={gymnastName || "Gymnast"}
     {download}
     {empty}
     {controls}

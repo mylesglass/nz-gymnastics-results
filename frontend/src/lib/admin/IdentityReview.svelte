@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { getIdentityReview, mergeAthletes, splitAthlete } from "$lib/api";
   import type { AthleteReviewInfo, IdentityReview, MultiIdAthlete } from "$lib/api";
+  import { gymnastPath } from "$lib/seo";
 
   let {
     onCount,
@@ -406,7 +407,7 @@
 {#snippet evidence(a: AthleteReviewInfo)}
   <div class="text-xs space-y-0.5">
     <div>
-      <a href="/gymnast/{a.slug}" class="link link-hover font-medium">{a.name}</a>
+      <a href={gymnastPath(a.slug, a.gnz_id || "", a.name)} class="link link-hover font-medium">{a.name}</a>
       {#if a.gnz_id}<span class="text-base-content/60"> · {a.gnz_id}</span>{/if}
       {#if a.intent_years.length > 0}<span class="badge badge-primary badge-xs ml-1">intent</span>{/if}
     </div>

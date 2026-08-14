@@ -676,3 +676,99 @@ class TestAthleteSlugEndpoints:
         assert resp.status_code == 200
         data = resp.json()
         assert data["name"] == "Eva McEwan"
+
+
+class TestGymnastIdentity:
+    def _seed(self, session) -> None:
+        from app.athlete_identity import rebuild_athletes
+        from app.models import Event, LongScore
+
+        ev = Event(name="Meet 2026", start_date="2026-03-01", end_date="2026-03-02", discipline="WAG", year=2026)
+        session.add(ev)
+        session.flush()
+        session.add_all([
+            LongScore(event_id=ev.id, event_name="Meet 2026", gymnast_name="Eva Mcewan", gnz_id="999", club_name="OMNI", discipline="WAG", level_category="STEP 5", apparatus="VT", pass_number=1, pass_final_score=10.0, round_type="All Around"),
+            LongScore(event_id=ev.id, event_name="Meet 2026", gymnast_name="Eva McEwan", gnz_id="999", club_name="OMNI", discipline="WAG", level_category="STEP 5", apparatus="UB", pass_number=1, pass_final_score=11.0, round_type="All Around"),
+        ])
+        session.commit()
+        rebuild_athletes(session)
+
+    def test_by_slug(self):
+        from app.cache import cache
+        from app.database import SessionLocal
+        from app.models import Athlete
+
+        cache.clear()
+        session = SessionLocal()
+        try:
+            self._seed(session)
+            slug = session.query(Athlete).first().slug
+        finally:
+            session.close()
+
+        resp = client.get("/api/gymnast", params={"slug": slug})
+        assert resp.status_code == 200
+        g = resp.json()
+        assert g["name"] == "Eva McEwan"
+        assert g["slug"] == slug
+        assert g["gnz_id"] == "999"
+        assert g["club"] == "OMNI"
+
+    def test_by_gnz_id(self):
+        from app.cache import cache
+        from app.database import SessionLocal
+
+        cache.clear()
+        session = SessionLocal()
+        try:
+            self._seed(session)
+        finally:
+            session.close()
+
+        resp = client.get("/api/gymnast", params={"gnz_id": "999"})
+        assert resp.status_code == 200
+        g = resp.json()
+        assert g["name"] == "Eva McEwan"
+        assert g["slug"].startswith("a")
+
+    def test_unknown_returns_null(self):
+        from app.cache import cache
+        from app.database import SessionLocal
+
+        cache.clear()
+        session = SessionLocal()
+        try:
+            self._seed(session)
+        finally:
+            session.close()
+
+        resp = client.get("/api/gymnast", params={"slug": "a0000000000"})
+        assert resp.status_code == 200
+        assert resp.json() is None
+
+        resp = client.get("/api/gymnast")
+        assert resp.status_code == 200
+        assert resp.json() is None
+
+    def test_gnz_id_fallback_without_athlete_cluster(self):
+        from app.cache import cache
+        from app.database import SessionLocal
+        from app.models import Event, LongScore
+
+        cache.clear()
+        session = SessionLocal()
+        try:
+            ev = Event(name="Meet 2026", start_date="2026-03-01", end_date="2026-03-02", discipline="WAG", year=2026)
+            session.add(ev)
+            session.flush()
+            session.add(LongScore(event_id=ev.id, event_name="Meet 2026", gymnast_name="Una Clustered", gnz_id="777", club_name="Team X", discipline="WAG", level_category="STEP 5", apparatus="VT", pass_number=1, pass_final_score=10.0, round_type="All Around"))
+            session.commit()
+        finally:
+            session.close()
+
+        resp = client.get("/api/gymnast", params={"gnz_id": "777"})
+        assert resp.status_code == 200
+        g = resp.json()
+        assert g["name"] == "Una Clustered"
+        assert g["slug"] == ""
+        assert g["club"] == "Team X"

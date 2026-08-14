@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { page } from "$app/stores";
   import { listEvents, deleteEvent, updateEvent, listKnownClubs, type EventSummary, type KnownClub } from "$lib/api";
   import { currentUser } from "$lib/auth";
   import { selectedYear, yearOptions } from "$lib/year";
@@ -7,12 +8,26 @@
   import RegionBadge from "$lib/RegionBadge.svelte";
   import Dialog from "$lib/Dialog.svelte";
   import Timeline from "$lib/Timeline.svelte";
+  import Seo from "$lib/Seo.svelte";
+  import type { EventSummaryData } from "./+page.server";
 
-  let events = $state<EventSummary[]>([]);
-  let loading = $state(true);
+  let {
+    data,
+  }: {
+    data: { events: EventSummaryData[] };
+  } = $props();
+
+  let events = $state<EventSummary[]>(data.events as EventSummary[]);
+  let loading = $state(data.events.length === 0);
   let filterYear = $state<string | null>(null);
   let searchQuery = $state("");
   let loggedIn = $state(false);
+
+  let eventsDescription = $derived(
+    data.events.length
+      ? `Browse ${data.events.length} New Zealand gymnastics events — WAG & MAG competition results, dates, host clubs, and full scores.`
+      : "Browse New Zealand gymnastics competition results."
+  );
 
   let sortCol = $state("start_date");
   let sortAsc = $state(false);
@@ -143,9 +158,12 @@
   }
 </script>
 
-<svelte:head>
-  <title>Events — NZ Gymnastics Results</title>
-</svelte:head>
+<Seo
+  title="Events"
+  path="/events"
+  origin={$page.url.origin}
+  description={eventsDescription}
+/>
 
 <div>
   <div class="max-w-6xl mx-auto">

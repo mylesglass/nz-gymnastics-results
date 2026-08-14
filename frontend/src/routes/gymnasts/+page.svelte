@@ -1,9 +1,13 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { page } from "$app/stores";
   import { listGymnasts, getMedals } from "$lib/api";
   import type { GymnastMedals } from "$lib/api";
   import { selectedYear } from "$lib/year";
   import MedalBadges from "$lib/MedalBadges.svelte";
+  import Seo from "$lib/Seo.svelte";
+  import { gymnastPath } from "$lib/seo";
+  import type { GymnastData } from "./+page.server";
 
   interface Gymnast {
     slug?: string;
@@ -14,13 +18,25 @@
     alt_clubs: string[];
   }
 
-  let gymnasts = $state<Gymnast[]>([]);
-  let loading = $state(true);
+  let {
+    data,
+  }: {
+    data: { gymnasts: GymnastData[] };
+  } = $props();
+
+  let gymnasts = $state<Gymnast[]>(data.gymnasts);
+  let loading = $state(data.gymnasts.length === 0);
   let search = $state("");
   let activeLetter = $state("");
   let scrolled = $state(false);
   let filterYear = $state<string | null>(null);
   let gymnastMedals = $state<Record<string, GymnastMedals>>({});
+
+  let gymnastsDescription = $derived(
+    data.gymnasts.length
+      ? `Browse ${data.gymnasts.length} New Zealand artistic gymnast profiles — results, medals, clubs, and competition history.`
+      : "Browse New Zealand artistic gymnast profiles."
+  );
 
   let filtered = $derived(
     search
@@ -103,9 +119,12 @@
 
 </script>
 
-<svelte:head>
-  <title>Gymnasts — NZ Gymnastics Results</title>
-</svelte:head>
+<Seo
+  title="Gymnasts"
+  path="/gymnasts"
+  origin={$page.url.origin}
+  description={gymnastsDescription}
+/>
 
 <div class="max-w-6xl mx-auto">
   <div class="sticky top-4 z-10 rounded-box bg-base-200/80 backdrop-blur border border-base-300/50 p-4 mb-6 transition-all">
@@ -189,7 +208,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-1">
           {#each letterGymnasts as gr}
             <a
-              href="/gymnast/{gr.slug || gr.gnz_id}"
+              href={gymnastPath(gr.slug, gr.gnz_id, gr.name)}
               class="flex flex-col px-3 py-1.5 rounded hover:bg-base-200 transition-colors"
             >
               <span class="flex items-center gap-1">

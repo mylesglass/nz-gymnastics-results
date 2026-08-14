@@ -3,8 +3,34 @@
   import { getWideResults } from "$lib/api";
   import WideResultsTable from "$lib/WideResultsTable.svelte";
   import ExportMenu from "$lib/ExportMenu.svelte";
+  import Seo from "$lib/Seo.svelte";
+  import type { EventDetailData } from "./+page.server";
 
-  let eventName = $state("");
+  let {
+    data,
+  }: {
+    data: { event: EventDetailData };
+  } = $props();
+
+  let eventName = $state(data.event.name);
+
+  let eventDescription = $derived(
+    `Full results for ${data.event.name} (${data.event.year ?? ""}) — ${data.event.discipline} gymnastics, ${data.event.gymnast_count} gymnasts${data.event.host_club ? `, hosted by ${data.event.host_club}` : ""}.`
+  );
+
+  let sportsEventLd = $derived({
+    "@context": "https://schema.org",
+    "@type": "SportsEvent",
+    name: data.event.name,
+    startDate: data.event.start_date,
+    ...(data.event.end_date ? { endDate: data.event.end_date } : {}),
+    inLanguage: "en",
+    sport: "Artistic Gymnastics",
+    about: { "@type": "Thing", name: `${data.event.discipline} Artistic Gymnastics` },
+    ...(data.event.host_club
+      ? { location: { "@type": "Place", name: data.event.host_club } }
+      : {}),
+  });
 
   function loadData() {
     const id = Number($page.params.id);
@@ -21,9 +47,13 @@
   }
 </script>
 
-<svelte:head>
-  <title>Results — NZ Gymnastics Results</title>
-</svelte:head>
+<Seo
+  title={data.event.name}
+  path={`/events/${data.event.id}`}
+  origin={$page.url.origin}
+  description={eventDescription}
+  jsonLd={sportsEventLd}
+/>
 
 {#snippet download({columns, rows, headerLabels, pdfColumns, colFormat})}
   <ExportMenu {columns} {rows} {headerLabels} {pdfColumns} {colFormat} title={eventName || "Event Results"} filename={eventName ? `${eventName} Results` : `event-${$page.params.id}`} />
@@ -35,4 +65,4 @@
   </div>
 {/snippet}
 
-<WideResultsTable {loadData} {download} {empty} eventId={Number($page.params.id)} />
+<WideResultsTable {loadData} {download} {empty} eventId={Number($page.params.id)} initialTitle={data.event.name} />

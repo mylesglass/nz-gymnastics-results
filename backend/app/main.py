@@ -548,6 +548,63 @@ def _compute_gymnasts(year: int | None) -> list[GymnastItem]:
         session.close()
 
 
+@app.get("/api/gymnast", response_model=GymnastItem | None)
+def get_gymnast(response: Response, gnz_id: str = None, slug: str = None):
+    """Return a single gymnast's identity record (name, slug, club) by slug or gnz_id."""
+    response.headers.update(cache_headers())
+    if not slug and not gnz_id:
+        return None
+    return cached(
+        ("gymnast", slug or "", gnz_id or ""),
+        lambda: _compute_gymnast(slug, gnz_id),
+        ttl=300,
+    )
+
+
+def _compute_gymnast(slug: str | None, gnz_id: str | None) -> GymnastItem | None:
+    session = get_session()
+    try:
+        if slug:
+            athlete = session.query(Athlete).filter(Athlete.slug == slug).first()
+        elif gnz_id:
+            matches = session.query(Athlete).filter(Athlete.gnz_id == gnz_id).all()
+            athlete = matches[0] if len(matches) == 1 else None
+        else:
+            return None
+
+        if athlete is None and gnz_id:
+            # No athlete cluster — fall back to the raw name row(s) for a gnz_id.
+            rows = (
+                session.query(LongScore.gymnast_name, LongScore.club_name)
+                .filter(LongScore.gnz_id == gnz_id)
+                .order_by(LongScore.gymnast_name)
+                .all()
+            )
+            if not rows:
+                return None
+            name = rows[0][0].strip()
+            clubs = {c for _, c in rows if c}
+            club = sorted(clubs)[0] if clubs else None
+            return GymnastItem(slug="", gnz_id=gnz_id or "", name=name, club=club)
+
+        if athlete is None:
+            return None
+
+        club = (
+            session.query(LongScore.club_name)
+            .filter(LongScore.athlete_id == athlete.id, LongScore.club_name.isnot(None))
+            .first()
+        )
+        return GymnastItem(
+            slug=athlete.slug,
+            gnz_id=athlete.gnz_id or "",
+            name=athlete.canonical_name,
+            club=club[0] if club else None,
+        )
+    finally:
+        session.close()
+
+
 # ---------------------------------------------------------------------------
 # Auth
 # ---------------------------------------------------------------------------

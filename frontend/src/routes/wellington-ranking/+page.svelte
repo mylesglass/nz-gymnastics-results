@@ -4,6 +4,7 @@
   import { selectedYear, yearOptions } from "$lib/year";
   import { currentUser } from "$lib/auth";
   import ExportMenu from "$lib/ExportMenu.svelte";
+  import { gymnastPath } from "$lib/seo";
 
 
   const CSV_HEADERS: Record<string, string> = {
@@ -422,7 +423,7 @@
                 class:border-l-4={configKey === 'wag_step_5_6' && i < 4}
                 class:border-l-primary={configKey === 'wag_step_5_6' && i < 4}
               >
-                <a href="/gymnast/{r.slug || r.gnz_id}" class="hover:link">{r.name}</a>
+                <a href={gymnastPath(r.slug, r.gnz_id, r.name)} class="hover:link">{r.name}</a>
               </td>
               <td class="text-base-content/70 text-xs hidden md:table-cell">{r.gnz_id}</td>
               <td class="hidden md:table-cell">{r.club}</td>
@@ -515,7 +516,7 @@
         {#each specialists as s, i}
           <tr class="group hover:bg-base-300">
             <td class="font-medium sticky left-0 z-10 border-r border-base-300 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}">
-              <a href="/gymnast/{s.slug || s.gnz_id}" class="hover:link">{s.name}</a>
+              <a href={gymnastPath(s.slug, s.gnz_id, s.name)} class="hover:link">{s.name}</a>
             </td>
             <td class="text-base-content/70 text-xs hidden md:table-cell">{s.gnz_id}</td>
             <td class="hidden md:table-cell">{s.club}</td>
