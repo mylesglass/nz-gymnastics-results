@@ -260,4 +260,4 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
 - `stale-while-revalidate=60` caps how long browsers/CDNs may serve stale public data while revalidating in the background (was 3600; users could otherwise sit on hour-old data after an upload/edit).
 
 ## Docs Convention
-- Whenever updating project docs (MEMORY/README/PLAN/DESIGN-DOCUMENT/BUGS) for a notable user-facing change, also prepend a matching entry to `frontend/static/patch_notes.json` (full history, newest first; landing page shows all entries in a scrollable section).
+- Whenever updating project docs (MEMORY/README/PLAN/DESIGN-DOCUMENT/BUGS) for a notable user-facing change, also prepend a matching entry to `frontend/static/patch_notes.json` (full history, newest first; landing page shows all entries in a scrollable section). Patch notes are public — never reference real athlete names; use dummy/famous names (e.g. `Ewan McGregor`, "the two Simone Biles") and genericise real club names.

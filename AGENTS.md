@@ -222,6 +222,7 @@ let { label, count = 0 }: { label: string; count?: number } = $props();
 - Whenever updating project docs (MEMORY.md, README.md, PLAN.md, DESIGN-DOCUMENT.md, BUGS.md) for a **notable user-facing change**, also prepend a matching entry to `frontend/static/patch_notes.json`.
 - The file is the full history, newest date group first. The landing page fetches it and renders everything in a scrollable "What's new" section, so additions are always visible without a frontend change.
 - Patch-note entry shape: `{ "date": "<Day Mon YYYY>", "entries": [{ "title": "...", "items": ["..."] }] }`. Group multiple updates from the same date under one `date` key.
+- **Privacy**: patch notes are public (rendered on the landing page), so never reference real athlete names. Use dummy/famous names instead — e.g. spelling-variant examples become `Ewan McGregor`/`Ewan Mcgregor`, and same-name-keep-apart examples become "the two Simone Biles" — and genericise real club names (e.g. "(at different clubs)").
 
 ## Development Commands
 

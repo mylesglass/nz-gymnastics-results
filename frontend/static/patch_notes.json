@@ -50,8 +50,8 @@
         "title": "Cleaner athlete identities on the live site",
         "items": [
           "The live database was re-checked against the original event exports, and every gymnast's name spelling and GNZ ID was corrected to what the source results agree on.",
-          "Gymnasts that were accidentally lumped together now appear separately again — for example the two Madison Lynches (OMNI and Onslow) are distinct athletes with their own pages, and over a thousand athletes had their correct ID restored.",
-          "Spelling variants (like McEwan/Mcewan) are now consistently the most common form everywhere on the site."
+          "Gymnasts that were accidentally lumped together now appear separately again — for example the two Simone Biles (at different clubs) are distinct athletes with their own pages, and over a thousand athletes had their correct ID restored.",
+          "Spelling variants (like McGregor/Mcgregor) are now consistently the most common form everywhere on the site."
         ]
       }
     ]
@@ -77,14 +77,14 @@
       {
         "title": "One consistent spelling for every gymnast",
         "items": [
-          "All of a gymnast's results are now stored under a single spelling of their name — variants like 'Eva Mcewan' / 'Eva McEwan', 'Rolston-larking' / 'Rolston-Larking' and 'Josh' / 'Joshua' Teitelbaum collapse to the most common form everywhere, including exports.",
-          "Gymnast totals and per-event competitor counts now count real people, so the homepage and event lists show exact numbers even when two athletes share a name (e.g. the two Madison Lynches)."
+          "All of a gymnast's results are now stored under a single spelling of their name — variants like 'Ewan Mcgregor' / 'Ewan McGregor', 'Newton-john' / 'Newton-John' and 'Suni' / 'Sunisa' Lee collapse to the most common form everywhere, including exports.",
+          "Gymnast totals and per-event competitor counts now count real people, so the homepage and event lists show exact numbers even when two athletes share a name (e.g. the two Simone Biles)."
         ]
       },
       {
         "title": "One identity per gymnast",
         "items": [
-          "Every gymnast now has a stable identity that survives spelling differences and messy IDs — the gymnast list no longer shows duplicates like 'Eva Mcewan' and 'Eva McEwan' as two people, and genuinely different athletes who share a name or ID (e.g. two Madison Lynches) are kept apart.",
+          "Every gymnast now has a stable identity that survives spelling differences and messy IDs — the gymnast list no longer shows duplicates like 'Ewan Mcgregor' and 'Ewan McGregor' as two people, and genuinely different athletes who share a name or ID (e.g. two Simone Biles) are kept apart.",
           "Gymnast pages moved to stable links (e.g. /gymnast/a3f8b2c1d4) that don't break when an ID is corrected. Old gnz-id links still work.",
           "Ranking tables, results tables and the Wellington rankings all group by the gymnast's identity, so spelling variants of the same person rank as one gymnast with their most common name.",
           "Wellington intent tracking follows the gymnast identity too, so marking intent for a gymnast stays attached if their ID is ever corrected."
@@ -93,8 +93,8 @@
       {
         "title": "Smarter athlete identity handling",
         "items": [
-          "Gymnast names keep their proper capitalization on import — names like McEwan, O'Sullivan and hyphenated surnames are no longer flattened to 'Mcewan' or 'Sullivan'.",
-          "Importing a competition now checks for identity collisions: if two athletes share a name (e.g. two Madison Lynches) or one ID appears on multiple names, the upload flags it as a warning instead of silently merging them.",
+          "Gymnast names keep their proper capitalization on import — names like McGregor, O'Neal and hyphenated surnames are no longer flattened to 'Mcgregor' or 'Neal'.",
+          "Importing a competition now checks for identity collisions: if two athletes share a name (e.g. two Simone Biles) or one ID appears on multiple names, the upload flags it as a warning instead of silently merging them.",
           "ID reconciliation is safer: athletes who share a name but competed at the same event (or in different disciplines) are never auto-merged — they're reported for manual review in the admin dashboard.",
           "An admin repair script (python -m app.repair_identities) can restore correct GNZ IDs and name spelling from the original event exports. It cross-checks every athlete against all source files, so a typo in one competition's data never overwrites a GNZ ID that the rest of the season agrees on."
         ]
