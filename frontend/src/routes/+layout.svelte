@@ -384,7 +384,7 @@
             rel="noopener noreferrer"
             class="btn btn-primary btn-xs"
           >
-            ☕ Support on Ko-fi
+            ☕ Buy me a coffee
           </a>
         </div>
         <p class="text-xs text-base-content/70 mt-3">
