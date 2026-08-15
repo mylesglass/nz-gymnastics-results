@@ -3,6 +3,20 @@
     "date": "15 Aug 2026",
     "entries": [
       {
+        "title": "Fix: wrongly merged duplicate profiles restored",
+        "items": [
+          "Duplicate profiles that had been merged with the old \"Keep\" button (keeping the wrong spelling or GNZ ID) have been reversed back into their separate profiles — for example where one competition left the GNZ ID blank, its profile no longer renames the gymnast's whole history. Old profile links keep working and redirect to the restored profile.",
+          "If you merge them again from the identity review, the preview now shows exactly which rows change, and keeping the profile that already has a GNZ ID keeps that ID across the merged rows."
+        ]
+      },
+      {
+        "title": "Fix: identity review \"Keep\" no longer keeps the wrong profile",
+        "items": [
+          "In the admin Identity Review, the \"Keep\" button next to a profile used to merge the wrong way around — it kept the other profile, which could overwrite a gymnast's real GNZ ID with a one-off value. Each button now keeps the profile it's shown next to, and a preview appears before merging that shows exactly which rows change, with the changed name and GNZ ID cells highlighted.",
+          "Profiles merged with the old button (where the wrong ID won) can be corrected with a repair script that restores the canonical name and GNZ ID — old profile links keep working and redirect to the restored profile."
+        ]
+      },
+      {
         "title": "Fix: gymnast Personal Bests now credit full all-around totals from finals days",
         "items": [
           "A gymnast's \"Best All-Around\" on the season-bests card used to ignore scores from Apparatus Finals or Day 2 rounds entirely, even when they competed a full all-around that day. If that finals-day total was their best of the season it was skipped and their second-best shown instead. Finals and Day 2 totals are now counted whenever the gymnast completed every apparatus that day, so a genuine best — for example a 56.625 all-around from the apparatus-finals day of a 2026 championship — ranks as the season's highest AA.",

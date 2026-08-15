@@ -1,0 +1,32 @@
+{
+  "cases": [
+    {
+      "athlete_id": 4450,
+      "splits": [
+        {"name": "Isabella Matheson", "gnz_id": "523803", "event_ids": [149, 159, 162, 169, 113, 121, 127, 138, 19, 21, 38, 56, 59, 65, 74, 215]},
+        {"name": "Isabella Matherson", "gnz_id": "", "event_ids": [94]}
+      ]
+    },
+    {
+      "athlete_id": 4451,
+      "splits": [
+        {"name": "Harriet Schuurman", "gnz_id": "721208", "event_ids": [93, 97, 116, 2, 15, 27, 30, 45, 58, 73, 75, 82, 84]},
+        {"name": "Harriet Shuurman", "gnz_id": "", "event_ids": [120]}
+      ]
+    },
+    {
+      "athlete_id": 4449,
+      "splits": [
+        {"name": "Daesharn Ewans-mcmahon", "gnz_id": "246312", "event_ids": [175, 178, 184, 187, 190, 193]},
+        {"name": "Daesharn Ewansmcmahon", "gnz_id": "", "event_ids": [155]}
+      ]
+    },
+    {
+      "athlete_id": 4453,
+      "splits": [
+        {"name": "Bianca Mendes Mattos", "gnz_id": "539540", "event_ids": [219]},
+        {"name": "Bianca Mendes Mattos", "gnz_id": "", "event_ids": [56]}
+      ]
+    }
+  ]
+}
