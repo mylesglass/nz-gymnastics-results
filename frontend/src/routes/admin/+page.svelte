@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { goto } from "$app/navigation";
+  import { page } from "$app/stores";
   import Dialog from "$lib/Dialog.svelte";
   import { getCloudflareSummary, refreshCache } from "$lib/api";
   import type { ActivitySummary, CloudflareSummary } from "$lib/api";
@@ -15,7 +17,28 @@
 
   type DialogKey = "upload" | "users" | "identity" | "log" | null;
 
+  const DIALOG_HASHES: Record<string, DialogKey> = {
+    upload: "upload",
+    users: "users",
+    identity: "identity",
+    log: "log",
+  };
+
   let openDialog = $state<DialogKey>(null);
+
+  $effect(() => {
+    const key = $page.url.hash.replace("#", "");
+    openDialog = DIALOG_HASHES[key] ?? null;
+  });
+
+  function openDialogKey(key: Exclude<DialogKey, null>) {
+    goto(`/admin#${key}`, { replaceState: true });
+  }
+
+  function closeDialog() {
+    openDialog = null;
+    goto("/admin", { replaceState: true });
+  }
   let chartData = $state<{
     summary: ActivitySummary | null;
     chartColors: Record<string, string> | null;
@@ -117,22 +140,22 @@
             <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
             Refresh cache
           </button>
-          <button class="btn btn-outline btn-sm gap-1" onclick={() => (openDialog = "upload")}>
+          <button class="btn btn-outline btn-sm gap-1" onclick={() => openDialogKey("upload")}>
             <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
             Upload
           </button>
-          <button class="btn btn-outline btn-sm gap-1" onclick={() => (openDialog = "users")}>
+          <button class="btn btn-outline btn-sm gap-1" onclick={() => openDialogKey("users")}>
             <span class="material-symbols-outlined" aria-hidden="true">group</span>
             Users
           </button>
-          <button class="btn btn-outline btn-sm gap-1" onclick={() => (openDialog = "identity")}>
+          <button class="btn btn-outline btn-sm gap-1" onclick={() => openDialogKey("identity")}>
             <span class="material-symbols-outlined" aria-hidden="true">badge</span>
             Identity Review
             {#if identityCount > 0}
               <span class="badge badge-warning badge-sm">{identityCount}</span>
             {/if}
           </button>
-          <button class="btn btn-outline btn-sm gap-1" onclick={() => (openDialog = "log")}>
+          <button class="btn btn-outline btn-sm gap-1" onclick={() => openDialogKey("log")}>
             <span class="material-symbols-outlined" aria-hidden="true">history</span>
             Logged-in activity
           </button>
@@ -196,19 +219,19 @@
 </div>
 
 {#if openDialog === "upload"}
-  <Dialog title="Upload Event" onClose={() => (openDialog = null)} maxWidth="max-w-3xl">
+  <Dialog title="Upload Event" onClose={closeDialog} maxWidth="max-w-3xl">
     <Upload />
   </Dialog>
 {:else if openDialog === "users"}
-  <Dialog title="User Management" onClose={() => (openDialog = null)} maxWidth="max-w-3xl">
+  <Dialog title="User Management" onClose={closeDialog} maxWidth="max-w-3xl">
     <Users />
   </Dialog>
 {:else if openDialog === "identity"}
-  <Dialog title="Identity Review" onClose={() => (openDialog = null)} maxWidth="max-w-5xl">
+  <Dialog title="Identity Review" onClose={closeDialog} maxWidth="max-w-5xl">
     <IdentityReview onCount={(n) => (identityCount = n)} />
   </Dialog>
 {:else if openDialog === "log"}
-  <Dialog title="Logged-in activity" onClose={() => (openDialog = null)} maxWidth="max-w-4xl">
+  <Dialog title="Logged-in activity" onClose={closeDialog} maxWidth="max-w-4xl">
     <ActivityLog />
   </Dialog>
 {/if}

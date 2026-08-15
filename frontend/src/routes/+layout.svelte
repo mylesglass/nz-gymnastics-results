@@ -338,8 +338,10 @@
                 {#if user?.role === "admin"}
                   <li role="none"><a role="menuitem" href="/admin" class={adminTab('overview') ? 'active' : ''}><span class="material-symbols-outlined" aria-hidden="true">space_dashboard</span>Dashboard</a></li>
                   <li role="none"><a role="menuitem" href="/admin#activity" class={adminTab('activity') ? 'active' : ''}><span class="material-symbols-outlined" aria-hidden="true">monitoring</span>Activity</a></li>
-                  <li role="none"><a role="menuitem" href="/admin" class={adminTab('upload') ? 'active' : ''}><span class="material-symbols-outlined" aria-hidden="true">upload_file</span>Upload</a></li>
-                  <li role="none"><a role="menuitem" href="/admin" class={adminTab('users') ? 'active' : ''}><span class="material-symbols-outlined" aria-hidden="true">group</span>Users</a></li>
+                  <li role="none"><a role="menuitem" href="/admin#upload" class={adminTab('upload') ? 'active' : ''}><span class="material-symbols-outlined" aria-hidden="true">upload_file</span>Upload</a></li>
+                  <li role="none"><a role="menuitem" href="/admin#users" class={adminTab('users') ? 'active' : ''}><span class="material-symbols-outlined" aria-hidden="true">group</span>Users</a></li>
+                  <li role="none"><a role="menuitem" href="/admin#identity" class={adminTab('identity') ? 'active' : ''}><span class="material-symbols-outlined" aria-hidden="true">badge</span>Identity Review</a></li>
+                  <li role="none"><a role="menuitem" href="/admin#log" class={adminTab('log') ? 'active' : ''}><span class="material-symbols-outlined" aria-hidden="true">history</span>Logged-in activity</a></li>
                 {/if}
                 <li role="none" class="border-t border-base-300 mt-1 pt-1">
                   <button role="menuitem" onclick={() => { logout(); goto("/"); }}>
@@ -533,15 +535,27 @@
               </a>
             </li>
             <li>
-              <a href="/admin" onclick={handleNavClick} class:active={adminTab("upload")}>
+              <a href="/admin#upload" onclick={handleNavClick} class:active={adminTab("upload")}>
                 <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
                 Upload
               </a>
             </li>
             <li>
-              <a href="/admin" onclick={handleNavClick} class:active={adminTab("users")}>
+              <a href="/admin#users" onclick={handleNavClick} class:active={adminTab("users")}>
                 <span class="material-symbols-outlined" aria-hidden="true">group</span>
                 Users
+              </a>
+            </li>
+            <li>
+              <a href="/admin#identity" onclick={handleNavClick} class:active={adminTab("identity")}>
+                <span class="material-symbols-outlined" aria-hidden="true">badge</span>
+                Identity Review
+              </a>
+            </li>
+            <li>
+              <a href="/admin#log" onclick={handleNavClick} class:active={adminTab("log")}>
+                <span class="material-symbols-outlined" aria-hidden="true">history</span>
+                Logged-in activity
               </a>
             </li>
           {/if}
