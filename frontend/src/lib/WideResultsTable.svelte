@@ -415,14 +415,17 @@ function appDisplayLabel(prefix: string): string {
 
   let loaded = $state(false);
   let reloadTick = $state(0);
+  let loadToken = 0;
 
   async function doLoad() {
+    const token = ++loadToken;
     loaded = false;
     errorMessage = null;
     errorRaw = null;
     loading = true;
     try {
       const r = await loadData();
+      if (token !== loadToken) return;
       title = r.title;
       allData = r.tabs;
       onData?.(r.tabs);
@@ -432,6 +435,7 @@ function appDisplayLabel(prefix: string): string {
         applyTab(keys[0]);
       }
     } catch (err) {
+      if (token !== loadToken) return;
       allData = {};
       const text = String(err);
       errorRaw = text;
@@ -446,8 +450,10 @@ function appDisplayLabel(prefix: string): string {
         errorMessage = text;
       }
     } finally {
-      loading = false;
-      loaded = true;
+      if (token === loadToken) {
+        loading = false;
+        loaded = true;
+      }
     }
   }
 

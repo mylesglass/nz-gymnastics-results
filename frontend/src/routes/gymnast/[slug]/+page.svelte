@@ -19,7 +19,7 @@
   } = $props();
 
   let filterYear = $state<string | null>(null);
-  let ready = $state(true);
+  let ready = $state(false);
   let gymnastFound = $state(Boolean(data.name));
   let gymnastName = $state(data.name);
   let medals = $state<MedalCounts | null>(null);
@@ -49,10 +49,17 @@
 
   onMount(() => {
     const unsub = selectedYear.subscribe((v) => (filterYear = v));
-    const unsubYears = yearOptions.subscribe(applyDefaultYear);
+    const unsubYears = yearOptions.subscribe((opts) => {
+      if (!opts.length) return;
+      applyDefaultYear();
+      ready = true;
+    });
+    const fallback = setTimeout(() => {
+      if (!ready) ready = true;
+    }, 4000);
     applyDefaultYear();
-    ready = true;
     return () => {
+      clearTimeout(fallback);
       unsub();
       unsubYears();
     };
