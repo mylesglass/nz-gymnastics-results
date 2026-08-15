@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Tooltip from "$lib/Tooltip.svelte";
+
   interface TabData {
     columns: string[];
     rows: Record<string, unknown>[];
@@ -162,24 +164,21 @@
       <p class="text-xs text-base-content/70">Best score on each apparatus this season, plus the Best Possible AA</p>
       <div class="flex flex-wrap items-center gap-x-5 gap-y-2 max-md:justify-center max-md:gap-x-3 max-md:gap-y-3">
         {#each bests as b}
-          <div class="dropdown dropdown-hover dropdown-bottom dropdown-end">
-            <button
-              type="button"
-              class="flex flex-col items-center cursor-pointer border-b border-dotted border-base-content/40 hover:border-base-content/70"
-              aria-label={`${b.prefix.toUpperCase()} ${b.score.toFixed(3)}${b.d != null ? `, D ${b.d.toFixed(1)}` : ""}, ${APP_LABELS[b.prefix] ?? b.prefix.toUpperCase()}`}
-              aria-describedby={tipId(b)}
-            >
+          <Tooltip
+            tipId={tipId(b)}
+            label={`${b.prefix.toUpperCase()} ${b.score.toFixed(3)}${b.d != null ? `, D ${b.d.toFixed(1)}` : ""}, ${APP_LABELS[b.prefix] ?? b.prefix.toUpperCase()}`}
+            placement="bottom"
+            triggerClass="flex flex-col items-center cursor-pointer border-b border-dotted border-base-content/40 hover:border-base-content/70"
+            panelClass="p-3"
+          >
+            {#snippet trigger()}
               <span class="text-xs text-base-content/70">{b.prefix.toUpperCase()}</span>
               <span class="bg-secondary text-secondary-content rounded px-1.5 py-0.5 font-semibold leading-none">{b.score.toFixed(3)}</span>
               {#if b.d != null}
                 <span class="text-[10px] text-base-content/60">D {b.d.toFixed(1)}</span>
               {/if}
-            </button>
-            <div
-              id={tipId(b)}
-              role="tooltip"
-              class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs"
-            >
+            {/snippet}
+            {#snippet content()}
               <div class="text-xs mb-1 text-left text-neutral-content/90">
                 {year} — {APP_LABELS[b.prefix] ?? b.prefix.toUpperCase()}
               </div>
@@ -194,28 +193,25 @@
                   ><span>{b.roundType || "—"}</span>
                 </div>
               </div>
-            </div>
-          </div>
+            {/snippet}
+          </Tooltip>
         {/each}
         {#if bestAA}
-          <div class="dropdown dropdown-hover dropdown-bottom dropdown-end">
-            <button
-              type="button"
-              class="flex flex-col items-center cursor-pointer border-b border-dotted border-base-content/40 hover:border-base-content/70"
-              aria-label={`AA ${bestAA.score.toFixed(3)}${bestAA.d != null ? `, D ${bestAA.d.toFixed(1)}` : ""}`}
-              aria-describedby={aaBestTipId()}
-            >
+          <Tooltip
+            tipId={aaBestTipId()}
+            label={`AA ${bestAA.score.toFixed(3)}${bestAA.d != null ? `, D ${bestAA.d.toFixed(1)}` : ""}`}
+            placement="bottom"
+            triggerClass="flex flex-col items-center cursor-pointer border-b border-dotted border-base-content/40 hover:border-base-content/70"
+            panelClass="p-3"
+          >
+            {#snippet trigger()}
               <span class="text-xs text-base-content/70">AA</span>
               <span class="bg-secondary text-secondary-content rounded px-1.5 py-0.5 font-semibold leading-none">{bestAA.score.toFixed(3)}</span>
               {#if bestAA.d != null}
                 <span class="text-[10px] text-base-content/60">D {bestAA.d.toFixed(1)}</span>
               {/if}
-            </button>
-            <div
-              id={aaBestTipId()}
-              role="tooltip"
-              class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs"
-            >
+            {/snippet}
+            {#snippet content()}
               <div class="text-xs mb-1 text-left text-neutral-content/90">
                 {year} — Best All-Around
               </div>
@@ -230,29 +226,26 @@
                   ><span>{bestAA.roundType || "—"}</span>
                 </div>
               </div>
-            </div>
-          </div>
+            {/snippet}
+          </Tooltip>
         {/if}
         <div class="divider divider-horizontal ml-auto mr-0 max-md:hidden" aria-hidden="true"></div>
         <div class="md:hidden w-full h-px bg-base-300 my-2" aria-hidden="true"></div>
-        <div class="dropdown dropdown-hover dropdown-bottom dropdown-end max-md:mx-auto">
-          <button
-            type="button"
-            class="flex flex-col items-center cursor-pointer border-b border-dotted border-base-content/40 hover:border-base-content/70"
-            aria-label={`Best Possible AA ${aaText}${aaD != null ? `, D ${aaD.toFixed(1)}` : ""}`}
-            aria-describedby={aaTipId()}
-          >
+        <Tooltip
+          tipId={aaTipId()}
+          label={`Best Possible AA ${aaText}${aaD != null ? `, D ${aaD.toFixed(1)}` : ""}`}
+          placement="bottom"
+          triggerClass="flex flex-col items-center cursor-pointer border-b border-dotted border-base-content/40 hover:border-base-content/70 max-md:mx-auto"
+          panelClass="p-3 w-64"
+        >
+          {#snippet trigger()}
             <span class="text-xs text-base-content/70">Best Possible AA</span>
             <span class="bg-primary text-primary-content rounded px-1.5 py-0.5 font-semibold leading-none">{aaText}</span>
             {#if aaD != null}
               <span class="text-[10px] text-base-content/60">D {aaD.toFixed(1)}</span>
             {/if}
-          </button>
-          <div
-            id={aaTipId()}
-            role="tooltip"
-            class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs w-64"
-          >
+          {/snippet}
+          {#snippet content()}
             <div class="text-xs mb-1 text-left text-neutral-content/90">
               {year} — Best Possible AA
             </div>
@@ -260,8 +253,8 @@
             <p class="text-xs text-neutral-content/90 leading-snug">
               The best score this gymnast achieved on each apparatus in {year}, added together. This is not an all-around score actually achieved in a single competition.
             </p>
-          </div>
-        </div>
+          {/snippet}
+        </Tooltip>
       </div>
     </div>
   </section>

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Tooltip from "$lib/Tooltip.svelte";
+
   let uid: number;
   {
     uid = Math.floor(Math.random() * 1e9);
@@ -31,20 +33,17 @@
   let tipContentId = $derived(`aa-tip-content-${uid}`);
 </script>
 
-<div class="dropdown dropdown-hover dropdown-left">
-  <button
-    type="button"
-    class="cursor-pointer"
-    aria-label={`${row["aa-score"] ?? ""}, all around score for ${row.name}`}
-    aria-describedby={tipContentId}
-  >
+<Tooltip
+  tipId={tipContentId}
+  label={`${row["aa-score"] ?? ""}, all around score for ${row.name}`}
+  placement="left"
+  triggerClass="cursor-pointer"
+  panelClass="p-3 min-w-44"
+>
+  {#snippet trigger()}
     {row["aa-score"] ?? ""}
-  </button>
-  <div
-    id={tipContentId}
-    role="tooltip"
-    class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs min-w-44"
-  >
+  {/snippet}
+  {#snippet content()}
     <div class="text-xs mb-1 text-left text-neutral-content/90">
       {row.name} - All Around
     </div>
@@ -71,5 +70,5 @@
         <span>Total ND</span><span>{totalN.toFixed(1)}</span>
       </div>
     </div>
-  </div>
-</div>
+  {/snippet}
+</Tooltip>

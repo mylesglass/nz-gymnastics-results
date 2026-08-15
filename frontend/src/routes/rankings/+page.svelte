@@ -6,6 +6,7 @@
   import { REGION_ORDER, REGION_PALETTES } from "$lib/regions";
   import ExportMenu from "$lib/ExportMenu.svelte";
   import FilterDropdown from "$lib/FilterDropdown.svelte";
+  import Tooltip from "$lib/Tooltip.svelte";
   import { gymnastPath } from "$lib/seo";
 
   const SCORE_KEYS = ["score1", "comp1", "score2", "comp2", "score3", "comp3"];
@@ -372,13 +373,13 @@
             <input type="checkbox" class="checkbox checkbox-sm" bind:checked={quotaMode} />
             <span class="label-text text-sm">Region Quotas</span>
           </label>
-          <span class="dropdown dropdown-hover dropdown-top">
-            <button
-              type="button"
-              class="cursor-help"
-              aria-label="About region quotas"
-              aria-describedby="quota-tooltip"
-            >
+          <Tooltip
+            tipId="quota-tooltip"
+            label="About region quotas"
+            placement="top"
+            triggerClass="cursor-help"
+          >
+            {#snippet trigger()}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -388,15 +389,11 @@
               >
                 <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5A.75.75 0 0 0 12 9Z" clip-rule="evenodd" />
               </svg>
-            </button>
-            <span
-              id="quota-tooltip"
-              role="tooltip"
-              class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs whitespace-nowrap"
-            >
+            {/snippet}
+            {#snippet content()}
               Caps each region at 4 gymnasts in the initial ranking, then fills the remaining places with the next best gymnasts from any region.
-            </span>
-          </span>
+            {/snippet}
+          </Tooltip>
         </div>
         <div class="flex items-center gap-1.5">
           <label class="label cursor-pointer gap-2">
@@ -404,13 +401,13 @@
             <span class="label-text text-sm">Qualified</span>
           </label>
           {#if qualifierHint}
-            <span class="dropdown dropdown-hover dropdown-top">
-              <button
-                type="button"
-                class="cursor-help"
-                aria-label="About the qualifying marks"
-                aria-describedby="qualifier-tooltip"
-              >
+            <Tooltip
+              tipId="qualifier-tooltip"
+              label="About the qualifying marks"
+              placement="top"
+              triggerClass="cursor-help"
+            >
+              {#snippet trigger()}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -420,15 +417,11 @@
                 >
                   <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5A.75.75 0 0 0 12 9Z" clip-rule="evenodd" />
                 </svg>
-              </button>
-              <span
-                id="qualifier-tooltip"
-                role="tooltip"
-                class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs whitespace-nowrap"
-              >
+              {/snippet}
+              {#snippet content()}
                 Qualifies: {qualifierHint}
-              </span>
-            </span>
+              {/snippet}
+            </Tooltip>
           {/if}
         </div>
       </div>
@@ -498,13 +491,14 @@
             <th scope="col" class="text-right">Average</th>
             {#if showMarkColumn}
               <th scope="col" class="text-center">
-                <span class="dropdown dropdown-hover dropdown-end">
-                  <button
-                    type="button"
-                    class="cursor-help inline-flex items-center gap-0.5"
-                    aria-label="About the Q column (Gymnastics NZ qualifying mark)"
-                    aria-describedby="q-tooltip"
-                  >
+                <Tooltip
+                  tipId="q-tooltip"
+                  label="About the Q column (Gymnastics NZ qualifying mark)"
+                  placement="bottom"
+                  triggerClass="cursor-help inline-flex items-center gap-0.5"
+                  panelClass="p-2 whitespace-nowrap"
+                >
+                  {#snippet trigger()}
                     Q
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -515,15 +509,11 @@
                     >
                       <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5A.75.75 0 0 0 12 9Z" clip-rule="evenodd" />
                     </svg>
-                  </button>
-                  <span
-                    id="q-tooltip"
-                    role="tooltip"
-                    class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs whitespace-nowrap"
-                  >
+                  {/snippet}
+                  {#snippet content()}
                     Has met Gymnastics NZ qualifying score of 52.000 at two different competitions
-                  </span>
-                </span>
+                  {/snippet}
+                </Tooltip>
               </th>
             {/if}
           </tr>
@@ -546,23 +536,20 @@
                 {@const score = r.scores[i]}
                 {#if score != null}
                   <td class="text-right">
-                    <div class="dropdown dropdown-hover dropdown-top dropdown-end">
-                      <button
-                        type="button"
-                        class="cursor-pointer font-mono"
-                        aria-label={`Score ${i + 1} for ${r.name}`}
-                        aria-describedby={`rank-comp-${r.gnz_id}-${i}`}
-                      >
+                    <Tooltip
+                      tipId={`rank-comp-${r.gnz_id}-${i}`}
+                      label={`Score ${i + 1} for ${r.name}`}
+                      placement="top"
+                      triggerClass="cursor-pointer font-mono"
+                      panelClass="p-2 whitespace-nowrap"
+                    >
+                      {#snippet trigger()}
                         {score.toFixed(3)}
-                      </button>
-                      <div
-                        id={`rank-comp-${r.gnz_id}-${i}`}
-                        role="tooltip"
-                        class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs whitespace-nowrap"
-                      >
+                      {/snippet}
+                      {#snippet content()}
                         {r.competitions[i] || "Unknown competition"}
-                      </div>
-                    </div>
+                      {/snippet}
+                    </Tooltip>
                   </td>
                 {:else}
                   <td class="text-right text-base-content/70">—</td>
@@ -636,24 +623,21 @@
               <div class="flex flex-wrap gap-1 justify-end">
                 {#each s.apparatus as a}
                   {@const qual = a.count >= appQualCount}
-                  <div class="dropdown dropdown-hover dropdown-top dropdown-end">
-                    <button
-                      type="button"
-                      class="cursor-help"
-                      aria-label={appTooltip(a)}
-                      aria-describedby={`spec-badge-${s.gnz_id}-${a.app}`}
-                    >
+                  <Tooltip
+                    tipId={`spec-badge-${s.gnz_id}-${a.app}`}
+                    label={appTooltip(a)}
+                    placement="top"
+                    triggerClass="cursor-help"
+                    panelClass="p-3 w-72 whitespace-normal break-words space-y-1"
+                  >
+                    {#snippet trigger()}
                       {#if qual}
                         <span class="badge badge-sm {appBadgeClass(a.app)}">{a.app} {a.best.toFixed(3)}</span>
                       {:else}
                         <span class="badge badge-sm badge-outline border-dashed text-base-content/60">{a.app} {a.best.toFixed(3)}</span>
                       {/if}
-                    </button>
-                    <div
-                      id={`spec-badge-${s.gnz_id}-${a.app}`}
-                      role="tooltip"
-                      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs w-72 whitespace-normal break-words space-y-1"
-                    >
+                    {/snippet}
+                    {#snippet content()}
                       <div class="font-semibold text-sm">{a.app} {a.best.toFixed(3)}</div>
                       <div>
                         {#if qual}
@@ -672,8 +656,8 @@
                       {#if !qual}
                         <div>Needs {appQualCount} different competitions to qualify</div>
                       {/if}
-                    </div>
-                  </div>
+                    {/snippet}
+                  </Tooltip>
                 {/each}
               </div>
             </td>

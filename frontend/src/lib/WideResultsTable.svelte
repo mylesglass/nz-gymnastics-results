@@ -1021,7 +1021,7 @@ function appDisplayLabel(prefix: string): string {
             {#each apparatusPrefixes as prefix, i}
               <td class="text-left min-w-12 whitespace-nowrap py-1.5 {COL_MIN_CLASS[prefix] ?? ''}">
                 <span class="inline-flex items-center gap-1">
-                  <ScoreTooltip {row} {prefix} isLast={i === apparatusPrefixes.length - 1} />
+                  <ScoreTooltip {row} {prefix} />
                   <MedalDot rank={appRank(row, prefix)} />
                 </span>
               </td>

@@ -1,14 +1,12 @@
 <script lang="ts">
+  import Tooltip from "$lib/Tooltip.svelte";
+
   let uid: number;
   {
     uid = Math.floor(Math.random() * 1e9);
   }
 
-  let {
-    row,
-    prefix,
-    isLast = false,
-  }: { row: Record<string, unknown>; prefix: string; isLast?: boolean } =
+  let { row, prefix }: { row: Record<string, unknown>; prefix: string } =
     $props();
 
   let hasMulti = $derived(row[`${prefix}-1-total`] != null);
@@ -25,23 +23,23 @@
   };
   let appLabel = $derived(APP_LABELS[prefix] ?? prefix.toUpperCase());
   let tipContentId = $derived(`score-tip-content-${prefix}-${uid}`);
+  let triggerLabel = $derived(
+    `${row[`${prefix}-d`] ?? ""} / ${row[`${prefix}-total`] ?? "DNS"}, ${appLabel} score for ${row.name}`,
+  );
 </script>
 
 {#if hasMulti}
-  <div class="dropdown dropdown-hover {isLast ? 'dropdown-left' : 'dropdown-right'}">
-    <button
-      type="button"
-      class="cursor-pointer border-b border-dotted border-base-content/40 hover:border-base-content/70 leading-tight"
-      aria-label={`${row[`${prefix}-d`] ?? ""} / ${row[`${prefix}-total`] ?? "DNS"}, ${appLabel} score for ${row.name}`}
-      aria-describedby={tipContentId}
-    >
+  <Tooltip
+    tipId={tipContentId}
+    label={triggerLabel}
+    placement="right"
+    triggerClass="cursor-pointer border-b border-dotted border-base-content/40 hover:border-base-content/70 leading-tight"
+    panelClass="p-3 min-w-64"
+  >
+    {#snippet trigger()}
       {row[`${prefix}-d`] ?? ""} / {row[`${prefix}-total`] ?? "DNS"}
-    </button>
-    <div
-      id={tipContentId}
-      role="tooltip"
-      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs min-w-64"
-    >
+    {/snippet}
+    {#snippet content()}
       <div class="text-xs mb-1 text-left text-neutral-content/90">
         {row.name} - {appLabel}
       </div>
@@ -69,23 +67,20 @@
           <span>Rank {row[`${prefix}-rank`]}</span>
         {/if}
       </div>
-    </div>
-  </div>
+    {/snippet}
+  </Tooltip>
 {:else}
-  <div class="dropdown dropdown-hover {isLast ? 'dropdown-left' : 'dropdown-right'}">
-    <button
-      type="button"
-      class="cursor-pointer border-b border-dotted border-base-content/40 hover:border-base-content/70 leading-tight"
-      aria-label={`${row[`${prefix}-d`] ?? ""} / ${row[`${prefix}-total`] ?? "DNS"}, ${appLabel} score for ${row.name}`}
-      aria-describedby={tipContentId}
-    >
+  <Tooltip
+    tipId={tipContentId}
+    label={triggerLabel}
+    placement="right"
+    triggerClass="cursor-pointer border-b border-dotted border-base-content/40 hover:border-base-content/70 leading-tight"
+    panelClass="p-3 min-w-36"
+  >
+    {#snippet trigger()}
       {row[`${prefix}-d`] ?? ""} / {row[`${prefix}-total`] ?? "DNS"}
-    </button>
-    <div
-      id={tipContentId}
-      role="tooltip"
-      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs min-w-36"
-    >
+    {/snippet}
+    {#snippet content()}
       <div class="text-xs mb-1 text-left text-neutral-content/90">
         {row.name} - {appLabel}
       </div>
@@ -129,6 +124,6 @@
           >
         </div>
       </div>
-    </div>
-  </div>
+    {/snippet}
+  </Tooltip>
 {/if}

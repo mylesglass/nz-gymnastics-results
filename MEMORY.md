@@ -176,7 +176,7 @@ Core logic:
 ### Accessibility (STEP 24 — complete, all 6 public pages 100/100 on Lighthouse)
 - Shared `Dialog.svelte` for all modals: `role="dialog"`/`aria-modal`, focus trap, Escape, focus restore, labelled heading.
 - Tabs are native radios (no `role="tab"`); WAG/MAG toggles are `aria-pressed` buttons.
-- Tooltips are DaisyUI `dropdown-hover` (`<button>` trigger, `role="tooltip"`, `aria-describedby`, label-in-name).
+- Tooltips are the shared `Tooltip.svelte` (`<button>` trigger, `role="tooltip"`, `aria-describedby`, label-in-name); its `position: fixed` panel escapes table `overflow-x-auto` clipping.
 - `textColor()`/`gradientTextColor()` use WCAG relative-luminance contrast (`#000` vs `#fff`).
 - Skip link, `<main id="main">`, `<nav>` landmarks, `aria-current` on active links, `aria-live`/`role="status"` toasts, `role="alert"` errors, 24px min button targets, reduced-motion gating.
 - Reports in `a11y-reports/` (rerun: `./a11y-reports/run.sh before|after [pages...]`, needs `CHROME_PATH`).

@@ -7,6 +7,7 @@
   import { REGION_ORDER, REGION_PALETTES } from "$lib/regions";
   import ExportMenu from "$lib/ExportMenu.svelte";
   import FilterDropdown from "$lib/FilterDropdown.svelte";
+  import Tooltip from "$lib/Tooltip.svelte";
   import { gymnastPath } from "$lib/seo";
 
   const EXPORT_HEADERS: Record<string, string> = {
@@ -330,23 +331,20 @@
                 {/if}
               </td>
               <td class="text-right">
-                <div class="dropdown dropdown-hover dropdown-top dropdown-end">
-                  <button
-                    type="button"
-                    class="cursor-pointer font-mono font-bold"
-                    aria-label={`Best ${selectedApp} score for ${r.name}`}
-                    aria-describedby={`app-best-${i}`}
-                  >
+                <Tooltip
+                  tipId={`app-best-${i}`}
+                  label={`Best ${selectedApp} score for ${r.name}`}
+                  placement="top"
+                  triggerClass="cursor-pointer font-mono font-bold"
+                  panelClass="p-2 whitespace-nowrap"
+                >
+                  {#snippet trigger()}
                     {r.best.toFixed(3)}
-                  </button>
-                  <div
-                    id={`app-best-${i}`}
-                    role="tooltip"
-                    class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2 text-xs whitespace-nowrap"
-                  >
+                  {/snippet}
+                  {#snippet content()}
                     Set at {r.event || "unknown competition"}
-                  </div>
-                </div>
+                  {/snippet}
+                </Tooltip>
               </td>
             </tr>
           {/each}

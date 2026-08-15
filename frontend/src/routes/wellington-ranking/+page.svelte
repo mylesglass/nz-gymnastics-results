@@ -4,6 +4,7 @@
   import { selectedYear, yearOptions } from "$lib/year";
   import { currentUser } from "$lib/auth";
   import ExportMenu from "$lib/ExportMenu.svelte";
+  import Tooltip from "$lib/Tooltip.svelte";
   import { gymnastPath } from "$lib/seo";
 
 
@@ -87,6 +88,11 @@
   ]);
 
   const STEP7_CONFIGS = new Set(["wag_step_7_10", "mag_level_7_plus"]);
+
+  const APPARATUS_MARKS: Record<string, Record<string, number>> = {
+    "Junior International": { VT: 12.2, UB: 10.4, BB: 10.5, FX: 11.4 },
+    "Senior International": { VT: 12.5, UB: 11.3, BB: 11.2, FX: 11.4 },
+  };
 
   const CATEGORY_LABELS: Record<string, string> = {
     regional: "Regional Best",
@@ -275,8 +281,13 @@
     }
   }
 
+  function appMarkText(app: string): string {
+    if (appQualScore != null) return appQualScore.toFixed(3);
+    return (APPARATUS_MARKS[selectedStep]?.[app] ?? null)?.toFixed(3) ?? "the qualifying mark";
+  }
+
   function appTooltip(a: ApparatusQualifyingApp): string {
-    const mark = appQualScore != null ? appQualScore.toFixed(3) : "the qualifying mark";
+    const mark = appMarkText(a.app);
     if (a.count >= appQualCount) {
       return a.competitions.length > 0
         ? `${a.app} ${a.best.toFixed(3)} — reached ${mark} at ${a.competitions.join(", ")}`
@@ -448,20 +459,17 @@
             </td>
               {#each r.scores as score, i}
                 <td class="text-right">
-                  <span class="dropdown dropdown-hover dropdown-top dropdown-end">
-                    <button
-                      type="button"
-                      class="cursor-pointer font-mono border-b border-dotted border-base-content/40 hover:border-base-content/70 leading-tight"
-                      aria-label={`Score ${i + 1} for ${r.name}`}
-                      aria-describedby={`wgtn-comp-${r.gnz_id}-${i}`}
-                    >
+                  <Tooltip
+                    tipId={`wgtn-comp-${r.gnz_id}-${i}`}
+                    label={`Score ${i + 1} for ${r.name}`}
+                    placement="top"
+                    triggerClass="cursor-pointer font-mono border-b border-dotted border-base-content/40 hover:border-base-content/70 leading-tight"
+                    panelClass="p-2.5 min-w-44"
+                  >
+                    {#snippet trigger()}
                       {score.toFixed(3)}
-                    </button>
-                    <span
-                      id={`wgtn-comp-${r.gnz_id}-${i}`}
-                      role="tooltip"
-                      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2.5 text-xs min-w-44"
-                    >
+                    {/snippet}
+                    {#snippet content()}
                       <span class="block font-medium text-xs truncate max-w-48 mb-1">{r.competitions[i] || "Unknown competition"}</span>
                       <span>
                         <span class={catBadge(r.categories[i])}>
@@ -482,8 +490,8 @@
                           <span>{score.toFixed(3)}</span>
                         </span>
                       {/if}
-                    </span>
-                  </span>
+                    {/snippet}
+                  </Tooltip>
                 </td>
               {/each}
               {#if !INTERNATIONAL_CONFIGS.has(configKey)}
@@ -523,18 +531,42 @@
             <td>
               <div class="flex flex-wrap gap-1 justify-end">
                 {#each s.apparatus as a}
-                  <button
-                    type="button"
-                    class="tooltip tooltip-top cursor-help"
-                    data-tip={appTooltip(a)}
-                    aria-label={appTooltip(a)}
+                  {@const qual = a.count >= appQualCount}
+                  <Tooltip
+                    tipId={`wgtn-spec-${s.gnz_id}-${a.app}`}
+                    label={appTooltip(a)}
+                    placement="top"
+                    triggerClass="cursor-help"
+                    panelClass="p-3 w-72 whitespace-normal break-words space-y-1"
                   >
-                    {#if a.count >= appQualCount}
-                      <span class="badge badge-sm {appBadgeClass(a.app)}">{a.app} {a.best.toFixed(3)}</span>
-                    {:else}
-                      <span class="badge badge-sm badge-outline border-dashed text-base-content/60">{a.app} {a.best.toFixed(3)}</span>
-                    {/if}
-                  </button>
+                    {#snippet trigger()}
+                      {#if qual}
+                        <span class="badge badge-sm {appBadgeClass(a.app)}">{a.app} {a.best.toFixed(3)}</span>
+                      {:else}
+                        <span class="badge badge-sm badge-outline border-dashed text-base-content/60">{a.app} {a.best.toFixed(3)}</span>
+                      {/if}
+                    {/snippet}
+                    {#snippet content()}
+                      <div class="font-semibold text-sm">{a.app} {a.best.toFixed(3)}</div>
+                      <div>
+                        {#if qual}
+                          Reached {appMarkText(a.app)} at {a.count} competition{a.count === 1 ? "" : "s"}
+                        {:else}
+                          Reached {appMarkText(a.app)} once at {a.event || "unknown competition"}
+                        {/if}
+                      </div>
+                      {#if qual && a.competitions.length > 0}
+                        <ul class="list-disc list-inside mt-1 space-y-0.5">
+                          {#each a.competitions as c}
+                            <li>{c}</li>
+                          {/each}
+                        </ul>
+                      {/if}
+                      {#if !qual}
+                        <div>Needs {appQualCount} different competitions to qualify</div>
+                      {/if}
+                    {/snippet}
+                  </Tooltip>
                 {/each}
               </div>
             </td>
@@ -594,20 +626,17 @@
             {#each (HEADER_LABELS[configKey] ?? ["Score 1", "Score 2", "Score 3"]) as _, i}
               <td class="text-right">
                 {#if r.scores[i] != null}
-                  <span class="dropdown dropdown-hover dropdown-top dropdown-end">
-                    <button
-                      type="button"
-                      class="cursor-pointer font-mono border-b border-dotted border-base-content/40 hover:border-base-content/70 leading-tight"
-                      aria-label={`Best score ${i + 1} for ${r.name}: ${r.scores[i]!.toFixed(3)}`}
-                      aria-describedby={`wgtn-nr-score-${r.gnz_id}-${i}`}
-                    >
+                  <Tooltip
+                    tipId={`wgtn-nr-score-${r.gnz_id}-${i}`}
+                    label={`Best score ${i + 1} for ${r.name}: ${r.scores[i]!.toFixed(3)}`}
+                    placement="top"
+                    triggerClass="cursor-pointer font-mono border-b border-dotted border-base-content/40 hover:border-base-content/70 leading-tight"
+                    panelClass="p-2.5 min-w-44"
+                  >
+                    {#snippet trigger()}
                       {r.scores[i]!.toFixed(3)}
-                    </button>
-                    <span
-                      id={`wgtn-nr-score-${r.gnz_id}-${i}`}
-                      role="tooltip"
-                      class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-2.5 text-xs min-w-44"
-                    >
+                    {/snippet}
+                    {#snippet content()}
                       <span class="block font-medium text-xs truncate max-w-48 mb-1">{r.competition_names[i] || "Unknown competition"}</span>
                       <span>
                         <span class={catBadge(r.categories[i])}>
@@ -628,21 +657,22 @@
                           <span>{r.scores[i]!.toFixed(3)}</span>
                         </span>
                       {/if}
-                    </span>
-                  </span>
+                    {/snippet}
+                  </Tooltip>
                 {:else}
                   <span class="text-base-content/40">—</span>
                 {/if}
               </td>
             {/each}
             <td class="text-center w-8">
-              <span class="dropdown dropdown-hover dropdown-left">
-                <button
-                  type="button"
-                  class="cursor-help"
-                  aria-label={`Why ${r.name} isn't on the ranking`}
-                  aria-describedby={`wgtn-nr-why-${r.gnz_id}`}
-                >
+              <Tooltip
+                tipId={`wgtn-nr-why-${r.gnz_id}`}
+                label={`Why ${r.name} isn't on the ranking`}
+                placement="left"
+                triggerClass="cursor-help"
+                panelClass="p-3 min-w-64 max-w-80 whitespace-normal text-left"
+              >
+                {#snippet trigger()}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -653,12 +683,8 @@
                   >
                     <path fill="currentColor" d="m12 23l-3-3H3V2h18v18h-6zm-.1-6q.525 0 .888-.363t.362-.887t-.363-.888t-.887-.362t-.888.363t-.362.887t.363.888t.887.362m-.9-3.85h1.85q0-.425.038-.725t.162-.575t.312-.512t.538-.588q.875-.875 1.238-1.463T15.5 7.95q0-1.325-.9-2.137T12.175 5q-1.375 0-2.337.675T8.5 7.55l1.65.65q.175-.675.7-1.087t1.225-.413q.675 0 1.125.363t.45.962q0 .425-.275.9t-.925 1.05q-.425.35-.688.688t-.437.712t-.25.788t-.075.987"/>
                   </svg>
-                </button>
-                <span
-                  id={`wgtn-nr-why-${r.gnz_id}`}
-                  role="tooltip"
-                  class="dropdown-content z-50 bg-neutral text-neutral-content rounded-box shadow-xl p-3 text-xs min-w-64 max-w-80 whitespace-normal text-left"
-                >
+                {/snippet}
+                {#snippet content()}
                   <span class="block space-y-1">
                     {#each r.checks as c}
                       <span class="flex items-start gap-1.5 leading-snug">
@@ -677,8 +703,8 @@
                       </span>
                     {/each}
                   </span>
-                </span>
-              </span>
+                {/snippet}
+              </Tooltip>
             </td>
           </tr>
         {/each}
