@@ -108,7 +108,13 @@
       const prefixes = prefixesFor(d.columns);
       for (const row of d.rows) {
         const rt = String(row["round-type"] ?? "").toLowerCase();
-        if (rt.includes("apparatus final") || rt.includes("day 2")) continue;
+        if (rt.includes("apparatus final") || rt.includes("day 2")) {
+          const fullSet = prefixes.every((p) => {
+            const t = row[`${p}-total`];
+            return t != null && t !== "DNS";
+          });
+          if (!fullSet) continue;
+        }
         const v = row["aa-score"];
         if (v == null) continue;
         const num = Number(v);
