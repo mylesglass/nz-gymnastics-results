@@ -38,6 +38,18 @@ class Athlete(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
+class SlugRedirect(Base):
+    __tablename__ = "slug_redirects"
+
+    __table_args__ = (
+        Index("idx_slug_redirects_athlete_id", "athlete_id"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    old_slug = Column(String, nullable=False, unique=True)
+    athlete_id = Column(Integer, ForeignKey("athletes.id"), nullable=False)
+
+
 class Event(Base):
     __tablename__ = "events"
 

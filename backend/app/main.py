@@ -35,7 +35,7 @@ from app.cache import cache, cache_headers, cached, invalidate
 from app.clubdata import active_path, ensure_seed
 from app.cloudflare import CloudflareFetchError, fetch_zone_summary, is_configured as cloudflare_is_configured
 from app.database import get_session, init_db
-from app.models import ACTIVITY_TYPE_API, ACTIVITY_TYPE_PAGE, ActivityLog, Athlete, Event, LongScore, TrafficDaily, User, WellingtonIntent
+from app.models import ACTIVITY_TYPE_API, ACTIVITY_TYPE_PAGE, ActivityLog, Athlete, Event, LongScore, SlugRedirect, TrafficDaily, User, WellingtonIntent
 from app.parser import ParseError, _NAME_TO_CANONICAL, detect_participant_collisions, find_unknown_clubs, parse_json, reload_club_maps, suggest_club_mapping, validate_upload_structure
 from app.reconcile import reconcile_athletes
 from app.scoreholder import ScoreholderFetchError, fetch_event_json
@@ -566,6 +566,17 @@ def _compute_gymnast(slug: str | None, gnz_id: str | None) -> GymnastItem | None
     try:
         if slug:
             athlete = session.query(Athlete).filter(Athlete.slug == slug).first()
+            if athlete is None:
+                # Old slug from a merged-away (or re-keyed) identity: redirect
+                # to the athlete that absorbed it, so the frontend 301s to the
+                # survivor's canonical URL instead of 404ing.
+                redirect = (
+                    session.query(SlugRedirect)
+                    .filter(SlugRedirect.old_slug == slug)
+                    .first()
+                )
+                if redirect is not None:
+                    athlete = session.get(Athlete, redirect.athlete_id)
         elif gnz_id:
             matches = session.query(Athlete).filter(Athlete.gnz_id == gnz_id).all()
             athlete = matches[0] if len(matches) == 1 else None

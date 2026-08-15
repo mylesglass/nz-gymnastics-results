@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.athlete_identity import rebuild_athletes
 from app.main import app
-from app.models import Athlete, Base, Event, LongScore, WellingtonIntent
+from app.models import Athlete, Base, Event, LongScore, SlugRedirect, WellingtonIntent
 
 client = TestClient(app)
 
@@ -394,6 +394,200 @@ class TestIdentityReview:
                 "athlete_id": 99999, "split_by": "gnz_id", "value": "555",
             })
             assert resp.status_code == 404
+        finally:
+            session.close()
+
+    def test_merge_redirects_old_slug_to_survivor(self, setup_db):
+        from app.athlete_identity import resolve_identity
+        from app.cache import invalidate as clear_cache
+        session = setup_db()
+        try:
+            ev1 = self._event(session)
+            ev2 = self._event(session, name="Other Meet")
+            self._seed(session, [
+                {"event_id": ev1, "gymnast_name": "Madison Lynch", "gnz_id": "249317", "club_name": "Onslow"},
+                {"event_id": ev2, "gymnast_name": "Madison Lynch", "gnz_id": "716561", "club_name": "OMNI"},
+            ])
+            rebuild_athletes(session)
+            groups = self._athletes(session)["Madison Lynch"]
+            assert len(groups) == 2
+            survivor = next(a for a in groups if a.gnz_id == "249317")
+            merged = next(a for a in groups if a.gnz_id == "716561")
+
+            clear_cache()
+            resp = client.post("/api/admin/athletes/merge", json={
+                "athlete_id": survivor.id,
+                "merge_id": merged.id,
+            })
+            assert resp.status_code == 200
+
+            # The merged-away slug now resolves to the survivor via a redirect.
+            clear_cache()
+            g = client.get("/api/gymnast", params={"slug": merged.slug}).json()
+            assert g is not None
+            assert g["slug"] == survivor.slug
+            assert g["name"] == "Madison Lynch"
+            assert resolve_identity(session, slug=merged.slug) == survivor.id
+            assert resolve_identity(session, slug=survivor.slug) == survivor.id
+        finally:
+            session.close()
+
+    def test_merge_empty_id_survivor_redirects_both_old_slugs(self, setup_db):
+        from app.athlete_identity import resolve_identity
+        from app.cache import invalidate as clear_cache
+        session = setup_db()
+        try:
+            ev1 = self._event(session)
+            ev2 = self._event(session, name="Other Meet")
+            self._seed(session, [
+                {"event_id": ev1, "gymnast_name": "Alex Sims", "gnz_id": "102232", "club_name": "C1"},
+                {"event_id": ev2, "gymnast_name": "Alexander Sims", "gnz_id": "", "club_name": "C2"},
+            ])
+            rebuild_athletes(session)
+            by_name = self._athletes(session)
+            survivor = by_name["Alexander Sims"][0]
+            merged = by_name["Alex Sims"][0]
+            old_slugs = {survivor.slug, merged.slug}
+
+            clear_cache()
+            resp = client.post("/api/admin/athletes/merge", json={
+                "athlete_id": survivor.id,
+                "merge_id": merged.id,
+            })
+            assert resp.status_code == 200
+
+            # Both previously-open URLs resolve to the one new survivor slug.
+            clear_cache()
+            resolved = set()
+            for slug in old_slugs:
+                g = client.get("/api/gymnast", params={"slug": slug}).json()
+                assert g is not None, slug
+                resolved.add(g["slug"])
+            assert len(resolved) == 1
+            new_slug = next(iter(resolved))
+            assert new_slug not in old_slugs
+
+            target = resolve_identity(session, slug=next(iter(old_slugs)))
+            assert target is not None
+            for slug in old_slugs:
+                assert resolve_identity(session, slug=slug) == target
+        finally:
+            session.close()
+
+    def test_redirect_pruned_when_identity_resurrected(self, setup_db):
+        from app.cache import invalidate as clear_cache
+        session = setup_db()
+        try:
+            ev1 = self._event(session)
+            ev2 = self._event(session, name="Other Meet")
+            self._seed(session, [
+                {"event_id": ev1, "gymnast_name": "Alex Sims", "gnz_id": "102232", "club_name": "C1"},
+                {"event_id": ev2, "gymnast_name": "Alexander Sims", "gnz_id": "", "club_name": "C2"},
+            ])
+            rebuild_athletes(session)
+            by_name = self._athletes(session)
+            survivor = by_name["Alexander Sims"][0]
+            merged = by_name["Alex Sims"][0]
+            merged_slug = merged.slug
+
+            clear_cache()
+            resp = client.post("/api/admin/athletes/merge", json={
+                "athlete_id": survivor.id,
+                "merge_id": merged.id,
+            })
+            assert resp.status_code == 200
+
+            # Re-ingesting the merged-away signature brings the slug back live.
+            ev3 = self._event(session, name="Reingest Meet")
+            self._seed(session, [
+                {"event_id": ev3, "gymnast_name": "Alex Sims", "gnz_id": "102232", "club_name": "C1"},
+            ])
+            rebuild_athletes(session)
+
+            clear_cache()
+            g = client.get("/api/gymnast", params={"slug": merged_slug}).json()
+            assert g is not None
+            assert g["slug"] == merged_slug
+            assert (
+                session.query(SlugRedirect)
+                .filter(SlugRedirect.old_slug == merged_slug)
+                .first()
+                is None
+            )
+        finally:
+            session.close()
+
+    def test_split_does_not_leave_self_redirect(self, setup_db):
+        from app.athlete_identity import resolve_identity
+        from app.cache import invalidate as clear_cache
+        session = setup_db()
+        try:
+            ev1 = self._event(session)
+            ev2 = self._event(session, name="Other Meet")
+            self._seed(session, [
+                {"event_id": ev1, "gymnast_name": "Adam Lim", "gnz_id": "184417", "club_name": "OMNI"},
+                {"event_id": ev2, "gymnast_name": "Adam Lim", "gnz_id": "273749", "club_name": "OMNI"},
+            ])
+            rebuild_athletes(session)
+            aid = session.query(Athlete).first().id
+
+            clear_cache()
+            resp = client.post("/api/admin/athletes/split", json={
+                "athlete_id": aid,
+                "split_by": "gnz_id",
+                "value": "273749",
+            })
+            assert resp.status_code == 200
+            body = resp.json()
+
+            assert resolve_identity(session, slug=body["original_slug"]) == body["original_id"]
+            assert resolve_identity(session, slug=body["created_slug"]) == body["created_id"]
+            assert (
+                session.query(SlugRedirect)
+                .filter(SlugRedirect.old_slug == body["original_slug"])
+                .first()
+                is None
+            )
+        finally:
+            session.close()
+
+    def test_merge_chain_repoints_redirects(self, setup_db):
+        from app.athlete_identity import resolve_identity
+        from app.cache import invalidate as clear_cache
+        session = setup_db()
+        try:
+            evs = [self._event(session, name=f"Meet {i}") for i in range(3)]
+            self._seed(session, [
+                {"event_id": evs[0], "gymnast_name": "Madison Lynch", "gnz_id": "249317", "club_name": "Onslow"},
+                {"event_id": evs[1], "gymnast_name": "Madison Lynch", "gnz_id": "716561", "club_name": "OMNI"},
+                {"event_id": evs[2], "gymnast_name": "Madison Lynch", "gnz_id": "999999", "club_name": "CSG"},
+            ])
+            rebuild_athletes(session)
+            groups = self._athletes(session)["Madison Lynch"]
+            assert len(groups) == 3
+            by_id = {a.gnz_id: a for a in groups}
+            slugs = {gid: a.slug for gid, a in by_id.items()}
+
+            # A (249317) merged into B (716561)...
+            clear_cache()
+            r = client.post("/api/admin/athletes/merge", json={
+                "athlete_id": by_id["716561"].id,
+                "merge_id": by_id["249317"].id,
+            })
+            assert r.status_code == 200
+            b_id = r.json()["survivor_id"]
+
+            # ...then B merged into C (999999). A's redirect must re-point to C.
+            clear_cache()
+            r2 = client.post("/api/admin/athletes/merge", json={
+                "athlete_id": by_id["999999"].id,
+                "merge_id": b_id,
+            })
+            assert r2.status_code == 200
+            c_id = r2.json()["survivor_id"]
+
+            for slug in (slugs["249317"], slugs["716561"], slugs["999999"]):
+                assert resolve_identity(session, slug=slug) == c_id
         finally:
             session.close()
 

@@ -33,6 +33,11 @@ existing ``Athlete`` row is reused (keeping its ``id``/``slug``) across rebuilds
 unless the cluster's dominant identity actually changes.  After re-clustering,
 every ``long_scores`` row is **back-written** to its cluster's canonical
 spelling, so the raw ``gymnast_name`` column stops carrying variant spellings.
+
+When a cluster's identity changes (admin merge/split, or a rebuild that
+re-keys it), the old ``Athlete`` row is deleted — but a ``SlugRedirect`` is
+recorded from its old ``slug`` to the athlete that absorbed its rows, so
+bookmarked/shared gymnast URLs resolve to the survivor instead of 404ing.
 """
 
 import difflib
@@ -41,7 +46,7 @@ from collections import Counter, defaultdict
 
 from sqlalchemy import func
 
-from app.models import Athlete, LongScore
+from app.models import Athlete, LongScore, SlugRedirect
 
 _NAME_SIMILARITY_THRESHOLD = 0.85
 
@@ -212,6 +217,35 @@ def _slug_from_hash(digest: str) -> str:
     return f"a{digest[:10]}"
 
 
+def _redirect_target(
+    session, target_id: int, orphan_slugs: dict[int, str]
+) -> int | None:
+    """Resolve a redirect's target to a live athlete, following merge chains.
+
+    ``orphan_slugs`` maps athlete ids deleted this rebuild to their slugs, so
+    a target merged away in this same rebuild (A->B then B->C) can be followed
+    through its newly-recorded redirect.  Returns ``None`` when no live athlete
+    exists at the end of the chain.
+    """
+    seen: set[int] = set()
+    while target_id is not None and target_id not in seen:
+        seen.add(target_id)
+        if session.get(Athlete, target_id) is not None:
+            return target_id
+        old_slug = orphan_slugs.get(target_id)
+        if old_slug is None:
+            return None
+        hop = (
+            session.query(SlugRedirect)
+            .filter(SlugRedirect.old_slug == old_slug)
+            .first()
+        )
+        if hop is None:
+            return None
+        target_id = hop.athlete_id
+    return None
+
+
 def rebuild_athletes(session) -> int:
     """Recompute athlete identities and assign ``long_scores.athlete_id``.
 
@@ -378,6 +412,30 @@ def rebuild_athletes(session) -> int:
             sig_to_athlete[key] = athlete.id
             athlete_names[athlete.id] = meta["canonical_name"]
 
+    # --- Capture signature keys of soon-to-be-orphaned athletes --------
+    # Rows still point at the old athlete here, so their (norm, gnz_id)
+    # signatures reveal which new athlete will absorb them.  Used to build
+    # slug redirects so old gymnast URLs keep resolving after a merge/split.
+    orphan_keys: dict[str, list[tuple[tuple[str, str], int]]] = {}
+    for digest, athlete in existing.items():
+        if digest in hashes_in_use:
+            continue
+        rows = (
+            session.query(
+                func.trim(func.lower(LongScore.gymnast_name)).label("norm"),
+                LongScore.gnz_id,
+                func.count(LongScore.id),
+            )
+            .filter(LongScore.athlete_id == athlete.id)
+            .group_by(
+                func.trim(func.lower(LongScore.gymnast_name)),
+                LongScore.gnz_id,
+            )
+            .all()
+        )
+        if rows:
+            orphan_keys[athlete.slug] = [((norm, gid or ""), cnt) for norm, gid, cnt in rows]
+
     # --- Assign athlete_id to long_scores -------------------------------
     for key, athlete_id in sig_to_athlete.items():
         norm, gid = key
@@ -394,9 +452,46 @@ def rebuild_athletes(session) -> int:
 
     # Orphans are deleted only after re-pointing, so no ``long_scores`` row
     # still references an athlete whose signature changed this rebuild.
+    orphan_slugs: dict[int, str] = {}
     for digest, athlete in list(existing.items()):
         if digest not in hashes_in_use:
+            orphan_slugs[athlete.id] = athlete.slug
             session.delete(athlete)
+
+    # --- Slug redirects for the deleted athletes -----------------------
+    # An orphan's rows were re-pointed to their new owner above; record
+    # ``old_slug -> new owner`` so the old gymnast URL 301s there instead of
+    # 404ing.  When several keys split the rows across owners, keep the key
+    # with the most rows (one redirect per old slug).
+    for slug, entries in orphan_keys.items():
+        best_key = max(entries, key=lambda e: e[1])[0]
+        new_owner = sig_to_athlete.get(best_key)
+        if new_owner is not None:
+            session.add(SlugRedirect(old_slug=slug, athlete_id=new_owner))
+
+    # Flush deletes/inserts so the prune pass below sees a consistent table.
+    session.flush()
+
+    # --- Prune / re-point redirects ------------------------------------
+    # (1) An identity that came back (same signature re-ingested) makes the
+    # old slug live again — drop the stale redirect, the URL works on its own.
+    # (2) A redirect's target may itself have been merged away in this rebuild
+    # (a chain: A->B then B->C); re-point it to the final live athlete.
+    live_slugs = {
+        r[0]
+        for r in session.query(Athlete.slug)
+        .filter(Athlete.slug.isnot(None))
+        .all()
+    }
+    for redirect in list(session.query(SlugRedirect).all()):
+        if redirect.old_slug in live_slugs:
+            session.delete(redirect)
+            continue
+        target = _redirect_target(session, redirect.athlete_id, orphan_slugs)
+        if target is None:
+            session.delete(redirect)
+        elif target != redirect.athlete_id:
+            redirect.athlete_id = target
 
     # --- Back-write: unify raw spelling to the canonical name -----------
     # Every row of an athlete now carries the cluster's most-common spelling,
@@ -432,8 +527,10 @@ def athlete_lookup(session) -> dict[str, Athlete]:
 def resolve_identity(session, slug: str | None = None, gnz_id: str | None = None) -> int | None:
     """Resolve a slug (``a...``) or legacy gnz_id to a single athlete id.
 
-    Returns ``None`` when nothing matches, or when a gnz_id maps to multiple
-    athletes (callers fall back to the raw gnz_id match).
+    A slug that no longer exists (e.g. merged away) is followed through its
+    ``SlugRedirect`` to the athlete that absorbed it.  Returns ``None`` when
+    nothing matches, or when a gnz_id maps to multiple athletes (callers fall
+    back to the raw gnz_id match).
     """
     if slug:
         athlete = (
@@ -443,6 +540,13 @@ def resolve_identity(session, slug: str | None = None, gnz_id: str | None = None
         )
         if athlete:
             return athlete.id
+        redirect = (
+            session.query(SlugRedirect)
+            .filter(SlugRedirect.old_slug == slug)
+            .first()
+        )
+        if redirect is not None and session.get(Athlete, redirect.athlete_id) is not None:
+            return redirect.athlete_id
         return None
     if gnz_id:
         matches = (
