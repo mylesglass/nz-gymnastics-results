@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from sqlalchemy import case, func
 
 from app.activity_log import enqueue as enqueue_activity, flush as flush_activity, start as start_activity_writer, stop as stop_activity_writer, enqueue_traffic as enqueue_traffic_activity
-from app.athlete_identity import rebuild_athletes, resolve_identity
+from app.athlete_identity import rebuild_athletes, resolve_identity, _signature_hash, _slug_from_hash
 
 from app.auth import (
     ALL_PERMISSIONS,
@@ -74,7 +74,11 @@ from app.schemas import (
     MedalsResponse,
     MergeAthletesRequest,
     MergeAthletesResponse,
+    MergeChangeRow,
     MergeNamesRequest,
+    MergePairPreview,
+    MergePreviewRequest,
+    MergePreviewResponse,
     MultiIdAthlete,
     NameConflict,
     RankingsResponse,
@@ -2559,6 +2563,124 @@ def get_identity_review(_auth=Depends(require_role("admin"))):
     session = get_session()
     try:
         return _build_identity_review(session)
+    finally:
+        session.close()
+
+
+@app.post("/api/admin/athletes/merge-preview", response_model=MergePreviewResponse)
+def preview_merge(
+    req: MergePreviewRequest,
+    _auth=Depends(require_role("admin")),
+):
+    """Return the exact changes a merge would apply, without writing anything.
+
+    Used by the identity review's confirm dialog so an admin sees every row
+    that will be rewritten (name/GNZ ID before -> after, highlighted) plus the
+    resulting URL before committing a merge.
+    """
+    if not req.merge_ids:
+        raise HTTPException(400, "No athletes to merge")
+    if req.athlete_id in req.merge_ids:
+        raise HTTPException(400, "Cannot merge an athlete into itself")
+
+    session = get_session()
+    try:
+        survivor = session.get(Athlete, req.athlete_id)
+        if survivor is None:
+            raise HTTPException(404, "Survivor athlete not found")
+
+        def _summary(a: Athlete) -> dict:
+            agg = (
+                session.query(
+                    func.count(LongScore.id),
+                    func.count(func.distinct(LongScore.event_id)),
+                    func.group_concat(func.distinct(LongScore.club_name)),
+                    func.group_concat(func.distinct(Event.year)),
+                )
+                .join(Event, Event.id == LongScore.event_id)
+                .filter(LongScore.athlete_id == a.id)
+                .group_by(LongScore.athlete_id)
+                .first()
+            )
+            rows, event_count, clubs, years = agg or (0, 0, None, None)
+            intents = [
+                y for (y,) in session.query(WellingtonIntent.year)
+                .filter(WellingtonIntent.athlete_id == a.id)
+                .all()
+            ]
+            return {
+                "athlete_id": a.id,
+                "slug": a.slug,
+                "name": a.canonical_name,
+                "gnz_id": a.gnz_id,
+                "clubs": sorted(set(_split_csv(clubs))),
+                "events": event_count,
+                "event_ids": [],
+                "years": [int(y) for y in sorted(set(_split_csv(years)))],
+                "disciplines": [],
+                "rows": rows,
+                "intent_years": sorted(intents),
+            }
+
+        survivor_summary = _summary(survivor)
+        pairs = []
+        for mid in req.merge_ids:
+            merged = session.get(Athlete, mid)
+            if merged is None:
+                raise HTTPException(404, f"Athlete {mid} not found")
+            if merged.id == survivor.id:
+                raise HTTPException(400, "Cannot merge an athlete into itself")
+
+            name = survivor.canonical_name
+            gid = survivor.gnz_id
+            if not gid:
+                gid = merged.gnz_id
+
+            change_rows = (
+                session.query(
+                    LongScore.event_id,
+                    func.min(Event.name),
+                    LongScore.gymnast_name,
+                    LongScore.gnz_id,
+                    func.count(LongScore.id),
+                )
+                .join(Event, Event.id == LongScore.event_id)
+                .filter(LongScore.athlete_id == merged.id)
+                .group_by(LongScore.event_id, LongScore.gymnast_name, LongScore.gnz_id)
+                .order_by(func.min(Event.name))
+                .all()
+            )
+            changes = [
+                MergeChangeRow(
+                    event_id=eid,
+                    event_name=ename,
+                    rows=cnt,
+                    old_name=old_name,
+                    old_gnz_id=old_gid or "",
+                    new_name=name,
+                    new_gnz_id=gid or "",
+                )
+                for eid, ename, old_name, old_gid, cnt in change_rows
+            ]
+            intent_moves = [
+                y for (y,) in session.query(WellingtonIntent.year)
+                .filter(WellingtonIntent.athlete_id == merged.id)
+                .all()
+            ]
+            new_survivor_slug = _slug_from_hash(
+                _signature_hash(survivor.canonical_name.strip().lower(), gid or "")
+            )
+            pairs.append(MergePairPreview(
+                survivor=survivor_summary,
+                merged=_summary(merged),
+                target_name=name,
+                target_gnz_id=gid or "",
+                changes=changes,
+                intent_moves=sorted(intent_moves),
+                survivor_slug=new_survivor_slug,
+                merged_slug=merged.slug,
+            ))
+        return MergePreviewResponse(pairs=pairs)
     finally:
         session.close()
 

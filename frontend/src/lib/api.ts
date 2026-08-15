@@ -679,6 +679,44 @@ export async function getIdentityReview(): Promise<IdentityReview> {
   return res.json();
 }
 
+export interface MergeChangeRow {
+  event_id: number;
+  event_name: string;
+  rows: number;
+  old_name: string;
+  old_gnz_id: string;
+  new_name: string;
+  new_gnz_id: string;
+}
+
+export interface MergePairPreview {
+  survivor: AthleteReviewInfo;
+  merged: AthleteReviewInfo;
+  target_name: string;
+  target_gnz_id: string;
+  changes: MergeChangeRow[];
+  intent_moves: number[];
+  survivor_slug: string;
+  merged_slug: string;
+}
+
+export interface MergePreview {
+  pairs: MergePairPreview[];
+}
+
+export async function mergePreview(
+  athlete_id: number,
+  merge_ids: number[]
+): Promise<MergePreview> {
+  const res = await fetch(`${API_BASE}/api/admin/athletes/merge-preview`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ athlete_id, merge_ids }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export async function mergeAthletes(
   athlete_id: number,
   merge_id: number

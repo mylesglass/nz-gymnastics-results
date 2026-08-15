@@ -230,9 +230,12 @@ def _redirect_target(
     seen: set[int] = set()
     while target_id is not None and target_id not in seen:
         seen.add(target_id)
-        if session.get(Athlete, target_id) is not None:
+        if target_id in orphan_slugs:
+            old_slug = orphan_slugs[target_id]
+        elif session.get(Athlete, target_id) is not None:
             return target_id
-        old_slug = orphan_slugs.get(target_id)
+        else:
+            old_slug = orphan_slugs.get(target_id)
         if old_slug is None:
             return None
         hop = (
@@ -456,7 +459,6 @@ def rebuild_athletes(session) -> int:
     for digest, athlete in list(existing.items()):
         if digest not in hashes_in_use:
             orphan_slugs[athlete.id] = athlete.slug
-            session.delete(athlete)
 
     # --- Slug redirects for the deleted athletes -----------------------
     # An orphan's rows were re-pointed to their new owner above; record
@@ -469,14 +471,29 @@ def rebuild_athletes(session) -> int:
         if new_owner is not None:
             session.add(SlugRedirect(old_slug=slug, athlete_id=new_owner))
 
-    # Flush deletes/inserts so the prune pass below sees a consistent table.
+    # Re-point existing redirects whose target is deleted this rebuild (a
+    # chain: A->B then B->C).  Must happen BEFORE the orphans are deleted —
+    # ``slug_redirects.athlete_id`` is a foreign key to ``athletes``.
+    for redirect in list(session.query(SlugRedirect).all()):
+        if redirect.athlete_id not in orphan_slugs:
+            continue
+        target = _redirect_target(session, redirect.athlete_id, orphan_slugs)
+        if target is None:
+            session.delete(redirect)
+        elif target != redirect.athlete_id:
+            redirect.athlete_id = target
+
+    # Persist the redirect inserts/re-points first, then drop the orphans
+    # (no redirect references them any more, so the FK delete succeeds).
+    session.flush()
+    for digest, athlete in list(existing.items()):
+        if digest not in hashes_in_use:
+            session.delete(athlete)
     session.flush()
 
-    # --- Prune / re-point redirects ------------------------------------
-    # (1) An identity that came back (same signature re-ingested) makes the
-    # old slug live again — drop the stale redirect, the URL works on its own.
-    # (2) A redirect's target may itself have been merged away in this rebuild
-    # (a chain: A->B then B->C); re-point it to the final live athlete.
+    # --- Prune redirects ------------------------------------------------
+    # An identity that came back (same signature re-ingested) makes the old
+    # slug live again — drop the stale redirect, the URL works on its own.
     live_slugs = {
         r[0]
         for r in session.query(Athlete.slug)

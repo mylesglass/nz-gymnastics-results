@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getIdentityReview, mergeAthletes, splitAthlete } from "$lib/api";
-  import type { AthleteReviewInfo, IdentityReview, MultiIdAthlete } from "$lib/api";
+  import { getIdentityReview, mergeAthletes, mergePreview, splitAthlete } from "$lib/api";
+  import type { AthleteReviewInfo, IdentityReview, MergePreview, MultiIdAthlete } from "$lib/api";
   import { gymnastPath } from "$lib/seo";
+  import Dialog from "$lib/Dialog.svelte";
 
   let {
     onCount,
@@ -65,29 +66,52 @@
     toastTimer = setTimeout(() => { reviewToast = null; }, 5000);
   }
 
-  async function runMerge(survivor: AthleteReviewInfo, merged: AthleteReviewInfo) {
-    busy = true;
+  // --- Merge confirm ---------------------------------------------------
+  // Every merge goes through a preview dialog so the admin sees exactly which
+  // rows change (name/GNZ ID before -> after, highlighted) before committing.
+  let mergeSurvivor = $state<AthleteReviewInfo | null>(null);
+  let mergeMerged = $state<AthleteReviewInfo[]>([]);
+  let mergePreviewData = $state<MergePreview | null>(null);
+  let mergePreviewLoading = $state(false);
+  let mergePreviewError = $state<string | null>(null);
+
+  async function requestMerge(survivor: AthleteReviewInfo, mergedList: AthleteReviewInfo[]) {
+    if (mergedList.length === 0) return;
+    mergeSurvivor = survivor;
+    mergeMerged = mergedList;
+    mergePreviewData = null;
+    mergePreviewError = null;
+    mergePreviewLoading = true;
     try {
-      const res = await mergeAthletes(survivor.athlete_id, merged.athlete_id);
-      showToast("success", `Merged ${res.merged_rows} rows — kept "${survivor.name}"`);
-      await loadReview();
+      mergePreviewData = await mergePreview(
+        survivor.athlete_id,
+        mergedList.map(m => m.athlete_id)
+      );
     } catch (e) {
-      showToast("error", String(e));
+      mergePreviewError = String(e);
     } finally {
-      busy = false;
+      mergePreviewLoading = false;
     }
   }
 
-  async function mergeGroupInto(group: { name?: string; gnz_id?: string; athletes: AthleteReviewInfo[] }, survivor: AthleteReviewInfo) {
+  function closeMergeConfirm() {
+    mergeSurvivor = null;
+    mergeMerged = [];
+    mergePreviewData = null;
+    mergePreviewError = null;
+  }
+
+  async function applyMerge() {
+    if (!mergeSurvivor) return;
     busy = true;
     try {
       let total = 0;
-      for (const other of group.athletes) {
-        if (other.athlete_id === survivor.athlete_id) continue;
-        const res = await mergeAthletes(survivor.athlete_id, other.athlete_id);
+      for (const merged of mergeMerged) {
+        const res = await mergeAthletes(mergeSurvivor.athlete_id, merged.athlete_id);
         total += res.merged_rows;
       }
-      showToast("success", `Merged ${total} rows — kept "${survivor.name}"`);
+      showToast("success", `Merged ${total} rows — kept "${mergeSurvivor.name}"`);
+      closeMergeConfirm();
       await loadReview();
     } catch (e) {
       showToast("error", String(e));
@@ -196,7 +220,7 @@
                 <tr>
                   <td>
                     <div class="flex items-start gap-2">
-                      <button class="btn btn-primary btn-xs shrink-0" onclick={() => runMerge(m.athlete_b, m.athlete_a)} disabled={busy}>Keep</button>
+                      <button class="btn btn-primary btn-xs h-auto min-h-0 whitespace-normal text-left leading-tight justify-start shrink-0" onclick={() => requestMerge(m.athlete_a, [m.athlete_b])} disabled={busy}>Keep {m.athlete_a.name}{m.athlete_a.gnz_id ? ` · ${m.athlete_a.gnz_id}` : ""}</button>
                       <div class="min-w-0">
                         {@render evidence(m.athlete_a)}
                       </div>
@@ -204,7 +228,7 @@
                   </td>
                   <td>
                     <div class="flex items-start gap-2">
-                      <button class="btn btn-secondary btn-xs shrink-0" onclick={() => runMerge(m.athlete_a, m.athlete_b)} disabled={busy}>Keep</button>
+                      <button class="btn btn-secondary btn-xs h-auto min-h-0 whitespace-normal text-left leading-tight justify-start shrink-0" onclick={() => requestMerge(m.athlete_b, [m.athlete_a])} disabled={busy}>Keep {m.athlete_b.name}{m.athlete_b.gnz_id ? ` · ${m.athlete_b.gnz_id}` : ""}</button>
                       <div class="min-w-0">
                         {@render evidence(m.athlete_b)}
                       </div>
@@ -252,8 +276,8 @@
                   <td class="align-top">
                     <div class="flex flex-col gap-1 min-w-44">
                       {#each g.athletes as survivor}
-                        <button class="btn btn-primary btn-xs h-auto min-h-0 whitespace-normal text-left leading-tight justify-start" onclick={() => mergeGroupInto(g, survivor)} disabled={busy}>
-                          Merge others into {survivor.name}
+                        <button class="btn btn-primary btn-xs h-auto min-h-0 whitespace-normal text-left leading-tight justify-start" onclick={() => requestMerge(survivor, g.athletes.filter(a => a.athlete_id !== survivor.athlete_id))} disabled={busy}>
+                          Merge others into {survivor.name}{survivor.gnz_id ? ` · ${survivor.gnz_id}` : ""}
                         </button>
                       {/each}
                       <button class="btn btn-ghost btn-xs text-error" onclick={() => runDismiss(g)}>Separate people — dismiss</button>
@@ -299,8 +323,8 @@
                   <td class="align-top">
                     <div class="flex flex-col gap-1 min-w-44">
                       {#each g.athletes as survivor}
-                        <button class="btn btn-primary btn-xs h-auto min-h-0 whitespace-normal text-left leading-tight justify-start" onclick={() => mergeGroupInto(g, survivor)} disabled={busy}>
-                          Merge others into {survivor.name}
+                        <button class="btn btn-primary btn-xs h-auto min-h-0 whitespace-normal text-left leading-tight justify-start" onclick={() => requestMerge(survivor, g.athletes.filter(a => a.athlete_id !== survivor.athlete_id))} disabled={busy}>
+                          Merge others into {survivor.name}{survivor.gnz_id ? ` · ${survivor.gnz_id}` : ""}
                         </button>
                       {/each}
                       <button class="btn btn-ghost btn-xs text-error" onclick={() => runDismiss(g)}>Different people — dismiss</button>
@@ -402,6 +426,118 @@
       </div>
     </div>
   </div>
+{/if}
+
+{#if mergeSurvivor}
+  <Dialog title={`Merge into ${mergeSurvivor.name}?`} onClose={closeMergeConfirm} maxWidth="max-w-2xl">
+    <div class="text-sm space-y-3">
+      <p class="text-base-content/70">
+        Every row of the merged profile(s) is rewritten to the kept profile's name and GNZ ID.
+        The merged profile's old URL redirects to the kept profile.
+      </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="card bg-base-200 border border-base-300 p-3">
+          <div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-1">Keep</div>
+          <div class="font-medium">{mergeSurvivor.name}</div>
+          <div class="text-xs text-base-content/70 font-mono">{mergeSurvivor.gnz_id || "no GNZ ID"}</div>
+          <div class="text-xs text-base-content/70">
+            {mergeSurvivor.rows} rows · {mergeSurvivor.events} event{mergeSurvivor.events === 1 ? "" : "s"}
+            {#if mergeSurvivor.clubs.length > 0} · {mergeSurvivor.clubs.join(", ")}{/if}
+          </div>
+        </div>
+        <div class="card bg-base-200 border border-base-300 p-3">
+          <div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-1">Merged into it</div>
+          {#each mergeMerged as m}
+            <div class="mb-1.5">
+              <div class="font-medium line-through text-base-content/60">{m.name}</div>
+              <div class="text-xs text-base-content/70 font-mono line-through">{m.gnz_id || "no GNZ ID"}</div>
+              <div class="text-xs text-base-content/70">{m.rows} rows · {m.events} event{m.events === 1 ? "" : "s"}</div>
+            </div>
+          {/each}
+        </div>
+      </div>
+
+      {#if mergePreviewLoading}
+        <div class="flex items-center gap-2 text-base-content/70">
+          <span class="loading loading-spinner loading-sm"></span> Preparing change preview…
+        </div>
+      {:else if mergePreviewError}
+        <div role="alert" class="alert alert-error text-sm py-2">
+          <span>{mergePreviewError}</span>
+        </div>
+      {:else if mergePreviewData}
+        {#each mergePreviewData.pairs as pair}
+          {#if pair.changes.length > 0}
+            <div>
+              <div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-1">
+                Rows that change — {pair.merged.name}
+              </div>
+              <div class="overflow-x-auto">
+                <table class="table table-xs">
+                  <thead>
+                    <tr>
+                      <th>Event</th>
+                      <th>Rows</th>
+                      <th>Name</th>
+                      <th>GNZ ID</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {#each pair.changes as ch}
+                      <tr>
+                        <td class="max-w-52 truncate" title={ch.event_name}>{ch.event_name}</td>
+                        <td>{ch.rows}</td>
+                        <td>
+                          {#if ch.old_name !== ch.new_name}
+                            <span class="badge badge-warning badge-xs mr-1">changed</span>
+                            <span class="line-through text-base-content/50">{ch.old_name}</span>
+                            <span class="mx-0.5">→</span>
+                            <span class="font-semibold">{ch.new_name}</span>
+                          {:else}
+                            {ch.new_name}
+                          {/if}
+                        </td>
+                        <td>
+                          {#if (ch.old_gnz_id || "") !== (ch.new_gnz_id || "")}
+                            <span class="badge badge-warning badge-xs mr-1">changed</span>
+                            <span class="line-through text-base-content/50 font-mono">{ch.old_gnz_id || "—"}</span>
+                            <span class="mx-0.5">→</span>
+                            <span class="font-semibold font-mono">{ch.new_gnz_id || "—"}</span>
+                          {:else}
+                            <span class="font-mono">{ch.new_gnz_id || "—"}</span>
+                          {/if}
+                        </td>
+                      </tr>
+                    {/each}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          {/if}
+          {#if pair.intent_moves.length > 0}
+            <p class="text-xs text-base-content/70">
+              Wellington intent{pair.intent_moves.length > 1 ? "s" : ""} {pair.intent_moves.join(", ")} move{pair.intent_moves.length > 1 ? "" : "s"} to the kept profile.
+            </p>
+          {/if}
+        {/each}
+        <p class="text-xs text-base-content/60">
+          {#if mergePreviewData.pairs.some(p => p.survivor_slug !== p.survivor.slug)}
+            The kept profile's URL changes because it gains the merged GNZ ID — both old URLs redirect.
+          {:else}
+            The kept profile's URL stays the same; the merged profile's old URL redirects to it.
+          {/if}
+        </p>
+      {/if}
+
+      <div class="flex gap-2 justify-end">
+        <button class="btn btn-ghost btn-sm" onclick={closeMergeConfirm} disabled={busy}>Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick={applyMerge} disabled={busy || mergePreviewLoading || !mergePreviewData}>
+          {busy ? "Merging..." : `Merge ${mergeMerged.length} profile${mergeMerged.length === 1 ? "" : "s"} into ${mergeSurvivor.name}`}
+        </button>
+      </div>
+    </div>
+  </Dialog>
 {/if}
 
 {#snippet evidence(a: AthleteReviewInfo)}

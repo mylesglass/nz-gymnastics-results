@@ -5,7 +5,7 @@ import tempfile
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.athlete_identity import rebuild_athletes
@@ -21,6 +21,13 @@ def setup_db():
     db_path = tmp.name
     tmp.close()
     engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False})
+
+    @event.listens_for(engine, "connect")
+    def _fk(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON;")
+        cursor.close()
+
     Base.metadata.create_all(engine)
     TestSession = sessionmaker(bind=engine, class_=Session)
 
@@ -588,6 +595,115 @@ class TestIdentityReview:
 
             for slug in (slugs["249317"], slugs["716561"], slugs["999999"]):
                 assert resolve_identity(session, slug=slug) == c_id
+        finally:
+            session.close()
+
+    def test_merge_preview_shows_changes(self, setup_db):
+        from app.cache import invalidate as clear_cache
+        session = setup_db()
+        try:
+            ev1 = self._event(session)
+            ev2 = self._event(session, name="Other Meet")
+            self._seed(session, [
+                {"event_id": ev1, "gymnast_name": "Madison Lynch", "gnz_id": "249317", "club_name": "Onslow"},
+                {"event_id": ev2, "gymnast_name": "Madison Lynch", "gnz_id": "716561", "club_name": "OMNI"},
+            ])
+            rebuild_athletes(session)
+            groups = self._athletes(session)["Madison Lynch"]
+            assert len(groups) == 2
+            survivor = next(a for a in groups if a.gnz_id == "249317")
+            merged = next(a for a in groups if a.gnz_id == "716561")
+
+            clear_cache()
+            resp = client.post("/api/admin/athletes/merge-preview", json={
+                "athlete_id": survivor.id, "merge_ids": [merged.id],
+            })
+            assert resp.status_code == 200
+            body = resp.json()
+            assert len(body["pairs"]) == 1
+            pair = body["pairs"][0]
+            assert pair["survivor"]["name"] == "Madison Lynch"
+            assert pair["survivor"]["gnz_id"] == "249317"
+            assert pair["merged"]["gnz_id"] == "716561"
+            assert pair["target_name"] == "Madison Lynch"
+            assert pair["target_gnz_id"] == "249317"
+            assert pair["survivor_slug"] == survivor.slug
+            assert pair["merged_slug"] == merged.slug
+            assert len(pair["changes"]) == 1
+            ch = pair["changes"][0]
+            assert ch["old_name"] == "Madison Lynch"
+            assert ch["old_gnz_id"] == "716561"
+            assert ch["new_gnz_id"] == "249317"
+            assert ch["rows"] == 1
+
+            # Preview writes nothing — both athletes still exist.
+            assert len(self._athletes(session)["Madison Lynch"]) == 2
+        finally:
+            session.close()
+
+    def test_merge_preview_promotes_id_and_reports_intents(self, setup_db):
+        from app.cache import invalidate as clear_cache
+        session = setup_db()
+        try:
+            ev1 = self._event(session)
+            ev2 = self._event(session, name="Other Meet")
+            self._seed(session, [
+                {"event_id": ev1, "gymnast_name": "Alex Sims", "gnz_id": "102232", "club_name": "C1"},
+                {"event_id": ev2, "gymnast_name": "Alexander Sims", "gnz_id": "", "club_name": "C2"},
+            ])
+            rebuild_athletes(session)
+            by_name = self._athletes(session)
+            survivor = by_name["Alexander Sims"][0]   # empty-id survivor (kept)
+            merged = by_name["Alex Sims"][0]          # has the numeric id
+            session.add(WellingtonIntent(athlete_id=merged.id, gnz_id="102232", year=2026))
+            session.commit()
+
+            clear_cache()
+            resp = client.post("/api/admin/athletes/merge-preview", json={
+                "athlete_id": survivor.id, "merge_ids": [merged.id],
+            })
+            assert resp.status_code == 200
+            pair = resp.json()["pairs"][0]
+            assert pair["target_gnz_id"] == "102232"           # promoted
+            assert pair["survivor_slug"] != survivor.slug      # survivor URL changes
+            assert pair["intent_moves"] == [2026]
+        finally:
+            session.close()
+
+    def test_merge_preview_batch_and_guards(self, setup_db):
+        from app.cache import invalidate as clear_cache
+        session = setup_db()
+        try:
+            evs = [self._event(session, name=f"Meet {i}") for i in range(3)]
+            self._seed(session, [
+                {"event_id": evs[0], "gymnast_name": "Madison Lynch", "gnz_id": "249317", "club_name": "Onslow"},
+                {"event_id": evs[1], "gymnast_name": "Madison Lynch", "gnz_id": "716561", "club_name": "OMNI"},
+                {"event_id": evs[2], "gymnast_name": "Madison Lynch", "gnz_id": "999999", "club_name": "CSG"},
+            ])
+            rebuild_athletes(session)
+            groups = self._athletes(session)["Madison Lynch"]
+            assert len(groups) == 3
+            by_id = {a.gnz_id: a for a in groups}
+
+            clear_cache()
+            resp = client.post("/api/admin/athletes/merge-preview", json={
+                "athlete_id": by_id["249317"].id,
+                "merge_ids": [by_id["716561"].id, by_id["999999"].id],
+            })
+            assert resp.status_code == 200
+            assert len(resp.json()["pairs"]) == 2
+
+            # Self-merge rejected
+            resp = client.post("/api/admin/athletes/merge-preview", json={
+                "athlete_id": by_id["249317"].id, "merge_ids": [by_id["249317"].id],
+            })
+            assert resp.status_code == 400
+
+            # Unknown survivor
+            resp = client.post("/api/admin/athletes/merge-preview", json={
+                "athlete_id": 99999, "merge_ids": [by_id["716561"].id],
+            })
+            assert resp.status_code == 404
         finally:
             session.close()
 

@@ -426,6 +426,36 @@ class MergeAthletesRequest(BaseModel):
     merge_id: int
 
 
+class MergePreviewRequest(BaseModel):
+    athlete_id: int
+    merge_ids: list[int]
+
+
+class MergeChangeRow(BaseModel):
+    event_id: int
+    event_name: str
+    rows: int
+    old_name: str
+    old_gnz_id: str
+    new_name: str
+    new_gnz_id: str
+
+
+class MergePairPreview(BaseModel):
+    survivor: AthleteReviewInfo
+    merged: AthleteReviewInfo
+    target_name: str
+    target_gnz_id: str
+    changes: list[MergeChangeRow]
+    intent_moves: list[int]
+    survivor_slug: str
+    merged_slug: str
+
+
+class MergePreviewResponse(BaseModel):
+    pairs: list[MergePairPreview]
+
+
 class SplitAthleteRequest(BaseModel):
     athlete_id: int
     split_by: str
