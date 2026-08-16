@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { getRankings, getRankingSteps, type RankingRow, type ApparatusSpecialistRow, type ApparatusQualifyingApp } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
+  import { rankingState } from "$lib/rankingState.svelte.ts";
   import RegionBadge from "$lib/RegionBadge.svelte";
   import { REGION_ORDER, REGION_PALETTES } from "$lib/regions";
   import ExportMenu from "$lib/ExportMenu.svelte";
@@ -25,10 +26,8 @@
   let loading = $state(true);
   let error = $state("");
 
-  let discipline = $state("WAG");
   let year = $state<string | null>(null);
   let steps = $state<string[]>([]);
-  let selectedStep = $state("");
   let rankings = $state<RankingRow[]>([]);
   let years = $state<string[]>([]);
 
@@ -76,10 +75,10 @@
   async function loadSteps() {
     if (!year) return;
     try {
-      const data = await getRankingSteps(Number(year), discipline);
+      const data = await getRankingSteps(Number(year), rankingState.discipline);
       steps = sortSteps(data.steps);
-      if (steps.length > 0 && !steps.includes(selectedStep)) {
-        selectedStep = steps[0];
+      if (steps.length > 0 && !steps.includes(rankingState.selectedStep)) {
+        rankingState.selectedStep = steps[0];
       }
     } catch {
       steps = [];
@@ -90,7 +89,7 @@
 
   let divisionFilter = $state("");
 
-  let scoreCols = $derived(["STEP 5", "STEP 6"].includes(selectedStep) ? 3 : 2);
+  let scoreCols = $derived(["STEP 5", "STEP 6"].includes(rankingState.selectedStep) ? 3 : 2);
 
   let clubFilters = $state<string[]>([]);
   let regionFilters = $state<string[]>([]);
@@ -112,7 +111,7 @@
     "Senior International": "Senior International athletes who reached an apparatus specialist mark (VT 12.500, UB 11.300, BB 11.200, FX 11.400) on one apparatus but didn't qualify for the All Around ranking.",
   };
 
-  let specialistNote = $derived(SPECIALIST_NOTES[selectedStep] ?? "");
+  let specialistNote = $derived(SPECIALIST_NOTES[rankingState.selectedStep] ?? "");
 
   function appBadgeClass(app: string): string {
     switch (app) {
@@ -131,7 +130,7 @@
 
   function appMarkText(app: string): string {
     if (appQualScore != null) return appQualScore.toFixed(3);
-    return (APPARATUS_MARKS[selectedStep]?.[app] ?? null)?.toFixed(3) ?? "the qualifying mark";
+    return (APPARATUS_MARKS[rankingState.selectedStep]?.[app] ?? null)?.toFixed(3) ?? "the qualifying mark";
   }
 
   function appTooltip(a: ApparatusQualifyingApp): string {
@@ -188,11 +187,11 @@
   }));
 
   async function loadRankings() {
-    if (!year || !selectedStep) return;
+    if (!year || !rankingState.selectedStep) return;
     loadingRankings = true;
     error = "";
     try {
-      const data = await getRankings(Number(year), selectedStep, discipline, quotaMode, qualifierMode, divisionFilter);
+      const data = await getRankings(Number(year), rankingState.selectedStep, rankingState.discipline, quotaMode, qualifierMode, divisionFilter);
       rankings = data.rankings;
       specialists = data.apparatus_specialists ?? [];
       appQualScore = data.apparatus_qualifying_score ?? null;
@@ -225,7 +224,7 @@
     "Senior Open": "1 mark at 63.000",
   };
 
-  let qualifierHint = $derived(QUALIFIER_RULES[selectedStep] ?? "");
+  let qualifierHint = $derived(QUALIFIER_RULES[rankingState.selectedStep] ?? "");
 
   const APPARATUS_RULES: Record<string, string> = {
     "STEP 8": "11.000 on one apparatus at two different competitions",
@@ -239,18 +238,18 @@
     "Junior International": "VT 12.200, UB 10.400, BB 10.500, FX 11.400 on one apparatus",
     "Senior International": "VT 12.500, UB 11.300, BB 11.200, FX 11.400 on one apparatus",
   };
-  let apparatusNote = $derived(APPARATUS_RULES[selectedStep] ?? "");
+  let apparatusNote = $derived(APPARATUS_RULES[rankingState.selectedStep] ?? "");
 
-  let rankingNote = $derived(["STEP 5", "STEP 6"].includes(selectedStep)
+  let rankingNote = $derived(["STEP 5", "STEP 6"].includes(rankingState.selectedStep)
     ? "Ranked by the average of each gymnast's top 3 competition scores."
     : "Ranked by the average of each gymnast's top 2 competition scores.");
 
-  let showRankingToggles = $derived(!["STEP 1", "STEP 2", "STEP 3", "STEP 4", "Level 1", "Level 2", "Level 3"].includes(selectedStep));
-  let showMarkColumn = $derived(["STEP 1", "STEP 2", "STEP 3", "STEP 4"].includes(selectedStep));
-  let divisionDisabled = $derived(["STEP 9", "STEP 10", "Youth International", "Junior International", "Senior International"].includes(selectedStep));
+  let showRankingToggles = $derived(!["STEP 1", "STEP 2", "STEP 3", "STEP 4", "Level 1", "Level 2", "Level 3"].includes(rankingState.selectedStep));
+  let showMarkColumn = $derived(["STEP 1", "STEP 2", "STEP 3", "STEP 4"].includes(rankingState.selectedStep));
+  let divisionDisabled = $derived(["STEP 9", "STEP 10", "Youth International", "Junior International", "Senior International"].includes(rankingState.selectedStep));
 
   function switchDisc(d: string) {
-    discipline = d;
+    rankingState.discipline = d;
     divisionFilter = "";
     if (year) loadSteps();
   }
@@ -258,13 +257,13 @@
   let prevYear = "";
   let prevDiscipline = "";
   $effect(() => {
-    if (year && selectedStep && discipline) {
-      if (year !== prevYear || discipline !== prevDiscipline) {
+    if (year && rankingState.selectedStep && rankingState.discipline) {
+      if (year !== prevYear || rankingState.discipline !== prevDiscipline) {
         clubFilters = [];
         regionFilters = [];
       }
       prevYear = year;
-      prevDiscipline = discipline;
+      prevDiscipline = rankingState.discipline;
       loadRankings();
     }
   });
@@ -303,7 +302,7 @@
 <div class="max-w-6xl mx-auto">
   <h1 class="text-3xl font-bold mb-6">National Rankings</h1>
 
-  {#if showRankingToggles && selectedStep}
+  {#if showRankingToggles && rankingState.selectedStep}
     <div class="card bg-base-200 border border-base-300 mb-6">
       <div class="card-body py-4">
         <div class="flex items-start gap-3">
@@ -311,7 +310,7 @@
             <path fill="currentColor" d="M11 17h2v-6h-2zm1.713-8.287Q13 8.425 13 8t-.288-.712T12 7t-.712.288T11 8t.288.713T12 9t.713-.288M12 22q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22"/>
           </svg>
           <div class="min-w-0">
-            <h3 class="card-title text-sm mb-1">{selectedStep}</h3>
+            <h3 class="card-title text-sm mb-1">{rankingState.selectedStep}</h3>
             <div class="text-xs text-base-content/70 space-y-1.5">
               <div>
                 <span class="font-semibold text-base-content/90">Ranking:</span>
@@ -345,19 +344,19 @@
 
   <div class="flex flex-wrap items-center gap-3 mb-6">
     <div class="tabs tabs-box" aria-label="Discipline">
-      <button type="button" aria-pressed={discipline === 'WAG'} class="tab tab-sm {discipline === 'WAG' ? 'bg-primary text-primary-content rounded-lg' : ''}" onclick={() => switchDisc('WAG')}>WAG</button>
-      <button type="button" aria-pressed={discipline === 'MAG'} class="tab tab-sm {discipline === 'MAG' ? 'bg-secondary text-secondary-content rounded-lg' : ''}" onclick={() => switchDisc('MAG')}>MAG</button>
+      <button type="button" aria-pressed={rankingState.discipline === 'WAG'} class="tab tab-sm {rankingState.discipline === 'WAG' ? 'bg-primary text-primary-content rounded-lg' : ''}" onclick={() => switchDisc('WAG')}>WAG</button>
+      <button type="button" aria-pressed={rankingState.discipline === 'MAG'} class="tab tab-sm {rankingState.discipline === 'MAG' ? 'bg-secondary text-secondary-content rounded-lg' : ''}" onclick={() => switchDisc('MAG')}>MAG</button>
     </div>
 
     {#if steps.length > 0}
       <label for="rank-step" class="sr-only">Step</label>
-      <select id="rank-step" class="select select-bordered select-sm w-40" bind:value={selectedStep}>
+      <select id="rank-step" class="select select-bordered select-sm w-40" bind:value={rankingState.selectedStep}>
         {#each steps as s}
           <option value={s}>{s}</option>
         {/each}
       </select>
 
-      {#if discipline === "WAG"}
+      {#if rankingState.discipline === "WAG"}
         <label for="rank-division" class="sr-only">Division</label>
         <select id="rank-division" class="select select-bordered select-sm w-40 {divisionDisabled ? 'select-disabled opacity-60' : ''}" bind:value={divisionFilter} disabled={divisionDisabled} aria-disabled={divisionDisabled}>
           <option value="">All Divisions</option>
@@ -366,7 +365,7 @@
         </select>
       {/if}
 
-  {#if showRankingToggles && selectedStep}
+  {#if showRankingToggles && rankingState.selectedStep}
       <div class="flex items-center gap-3 whitespace-nowrap">
         <div class="flex items-center gap-1.5">
           <label class="label cursor-pointer gap-2">
@@ -429,7 +428,7 @@
 
       {#if filteredRankings.length > 0}
         {@const divisionLabel = divisionFilter === "OVER" ? " Over" : divisionFilter === "UNDER" ? " Under" : ""}
-        <ExportMenu columns={exportKeys} rows={exportRows} headerLabels={headerLabels} title={`National Rankings ${year} ${discipline} ${selectedStep}${divisionLabel}`} filename={`National Rankings ${year} ${discipline} ${selectedStep}${divisionLabel}`} />
+        <ExportMenu columns={exportKeys} rows={exportRows} headerLabels={headerLabels} title={`National Rankings ${year} ${rankingState.discipline} ${rankingState.selectedStep}${divisionLabel}`} filename={`National Rankings ${year} ${rankingState.discipline} ${rankingState.selectedStep}${divisionLabel}`} />
       {/if}
     {:else if year}
       <span class="text-sm text-base-content/70">No STEP levels available</span>
@@ -583,7 +582,7 @@
           <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5A.75.75 0 0 0 12 9Z" clip-rule="evenodd" />
         </svg>
         <div class="text-sm">
-          <span class="font-semibold">Can't find someone?</span> The <span class="font-medium">Qualified</span> filter is on — gymnasts who haven't reached the {selectedStep} qualifying mark are hidden. Turn it off to show everyone.
+          <span class="font-semibold">Can't find someone?</span> The <span class="font-medium">Qualified</span> filter is on — gymnasts who haven't reached the {rankingState.selectedStep} qualifying mark are hidden. Turn it off to show everyone.
         </div>
       </div>
     {/if}

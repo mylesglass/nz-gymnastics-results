@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { getWellingtonRankings, getRankingSteps, getIntents, toggleIntent, type WellingtonRankingRow, type ApparatusSpecialistRow, type ApparatusQualifyingApp, type WellingtonNotRankedRow } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
+  import { rankingState } from "$lib/rankingState.svelte.ts";
   import { currentUser } from "$lib/auth";
   import ExportMenu from "$lib/ExportMenu.svelte";
   import Tooltip from "$lib/Tooltip.svelte";
@@ -113,10 +114,8 @@
   let loading = $state(true);
   let error = $state("");
 
-  let discipline = $state("WAG");
   let year = $state<string | null>(null);
   let steps = $state<string[]>([]);
-  let selectedStep = $state("");
   let rankings = $state<WellingtonRankingRow[]>([]);
   let specialists = $state<ApparatusSpecialistRow[]>([]);
   let notRanked = $state<WellingtonNotRankedRow[]>([]);
@@ -178,10 +177,10 @@
   async function loadSteps() {
     if (!year) return;
     try {
-      const data = await getRankingSteps(Number(year), discipline);
+      const data = await getRankingSteps(Number(year), rankingState.discipline);
       steps = sortSteps(data.steps.filter((s) => !EXCLUDE_STEPS.includes(s)));
-      if (steps.length > 0 && !steps.includes(selectedStep)) {
-        selectedStep = steps[0];
+      if (steps.length > 0 && !steps.includes(rankingState.selectedStep)) {
+        rankingState.selectedStep = steps[0];
       }
     } catch {
       steps = [];
@@ -221,13 +220,13 @@
   let fetchToken = 0;
 
   async function loadRankings() {
-    if (!year || !selectedStep) return;
+    if (!year || !rankingState.selectedStep) return;
     const token = ++fetchToken;
     loadingRankings = true;
     error = "";
     try {
       const [data, intentIds] = await Promise.all([
-        getWellingtonRankings(Number(year), selectedStep, discipline),
+        getWellingtonRankings(Number(year), rankingState.selectedStep, rankingState.discipline),
         getIntents(Number(year)),
       ]);
       if (token !== fetchToken) return;
@@ -252,12 +251,12 @@
   let intents = $state<Set<string>>(new Set());
 
   function switchDisc(d: string) {
-    discipline = d;
+    rankingState.discipline = d;
     if (year) loadSteps();
   }
 
   $effect(() => {
-    if (year && selectedStep && discipline) {
+    if (year && rankingState.selectedStep && rankingState.discipline) {
       loadRankings();
     }
   });
@@ -283,7 +282,7 @@
 
   function appMarkText(app: string): string {
     if (appQualScore != null) return appQualScore.toFixed(3);
-    return (APPARATUS_MARKS[selectedStep]?.[app] ?? null)?.toFixed(3) ?? "the qualifying mark";
+    return (APPARATUS_MARKS[rankingState.selectedStep]?.[app] ?? null)?.toFixed(3) ?? "the qualifying mark";
   }
 
   function appTooltip(a: ApparatusQualifyingApp): string {
@@ -361,20 +360,20 @@
 
   <div class="flex flex-wrap items-center gap-3 mb-6">
     <div class="tabs tabs-box" aria-label="Discipline">
-      <button type="button" aria-pressed={discipline === 'WAG'} class="tab tab-sm {discipline === 'WAG' ? 'bg-primary text-primary-content rounded-lg' : ''}" onclick={() => switchDisc('WAG')}>WAG</button>
-      <button type="button" aria-pressed={discipline === 'MAG'} class="tab tab-sm {discipline === 'MAG' ? 'bg-secondary text-secondary-content rounded-lg' : ''}" onclick={() => switchDisc('MAG')}>MAG</button>
+      <button type="button" aria-pressed={rankingState.discipline === 'WAG'} class="tab tab-sm {rankingState.discipline === 'WAG' ? 'bg-primary text-primary-content rounded-lg' : ''}" onclick={() => switchDisc('WAG')}>WAG</button>
+      <button type="button" aria-pressed={rankingState.discipline === 'MAG'} class="tab tab-sm {rankingState.discipline === 'MAG' ? 'bg-secondary text-secondary-content rounded-lg' : ''}" onclick={() => switchDisc('MAG')}>MAG</button>
     </div>
 
     {#if steps.length > 0}
       <label for="wgtn-step" class="sr-only">Step</label>
-      <select id="wgtn-step" class="select select-bordered select-sm" bind:value={selectedStep}>
+      <select id="wgtn-step" class="select select-bordered select-sm" bind:value={rankingState.selectedStep}>
         {#each steps as s}
           <option value={s}>{s}</option>
         {/each}
       </select>
 
       {#if rankings.length > 0}
-        <ExportMenu columns={EXPORT_KEYS} rows={exportRows} headerLabels={CSV_HEADERS} title={`Wellington Rankings ${year} ${discipline} ${selectedStep}`} filename={`Wellington Rankings ${year} ${discipline} ${selectedStep}`} />
+        <ExportMenu columns={EXPORT_KEYS} rows={exportRows} headerLabels={CSV_HEADERS} title={`Wellington Rankings ${year} ${rankingState.discipline} ${rankingState.selectedStep}`} filename={`Wellington Rankings ${year} ${rankingState.discipline} ${rankingState.selectedStep}`} />
       {/if}
     {:else if year}
       <span class="text-sm text-base-content/70">No STEP levels available</span>

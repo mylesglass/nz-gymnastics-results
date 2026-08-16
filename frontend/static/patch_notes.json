@@ -3,6 +3,12 @@
     "date": "17 Aug 2026",
     "entries": [
       {
+        "title": "Rankings remember your place — no more jumping back to STEP 5 WAG",
+        "items": [
+          "Opening a gymnast from the National, Apparatus or Wellington rankings and then going back used to reset the page to WAG and the first step. The ranking pages now remember your selected discipline and step, so you return to the exact ranking you were viewing — and switching between the three ranking pages keeps the same discipline and step where they exist."
+        ]
+      },
+      {
         "title": "Apparatus rankings cleaned up — no more \"All Around\" specialist badges",
         "items": [
           "On a few competitions (e.g. Counties Champs, NZ Champs) the exported data labels each apparatus pass generically, which made the rankings read some passes as a bogus \"All Around\" apparatus. That phantom apparatus no longer appears in the apparatus leaderboards, the national/Wellington Apparatus Specialist sections, or the medal tallies — only the real six (MAG) and four (WAG) apparatus count. The affected passes' scores still count toward each gymnast's all-around total."

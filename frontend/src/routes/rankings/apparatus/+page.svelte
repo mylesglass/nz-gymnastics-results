@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { getApparatusRankings, getRankingSteps, type ApparatusLeaderboard, type ApparatusRankingRow } from "$lib/api";
   import { selectedYear, yearOptions } from "$lib/year";
+  import { rankingState } from "$lib/rankingState.svelte.ts";
   import RegionBadge from "$lib/RegionBadge.svelte";
   import RegionCheck from "$lib/RegionCheck.svelte";
   import { REGION_ORDER, REGION_PALETTES } from "$lib/regions";
@@ -19,10 +20,8 @@
 
   let error = $state("");
 
-  let discipline = $state("WAG");
   let year = $state<string | null>(null);
   let steps = $state<string[]>([]);
-  let selectedStep = $state("");
   let leaderboards = $state<ApparatusLeaderboard[]>([]);
   let selectedApp = $state("");
   let years = $state<string[]>([]);
@@ -71,10 +70,10 @@
   async function loadSteps() {
     if (!year) return;
     try {
-      const data = await getRankingSteps(Number(year), discipline);
+      const data = await getRankingSteps(Number(year), rankingState.discipline);
       steps = sortSteps(data.steps);
-      if (steps.length > 0 && !steps.includes(selectedStep)) {
-        selectedStep = steps[0];
+      if (steps.length > 0 && !steps.includes(rankingState.selectedStep)) {
+        rankingState.selectedStep = steps[0];
       }
     } catch {
       steps = [];
@@ -114,10 +113,10 @@
     d: r.d?.toFixed(1) ?? "", best: r.best.toFixed(3), event: r.event,
   })));
 
-  let divisionDisabled = $derived(["STEP 9", "STEP 10", "Youth International", "Junior International", "Senior International"].includes(selectedStep));
+  let divisionDisabled = $derived(["STEP 9", "STEP 10", "Youth International", "Junior International", "Senior International"].includes(rankingState.selectedStep));
 
   function switchDisc(d: string) {
-    discipline = d;
+    rankingState.discipline = d;
     divisionFilter = "";
     if (year) loadSteps();
   }
@@ -133,12 +132,12 @@
   let fetchToken = 0;
 
   async function loadLeaderboards() {
-    if (!year || !selectedStep) return;
+    if (!year || !rankingState.selectedStep) return;
     const token = ++fetchToken;
     loadingRankings = true;
     error = "";
     try {
-      const data = await getApparatusRankings(Number(year), selectedStep, discipline, divisionFilter);
+      const data = await getApparatusRankings(Number(year), rankingState.selectedStep, rankingState.discipline, divisionFilter);
       if (token !== fetchToken) return;
       leaderboards = data.apparatus ?? [];
       if (!availableApps.includes(selectedApp)) {
@@ -156,13 +155,13 @@
   let prevYear = "";
   let prevDiscipline = "";
   $effect(() => {
-    if (year && selectedStep && discipline) {
-      if (year !== prevYear || discipline !== prevDiscipline) {
+    if (year && rankingState.selectedStep && rankingState.discipline) {
+      if (year !== prevYear || rankingState.discipline !== prevDiscipline) {
         clubFilters = [];
         regionFilters = [];
       }
       prevYear = year;
-      prevDiscipline = discipline;
+      prevDiscipline = rankingState.discipline;
       loadLeaderboards();
     }
   });
@@ -200,19 +199,19 @@
 
   <div class="flex flex-wrap items-center gap-3 mb-6">
     <div class="tabs tabs-box" aria-label="Discipline">
-      <button type="button" aria-pressed={discipline === 'WAG'} class="tab tab-sm {discipline === 'WAG' ? 'bg-primary text-primary-content rounded-lg' : ''}" onclick={() => switchDisc('WAG')}>WAG</button>
-      <button type="button" aria-pressed={discipline === 'MAG'} class="tab tab-sm {discipline === 'MAG' ? 'bg-secondary text-secondary-content rounded-lg' : ''}" onclick={() => switchDisc('MAG')}>MAG</button>
+      <button type="button" aria-pressed={rankingState.discipline === 'WAG'} class="tab tab-sm {rankingState.discipline === 'WAG' ? 'bg-primary text-primary-content rounded-lg' : ''}" onclick={() => switchDisc('WAG')}>WAG</button>
+      <button type="button" aria-pressed={rankingState.discipline === 'MAG'} class="tab tab-sm {rankingState.discipline === 'MAG' ? 'bg-secondary text-secondary-content rounded-lg' : ''}" onclick={() => switchDisc('MAG')}>MAG</button>
     </div>
 
     {#if steps.length > 0}
       <label for="app-step" class="sr-only">Step</label>
-      <select id="app-step" class="select select-bordered select-sm w-40" bind:value={selectedStep}>
+      <select id="app-step" class="select select-bordered select-sm w-40" bind:value={rankingState.selectedStep}>
         {#each steps as s}
           <option value={s}>{s}</option>
         {/each}
       </select>
 
-      {#if discipline === "WAG"}
+      {#if rankingState.discipline === "WAG"}
         <label for="app-division" class="sr-only">Division</label>
         <select id="app-division" class="select select-bordered select-sm w-40 {divisionDisabled ? 'select-disabled opacity-60' : ''}" bind:value={divisionFilter} disabled={divisionDisabled} aria-disabled={divisionDisabled}>
           <option value="">All Divisions</option>
@@ -238,7 +237,7 @@
 
       {#if filteredRows.length > 0}
         {@const divisionLabel = divisionFilter === "OVER" ? " Over" : divisionFilter === "UNDER" ? " Under" : ""}
-        <ExportMenu columns={EXPORT_KEYS} rows={exportRows} headerLabels={EXPORT_HEADERS} title={`Apparatus Rankings ${year} ${discipline} ${selectedStep}${divisionLabel} ${selectedApp}`} filename={`Apparatus Rankings ${year} ${discipline} ${selectedStep}${divisionLabel} ${selectedApp}`} />
+        <ExportMenu columns={EXPORT_KEYS} rows={exportRows} headerLabels={EXPORT_HEADERS} title={`Apparatus Rankings ${year} ${rankingState.discipline} ${rankingState.selectedStep}${divisionLabel} ${selectedApp}`} filename={`Apparatus Rankings ${year} ${rankingState.discipline} ${rankingState.selectedStep}${divisionLabel} ${selectedApp}`} />
       {/if}
     {:else if year}
       <span class="text-sm text-base-content/70">No STEP levels available</span>
