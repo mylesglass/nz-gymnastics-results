@@ -156,6 +156,21 @@ export async function getStats(): Promise<{
   return res.json();
 }
 
+export interface RebuildStatus {
+  ready: boolean;
+  building: boolean;
+  needs_rebuild: boolean;
+  last_rebuild_at: string;
+  last_rebuild_ms: number;
+  last_rebuild_size_bytes: number;
+}
+
+export async function getRebuildStatus(): Promise<RebuildStatus> {
+  const res = await fetch(`${API_BASE}/api/admin/rebuild/status`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export interface MedalCounts {
   g: number;
   s: number;
@@ -201,8 +216,10 @@ export async function getMedals(params?: {
   return res.json();
 }
 
-export async function getWideResults(eventId: number): Promise<WideResponse> {
-  const res = await fetch(`${API_BASE}/api/events/${eventId}/results/wide`);
+export async function getWideResults(eventId: number, noCache = false): Promise<WideResponse> {
+  const res = await fetch(`${API_BASE}/api/events/${eventId}/results/wide`, {
+    cache: noCache ? "no-store" : "default",
+  });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
@@ -213,7 +230,7 @@ export async function getAllWideResults(params?: {
   slug?: string;
   club?: string;
   year?: number;
-}): Promise<{
+}, noCache = false): Promise<{
   name?: string;
   wag?: { columns: string[]; rows: Record<string, unknown>[] };
   mag?: { columns: string[]; rows: Record<string, unknown>[] };
@@ -227,7 +244,9 @@ export async function getAllWideResults(params?: {
   if (params?.year) qp.set("year", String(params.year));
   const qs = qp.toString();
   if (qs) url += `?${qs}`;
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    cache: noCache ? "no-store" : "default",
+  });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
@@ -603,13 +622,20 @@ export async function mergeNames(
   return res.json();
 }
 
-export async function updateGymnast(data: {
+export interface GymnastEditData {
   event_id: number;
   current_name: string;
+  slug?: string;
   new_name?: string;
   new_gnz_id?: string;
   new_club?: string;
-}): Promise<{ updated: number }> {
+  new_division?: string;
+  new_round_type?: string;
+  current_division?: string;
+  current_round_type?: string;
+}
+
+export async function updateGymnast(data: GymnastEditData): Promise<{ updated: number }> {
   const res = await fetch(`${API_BASE}/api/admin/scores/gymnast`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...authHeaders() },

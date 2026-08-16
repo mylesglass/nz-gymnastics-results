@@ -80,6 +80,17 @@ def invalidate(event_id: Optional[int] = None):
         cache.invalidate_prefix(f"event:{event_id}:")
     else:
         cache.clear()
+    # Mark the materialized store dirty and (inside the running app) kick a
+    # background rebuild. Lazy import keeps cache.py a leaf module.
+    from app.materialize import mark_event_dirty, mark_needs_rebuild, maybe_kick_rebuild
+
+    mark_needs_rebuild()
+    if event_id is not None:
+        # The event's wide_rows may be stale until a rebuild refreshes them (or
+        # the read paths refresh them on demand) — flag it so reads never serve
+        # a pre-edit copy.
+        mark_event_dirty(event_id)
+    maybe_kick_rebuild()
 
 
 def cache_headers() -> dict[str, str]:

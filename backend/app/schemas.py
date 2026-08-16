@@ -360,9 +360,14 @@ class IntentToggle(BaseModel):
 class GymnastEditRequest(BaseModel):
     event_id: int
     current_name: str
+    slug: str | None = None
     new_name: str | None = None
     new_gnz_id: str | None = None
     new_club: str | None = None
+    new_division: str | None = None
+    new_round_type: str | None = None
+    current_division: str | None = None
+    current_round_type: str | None = None
 
 
 class GymnastEditResponse(BaseModel):

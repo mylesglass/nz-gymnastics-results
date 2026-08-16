@@ -46,7 +46,7 @@
     nameMeta,
     initialTitle = "",
   }: {
-    loadData: () => Promise<LoadDataResult>;
+    loadData: (opts?: { noCache?: boolean }) => Promise<LoadDataResult>;
     loadKey?: string;
     showEventFilter?: boolean;
     stickyCol?: string;
@@ -84,46 +84,87 @@
   let editValues = $state<Record<string, string>>({});
   let editToast = $state<string | null>(null);
   let toastTimer: ReturnType<typeof setTimeout> | undefined;
+  let savingRowIdx = $state<number | null>(null);
+
+  const EDITABLE_COLS = ["name", "gnz-id", "club", "division", "round-type"] as const;
 
   onMount(() => {
     const unsub = currentUser.subscribe((v) => (user = v));
     return unsub;
   });
 
-  function editKey(rowIdx: number, col: string): string {
-    return `${rowIdx}:${col}`;
+  // Edits are keyed by stable row identity (event + slug) rather than the row
+  // index, so sorting/paging mid-edit can never mis-apply an edit to another row.
+  function editKey(row: Record<string, unknown> | undefined, col: string): string {
+    if (!row) return `${col}:none`;
+    const eid = row["event_id"] ?? eventId;
+    const ident = row["slug"] || row["name"] || "none";
+    return `${eid}:${ident}:${col}`;
+  }
+
+  function rowHasEdits(rowIdx: number): boolean {
+    const row = visibleRows[rowIdx];
+    if (!row) return false;
+    for (const col of EDITABLE_COLS) {
+      const ek = editKey(row, col);
+      if (ek in editValues && editValues[ek] !== String(row[col] ?? "")) {
+        return true;
+      }
+    }
+    return false;
   }
 
   async function saveRow(rowIdx: number) {
     const row = visibleRows[rowIdx];
-    if (!row) return;
+    if (!row || savingRowIdx !== null) return;
     const event_id = row["event_id"] ?? eventId;
     if (!event_id) return;
-    const keys = ["name", "gnz-id", "club"] as const;
-    const patch: Record<string, string | number> = { event_id, current_name: String(row["name"]) };
+    const patch: {
+      event_id: number;
+      current_name: string;
+      slug?: string;
+      new_name?: string;
+      new_gnz_id?: string;
+      new_club?: string;
+      new_division?: string;
+      new_round_type?: string;
+      current_division?: string;
+      current_round_type?: string;
+    } = { event_id, current_name: String(row["name"] ?? "") };
+    if (row["slug"]) patch.slug = String(row["slug"]);
     let changed = false;
-    for (const col of keys) {
-      const ek = editKey(rowIdx, col);
+    for (const col of EDITABLE_COLS) {
+      const ek = editKey(row, col);
       if (ek in editValues && editValues[ek] !== String(row[col] ?? "")) {
         if (col === "name") patch.new_name = editValues[ek];
         else if (col === "gnz-id") patch.new_gnz_id = editValues[ek];
         else if (col === "club") patch.new_club = editValues[ek];
+        else if (col === "division") {
+          patch.new_division = editValues[ek];
+          patch.current_division = String(row["division"] ?? "");
+        } else if (col === "round-type") {
+          patch.new_round_type = editValues[ek];
+          patch.current_round_type = String(row["round-type"] ?? "");
+        }
         changed = true;
       }
     }
     if (!changed) return;
     let toastMsg = "";
+    savingRowIdx = rowIdx;
     try {
-      const result = await updateGymnast(patch as any);
+      const result = await updateGymnast(patch);
       toastMsg = result.updated === 0
         ? `No rows: current="${patch.current_name}" event=${patch.event_id}`
         : `Updated ${result.updated} row${result.updated !== 1 ? "s" : ""}`;
       const next = { ...editValues };
-      for (const col of keys) delete next[editKey(rowIdx, col)];
+      for (const col of EDITABLE_COLS) delete next[editKey(row, col)];
       editValues = next;
-      await doLoad();
+      await doLoad({ noCache: true, preserveView: true });
     } catch (e) {
       toastMsg = `Save failed: ${e}`;
+    } finally {
+      savingRowIdx = null;
     }
     if (toastMsg) {
       editToast = toastMsg;
@@ -417,22 +458,58 @@ function appDisplayLabel(prefix: string): string {
   let reloadTick = $state(0);
   let loadToken = 0;
 
-  async function doLoad() {
+  interface ViewSnapshot {
+    tab: string;
+    searchText: string;
+    filterEvent: string[];
+    filterStep: string[];
+    filterClub: string[];
+    filterRegion: string[];
+    filterDivision: string[];
+    filterRound: string[];
+    sortCol: string | null;
+    sortAsc: boolean;
+    page: number;
+  }
+
+  function captureView(): ViewSnapshot | null {
+    return {
+      tab: activeTab,
+      searchText,
+      filterEvent: [...filterEvent],
+      filterStep: [...filterStep],
+      filterClub: [...filterClub],
+      filterRegion: [...filterRegion],
+      filterDivision: [...filterDivision],
+      filterRound: [...filterRound],
+      sortCol,
+      sortAsc,
+      page: currentPage,
+    };
+  }
+
+  async function doLoad(opts: { noCache?: boolean; preserveView?: boolean } = {}) {
     const token = ++loadToken;
     loaded = false;
     errorMessage = null;
     errorRaw = null;
     loading = true;
+    const snapshot = opts.preserveView ? captureView() : null;
     try {
-      const r = await loadData();
+      const r = await loadData(opts.noCache ? { noCache: true } : undefined);
       if (token !== loadToken) return;
       title = r.title;
       allData = r.tabs;
       onData?.(r.tabs);
       const keys = Object.keys(r.tabs);
       if (keys.length > 0) {
-        activeTab = keys[0];
-        applyTab(keys[0]);
+        if (snapshot && keys.includes(snapshot.tab)) {
+          applyTab(snapshot.tab, { preserveView: true });
+          restoreView(snapshot);
+        } else {
+          activeTab = keys[0];
+          applyTab(keys[0]);
+        }
       }
     } catch (err) {
       if (token !== loadToken) return;
@@ -499,15 +576,18 @@ function appDisplayLabel(prefix: string): string {
     return () => ro.disconnect();
   });
 
-  function applyTab(tab: string) {
+  function applyTab(tab: string, opts: { preserveView?: boolean } = {}) {
     activeTab = tab;
-    searchText = "";
-    filterEvent = [];
-    filterStep = [];
-    filterClub = [];
-    filterRegion = [];
-    filterDivision = [];
-    filterRound = [];
+    if (!opts.preserveView) {
+      searchText = "";
+      filterEvent = [];
+      filterStep = [];
+      filterClub = [];
+      filterRegion = [];
+      filterDivision = [];
+      filterRound = [];
+      sortCol = null;
+    }
     const d = allData[tab];
     if (d) {
       columns = d.columns;
@@ -532,7 +612,28 @@ function appDisplayLabel(prefix: string): string {
       divisionOptions = [];
       roundOptions = [];
     }
-    sortCol = null;
+  }
+
+  // Re-apply the pre-save view after a reload: keep tab/search/filters (pruning
+  // selections that no longer exist in the fresh rows) and restore sort + page.
+  function restoreView(snapshot: ViewSnapshot) {
+    filterEvent = filterEvent.filter((v) => eventOptions.includes(v));
+    filterStep = filterStep.filter((v) => stepOptions.includes(v));
+    filterClub = filterClub.filter((v) => clubOptions.includes(v));
+    filterRegion = filterRegion.filter((v) => regionOptions.includes(v));
+    filterDivision = filterDivision.filter((v) => divisionOptions.includes(v));
+    filterRound = filterRound.filter((v) => roundOptions.includes(v));
+    searchText = snapshot.searchText;
+    if (snapshot.sortCol && columns.includes(snapshot.sortCol)) {
+      sortCol = snapshot.sortCol;
+      sortAsc = snapshot.sortAsc;
+    } else {
+      sortCol = null;
+    }
+    const maxPage = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+    // Set through pendingPage so the filter-reset effect (which runs first) can't
+    // clobber the restored page.
+    pendingPage = Math.min(snapshot.page, maxPage);
   }
 
   let pdfColumns = $derived.by<PdfColumn[]>(() => {
@@ -585,6 +686,7 @@ function appDisplayLabel(prefix: string): string {
 
   let pageSize = $state(50);
   let currentPage = $state(1);
+  let pendingPage = $state<number | null>(null);
 
   let filteredRows = $derived.by(() => {
     if (!rows) return [];
@@ -645,6 +747,15 @@ function appDisplayLabel(prefix: string): string {
   $effect(() => {
     searchText + filterEvent.join(",") + filterStep.join(",") + filterClub.join(",") + filterRegion.join(",") + filterDivision.join(",") + filterRound.join(",");
     currentPage = 1;
+  });
+
+  // Applies a preserved page AFTER the filter-reset effect above has run, so a
+  // post-save reload can restore the user's place without being reset to page 1.
+  $effect(() => {
+    if (pendingPage !== null) {
+      currentPage = pendingPage;
+      pendingPage = null;
+    }
   });
 
   function toggleSort(col: string) {
@@ -981,14 +1092,14 @@ function appDisplayLabel(prefix: string): string {
                   ? `border-r border-base-300 group-hover:bg-primary/15 ${rowIdx % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}`
                   : ''}"
               >
-                {#if editMode && (col === "name" || col === "gnz-id" || col === "club")}
+                {#if editMode && (col === "name" || col === "gnz-id" || col === "club" || col === "division" || col === "round-type")}
                   <input
                     type="text"
                     class="input input-xs input-bordered w-full min-w-24"
                     aria-label={`Edit ${HEADER_LABELS[col] ?? col}`}
-                    value={editValues[editKey(rowIdx, col)] ?? row[col] ?? ""}
+                    value={editValues[editKey(row, col)] ?? row[col] ?? ""}
                     oninput={(e) => {
-                      editValues = { ...editValues, [editKey(rowIdx, col)]: e.currentTarget.value };
+                      editValues = { ...editValues, [editKey(row, col)]: e.currentTarget.value };
                     }}
                     onkeydown={(e) => {
                       if (e.key === "Enter") saveRow(rowIdx);
@@ -1048,7 +1159,18 @@ function appDisplayLabel(prefix: string): string {
             {/each}
             {#if editMode}
               <td class="py-1.5">
-                <button class="btn btn-ghost btn-xs text-success" onclick={() => saveRow(rowIdx)}>Save</button>
+                <button
+                  class="btn btn-xs {rowHasEdits(rowIdx) ? 'btn-success text-base-content' : 'btn-ghost'}"
+                  disabled={savingRowIdx !== null || !rowHasEdits(rowIdx)}
+                  onclick={() => saveRow(rowIdx)}
+                >
+                  {#if savingRowIdx === rowIdx}
+                    <span class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+                    <span class="sr-only">Saving…</span>
+                  {:else}
+                    Save
+                  {/if}
+                </button>
               </td>
             {/if}
           </tr>

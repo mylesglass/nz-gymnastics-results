@@ -122,12 +122,12 @@
       .finally(() => (medalsLoading = false));
   });
 
-  function loadDataImpl() {
+  function loadDataImpl(opts?: { noCache?: boolean }) {
     const params = identityParams();
     if (!params.slug && !params.gnz_id) return Promise.resolve({ title: "Gymnast", tabs: {} });
     const query: { slug?: string; gnz_id?: string; year?: number } = { ...params };
     if (filterYear) query.year = parseInt(filterYear);
-    return getAllWideResults(query).then((r) => {
+    return getAllWideResults(query, opts?.noCache).then((r) => {
       const rowsExist = Boolean(r.wag?.rows?.length || r.mag?.rows?.length);
       gymnastFound = rowsExist || Boolean(r.name);
       const name = r.name || r.wag?.rows[0]?.name || r.mag?.rows[0]?.name;

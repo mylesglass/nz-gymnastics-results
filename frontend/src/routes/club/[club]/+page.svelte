@@ -47,12 +47,12 @@
       .finally(() => (medalsLoading = false));
   });
 
-  function loadDataImpl() {
+  function loadDataImpl(opts?: { noCache?: boolean }) {
     const club = $page.params.club;
     if (!club) return Promise.resolve({ title: "Club", tabs: {} });
     const params: { club: string; year?: number } = { club };
     if (filterYear) params.year = parseInt(filterYear);
-    return getAllWideResults(params).then((r) => ({
+    return getAllWideResults(params, opts?.noCache).then((r) => ({
       title: club,
       tabs: {
         ...(r.wag ? { wag: r.wag } : {}),

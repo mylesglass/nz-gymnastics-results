@@ -306,6 +306,43 @@
 - [x] Internal gymnast links updated to readable URLs; patch notes + docs (AGENTS.md SEO section).
 - **Files:** `frontend/src/lib/{Seo.svelte,seo.ts,backend.ts}` (new), `frontend/src/routes/{+layout.server.ts,+layout.svelte,+page.server.ts,+page.svelte}` + SSR loads on `events/`, `events/[id]/`, `results/`, `gymnasts/`, `gymnast/[slug]/`, `clubs/`, `club/[club]/`; `frontend/src/routes/{robots.txt,sitemap.xml}/+server.ts` (new); `backend/app/main.py` (`/api/gymnast`), `backend/tests/test_api.py`
 
+### STEP 30: Precomputed Data Stores (Materialized After Upload)
+Rebuild derived data after every mutation so ranking toggles, event/gymnast/club pages and all-results respond near-instantly. **Zero API or frontend changes** — the speedup is entirely backend: replace per-request Pandas pivots and ranking SQL with lookups into a persistent, precomputed layer.
+
+- **Why now:** writes are rare (admin-only) and already funnel through `invalidate()` (`cache.py:76`); reads dominate. The expensive units today are the wide pivots (300s TTL, recomputed on every miss) and the rankings — `/api/rankings` (`main.py:1161`) and `/api/rankings/wellington` (`main.py:1498`) are **not cached at all**, re-running SQL + `_build_event_marks` on every toggle.
+
+- **New file `data/materialized.db`** (separate from `results.db`, same PRAGMAs + passive checkpoint as `database.py:12-21`, own `create_engine`/`SessionLocal` in `materialize.py`). Derived data is rebuildable, so a bug can never corrupt source data and the 75 MB main DB doesn't bloat:
+  - `meta(key, value)` — `schema_version`, `ready`, `building`, `needs_rebuild`, `last_rebuild_at`, `last_rebuild_ms`, `last_rebuild_size_bytes`.
+  - `materialized_events(event_id, year, event_name, event_sort, present_apps JSON, has_wag, has_mag)` — per-event metadata for exact column/ordering fidelity.
+  - `wide_rows(id, event_id, year, event_sort, discipline, athlete_id, club, gnz_id, name, payload JSON)` — the output of `_pivot_long_rows`, one row per `(event, discipline, athlete, round_type)`; `payload` is the wide row dict. Indexed `(event_id)`, `(athlete_id, year)`, `(club, year)`.
+  - `ranking_marks(key, payload JSON)` — `_build_event_marks` output as a JSON blob per `(year, discipline, step, division)` (key e.g. `WAG|2025|STEP 2|OVER`, division `""` = unfiltered). `rebuild_all` injects `slug` into each `meta_by_key` entry so the blob is self-contained (derivation no longer needs a live `Athlete` map).
+  - `wellington_cache(key, payload JSON)` — full `WellingtonRankingResponse` per `(year, discipline, step)` (the endpoint is called per step, `main.py:1526`, not per config).
+
+- **Rebuild pipeline** (`materialize.py`): `rebuild_all()` in one transaction — Phase A loops `_compute_pivot(event_id, session)` per event → `materialized_events` + `wide_rows`; Phase B discovers distinct `(year, discipline, step, division)` and replays the `main.py:1183-1208` query into `_build_event_marks` per key → `ranking_marks`; Phase C (deferred) computes Wellington blobs. Commit sets `ready=1`/`building=0`. All reuses the **existing tested** pivot/marks functions — no duplicated ranking logic. WAL readers always see the previous or new complete version, never a partial one.
+
+- **Triggers — the single hook:** `invalidate()` (already called on upload `main.py:2852`, intent toggle `1643`, club aliases `808`, merge/split `2629/2709`, inline edit `2343`, dedupe/backfill/reconcile CLIs, refresh-cache `1865`) additionally sets `needs_rebuild=1` + kicks `rebuild_async()` (daemon thread, single lock). `_ingest_event` first inserts the new event's `wide_rows` + `materialized_events` row **synchronously** so the event page is instantly correct, then triggers the background full rebuild.
+
+- **Boot + readiness model:** rebuild **in the background on every boot** (after `init_db()` → `rebuild_athletes()`). This is required because several mutation paths run as **separate processes** (`dedupe_events.py`, `repair_identities.py`, `reconcile_clubs.py`, `backfill_host_club.py`) whose `invalidate()` only touches their own memory — and `repair_identities` rewrites names/gnz_ids without changing row counts/ids, so any count/id fingerprint would miss it. Every rewritten endpoint keeps a 2-line fallback guard `if not store.ready: return <old live compute>` (the old functions are retained anyway), giving zero-downtime boots/rebuilds.
+
+- **Endpoint rewiring** (fidelity requirements):
+  - `GET /api/events/{id}/results/wide` (`main.py:2999`) → `SELECT payload FROM wide_rows WHERE event_id=?` grouped by discipline. **Columns have NO `event_name`** (matches `_compute_pivot`); columns rebuilt via `_wide_column_list_for_prefixes(prefixes, present_apps)`.
+  - `GET /api/results/wide-all` (`main.py:3019`) → resolve `slug`/`gnz_id` → `athlete_id` via `resolve_identity`, then indexed `wide_rows` filter. **Columns DO include `event_name` at index 0** and rows carry `event_name`+`event_id` (matches `_compute_pivot_multi`). Preserve the `{"name": …}` no-results fallback from `Athlete.canonical_name`.
+  - `GET /api/rankings` (`main.py:1161`) → `ranking_marks` blob → existing in-memory derivation (`main.py:1220-1350`; `_is_qualifier`, `_RANKING_MARKS`, quota, rank/tie, `_compute_apparatus_specialists`). Toggles become µs-scale.
+  - `GET /api/rankings/apparatus` (`main.py:1363`) → same blob → `main.py:1431-1493` derivation.
+  - `GET /api/rankings/wellington` (`main.py:1498`) → Phase 3: `wellington_cache` blob.
+
+- **Rollout safety:** env flag `MATERIALIZED_READS` (default `1`); `0` forces every rewritten endpoint through the live-compute fallback unconditionally — instant rollback without redeploy. Each rebuild logs per-phase timings + final size into `meta`, surfaced via `GET /api/admin/rebuild/status` (Phase 3) and server logs.
+
+- **Phases:**
+  - [x] **Phase 0 — benchmark:** `backend/app/bench_materialize.py` (`python -m app.bench_materialize`) — baseline `_compute_pivot` (largest event) / `_build_event_marks` (WAG 2025 STEP 2) / full `/api/rankings`; full rebuild wall time (per phase + total) + resulting `materialized.db` size; equivalence sample (divisions, STEP 5/6 average, STEP 1-4 `_MARK_INDICATOR`, quota/qualifier, wide-all per athlete/club/year/all). Go/no-go: full rebuild ≤ ~60s, per-event insert ≤ ~1s, store ≤ ~100 MB.
+  - [x] **Phase 1 — store + rebuild:** `materialize.py`, `init_materialized()`, rebuild pipeline, boot/background wiring, `invalidate()` hook, per-event sync insert on ingest. No endpoint rewiring yet.
+  - [x] **Phase 2 — rewire:** wide-all, event-wide, national rankings, apparatus rankings → stores. User-visible speedup lands here.
+  - [x] **Phase 3 — Wellington + status:** `wellington_cache` store + `GET /api/admin/rebuild/status` + admin dashboard note.
+  - [ ] **Phase 4 — docs:** AGENTS.md/MEMORY.md + `patch_notes.json` entry ("pages pre-built after each upload — much faster loads").
+
+- **Tests** (`tests/test_materialize.py`, plain asserts / real data / no mocks): store-backed vs computed equivalence across param samples; column-fidelity (single-event no `event_name` vs wide-all `event_name` first — guards the gymnast-page `stickyCol="event_name"` contract); rebuild idempotence (second run no-op); failure safety (mid-rebuild exception leaves prior version + `needs_rebuild` set); boot-staleness (mutate source DB via a second connection simulating `repair_identities`, assert boot rebuild refreshes); upload immediacy (new event queryable instantly, `needs_rebuild` set). Existing 332 tests stay green.
+- **Files:** `backend/app/materialize.py` (new), `backend/app/bench_materialize.py` (new), `backend/app/{cache,main}.py`, `backend/tests/test_materialize.py` (new)
+
 ### Next Steps
 - [x] Medal counts + totals for gymnasts, clubs and regional teams
   - Gold/silver/bronze (G/S/B) medal tallies per gymnast, per club, and per regional/provincial team, aggregated from `LongScore.apparatus_rank` / `aa_rank` (1 = gold, 2 = silver, 3 = bronze) across scored ranking rows. Regional teams (e.g. `Counties - Manukau`) resolve via the club→region lookup, and National Championships (`is_national` events) medals can be tallied separately as "Nationals medals" alongside season totals.
@@ -313,9 +350,9 @@
   - Backend: aggregation endpoint(s) — e.g. `GET /api/medals?year=` returning per-gymnast, per-club and per-region counts (golds, silvers, bronzes, total, plus a nationals breakdown), cached like `/api/stats`.
   - Frontend: medal badges/totals on the gymnast page (`/gymnast/[gnz_id]`), club page (`/club/[club]`), the `/clubs` region lists, and optionally the `/gymnasts` list; exportable alongside existing tables.
   - **Files:** `backend/app/main.py`, `backend/app/schemas.py`, `backend/app/cache.py`, `frontend/src/lib/api.ts`, `frontend/src/routes/gymnast/[gnz_id]/+page.svelte`, `frontend/src/routes/club/[club]/+page.svelte`, `frontend/src/routes/gymnasts/+page.svelte`, `frontend/src/routes/clubs/+page.svelte`
-- [ ] Edit row functionality for admin
-  - Inline edit of gymnast name / GNZ ID / club already saves to DB, but the results table doesn't feel reactive after save — needs investigation into the data reload path (`doLoad()` / `applyTab()`). Cache invalidation on `wide-all` works but the frontend may still show stale rows.
-  - **Files:** `frontend/src/lib/WideResultsTable.svelte`, `frontend/src/lib/api.ts`, cache invalidation in `backend/app/main.py`
+- [x] Edit row functionality for admin
+  - Inline edit (admin Edit toggle on results tables) updates name / GNZ ID / club / division / round-type. `PATCH /api/admin/scores/gymnast` matches rows by `(event_id, slug)` when a slug is sent (same-name athletes edit independently) else `(event_id, case-insensitive name)`. Name/GNZ ID edits propagate across all the athlete's events (so `rebuild_athletes`'s majority-canonical back-write can't revert them); club/division/round-type stay event-scoped, with round-type/division scoped by the currently-displayed value. `rebuild_athletes` runs only for identity-affecting edits (division/round saves are ~instant); the event's materialized wide rows are sync-refreshed (`rebuild_event`) so the table reflects the change immediately. Frontend reloads with a no-store fetch (bypassing the 300s browser cache) and restores the current tab/search/filters/sort/page; edits are keyed by stable `(event, slug)` so sorting/paging mid-edit can't mis-apply values, and the row's Save button shows a spinner while an identity edit re-clusters.
+  - **Files:** `frontend/src/lib/WideResultsTable.svelte`, `frontend/src/lib/api.ts`, `backend/app/main.py`, `backend/app/schemas.py`, `backend/tests/test_admin_edit.py`
 - [x] MAG Wellington ranking thresholds
   - MAG per-step-range qualifying scores configured in the Wellington ranking module.
 - [x] Look at not-admin logged in functionality

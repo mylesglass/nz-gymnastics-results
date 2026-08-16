@@ -181,6 +181,9 @@ def main() -> None:
         stats = _repair_rows(session, id_consensus, name_consensus, args.apply)
         if args.apply:
             session.commit()
+            from app.cache import invalidate
+
+            invalidate()
         else:
             session.rollback()
 

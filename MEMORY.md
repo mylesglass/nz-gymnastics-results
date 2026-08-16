@@ -181,7 +181,7 @@ Core logic:
 - Skip link, `<main id="main">`, `<nav>` landmarks, `aria-current` on active links, `aria-live`/`role="status"` toasts, `role="alert"` errors, 24px min button targets, reduced-motion gating.
 - Reports in `a11y-reports/` (rerun: `./a11y-reports/run.sh before|after [pages...]`, needs `CHROME_PATH`).
 
-## Test Suite (332 tests, 87 conditional skip)- `test_decoder.py`: 14 tests — output map building, decoding, DNS detection, Start Value
+## Test Suite (401 tests, 87 conditional skip)- `test_decoder.py`: 14 tests — output map building, decoding, DNS detection, Start Value
 - `test_resolver.py`: 34 tests — resolver + name-cleaner (McEwan/O'Sullivan/hyphens) + ID fixes
 - `test_models.py`: 4 tests — CRUD, cascade delete
 - `test_parser.py`: 130 tests — parsing, validation, known files, bulk scans, edge cases
@@ -246,12 +246,13 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
   - TTL entries stored as `(expiry, value)` tuples, auto-evicted on read.
   - Prefix-based invalidation: `invalidate(event_id)` clears `event:{id}:*` keys.
   - Full clear: `invalidate()` without event_id (used by admin bulk operations).
+- **Materialized stores** (STEP 30) — `data/results.materialized.db` (`app/materialize.py`), the persistent precomputed layer: `wide_rows` (flattened pivot output, JSON payload + athlete/club/event/year indexes), `ranking_marks` (per `(year, discipline, step, division)` blob of `_build_event_marks` output, typed-array serialization so int IDs survive JSON), `wellington_cache` (full result per `(year, discipline, step)` with default toggles). Rebuilt in the background after every mutation (`cache.invalidate()` bumps the persisted `epoch` + kicks `rebuild_async()` when the app is running; boot auto-rebuilds when `needs_rebuild()` or the store is cold). Phase A parallelises event pivots via a `ProcessPoolExecutor` (events independent, workers pure-pandas, no DB); all three stores swap atomically in one transaction. The heavy GET endpoints read the store when `MATERIALIZED_READS` (default 1) and `is_ready()`, falling back to the unchanged live compute otherwise — the live and store paths share derived helpers so output can't drift. Rebuild ~49s on the live DB (84 MB store). Status via `GET /api/admin/rebuild/status`.
 - **Cached endpoints:**
   - `/api/stats` — key `"stats"`, TTL 300s
   - `/api/gymnasts` — key `"gymnasts"`, TTL 300s
   - `/api/clubs` — key `"clubs"`, TTL 300s
-  - `/api/results/wide-all` — key `"wide-all:{year}:{gnz_id}:{club}"`, TTL 300s
-  - `/api/events/{id}/results/wide` — key `"event:{id}:pivot:{gnz_id}:{club}"`, no TTL (invalidation-driven)
+  - `/api/results/wide-all` — key `"wide-all:{year}:{gnz_id}:{club}"`, TTL 300s (live-compute fallback only; store-backed reads bypass the memory cache)
+  - `/api/events/{id}/results/wide` — key `"event:{id}:pivot:{gnz_id}:{club}"`, no TTL (invalidation-driven) (live-compute fallback only)
 - **HTTP caching:** `Cache-Control: public, max-age=300, stale-while-revalidate=60` on GET read endpoints, set via middleware. `no-store, no-cache, private` on admin/write.
 - **ETag** — global version counter, incremented on every invalidation. Returned in response headers for conditional requests.
 

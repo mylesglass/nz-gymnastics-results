@@ -32,9 +32,9 @@
       : {}),
   });
 
-  function loadData() {
+  function loadData(opts?: { noCache?: boolean }) {
     const id = Number($page.params.id);
-    return getWideResults(id).then((r) => {
+    return getWideResults(id, opts?.noCache).then((r) => {
       eventName = r.event.name;
       return {
         title: r.event.name,

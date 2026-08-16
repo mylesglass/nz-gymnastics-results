@@ -1,5 +1,28 @@
 [
   {
+    "date": "16 Aug 2026",
+    "entries": [
+      {
+        "title": "Pages now pre-built after each upload — much faster loads",
+        "items": [
+          "Results, gymnast, club and ranking pages are now rebuilt in the background every time data changes (an upload, an edit, a merge or an intent tick), so the next visitor gets a pre-computed answer instead of a from-scratch calculation. National rankings, apparatus leaderboards and the Wellington rankings — which previously re-ran their full computation on every page view and every toggle — now load almost instantly.",
+          "The rebuild runs off to the side after an upload and takes under a minute; the just-uploaded event's page is ready immediately. The admin dashboard shows a small \"Prebuilt data\" status so you can see when a rebuild is running or pending."
+        ]
+      },
+      {
+        "title": "Admin inline editing now reflects changes immediately",
+        "items": [
+          "Saving a gymnast's name, GNZ ID or club in a results table now updates the table on the spot and keeps your place (tab, search, filters, sort and page) instead of reloading to a blank first page.",
+          "Division and Round Name can now be corrected inline too — saves are instant — and editing a round only affects that round, not the gymnast's other rounds.",
+          "Fixing a name or GNZ ID now applies to every one of the gymnast's events, so the change sticks instead of being reverted the next time the records are re-organised.",
+          "Same-name gymnasts in one competition now edit independently, so fixing one person's details never touches the other.",
+          "Event and all-results tables now always fetch the latest data — a change you just saved can never be hidden by a stale cached copy.",
+          "Fix: a save could still show the old value for up to a minute when the background re-indexing happened to be running at the same time. Saved edits are now read straight from the latest data, so they appear the moment you save."
+        ]
+      }
+    ]
+  },
+  {
     "date": "15 Aug 2026",
     "entries": [
       {

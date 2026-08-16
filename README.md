@@ -32,7 +32,7 @@ community but designed to be adaptable for any gymnastics organisation. 🥇
 ### 🔐 Authentication & admin
 - **JWT-based authentication** with bcrypt-hashed passwords and HS256 tokens (7-day expiry)
 - **Admin dashboard** with statistics, cache refresh, and user management
-- **Inline editing** of gymnast name / GNZ ID / club directly on event and all‑results tables
+- **Inline editing** of gymnast name / GNZ ID / club / division / round-type directly on event and all‑results tables (changes reflect immediately and keep your place)
 - **Athlete ID reconciliation** to unify duplicate GNZ IDs across events
 
 ## 🧰 Tech Stack

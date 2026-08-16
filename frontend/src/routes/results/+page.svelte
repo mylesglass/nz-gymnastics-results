@@ -35,9 +35,9 @@
     return () => { unsub1(); unsub2(); };
   });
 
-  function loadDataImpl() {
+  function loadDataImpl(opts?: { noCache?: boolean }) {
     const params = filterYear ? { year: parseInt(filterYear) } : undefined;
-    return getAllWideResults(params).then((r) => ({
+    return getAllWideResults(params, opts?.noCache).then((r) => ({
       title: "All Results",
       tabs: {
         ...(r.wag ? { wag: r.wag } : {}),
