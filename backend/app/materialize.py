@@ -363,7 +363,9 @@ def _compute_wide_rows_all(session) -> list[tuple]:
     for obj in rows:
         by_event[obj.event_id].append(_to_long_dict(obj))
     items = list(by_event.items())
-    workers = min(6, os.cpu_count() or 1)
+    # MATERIALIZE_WORKERS overrides the worker count (production can lower it to
+    # bound rebuild memory/CPU on a memory-constrained host).
+    workers = int(os.environ.get("MATERIALIZE_WORKERS", "0") or 0) or min(6, os.cpu_count() or 1)
     if len(items) < 20 or workers <= 1:
         parts = [_pivot_worker((items, slug_by_id, name_by_id))]
     else:
@@ -568,12 +570,18 @@ def rebuild_all() -> dict:
 
 
 def rebuild_async() -> None:
-    """Start a background rebuild thread unless one is already running."""
+    """Start a background rebuild thread unless a different one is running.
+
+    The re-kick at the end of ``rebuild_all`` runs *inside* the rebuild thread
+    itself, so the liveness check must exclude the current thread — otherwise a
+    mutation landing mid-rebuild would never spawn the follow-up rebuild and the
+    store would stay stale until the next mutation or boot."""
     global _rebuild_thread
     if init_materialized() is None:
         return
     with _thread_lock:
-        if _rebuild_thread is not None and _rebuild_thread.is_alive():
+        t = _rebuild_thread
+        if t is not None and t.is_alive() and t is not threading.current_thread():
             return
         _rebuild_thread = threading.Thread(
             target=_rebuild_worker, name="materialize-rebuild", daemon=True
