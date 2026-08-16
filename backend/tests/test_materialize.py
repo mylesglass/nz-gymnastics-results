@@ -113,6 +113,26 @@ def _seed(db_env) -> dict:
     return ids
 
 
+def _welly_seed(db_env) -> dict:
+    """_seed plus a Wellington-region MAG Level 4 gymnast, so the Wellington
+    ranking has a not_ranked row whose intent can be toggled."""
+    ids = _seed(db_env)
+    _, TestSession = db_env
+    session = TestSession()
+    welly = Athlete(slug="a-welly", signature_hash="h4", canonical_name="Welly Walker", gnz_id="3001")
+    session.add(welly)
+    session.flush()
+    ev2 = session.get(Event, ids["ev2"])
+    for app in ("FX", "PH", "SR", "VT", "PB", "HB"):
+        _score(session, ev2, "Welly Walker", "3001", "Wellington", "Level 4", "MAG", "",
+               app, 11.0, d_score=4.5, aa_score=60.0, athlete_id=welly.id)
+    session.commit()
+    ids["welly_id"] = welly.id
+    ids["welly_slug"] = welly.slug
+    session.close()
+    return ids
+
+
 class TestStoreLifecycle:
     def test_store_created_next_to_source(self, db_env):
         engine, _ = db_env
@@ -425,15 +445,30 @@ class TestStoreBackedEndpoints:
         assert wag, body  # must NOT hit the name-only fallback
         assert {r["name"] for r in wag["rows"]} == {"Eva McEwan"}
 
-    def test_wellington_store_equals_live(self, db_env, monkeypatch):
-        _seed(db_env)
+    def test_wellington_intent_toggle_reflected_immediately(self, db_env):
+        """The Wellington endpoint is always live-computed (no materialized
+        store), so an intent toggle must be visible on the very next read —
+        the fix for the Intent checkbox appearing stuck."""
+        ids = _welly_seed(db_env)
         materialize.init_materialized()
         materialize.rebuild_all()
         client = self._client()
         params = {"year": 2025, "step": "Level 4", "discipline": "MAG"}
-        store = client.get("/api/rankings/wellington", params=params).json()
-        live = self._live(monkeypatch, lambda: client.get("/api/rankings/wellington", params=params).json())
-        assert store == live
+
+        def row_for(body):
+            return next(r for r in body["not_ranked"] if r["name"] == "Welly Walker")
+
+        assert row_for(client.get("/api/rankings/wellington", params=params).json())["intent_submitted"] is False
+
+        resp = client.post("/api/wellington/intent",
+                           json={"slug": ids["welly_slug"], "year": 2025, "submitted": True})
+        assert resp.status_code == 200
+        assert row_for(client.get("/api/rankings/wellington", params=params).json())["intent_submitted"] is True
+
+        resp = client.post("/api/wellington/intent",
+                           json={"slug": ids["welly_slug"], "year": 2025, "submitted": False})
+        assert resp.status_code == 200
+        assert row_for(client.get("/api/rankings/wellington", params=params).json())["intent_submitted"] is False
 
     def test_rebuild_status_endpoint(self, db_env):
         _seed(db_env)

@@ -35,7 +35,7 @@ from app.cache import cache, cache_headers, cached, invalidate
 from app.clubdata import active_path, ensure_seed
 from app.cloudflare import CloudflareFetchError, fetch_zone_summary, is_configured as cloudflare_is_configured
 from app.database import get_session, init_db
-from app.materialize import dirty_events, get_ranking_marks, get_wide_rows, get_wellington, is_ready, reads_enabled, rebuild_event, status as materialize_status
+from app.materialize import dirty_events, get_ranking_marks, get_wide_rows, is_ready, reads_enabled, rebuild_event, status as materialize_status
 from app.models import ACTIVITY_TYPE_API, ACTIVITY_TYPE_PAGE, ActivityLog, Athlete, Event, LongScore, SlugRedirect, TrafficDaily, User, WellingtonIntent
 from app.parser import ParseError, _NAME_TO_CANONICAL, detect_participant_collisions, find_unknown_clubs, parse_json, reload_club_maps, suggest_club_mapping, validate_upload_structure
 from app.reconcile import reconcile_athletes
@@ -1620,15 +1620,9 @@ def get_wellington_rankings(
     intent_filter: bool = True,
     _auth=Depends(require_permission(PERMISSION_WELLINGTON)),
 ):
-    """Wellington regional rankings. Serves the materialized result (computed
-    with the default toggles) when the store is ready; falls back to a live
-    compute for non-default toggle combinations or when the store is cold."""
-    if (reads_enabled() and is_ready()
-            and gnz_qualifier and wellington_qualifier and intent_filter):
-        cached_result = get_wellington(year, discipline, step)
-        if cached_result is not None:
-            return _build_wellington_response(cached_result)
-
+    """Wellington regional rankings. Always live-computed — the page is low
+    traffic, so it deliberately skips the materialized stores (an intent toggle
+    must reflect on the very next read with no stale-cache window)."""
     session = get_session()
     try:
         intents = {

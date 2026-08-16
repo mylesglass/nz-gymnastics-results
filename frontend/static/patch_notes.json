@@ -1,5 +1,16 @@
 [
   {
+    "date": "17 Aug 2026",
+    "entries": [
+      {
+        "title": "Wellington Rankings: intent toggles now take effect immediately",
+        "items": [
+          "Ticking or unticking an athlete's Intent checkbox on the Wellington Rankings used to look like it did nothing for up to a minute, because the page kept serving a pre-computed copy that was only refreshed by the background rebuild. The checkbox now updates right away, and the next read of that year's ranking is recomputed on the spot so the change sticks."
+        ]
+      }
+    ]
+  },
+  {
     "date": "16 Aug 2026",
     "entries": [
       {

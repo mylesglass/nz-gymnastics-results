@@ -15,7 +15,10 @@ kicks a background rebuild. The rebuild recomputes the two derived stores once:
 The store lives in a separate SQLite file (``<source>.materialized.db``) derived
 from the *current* source engine so tests isolate automatically. Rebuilds write
 in a single transaction, so WAL readers always see the previous or the new
-complete version — never a partial one. See STEP 30 in PLAN.md.
+complete version — never a partial one. Wellington rankings deliberately stay
+out of the store (``/api/rankings/wellington`` is always live-computed): the
+page is low traffic and an intent toggle must reflect on the very next read.
+See STEP 30 in PLAN.md.
 """
 
 import json
@@ -31,7 +34,7 @@ from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app import database as db_mod
-from app.models import Athlete, Event, LongScore, WellingtonIntent
+from app.models import Athlete, Event, LongScore
 from app.transformer import (
     _athlete_maps,
     _compute_pivot,
@@ -122,7 +125,9 @@ def _create_tables(engine):
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_wide_athlete_year ON wide_rows(athlete_id, year)"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_wide_club_year ON wide_rows(club, year)"))
         conn.execute(text("CREATE TABLE IF NOT EXISTS ranking_marks (key TEXT PRIMARY KEY, payload TEXT)"))
-        conn.execute(text("CREATE TABLE IF NOT EXISTS wellington_cache (key TEXT PRIMARY KEY, payload TEXT)"))
+        # The Wellington store was removed (the endpoint is always live-computed);
+        # drop the table so pre-existing store files don't carry stale blobs.
+        conn.execute(text("DROP TABLE IF EXISTS wellington_cache"))
         for key, value in _META_DEFAULTS.items():
             conn.execute(text("INSERT OR IGNORE INTO meta (key, value) VALUES (:k, :v)"),
                          {"k": key, "v": value})
@@ -470,39 +475,8 @@ def _compute_marks_all(session) -> dict[str, str]:
     return marks
 
 
-def _discover_wellington_keys(session) -> list[tuple]:
-    """Return [(year, discipline, step)] selections that have a Wellington config."""
-    from app.wellington_ranking import _get_config
-    keys: list[tuple] = []
-    for year, discipline, step, _division in _discover_mark_keys(session):
-        if _get_config(discipline, step) is not None:
-            keys.append((year, discipline, step))
-    return keys
-
-
-def _compute_wellington_all(session) -> dict[str, str]:
-    """Rebuild the wellington_cache store: one compute_wellington_rankings result
-    per (year, discipline, step) with the default toggles (all qualifier/intent
-    filters on) and that year's current intents."""
-    from app.wellington_ranking import compute_wellington_rankings
-    intents_by_year: dict[int, set] = defaultdict(set)
-    for aid, gid, year in session.query(
-        WellingtonIntent.athlete_id, WellingtonIntent.gnz_id, WellingtonIntent.year
-    ).all():
-        intents_by_year[year].add(aid or gid)
-    out: dict[str, str] = {}
-    for year, discipline, step in _discover_wellington_keys(session):
-        result = compute_wellington_rankings(
-            year, discipline, step,
-            gnz_qualifier=True, wellington_qualifier=True,
-            intents=intents_by_year.get(year, set()), intent_filter=True,
-        )
-        out["|".join(map(str, (year, discipline, step)))] = _serialized(result)
-    return out
-
-
 def _replace_store(engine, wide_tuples: list[tuple], marks: dict[str, str],
-                   wellington: dict[str, str], built_epoch: str, start: float) -> None:
+                   built_epoch: str, start: float) -> None:
     """Atomically swap all stores in one transaction (readers keep the old
     committed version until commit)."""
     with engine.begin() as conn:
@@ -518,12 +492,6 @@ def _replace_store(engine, wide_tuples: list[tuple], marks: dict[str, str],
             conn.exec_driver_sql(
                 "INSERT INTO ranking_marks (key, payload) VALUES (?, ?)",
                 list(marks.items()),
-            )
-        conn.execute(text("DELETE FROM wellington_cache"))
-        if wellington:
-            conn.exec_driver_sql(
-                "INSERT INTO wellington_cache (key, payload) VALUES (?, ?)",
-                list(wellington.items()),
             )
         ms = (time.time() - start) * 1000.0
         conn.execute(text("UPDATE meta SET value = '1' WHERE key = 'ready'"))
@@ -554,10 +522,9 @@ def rebuild_all() -> dict:
             try:
                 wide_tuples = _compute_wide_rows_all(session)
                 marks = _compute_marks_all(session)
-                wellington = _compute_wellington_all(session)
             finally:
                 session.close()
-            _replace_store(engine, wide_tuples, marks, wellington, built_epoch, start)
+            _replace_store(engine, wide_tuples, marks, built_epoch, start)
         finally:
             _meta_set("building", "0")
     # A mutation during the rebuild left the epoch ahead of built_epoch — re-kick.
@@ -727,18 +694,3 @@ def get_ranking_marks(year: int, discipline: str, step: str, division: str = "")
     data["apparatus_events"] = _apparatus_events_from_list(data["apparatus_events"])
     data["meta_by_key"] = _meta_from_list(data["meta_by_key"])
     return data
-
-
-def get_wellington(year: int, discipline: str, step: str):
-    """Return the cached Wellington ranking result (None if absent)."""
-    engine = init_materialized()
-    if engine is None:
-        return None
-    key = "|".join(map(str, (year, discipline, step)))
-    with engine.connect() as conn:
-        row = conn.exec_driver_sql(
-            "SELECT payload FROM wellington_cache WHERE key = ?", (key,)
-        ).fetchone()
-    if not row:
-        return None
-    return json.loads(row[0])
