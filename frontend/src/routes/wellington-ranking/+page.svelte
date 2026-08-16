@@ -422,7 +422,10 @@
         </thead>
         <tbody>
           {#each rankings as r, i}
-            <tr class="group hover:bg-base-300">
+            <tr
+              class="group hover:bg-base-300"
+              class:cutline-error={configKey === 'wag_step_5_6' && i === 9}
+            >
               <td class="font-bold text-base md:text-lg sticky left-0 z-10 w-10 min-w-10 px-1 group-hover:bg-base-300 {i % 2 === 1 ? 'bg-base-200' : 'bg-base-100'}">{r.rank}</td>
               <td class="text-center w-10 min-w-10">
                 {#if (configKey === 'wag_step_5_6' || STEP7_CONFIGS.has(configKey)) && i < 4}

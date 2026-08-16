@@ -20,6 +20,12 @@
     "date": "16 Aug 2026",
     "entries": [
       {
+        "title": "Wellington Rankings: selection cut-off marked for WAG STEP 5–6",
+        "items": [
+          "A red line now sits under the 10th ranked gymnast on the WAG STEP 5–6 ranking, marking the Nationals team selection cut-off."
+        ]
+      },
+      {
         "title": "Pages now pre-built after each upload — much faster loads",
         "items": [
           "Results, gymnast, club and ranking pages are now rebuilt in the background every time data changes (an upload, an edit, a merge or an intent tick), so the next visitor gets a pre-computed answer instead of a from-scratch calculation. National rankings, apparatus leaderboards and the Wellington rankings — which previously re-ran their full computation on every page view and every toggle — now load almost instantly.",
