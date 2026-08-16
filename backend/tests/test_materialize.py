@@ -9,6 +9,7 @@ clears the cached engine between tests.
 import json
 import os
 import tempfile
+import time
 from pathlib import Path
 
 import pytest
@@ -300,6 +301,38 @@ class TestRebuildLifecycle:
         # When the lock is free the refresh succeeds and returns True.
         assert materialize.rebuild_event(99999) is False  # unknown event
         assert materialize.rebuild_event(1) is True
+
+    def test_mutation_during_rebuild_triggers_followup(self, db_env, monkeypatch):
+        """A mutation landing mid-rebuild must spawn a follow-up rebuild.
+
+        Regression for the re-kick bug: rebuild_all()'s final rebuild_async()
+        used to skip because the running thread itself was still alive, leaving
+        the store dirty until the next mutation or boot."""
+        _seed(db_env)
+        materialize.init_materialized()
+        materialize.rebuild_all()
+
+        real = materialize._compute_marks_all
+        bumped = {"done": False}
+
+        def bump_then_compute(session):
+            # Simulate one upload's invalidate() landing mid-rebuild.
+            if not bumped["done"]:
+                bumped["done"] = True
+                materialize.mark_needs_rebuild()
+            return real(session)
+
+        monkeypatch.setattr(materialize, "_compute_marks_all", bump_then_compute)
+        materialize.rebuild_all()
+        # The injected mutation left the store dirty; the follow-up rebuild must
+        # eventually clear it.
+        assert materialize.needs_rebuild()
+        for _ in range(200):
+            if not materialize.needs_rebuild():
+                break
+            time.sleep(0.05)
+        assert not materialize.needs_rebuild(), "follow-up rebuild never ran"
+        assert materialize.status()["ready"]
 
 
 class TestStoreBackedEndpoints:

@@ -132,3 +132,30 @@ Not the cert cause, but part of a clean domain migration:
   condition: service_healthy`. With single replicas a brief 502/second window is still
   possible while a container restarts during `docker compose up -d --build`; Cloudflare
   sits in front and may absorb/serve cached responses during that window.
+
+## Materialized data store (precomputed pages)
+
+The backend now precomputes results/rankings into `data/results.materialized.db`
+(same `backend_data` volume, gitignored) and rebuilds it in the background after every
+mutation (~49s on the live DB; status at `GET /api/admin/rebuild/status` and the admin
+dashboard's "Prebuilt data" line). Deployment implications:
+
+- **Normal redeploys are non-disruptive.** The store persists on the volume, so a boot
+  only rebuilds when `needs_rebuild()` is true (pending mutation) or the store is missing
+  (first deploy / fresh volume). The rebuild runs in a background thread, so `/api/health`
+  is unaffected and there's no added boot delay. On the very first deploy of this feature,
+  the store builds in the background for ~49s during which heavy endpoints fall back to
+  the old live-compute path (slower, not down).
+- **Rollback is seamless** — the pre-feature image simply ignores the store file. **But**
+  if data is mutated while rolled back, re-deploying this feature serves a *stale* store
+  (the old code's mutations never bump its `epoch`). After any restore/rollback where data
+  changed, delete the store so it rebuilds: `rm data/results.materialized.db*` on the
+  volume (or trigger the admin "Refresh Cache" button).
+- **DB restores** (`.bak` files / R2) have the same gotcha: restoring `results.db` while
+  leaving a newer `results.materialized.db` serves data the restored DB doesn't have.
+  Delete the store file after any manual DB restore.
+- **Instant fallback flag:** `MATERIALIZED_READS=0` in the backend env forces all heavy
+  endpoints back to live compute (no code change) — use it to roll back a bad store build.
+- **Rebuild resource bounds:** the rebuild loads all score rows and forks up to
+  `min(6, cpu_count)` worker processes. Set `MATERIALIZE_WORKERS` (e.g. `2`) in the backend
+  env to cap memory/CPU on a constrained host.
