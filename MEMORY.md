@@ -67,6 +67,9 @@ Core logic:
 | start_date | STRING |
 | end_date | STRING |
 | discipline | STRING (WAG/MAG/WAG+MAG) |
+| year | INTEGER |
+| is_national | BOOLEAN (default false) |
+| host_club | STRING nullable (national events default "Gymnastics NZ") |
 | created_at | DATETIME |
 
 ### long_scores table (one row = one apparatus pass for one gymnast)
@@ -74,6 +77,8 @@ Core logic:
 |--------|------|
 | id | INTEGER PK |
 | event_id | FK → events |
+| athlete_id | FK → athletes (nullable; set by `rebuild_athletes()`) |
+| identity_override | STRING nullable (admin force-split boundary) |
 | event_name, gymnast_name, gnz_id, club_name, discipline, level_category, division | STRING |
 | apparatus | STRING (VT/UB/BB/FX/PH/SR/PB/HB) |
 | pass_number | INTEGER |
@@ -82,6 +87,16 @@ Core logic:
 | aa_score | FLOAT |
 | round_type | STRING |
 | date_created | DATETIME |
+
+### athletes table (stable identity layer)
+| Column | Type |
+|--------|------|
+| id | INTEGER PK |
+| slug | STRING UNIQUE (`a{sha1-hex10}`, content-addressed) |
+| signature_hash | STRING |
+| canonical_name | STRING (most-frequent spelling) |
+| gnz_id | STRING (most-frequent numeric ID) |
+| identity_override | STRING nullable |
 
 ### users table
 | Column | Type |
@@ -92,6 +107,12 @@ Core logic:
 | role | STRING (admin/member) |
 | permissions | STRING (comma-separated: rankings.national, rankings.wellington) |
 | created_at | DATETIME |
+
+### Other tables
+- `slug_redirects` — `old_slug` → `athlete_id`, keeps old gymnast URLs working after merges/splits
+- `wellington_intents` — `UNIQUE(athlete_id, year)`, intent-submitted gymnasts
+- `activity_logs` — logged-in request detail (username, role, method, path, query, status, duration)
+- `traffic_daily` — anonymous + logged-in aggregates per `(date, hour, kind, path_group, anonymous)`
 
 ## Auth (JWT-based, role-based access)
 
@@ -111,15 +132,28 @@ Core logic:
 - `GET /api/auth/me` → DB-fresh `{ username, role, permissions }` for the token holder
 - `POST /api/auth/users/{id}/reset-password` → change password (admin only)
 - `DELETE /api/auth/users/{id}` → delete user (admin only)
-- `GET /api/admin/duplicates` → list duplicate GNZ ID groups by name (with club/level instances)
-- `POST /api/admin/duplicates/fix` → auto-fix high-confidence duplicates, return low-confidence for review
-- `POST /api/admin/duplicates/apply` → apply manual ID selections
+- `GET /api/rankings/steps` → available steps per `(year, discipline)` (either ranking permission)
+- `GET /api/rankings` → national rankings (national permission; qualifier/quota/division params)
+- `GET /api/rankings/apparatus` → national apparatus leaderboards (national permission; cached, single-flight)
+- `GET /api/rankings/wellington` → Wellington rankings (wellington permission; always live-computed)
+- `GET /api/medals` → medal tallies per gymnast / club / region
+- `GET /api/gymnast` → lightweight single-gymnast identity lookup by slug or gnz_id (public)
+- `GET /api/clubs/known` → known club names (searchable, admin event editing)
+- `POST /api/track/page` → page-view beacon (all visitors; anonymous traffic row)
+- `GET /api/admin/identity-review` → athlete-level name/ID conflicts (similar_names, name_conflicts, id_conflicts, multi_id_athletes)
+- `POST /api/admin/athletes/merge-preview` → read-only per-event change preview for a merge
+- `POST /api/admin/athletes/merge` / `POST /api/admin/athletes/split` → merge two athletes / split one into two
+- `POST /api/admin/refresh-cache` → clears in-memory cache + bumps materialized-store epoch
+- `GET /api/admin/rebuild/status` → `{ready, building, needs_rebuild, last_rebuild_at, last_rebuild_ms, last_rebuild_size_bytes}`
+- `GET /api/admin/activity` (+ `DELETE`) → logged-in detail log; `GET /api/admin/activity/summary?days=7|30|90|0` → usage summaries + series
+- `GET /api/admin/cloudflare/summary?days=7|30` → Cloudflare edge analytics
+- Legacy (still in the API + tested, no longer called by the UI): `GET/POST /api/admin/duplicates*`, `GET /api/admin/suggested-merges`, `POST /api/admin/merge-names`
 
 ### Frontend
 - JWT stored in `localStorage`, read by `getToken()` / `setToken()`
 - `currentUser` Svelte store holds `{ username, role, permissions }`; permissions persisted to `localStorage` under `nzgr_permissions`
 - `setPermissions()` / `hasPermission()` in `lib/auth.ts` (admins always pass)
-- `+layout.svelte` refreshes permissions via `me()` on mount and gates the Rankings nav links (desktop + mobile); its route guard (`requiresAuth`/`routeAllowed`) redirects signed-out users and members without the relevant permission away from `/admin`, `/rankings`, and `/wellington-ranking`. On mount it awaits `checkAuthStatus()` + `me()` via `Promise.allSettled` before `authResolved`; a 401 from `me()` (expired token / rotated JWT secret) auto-logs-out and sets `authRedirectTarget` to `/login`; `parseToken` rejects tokens past `exp`
+- `+layout.svelte` refreshes permissions via `me()` on mount and gates the Rankings nav links (desktop + mobile); its route guard (`requiresAuth`/`routeAllowed`) redirects signed-out users and members without the relevant permission away from `/admin`, `/rankings` (+ `/rankings/apparatus`), and `/wellington-ranking`. On mount it awaits `checkAuthStatus()` + `me()` via `Promise.allSettled` before `authResolved`; a 401 from `me()` (expired token / rotated JWT secret) auto-logs-out and sets `authRedirectTarget` to `/login`; `parseToken` rejects tokens past `exp`
 - `logout()` clears token + store
 - Nav bar shows/hides Upload/Admin/Rankings links based on role/permissions
 - All write API calls send `Authorization: Bearer <token>` header
@@ -129,33 +163,43 @@ Core logic:
 **Tech:** SvelteKit 5 (runes: `$state`, `$effect`, `$derived`), Tailwind CSS v4 (Vite plugin), DaisyUI v5 (dark theme).
 
 **Shared components:**
-- `WideResultsTable.svelte` — encapsulate all table rendering, filtering, sorting, sticky headers, scroll sync, duplicate header column width alignment, configurable pinned column (`stickyCol` prop, default `name`), region column with colored dots (checker square on mobile), truncated event names. Used by all result pages.
-- `Dialog.svelte` — a11y dialog: `role="dialog"` + `aria-modal`, labelled heading, initial-focus move, Tab/Shift+Tab focus trap, Escape close, focus restore to opener, backdrop click. Used by all 5 modals.
+- `WideResultsTable.svelte` — encapsulate all table rendering, filtering, sorting, sticky headers, scroll sync, duplicate header column width alignment, configurable pinned column (`stickyCol` prop, default `name`), region column with colored dots (checker square on mobile), truncated event names, admin inline-edit mode, optional `onData` callback + `afterHeader`/`nameBadge`/`nameMeta` snippets. Used by all result pages.
+- `Dialog.svelte` — a11y dialog: `role="dialog"` + `aria-modal`, labelled heading, initial-focus move, Tab/Shift+Tab focus trap, Escape close, focus restore to opener, backdrop click, Escape/Tab stop-propagation for nested inner dialogs. Used by all modals (upload club mapping, users, identity review, activity log, edit/delete event).
+- `Tooltip.svelte` — shared accessible tooltip: `<button>` trigger with `aria-label` (visible text) + `aria-describedby` → `role="tooltip"` fixed-position panel (auto-flips to stay in viewport, escapes `overflow-x-auto` clipping); opens on hover AND focus, closes on leave/blur/Escape. Base for ScoreTooltip/AATooltip, SeasonBest, RegionCheck, rankings/wellington score + specialist tooltips, header info icons.
+- `ScoreTooltip.svelte` / `AATooltip.svelte` — thin wrappers over `Tooltip.svelte` for apparatus score breakdowns (D/E/N/Bonus/Rank, multi-pass vault) and AA totals (summed D/E/N + rank). Used by `WideResultsTable`.
 - `RegionBadge.svelte` — region pill with 2x2 checkerboard (primary+secondary colors) on primary fill, `whitespace-nowrap`, used in rankings and clubs pages
-- `RegionCheck.svelte` — compact 20px 2x2 checkerboard square + hover/focus tooltip (`data-tip`) with the region name; used on mobile for the region column in results tables and the Apparatus Rankings table
+- `RegionCheck.svelte` — compact 20px 2x2 checkerboard square + tooltip with the region name; used on mobile for the region column in results tables and the Apparatus Rankings table
+- `FilterDropdown.svelte` — multi-select funnel dropdown (menuitemcheckbox options, count badge on the funnel, stays open while toggling, bottom sheet on <768px). Used for rankings Club/Region filters.
 - `NZRegionMap.svelte` — interactive SVG map of 15 regions; hovered/selected regions fill with a scrolling checker pattern (each region has its own CSS-var-driven direction + duration; seamless loop, respects `prefers-reduced-motion`). Regions are keyboard-focusable `role="button"`s with `focus-visible` outline, `aria-pressed` on the active region, `aria-live` announcement on selection.
+- `SeasonBest.svelte` — gymnast Personal Bests card (best per apparatus + D, best achieved AA, Best Possible AA), rendered via `WideResultsTable`'s `afterHeader` snippet when a specific year is selected.
+- `Timeline.svelte` — train-map-style season timeline on the `/events` page (desktop only): theme-aware SVG with week column, station dots, region checkerboard markers, hover/focus tooltips, click-to-navigate.
+- `charts/ChartJs.svelte` — lazy-loaded Chart.js wrapper (canvas `role="img"` + `aria-label` + visually-hidden data fallback) used by the admin dashboard.
 - `regions.ts` — `REGION_PALETTES` constant mapping 15 NZ regions to 2-3 hex colors (NZ sports team inspired), plus `REGION_ORDER` (north→south). `textColor()`/`gradientTextColor()` pick `#000` vs `#fff` via WCAG relative-luminance contrast.
-- `ScoreTooltip.svelte` — DaisyUI `dropdown-hover` tooltip (opens on hover + focus-within) showing D, E, N, Bonus, Rank per apparatus; `<button>` trigger with `aria-label` (visible text + context) + `aria-describedby` → `role="tooltip"` panel
-- `AATooltip.svelte` — same pattern for AA score/rank/summed D/E/N
-- `MultiSelect.svelte` — DaisyUI dropdown with checkboxes, Clear button, `min-w-48` buttons
 - `ExportMenu.svelte` — DaisyUI export dropdown (CSV/XLSX/PDF); `export.ts` builds files, XLSX honors `colFormat` (hidden columns + widths), PDF renders table-like columns with header + page numbers, libraries lazy-loaded
+- `Seo.svelte` + `seo.ts` — shared `<svelte:head>` component (title, description, canonical, OG/twitter, optional JSON-LD) + `pageTitle`/`kebabName`/`gymnastPath` helpers
+- `medals.ts` + `MedalBadges.svelte`/`MedalDot.svelte` — medal tally display helpers
+- `admin/` — dashboard components: `Overview`, `Activity`, `ActivityCharts`, `CloudflareCharts`, `ActivityLog`, `Upload`, `Users`, `IdentityReview`, `StatTile`
 
 **Routes:**
 - `/` — Landing page: three plain info items (WAG & MAG, Export & Share, Smart Filtering) above clickable nav cards with live stat badges; a member-only Rankings card appears for users with national/wellington ranking access (links to `/rankings` or `/wellington-ranking`); "What's new" section from `static/patch_notes.json` (fetched, all entries in a scrollable list)
 - `/login` — Username + password form, redirects to `/`
 - `/admin` — Single admin page arranged in source-grouped sections (all before the fold on desktop): **Site** (Events/Gymnasts/Scores/Clubs stat tiles), **Manage** (button pills: Refresh Cache + Upload / Users / Identity Review (conflict-count badge) / Logged-in activity dialog buttons), **Server usage** (range tabs + auto-refresh + 5 usage stat tiles followed by the 4 site Chart.js charts), and **Cloudflare** (5 stat tiles: requests, bandwidth, unique visitors, threats, cache-hit %, followed by 9 charts — requests/day, status codes, top countries, unique visitors/day, bandwidth/day, hourly requests, top paths, cache-status mix and device split; Cloudflare range follows the shared Server usage range clamped to 7/30 days, configured via `CLOUDFLARE_ZONE_ID` + `CLOUDFLARE_API_TOKEN`, shows a "not configured" note otherwise). Each group sits in a subtle rounded flex band (`bg-base-200/50 rounded-2xl`). Upload (drag-and-drop JSON + import-from-URL + club-mapping dialog), Users (create/delete/reset + permissions), Identity Review (merge/split) and the logged-in detail log each open in a Dialog. The old `/upload`, `/admin/activity` and `/admin/users` routes are removed — admin components live in `$lib/admin/` and the shared `Dialog.svelte` supports nesting (Escape/Tab stop propagation so inner dialogs like club-mapping/add-user close independently).
-- `/rankings` — Rankings with discipline tabs, STEP dropdown, a callout card at the top (STEP 5+) explaining the ranking system, qualifying marks and the toggles, WAG-only Division dropdown (All/Over/Under, resets on step/discipline change, recomputes the ranking server-side via a `division` query param on `GET /api/rankings` so qualifier/Q/quota/exports all respect it), region quotas + qualifier filter (info tooltips; hidden for STEP 1–4 / MAG Level 1–3), STEP 5/6 use the average of the top 3 marks (three score columns), STEP 1–4 show a rightmost Q column (✓ when 52.000 reached twice), an "Apparatus Qualifiers" section below the table for STEP 8–10 / MAG Level 7+ / Junior+Senior International (gymnasts not in the qualifier-filtered AA table who hit the Wellington apparatus marks — colour-coded badges + tooltips, follows the Club/Region filters), Club/Region header funnel dropdowns filter the loaded rows client-side (exports follow), Total column hidden (bolded Average), "Can't find someone?" note under the table when the qualifier filter is on, partial AA support
+- `/rankings` — National Rankings with discipline tabs, STEP dropdown, a callout card at the top (STEP 5+) explaining the ranking system, qualifying marks and the toggles, WAG-only Division dropdown (All/Over/Under, resets on step/discipline change, recomputes the ranking server-side via a `division` query param on `GET /api/rankings` so qualifier/Q/quota/exports all respect it), region quotas + qualifier filter (info tooltips; hidden for STEP 1–4 / MAG Level 1–3), STEP 5/6 use the average of the top 3 marks (three score columns), STEP 1–4 show a rightmost Q column (✓ when 52.000 reached twice), an "Apparatus Qualifiers" section below the table for STEP 8–10 / MAG Level 7+ / Junior+Senior International (gymnasts not in the qualifier-filtered AA table who hit the Wellington apparatus marks — colour-coded badges + tooltips, follows the Club/Region filters), Club/Region header funnel dropdowns filter the loaded rows client-side (exports follow), Total column hidden (bolded Average), "Can't find someone?" note under the table when the qualifier filter is on, partial AA support
+- `/rankings/apparatus` — National Apparatus Rankings: WAG/MAG toggle, step select, apparatus radio tabs (WAG `VT,UB,BB,FX`, MAG `FX,PH,SR,VT,PB,HB` + stragglers), WAG division select (disabled for STEP 9/10 + Internationals), Club/Region funnel filters, D-score column, Best column with competition tooltip, CSV/XLSX/PDF export. Ranks each gymnast's best single mark per apparatus for the season.
+- `/wellington-ranking` — Wellington Rankings (member+, `rankings.wellington` permission): config callout card, WAG/MAG tabs, step dropdown, main ranking table with slot-aligned score columns + category badges + per-pass apparatus tooltips, admin Intent checkboxes, "Apparatus Specialists" table (solid vs ghost badges with per-competition tooltips), "Not on the Ranking" table (alphabetical, checklist tooltip per athlete), CSV/XLSX/PDF export. No filter toggles — the main table always shows qualified + intended athletes; `not_ranked` captures everyone else. Ranked live on every read (not from the materialized store) so intent toggles reflect immediately.
 - `/events` — Event list with search bar, year filter, rename/delete, Nationals trophy toggle; a season timeline (`Timeline.svelte`, train-map style) appears at the top on desktop when a specific year is selected
 - `/events/[id]` — Per-event results (thin wrapper around `WideResultsTable`)
 - `/results` — All events results (thin wrapper around `WideResultsTable`, adds Event filter column)
-- `/gymnast/[gnz_id]` — Individual gymnast results; defaults to the current year; when a specific year is selected it shows a Personal Bests card (best per-apparatus score + D, best achieved AA, Best Possible AA), a region badge beside the name, and GNZ ID / club / steps underneath
+- `/gymnast/[slug]` — Individual gymnast results at a readable URL (`/gymnast/{slug}-{kebab-name}`); plain-slug and legacy gnz_id URLs 301-redirect to the canonical form; defaults to the current year; when a specific year is selected it shows a Personal Bests card (best per-apparatus score + D, best achieved AA, Best Possible AA), a region badge beside the name, and GNZ ID / club / steps underneath
 - `/gymnasts` — Gymnast list (A-Z grouped, live search, GNZ ID shown subtly, ⚠ for multi-ID, comma-separated clubs for multi-club). Sticky header: search box + alphabet jump bar inline, active-letter highlight on scroll, collapsing title, "Back to top" button once scrolled
 - `/club/[club]` — Club results across all events
 - `/clubs` — Club list: desktop has the interactive NZ map (sticky left) + selected region box (right); mobile (`<lg`) replaces the map with a collapsible accordion of region cards (tap to expand, one open at a time), listed north→south via `REGION_ORDER`
+- `/robots.txt` + `/sitemap.xml` — dynamic routes: disallows `/api`, `/login`, `/admin`, `/upload`, `/rankings`, `/wellington-ranking`; sitemap enumerates static pages + events + gymnasts (readable URLs) + clubs
 
 **Shared stores:**
 - `src/lib/year.ts` — `selectedYear` and `yearOptions` stores populated from `GET /api/years`; used globally in nav toggle
-- `src/lib/auth.ts` — `currentUser`, `setToken()`, `getToken()`, `logout()`
+- `src/lib/rankingState.svelte.ts` — module-level `$state` object `{ discipline, selectedStep }` shared by the three ranking pages, so discipline/step survive navigation (viewing a gymnast and going back keeps your place)
+- `src/lib/auth.ts` — `currentUser`, `setToken()`, `getToken()`, `logout()`, `hasPermission()` + persisted `nzgr_permissions`
 
 **Nav bar layout:**
 - Logo → Year toggle (DaisyUI `tabs tabs-box` radio inputs) → Role-based links → User badge dropdown (or Login button)
@@ -163,7 +207,7 @@ Core logic:
 
 ### Table Features
 - Column widths synced between duplicate sticky headers and main table via JS measurement + ResizeObserver
-- Name cells link to `/gymnast/[gnz_id]`, club cells link to `/club/[club]`
+- Name cells link to `/gymnast/[slug]`, club cells link to `/club/[club]`
 - Horizontal scroll synced between duplicate headers and main table
 - Client-side CSV/XLSX/PDF export via `export.ts` + `ExportMenu.svelte` (SheetJS + jsPDF lazy-loaded; XLSX supports hidden columns and widths via `colFormat`)
 - Row hover highlight (`hover:bg-base-300 transition-colors`), `py-1.5` vertical padding
@@ -181,17 +225,32 @@ Core logic:
 - Skip link, `<main id="main">`, `<nav>` landmarks, `aria-current` on active links, `aria-live`/`role="status"` toasts, `role="alert"` errors, 24px min button targets, reduced-motion gating.
 - Reports in `a11y-reports/` (rerun: `./a11y-reports/run.sh before|after [pages...]`, needs `CHROME_PATH`).
 
-## Test Suite (401 tests, 87 conditional skip)- `test_decoder.py`: 14 tests — output map building, decoding, DNS detection, Start Value
+## Test Suite (424 pass, 87 conditional skip — 511 collected)
+- `test_parser.py`: 131 tests — parsing, validation, known files, bulk scans, edge cases
+- `test_auth.py`: 40 tests — auth/permissions endpoints + JWT
+- `test_api.py`: 38 tests — health, upload, events/results, exports, slug endpoints
 - `test_resolver.py`: 34 tests — resolver + name-cleaner (McEwan/O'Sullivan/hyphens) + ID fixes
-- `test_models.py`: 4 tests — CRUD, cascade delete
-- `test_parser.py`: 130 tests — parsing, validation, known files, bulk scans, edge cases
-- `test_api.py`: 34 tests — health, upload, events/results, exports, slug endpoints
-- `test_reconcile.py`: 12 tests — evidence-based athlete ID reconciliation
-- `test_athlete_identity.py`: 17 tests — athlete clustering, back-write, rebuild idempotency
+- `test_rankings.py`: 27 tests — national rankings logic
+- `test_activity.py`: 26 tests — traffic aggregation, bot exclusion, summaries
+- `test_wellington_ranking.py`: 24 tests — Wellington ranking configs/selections/qualifiers
+- `test_materialize.py`: 22 tests — store-vs-live equivalence, rebuild idempotence, failure safety
 - `test_identity_review.py`: 22 tests — admin identity review, merge/split, merge-preview, slug redirects
+- `test_athlete_identity.py`: 17 tests — athlete clustering, back-write, rebuild idempotency
+- `test_admin_edit.py`: 15 tests — inline edit, scoped updates, edit-during-rebuild freshness
+- `test_decoder.py`: 14 tests — output map building, decoding, DNS detection, Start Value
 - `test_repair_identities.py`: 13 tests — consensus repair, dry-run, idempotency
-- `test_repair_merges.py`: 3 tests — wrong-merge repair (dry-run, apply, idempotent)
+- `test_medals.py`: 13 tests — medal tallies, apparatus rank awards
+- `test_reconcile.py`: 12 tests — evidence-based athlete ID reconciliation
+- `test_apparatus_rankings.py`: 12 tests — apparatus leaderboards + un-resolvable apparatus
+- `test_scoreholder.py`: 11 tests — Scoreholder URL fetch/redirect/brotli
+- `test_cloudflare.py`: 11 tests — config gating, query building, response parsing
 - `test_reverse_merges.py`: 5 tests — merge reversal (event splits, same-name override, backup derivation)
+- `test_ingest.py`: 5 tests — upload ingest, backfill guard
+- `test_dedupe.py`: 5 tests — duplicate-event cleanup
+- `test_models.py`: 4 tests — CRUD, cascade delete
+- `test_transformer.py`: 3 tests — pivot/vault aggregation helpers
+- `test_repair_merges.py`: 3 tests — wrong-merge repair (dry-run, apply, idempotent)
+- `test_fix_apparatus.py`: 3 tests — All-around apparatus relabel CLI
 - `test_database.py`: 1 test — init_db migration of a pre-existing schema
 
 Run: `cd backend && source .venv/bin/activate && pytest`
@@ -251,6 +310,8 @@ CLI batch validation: `python -m app.validate_json path/to/file.json [path/...]`
   - `/api/stats` — key `"stats"`, TTL 300s
   - `/api/gymnasts` — key `"gymnasts"`, TTL 300s
   - `/api/clubs` — key `"clubs"`, TTL 300s
+  - `/api/medals` — key `"medals:{...}"`, TTL 300s
+  - `/api/rankings/apparatus` — key `"apparatus-rankings:{year}:{step}:{discipline}:{division}"`, TTL 300s, single-flight
   - `/api/results/wide-all` — key `"wide-all:{year}:{gnz_id}:{club}"`, TTL 300s (live-compute fallback only; store-backed reads bypass the memory cache)
   - `/api/events/{id}/results/wide` — key `"event:{id}:pivot:{gnz_id}:{club}"`, no TTL (invalidation-driven) (live-compute fallback only)
 - **HTTP caching:** `Cache-Control: public, max-age=300, stale-while-revalidate=60` on GET read endpoints, set via middleware. `no-store, no-cache, private` on admin/write.

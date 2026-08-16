@@ -40,7 +40,7 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   ├── scoreholder.py   # Fetch Scoreholder event JSON exports from public URLs
 │   │   ├── validate_json.py # Batch validation CLI
 │   │   └── wellington_ranking.py # Wellington regional ranking computation
-│   ├── tests/               # pytest suite (401 pass, 87 skip)
+│   ├── tests/               # pytest suite (424 pass, 87 skip)
 │   └── pyproject.toml
 │
 ├── frontend/
@@ -52,6 +52,7 @@ Web app to ingest Scoreholder JSON exports, parse into normalized SQLite, pivot 
 │   │   │   ├── api.ts              # Typed fetch wrappers (updateGymnast, etc.)
 │   │   │   ├── auth.ts             # JWT auth stores (currentUser, setToken, logout)
 │   │   │   ├── year.ts             # yearOptions store (selectedYear removed)
+│   │   │   ├── rankingState.svelte.ts # Module-level $state {discipline, selectedStep} shared by the 3 ranking pages so they survive navigation
 │   │   │   ├── utils/debounce.ts   # Debounce helper for search inputs
 │   │   │   ├── regions.ts          # Region color palettes + REGION_ORDER (north→south) + WCAG-contrast text/gradient helpers
 │   │   │   ├── RegionBadge.svelte  # Region color badge component
@@ -206,7 +207,7 @@ let { label, count = 0 }: { label: string; count?: number } = $props();
 - All tests in `backend/tests/`, one file per module
 - **Run:** `cd backend && source .venv/bin/activate && pytest`
 - **Run single:** `pytest tests/test_parser.py -v`
-- **Stats:** 401 pass, 87 skip (skipped tests rely on data-collection JSON files not always present)
+- **Stats:** 424 pass, 87 skip (skipped tests rely on data-collection JSON files not always present)
 - Plain `assert` statements (no `unittest` methods)
 - `@pytest.mark.parametrize` for data-driven tests
 - Inline fixtures (no conftest.py) — SQLite `:memory:` or temp file
@@ -317,6 +318,7 @@ docker compose -f docker-compose.prod.yml up --build -d
 - **Gymnast page meta under name** — when a year is selected, `nameBadge` (region `RegionBadge` beside the name) and `nameMeta` (GNZ ID / club link / each step on its own line, stacked) snippets render below/inline with the name. Values derive from the loaded wide rows: `gnzId` from `$page.params.gnz_id`, `club`/`region` via `mostCommon()` across rows (a gymnast can switch clubs mid-season), `steps` as the unique `step` values (a gymnast may compete two steps in one year).
 - **`WideResultsTable` optional snippets/callback** — `onData?: (tabs) => void` fires after every successful load (used to mirror the loaded rows outside the table); `afterHeader` renders on the right of the name row (the Personal Bests card); `nameBadge`/`nameMeta` render beside/below the `<h1>`. All optional — other pages are unaffected. The pinned left-hand column is configurable via a `stickyCol` prop (default `"name"`; the gymnast page passes `stickyCol="event_name"` since `event_name` is already the first column and the gymnast's name is the same in every row). `doLoad()` is guarded against **out-of-order responses** with a plain-`let` `loadToken` (bumped at the start, checked after the `await` in the `try`/`catch`/`finally`), so a slow earlier load (e.g. the mount-time all-years fetch before the default year is applied) can never clobber a newer year-specific load — the same pattern as the Wellington page's `fetchToken`. It must stay a plain `let`, not `$state`: reading a `$state` token synchronously in the `$effect` that calls `doLoad()` would re-trigger the effect in a loop.
 - **Mobile responsiveness** — the app is mobile-tested at ~375px. Navigation: year filter is a native `<select>` below `md` (desktop keeps the tab radio group, which also lives in the drawer); the logo text/Beta badge hide below `sm`. Tables: low-value columns are hidden below `md` (`gnz-id`, sometimes `club`/`region`) via `hidden md:table-cell`; the rank+name pair (or a single `stickyCol`) is pinned with `sticky left-*` + zebra-aware backgrounds; `event_name` truncates tighter on mobile (`max-w-40 md:max-w-56`). Region cells swap to a compact checker square (`lib/RegionCheck.svelte`, tooltip + `aria-label`) below `md`, full `RegionBadge` above. `WideResultsTable`'s column-header filter and `FilterDropdown` (rankings Club/Region) open as a **full-width bottom sheet** on screens <768px (fixed-position panel, backdrop, bigger tap targets, sticky **Close (n selected)** button that only appears once something is selected); the sheet also closes via backdrop/Escape/outside-click. `FilterDropdown`'s menu is mounted only while `open` (`{#if open}`) so DaisyUI's `:focus-within` can't keep it visible after closing. Specialist ghost badges use `border-dashed`; `SeasonBest` card centers/wraps and separates "Best Possible AA" below `md`.
+- **Ranking pages remember discipline/step** — the three ranking pages (`rankings`, `rankings/apparatus`, `wellington-ranking`) share `discipline` + `selectedStep` via a module-level `$state` object in `lib/rankingState.svelte.ts` (`export const rankingState = $state({...})`), so opening a gymnast and navigating back keeps your place instead of resetting to WAG / the first step. It's a `$state` **object** (properties mutated) rather than `export let`/`export const` of the bare value — Svelte 5 cannot reassign exported module bindings from components ("Cannot assign to import"), but object properties are always assignable. The existing `if (!steps.includes(step)) step = steps[0]` fallback in each page's `loadSteps()` still handles year/discipline changes and steps that don't exist on another page. State is in-memory only (lost on full page reload), like the year store.
 - **Step dropdown ordering** — backend `ORDER BY level_category` is alphabetical (`STEP 1, STEP 10, STEP 2, ...`). Frontend re-sorts with `sortSteps()` (STEP 1–10 numerically, then Youth/Junior/Senior) in `rankings/+page.svelte` and `WideResultsTable.svelte`. `wellington-ranking/+page.svelte` has its own `sortSteps()` (STEP 1–10, Level 1–10, Youth/Youth International, Junior/Junior International, Senior/Senior International, Senior Open, U18, U16).
 - **SvelteKit CSRF disabled** — `csrf: { checkOrigin: false }` in `svelte.config.js`; all mutations go through the `/api` proxy to FastAPI which handles its own JWT auth. Still set `ORIGIN` env var in production for adapter-node URL generation.
 - **`fetchToken` must NOT be `$state`** — the stale-response guard counter in `wellington-ranking/+page.svelte` is a plain `let`. If made `$state`, incrementing it inside `loadRankings()` re-triggers the `$effect` → infinite API request loop.

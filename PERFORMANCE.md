@@ -11,14 +11,15 @@
 - **Frontend:** SvelteKit 5 (adapter-node, SSR via +page.server.ts), Tailwind CSS v4, DaisyUI v5
 - **Infrastructure:** Docker Compose, single-server self-hosted deployment
 - **API proxy:** `hooks.server.ts` forwards `/api/*` from frontend Node server to backend container in production; Vite dev proxy in development
-- **Cache:** GranularTTLCache with per-key TTL + per-event prefix invalidation (68 lines)
-- **HTTP caching:** `Cache-Control: public, max-age=300, stale-while-revalidate=60` on read endpoints; `no-store` on admin/write
+- **Cache:** GranularTTLCache with per-key TTL + per-event prefix invalidation + single-flight `cached()` (concurrent misses compute once)
+- **Precomputed store:** a materialized SQLite store (`data/results.materialized.db`) holds wide rows + ranking marks, rebuilt in the background after every mutation — the heavy read endpoints are cheap lookups instead of per-request pivots (fall back to live compute when the store isn't ready)
+- **HTTP caching:** `Cache-Control: public, max-age=300, stale-while-revalidate=60` on read endpoints; `no-store` on admin/write and on the two wide results endpoints (`/api/events/{id}/results/wide`, `/api/results/wide-all`) so inline edits never sit behind a browser-cached copy
 
 ---
 
 ## 2. Database Schema & Indexes
 
-### Table: `events` — 81 rows
+### Table: `events` — 183 rows (live DB snapshot, Aug 2026)
 
 | Column | Type | Indexed? |
 |--------|------|----------|
@@ -29,14 +30,17 @@
 | `discipline` | STRING | |
 | `year` | INTEGER | |
 | `is_national` | BOOLEAN (default false) | |
+| `host_club` | STRING | |
 | `created_at` | DATETIME | |
 
-### Table: `long_scores` — 90,602 rows
+### Table: `long_scores` — 191,511 rows
 
 | Column | Type | Indexed? | Used in filter |
 |--------|------|----------|----------------|
 | `id` | INTEGER PK | ✓ auto-index | — |
 | `event_id` | INTEGER FK | ✓ B-tree (`idx_long_scores_event_id`) | every per-event query |
+| `athlete_id` | INTEGER FK | ✓ B-tree | athlete-keyed queries |
+| `identity_override` | STRING | | admin force-split marker |
 | `event_name` | STRING | | — |
 | `gymnast_name` | STRING | ✓ B-tree (`idx_long_scores_gymnast_name`) | duplicates, merge, counts |
 | `gnz_id` | STRING | ✓ B-tree (`idx_long_scores_gnz_id`) | gymnasts list, duplicates |
@@ -58,7 +62,7 @@
 | `round_type` | STRING | | — |
 | `date_created` | DATETIME | | — |
 
-### Table: `users` — 1 row
+### Table: `users` — a few rows
 
 | Column | Type | Indexed? |
 |--------|------|----------|
@@ -82,11 +86,11 @@
 
 | Metric | Value |
 |--------|-------|
-| Total `long_scores` rows | 90,602 |
-| Total `events` | 81 |
-| Avg scores per event | ~1,119 |
-| Distinct level categories | 26 |
-| Years | 2025, 2026 |
+| Total `long_scores` rows | 191,511 |
+| Total `events` | 183 |
+| Total `athletes` | 4,421 |
+| Avg scores per event | ~1,047 |
+| Years | 2023–2026 |
 | Disciplines | WAG, MAG |
 
 ---
@@ -95,27 +99,33 @@
 
 ### Endpoints: Read (with ETag caching)
 
+> Since the materialized store landed, `/api/events/{id}/results/wide`, `/api/results/wide-all`, `/api/rankings` and `/api/rankings/apparatus` are **store lookups** (indexed `wide_rows` / `ranking_marks` blobs) rather than the scans below; the old live-compute paths remain only as a fallback when the store isn't ready. `/api/rankings/wellington` is still live-computed per request (low traffic, needs immediacy).
+
 | Endpoint | Queries | Scan vs Index | Notes |
 |----------|---------|---------------|-------|
 | `GET /api/stats` | 4 aggregate queries | **SCAN** long_scores x3, events x1 | 4 separate full scans |
 | `GET /api/clubs` | SELECT club_name, COUNT(DISTINCT gymnast_name) GROUP BY club_name | **SCAN** long_scores + temp B-tree GROUP BY | |
-| `GET /api/gymnasts` | SELECT DISTINCT gymnast_name, gnz_id, club_name WHERE gnz_id IS NOT NULL | **SCAN** long_scores + temp B-tree DISTINCT | Only ~3,700 distinct gymnasts from 90K rows |
-| `GET /api/events` | 1. SELECT FROM events 2. 1 extra query per event: COUNT(DISTINCT gymnast_name) WHERE event_id=? | **SCAN** events + **SCAN** long_scores x81 | **N+1: 82 queries for 81 events** |
+| `GET /api/gymnasts` | SELECT DISTINCT gymnast_name, gnz_id, club_name WHERE gnz_id IS NOT NULL | **SCAN** long_scores + temp B-tree DISTINCT | ~3,700 distinct gymnasts from 190K rows |
+| `GET /api/events` | 1. SELECT FROM events 2. 1 extra query per event: COUNT(DISTINCT gymnast_name) WHERE event_id=? | **SCAN** events + **SCAN** long_scores xN | N+1 (was resolved for counts via grouping; re-check per deploy) |
 | `GET /api/events/{id}/results` | event by PK + COUNT gymnasts + SELECT WHERE event_id=? | PK search + **SCAN** long_scores x2 | |
-| `GET /api/events/{id}/results/wide` | event by PK + SELECT WHERE event_id=? (inside pivot) | PK search + **SCAN** long_scores | In-memory cached |
-| `GET /api/results/wide-all` | 1. SELECT events 2. 1 pivot per event: full scan + Pandas transform | **SCAN** events + **SCAN** long_scores xN | **1+N: up to 82 scans** |
-| `GET /api/rankings/steps` | SELECT DISTINCT level_category FROM long_scores JOIN events WHERE year=? | **SCAN** long_scores (90K rows) + PK lookup events | Scans all rows even for single year |
-| `GET /api/rankings` | 1. SELECT id FROM events 2. SELECT FROM long_scores WHERE event_id IN (...) | **SCAN** events + **SCAN** long_scores | No cache (auth-required) |
+| `GET /api/events/{id}/results/wide` | store read by event_id | indexed | falls back to live pivot |
+| `GET /api/results/wide-all` | store read by athlete/club/year | indexed | falls back to live multi-event pivot |
+| `GET /api/rankings/steps` | SELECT DISTINCT level_category FROM long_scores JOIN events WHERE year=? | **SCAN** long_scores (190K rows) + PK lookup events | |
+| `GET /api/rankings` | store read of `ranking_marks` blob per key | indexed | derivation happens in memory |
+| `GET /api/rankings/apparatus` | store read of `ranking_marks` blob per key | indexed | server-cached + single-flight |
+| `GET /api/rankings/wellington` | live SELECT + `_build_event_marks` | **SCAN** long_scores | always live (~130 ms/step) |
 
 ### Endpoints: Admin (no cache, auth-required)
 
 | Endpoint | Queries | Notes |
 |----------|---------|-------|
-| `GET /api/admin/duplicates` | SELECT GROUP BY 4 columns | **SCAN** long_scores + temp B-tree |
-| `POST /api/admin/duplicates/fix` | Same query + 1 UPDATE per conflicting ID | Multiple individual UPDATEs |
-| `POST /api/admin/duplicates/apply` | SELECT DISTINCT gnz_id + UPDATE per fix | **SCAN** long_scores per fix |
-| `GET /api/admin/suggested-merges` | 1. SELECT DISTINCT gymnast_name 2. 4 queries per similar pair | **N+1: 1 + 4N queries, O(n^2) difflib** |
-| `POST /api/admin/merge-names` | UPDATE + canonical query + reconcile_athletes() | Same scan pattern |
+| `GET /api/admin/identity-review` | athlete/event aggregation | athlete-level conflict review |
+| `POST /api/admin/athletes/{merge-preview,merge,split}` | row rewrites + rebuild | rebuild re-clusters athletes |
+| `POST /api/admin/scores/gymnast` | targeted UPDATEs + sync store refresh | inline edit |
+| `GET /api/admin/activity` / `summary` | activity_logs / traffic_daily reads | flush queued rows first |
+| `GET /api/admin/cloudflare/summary` | external GraphQL | cached 300s, single-flight |
+| `GET /api/admin/rebuild/status` | materialized `meta` table | `{ready, building, needs_rebuild, ...}` |
+| Legacy: `GET/POST /api/admin/duplicates*`, `GET /api/admin/suggested-merges`, `POST /api/admin/merge-names` | old scan patterns | still in the API + tested, no longer called by the UI |
 
 ### EXPLAIN QUERY PLAN — Key Findings
 
@@ -133,7 +143,7 @@ Most expensive patterns:
 
 ### Data Fetching
 
-All data fetching is client-side in `onMount()` or `$effect` hooks. No SSR for data pages — every page load shows a loading spinner.
+Public pages are server-rendered via `+page.server.ts` loads that fetch lightweight cached endpoints (`/api/stats`, `/api/events`, `/api/gymnasts`, `/api/clubs`, `/api/gymnast`) — the HTML carries real headings/counts. The heavy wide tables and ranking data hydrate client-side (never SSR'd): `WideResultsTable` and the ranking pages fetch in `onMount()` / `$effect` and render with a loading spinner until data arrives.
 
 ### Rendering: All Pages Use "Fetch All -> Render All"
 
@@ -184,26 +194,38 @@ Each row generates ~150-250 DOM nodes:
 
 ### Backend Cache (`app/cache.py`)
 
-- **Type:** In-memory dict `dict[str, tuple[int, Any]]`
-- **Key:** `:`-joined string from tuple parts
-- **Versioning:** Global `_version` counter, incremented on every write
-- **Invalidation:** `invalidate()` bumps `_version`, clears ALL entries at once
-- **TTL:** None — cache lives until version bump or process restart
-- **Eviction:** No LRU, no size limit
-- **Scope:** Only `pivot_to_wide_dict()` uses it — cached per `(event_id, gnz_id, club)` tuple
-- **HTTP caching:** `Cache-Control: no-cache, must-revalidate` + `ETag: <version>`. Browser revalidates every request (304 avoids body but backend still runs queries)
+- **Type:** In-memory `GranularTTLCache` — `dict[str, value]` with per-key TTL.
+  - No-TTL entries (pivot caches) stored as direct values.
+  - TTL entries stored as `(expiry, value)` tuples, auto-evicted on read.
+- **Key:** `:`-joined string from tuple parts (e.g. `event:{id}:pivot:{gnz_id}:{club}`).
+- **Versioning:** global `_version` counter bumped on every invalidation, returned as an ETag for conditional requests.
+- **Invalidation:** `invalidate(event_id)` clears the `event:{id}:*` prefix; `invalidate()` (no arg) clears everything and bumps the materialized-store rebuild epoch.
+- **Single-flight:** `cached()` dedupes concurrent misses — one in-flight computation is shared, so a cold cache can't hammer SQLite with parallel identical queries.
+- **Cached endpoints:** `/api/stats`, `/api/gymnasts`, `/api/clubs`, `/api/medals`, `/api/rankings/apparatus` (all TTL 300s), plus the live-compute fallback paths for `/api/results/wide-all` and `/api/events/{id}/results/wide`.
+- **HTTP caching:** `Cache-Control: public, max-age=300, stale-while-revalidate=60` + `ETag` on read endpoints; `no-store` on admin/write and the two wide results endpoints.
+
+### Materialized store (`app/materialize.py`)
+
+The heavy derivations live in a precomputed SQLite file (`data/results.materialized.db`, rebuilt in the background after every mutation):
+
+- `wide_rows` — the pivot output flattened to one row per `(event, discipline, athlete, round_type)` with `payload` JSON, indexed by `event_id` / `athlete_id, year` / `club, year`.
+- `ranking_marks` — `_build_event_marks` output as a JSON blob per `(year, discipline, step, division)` key.
+- Rebuilt in one transaction (old + new never partially visible to readers); status exposed via `GET /api/admin/rebuild/status`. ~34s full rebuild on the live DB (~84 MB store).
+- Wellington rankings are **not** stored — always live-computed so intent toggles reflect immediately.
+- `MATERIALIZED_READS=0` forces every rewritten endpoint back to live compute (instant rollback); `MATERIALIZE_WORKERS` caps the worker pool.
 
 ### Invalidation Triggers
 
-| Action | Calls `invalidate()`? |
-|--------|----------------------|
-| Upload | Yes |
-| Delete event | Yes |
-| Rename event | Yes |
-| Reconcile athletes | Yes |
-| Fix duplicates | Yes |
-| Merge names | Yes |
-| Save club aliases | Yes |
+| Action | Cache invalidated | Store rebuild |
+|--------|-------------------|---------------|
+| Upload | Yes | Yes (event inserted synchronously + full rebuild queued) |
+| Delete / rename event | Yes | Yes |
+| Inline edit | Yes (incl. `apparatus-rankings` prefix) | Yes (edited event refreshed synchronously, then full rebuild) |
+| Reconcile / identity merge / split | Yes | Yes |
+| Fix duplicates / merge names | Yes | Yes |
+| Save club aliases | Yes | Yes |
+| Intent toggle | Yes | No (Wellington stays live) |
+| Admin refresh-cache | Yes | Yes |
 
 ---
 
@@ -250,26 +272,30 @@ JSON file
        -> strip parenthetical metadata from names
        -> skip GFA units, non-competitive levels
    -> backfill missing GNZ IDs from existing DB (by name match)
-   -> delete existing events with same (name, start_date, discipline) (re-upload)
+   -> delete existing events with same (name, start_date, discipline) (re-upload dedup)
    -> INSERT all rows into long_scores
-  -> call reconcile_athletes() (auto-fix ID inconsistencies)
-  -> return EventResponse with counts + reconcile report
+  -> call reconcile_athletes() (evidence-based ID consistency report)
+  -> call rebuild_athletes() (cluster rows into `athletes` identities)
+  -> insert the new event's wide rows into the materialized store synchronously
+  -> trigger background full store rebuild (cache.invalidate() bumps the epoch)
+  -> return EventResponse with counts + warnings
 ```
 
 ## 8. Data Pipeline: Results/Display Flow
 
 ```
 Browser request
-  -> SvelteKit client-side fetch in onMount/$effect
+  -> SvelteKit client-side fetch (public pages SSR-loaded first, tables hydrate client-side)
   -> hooks.server.ts (production) or Vite dev proxy -> backend
   -> FastAPI endpoint:
-       a) Single event: SELECT WHERE event_id=? -> pivot_to_wide_dict() (SQL + Pandas) -> JSON
-       b) All events: SELECT all events -> loop pivot_to_wide_dict per event -> concat -> JSON
-       c) Rankings: SELECT scores -> Python aggregation (group by gymnast, pick top 2) -> sort -> rank -> JSON
+       a) Single event wide: store lookup by event_id (indexed) — live pivot fallback
+       b) All events wide: store lookup by athlete/club/year (indexed) — live multi-event pivot fallback
+       c) Rankings: store `ranking_marks` blob -> in-memory derivation (national/apparatus);
+          Wellington always live-computed
        d) Gymnasts: SELECT DISTINCT -> group by lowercase name -> merge alt_ids/clubs -> JSON
   -> JSON response to browser
   -> Svelte $state stores response
   -> $derived/$effect computes filtered/sorted data
-  -> {#each} renders all DOM nodes
+  -> {#each} renders DOM nodes (wide tables paginated 50/page)
   -> User interacts (filter, sort, search) -> client-side re-compute -> Svelte reactivity updates DOM
 ```

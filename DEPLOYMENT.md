@@ -137,14 +137,14 @@ Not the cert cause, but part of a clean domain migration:
 
 The backend now precomputes results/rankings into `data/results.materialized.db`
 (same `backend_data` volume, gitignored) and rebuilds it in the background after every
-mutation (~49s on the live DB; status at `GET /api/admin/rebuild/status` and the admin
+mutation (~34s on the live DB; status at `GET /api/admin/rebuild/status` and the admin
 dashboard's "Prebuilt data" line). Deployment implications:
 
 - **Normal redeploys are non-disruptive.** The store persists on the volume, so a boot
   only rebuilds when `needs_rebuild()` is true (pending mutation) or the store is missing
   (first deploy / fresh volume). The rebuild runs in a background thread, so `/api/health`
   is unaffected and there's no added boot delay. On the very first deploy of this feature,
-  the store builds in the background for ~49s during which heavy endpoints fall back to
+  the store builds in the background for ~34s during which heavy endpoints fall back to
   the old live-compute path (slower, not down).
 - **Rollback is seamless** — the pre-feature image simply ignores the store file. **But**
   if data is mutated while rolled back, re-deploying this feature serves a *stale* store
