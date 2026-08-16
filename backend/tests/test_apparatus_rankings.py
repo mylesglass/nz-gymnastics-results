@@ -232,6 +232,84 @@ class TestVaultAggregation:
         assert rows[0]["best"] == 12.0
 
 
+class TestUnresolvableApparatus:
+    """Passes labelled with the generic "All-around" result-set name (the
+    parser's fallback for multi-set aggregate tables) must never count as a
+    real apparatus: no leaderboard, no specialist badge — but their scores
+    still count toward the all-around total."""
+
+    def _seed(self):
+        from app.database import SessionLocal
+
+        session = SessionLocal()
+        try:
+            def _event(i: int, name: str) -> int:
+                ev = Event(
+                    name=name, start_date="2025-03-01", end_date="2025-03-02",
+                    discipline="WAG", year=2025,
+                )
+                session.add(ev)
+                session.flush()
+                return ev.id
+
+            def _score(eid, ename, name, gnz, app, total, pn=1, aa=None, rt="All Around"):
+                session.add(LongScore(
+                    event_id=eid, event_name=ename, gymnast_name=name, gnz_id=gnz,
+                    club_name="Capital Gymnastics", discipline="WAG",
+                    level_category="STEP 8", apparatus=app, pass_number=pn,
+                    pass_final_score=total, round_type=rt, aa_score=aa,
+                ))
+
+            e1 = _event(1, "Meet One")
+            e2 = _event(2, "Meet Two")
+            # "AllRounder" only has unresolvable "All-around" passes. Each event's
+            # three passes sum to 33 (< STEP 8's 43.0 AA qualifier) so she is not
+            # AA-qualified; but individual passes are >= 11.0, which WOULD make her
+            # a specialist if "All-around" were treated as a real apparatus.
+            _score(e1, "Meet One", "AllRounder", "G-001", "All-around", 11.0)
+            _score(e1, "Meet One", "AllRounder", "G-001", "All-around", 11.2)
+            _score(e1, "Meet One", "AllRounder", "G-001", "All-around", 10.8)
+            _score(e2, "Meet Two", "AllRounder", "G-001", "All-around", 11.4)
+            _score(e2, "Meet Two", "AllRounder", "G-001", "All-around", 11.1)
+            _score(e2, "Meet Two", "AllRounder", "G-001", "All-around", 10.5)
+            # "RealDeal" hits the UB mark on 2 distinct competitions -> specialist.
+            _score(e1, "Meet One", "RealDeal", "G-002", "UB", 11.2)
+            _score(e2, "Meet Two", "RealDeal", "G-002", "UB", 11.6)
+            session.commit()
+        finally:
+            session.close()
+
+    def test_no_all_around_leaderboard(self):
+        self._seed()
+        body = _leaderboard(2025, "STEP 8", "WAG")
+        apps = [a["app"] for a in body["apparatus"]]
+        assert apps == ["UB"]
+        assert "All-around" not in apps and "All-Around" not in apps
+
+    def test_all_around_not_a_specialist(self):
+        self._seed()
+        resp = client.get("/api/rankings", params={
+            "year": "2025", "step": "STEP 8", "discipline": "WAG", "qualifier": "true",
+        })
+        assert resp.status_code == 200
+        body = resp.json()
+        by_name = {s["name"]: s for s in body["apparatus_specialists"]}
+        assert "RealDeal" in by_name
+        assert all(a["app"] in ("VT", "UB", "BB", "FX") for a in by_name["RealDeal"]["apparatus"])
+        assert "AllRounder" not in by_name, "unresolvable All-around passes must not qualify as a specialist"
+
+    def test_all_around_scores_still_count_toward_aa_total(self):
+        self._seed()
+        resp = client.get("/api/rankings", params={
+            "year": "2025", "step": "STEP 8", "discipline": "WAG",
+        })
+        assert resp.status_code == 200
+        body = resp.json()
+        allrounder = next(r for r in body["rankings"] if r["name"] == "AllRounder")
+        # 33.0 per competition, summed over the top 2 -> total 66.0
+        assert allrounder["total"] == 66.0
+
+
 class TestRankingAndTies:
     def test_sorted_desc_with_t_ties(self):
         from app.database import SessionLocal

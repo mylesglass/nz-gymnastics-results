@@ -106,7 +106,7 @@ from app.schemas import (
     WellingtonRankingResponse,
 )
 from app.traffic import is_bot, normalize_path
-from app.transformer import _find_region, _guess_host_club, _use_vault_average, export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict, pivot_to_wide_dict_multi
+from app.transformer import STANDARD_APPARATUS, _find_region, _guess_host_club, _use_vault_average, export_csv, export_xlsx, pivot_to_wide, pivot_to_wide_dict, pivot_to_wide_dict_multi
 from app.wellington_ranking import compute_wellington_rankings
 
 
@@ -285,6 +285,14 @@ def _compute_stats() -> StatsResponse:
 # and "Day 2" rounds never carry an AA medal.
 _AA_MEDAL_ROUND_TYPES = ("All Around", "All Around - Final", "All Around - Day 2", "All Around, Teams", "Team")
 
+# The only real apparatus (see transformer.STANDARD_APPARATUS). Passes whose
+# ``LongScore.apparatus`` falls outside this set are un-resolvable leftovers
+# from multi-set "All-around"/"Team" result tables (see the parser's
+# ``unit_event_apparatus`` fallback): their scores are real and still count
+# toward the all-around total, but they must never populate apparatus
+# leaderboards, specialist qualification, or apparatus medals.
+_STANDARD_APPARATUS = STANDARD_APPARATUS
+
 
 @app.get("/api/medals", response_model=MedalsResponse)
 def get_medals(response: Response, year: int = None, gnz_id: str = None, club: str = None, athlete_id: int = None, slug: str = None):
@@ -357,7 +365,7 @@ def _compute_medals(year: int | None, gnz_id: str | None, club: str | None, athl
                 entity_key = f"name:{name.strip().lower()}"
             if entity_key not in entity_meta:
                 entity_meta[entity_key] = (name, gid, club_name, slug_by_id.get(aid) or "")
-            if app_rank in (1, 2, 3):
+            if app_rank in (1, 2, 3) and apparatus in _STANDARD_APPARATUS:
                 unit = (event_id, entity_key, apparatus, round_type or "")
                 if unit not in app_seen:
                     app_seen.add(unit)
@@ -1033,13 +1041,19 @@ def _build_event_marks(rows, step: str, athletes: dict[int, Athlete] | None = No
 
         # Event-level apparatus score. Vault aggregates multiple passes per the
         # AA rules (average or best); ``d`` tracks the best pass (averaged when
-        # the vault is averaged), matching ``_build_wide_row``.
+        # the vault is averaged), matching ``_build_wide_row``. Passes whose
+        # apparatus is unresolvable ("All-around" leftovers from multi-set
+        # tables) are skipped so they can never qualify as a specialist or
+        # fill an apparatus leaderboard; their scores still count toward the
+        # per-event competition total above.
         event_app_scores: dict[str, float] = {}
         event_app_ds: dict[str, float | None] = {}
         vt_totals: list[float] = []
         vt_ds: list[float | None] = []
         for s in scores:
             if s.pass_final_score is None:
+                continue
+            if s.apparatus not in _STANDARD_APPARATUS:
                 continue
             if s.apparatus == "VT":
                 vt_totals.append(float(s.pass_final_score))
@@ -1119,6 +1133,10 @@ def _compute_apparatus_specialists(
         qualifying: list[dict] = []
         partial: list[dict] = []
         for app, events in app_events.items():
+            # Defensive: a stale materialized blob could still carry an
+            # unresolvable "All-around" apparatus until the store is rebuilt.
+            if app not in _STANDARD_APPARATUS:
+                continue
             threshold = (
                 app_scores_by_app.get(app, float("inf"))
                 if app_scores_by_app is not None
@@ -1432,6 +1450,10 @@ def _build_apparatus_response(year: int, step: str, discipline: str,
         meta = meta_by_key.get(key, {"name": str(key), "gnz_id": "", "club": ""})
         slug = meta.get("slug", "")
         for app, events in app_events.items():
+            # Defensive: a stale materialized blob could still carry an
+            # unresolvable "All-around" apparatus until the store is rebuilt.
+            if app not in _STANDARD_APPARATUS:
+                continue
             best = max(events.values(), key=lambda e: e["score"])
             by_app[app].append({
                 "name": meta["name"],

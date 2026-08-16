@@ -87,6 +87,14 @@ def _guess_host_club(event_name: str) -> str:
 WAG_ORDER = ["VT", "UB", "BB", "FX"]
 MAG_ORDER = ["FX", "PH", "SR", "VT", "PB", "HB"]
 
+# The only real apparatus. Passes outside this set are un-resolvable leftovers
+# from multi-set "All-around"/"Team" result tables: their scores are real and
+# still count toward the all-around total, but they must never populate
+# apparatus leaderboards, specialist qualification, apparatus medals, or wide
+# rows. The wide pivot already drops them (only standard prefixes render), so
+# this constant exists for the ranking/medal consumers.
+STANDARD_APPARATUS = frozenset(set(WAG_ORDER) | set(MAG_ORDER))
+
 
 def pivot_to_wide(event_id: int, session, event_name: str, event_date: str) -> pd.DataFrame:
     """Pivot to wide format (used for CSV/XLSX exports).

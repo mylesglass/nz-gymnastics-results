@@ -8,7 +8,7 @@ from collections import defaultdict
 
 from app.database import get_session
 from app.models import Athlete, Event, LongScore
-from app.transformer import _find_region, _use_vault_average
+from app.transformer import STANDARD_APPARATUS, _find_region, _use_vault_average
 
 # ── Event name patterns ──────────────────────────────────────────────
 # Matched case-insensitively against raw event_name in the DB.
@@ -575,10 +575,13 @@ def compute_wellington_rankings(
                     "start_value": float(s.start_value) if s.start_value else None,
                 }
                 for s in scores
+                if s.apparatus in STANDARD_APPARATUS
             ]
 
             # Event-level apparatus score for specialist tracking. Vault
             # aggregates multiple passes per the AA rules (average or best).
+            # Unresolvable "All-around" apparatus is skipped so it can never
+            # qualify as a specialist.
             event_app_scores: dict[str, float] = {}
             vt_totals: list[float] = []
             for p in apparatus:

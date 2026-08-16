@@ -170,6 +170,29 @@ class TestGymnastTallies:
         assert g["medals"]["s"] == 1
         assert g["medals"]["g"] == 0
 
+    def test_unresolvable_apparatus_rank_awards_no_medal(self):
+        # Passes whose apparatus is a generic "All-around" label (parser
+        # fallback for multi-set result tables) must never award an apparatus
+        # medal, even with a 1-3 rank stored.
+        from app.database import SessionLocal
+
+        session = SessionLocal()
+        try:
+            ev = _add_event(session, "Meet")
+            _add_score(session, ev, "Meet", "Ana", "G-1", "Affinity Gymnastics Academy", "All-around", app_rank=1)
+            _add_score(session, ev, "Meet", "Ana", "G-1", "Affinity Gymnastics Academy", "All-Around | Over", app_rank=2)
+            _add_score(session, ev, "Meet", "Ana", "G-1", "Affinity Gymnastics Academy", "VT", app_rank=3)
+            session.commit()
+        finally:
+            session.close()
+
+        body = _medals()
+        g = _gymnast(body, "Ana")
+        assert g["medals"]["g"] == 0
+        assert g["medals"]["s"] == 0
+        assert g["medals"]["b"] == 1
+        assert g["medals"]["total"] == 1
+
 
 class TestTies:
     def test_shared_rank_both_medal(self):
