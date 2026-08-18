@@ -2002,6 +2002,7 @@ def track_page(body: TrackPageRequest, user: dict | None = Depends(get_optional_
 def list_activity(
     user: str = None,
     type: str = None,
+    exclude_admin: bool = True,
     limit: int = 100,
     offset: int = 0,
     days: int = None,
@@ -2014,6 +2015,8 @@ def list_activity(
     session = get_session()
     try:
         query = session.query(ActivityLog)
+        if exclude_admin:
+            query = query.filter(ActivityLog.username != "admin")
         if user:
             query = query.filter(ActivityLog.username == user)
         if type:

@@ -34,6 +34,7 @@
 
   let autoRefresh = $state(true);
   let refreshInterval: ReturnType<typeof setInterval> | undefined;
+  let hideAdmin = $state(true);
 
   async function load() {
     loading = true;
@@ -42,6 +43,7 @@
       const data = await getActivityLogs({
         user: appliedUser || undefined,
         type: appliedType || undefined,
+        exclude_admin: hideAdmin,
         limit: PAGE_SIZE,
         offset,
         days: rangeDays || undefined,
@@ -159,6 +161,10 @@
           <option value="page">Page views</option>
           <option value="api">API requests</option>
         </select>
+      </label>
+      <label class="form-control flex-row items-center gap-2 pb-1">
+        <span class="label-text text-xs">Hide admin</span>
+        <input type="checkbox" class="toggle toggle-sm" bind:checked={hideAdmin} onchange={applyFilters} aria-label="Hide admin" />
       </label>
       <label class="form-control flex-row items-center gap-2 pb-1">
         <span class="label-text text-xs">Auto-refresh</span>

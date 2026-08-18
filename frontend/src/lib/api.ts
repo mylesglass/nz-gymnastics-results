@@ -803,6 +803,7 @@ export interface ActivityLogItem {
 export async function getActivityLogs(params?: {
   user?: string;
   type?: string;
+  exclude_admin?: boolean;
   limit?: number;
   offset?: number;
   days?: number;
@@ -811,6 +812,8 @@ export async function getActivityLogs(params?: {
   const qp = new URLSearchParams();
   if (params?.user) qp.set("user", params.user);
   if (params?.type) qp.set("type", params.type);
+  if (params?.exclude_admin !== undefined)
+    qp.set("exclude_admin", params.exclude_admin ? "true" : "false");
   if (params?.limit !== undefined) qp.set("limit", String(params.limit));
   if (params?.offset !== undefined) qp.set("offset", String(params.offset));
   if (params?.days !== undefined) qp.set("days", String(params.days));
