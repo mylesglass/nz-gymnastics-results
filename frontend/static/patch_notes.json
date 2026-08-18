@@ -3,6 +3,19 @@
     "date": "18 Aug 2026",
     "entries": [
       {
+        "title": "Admin dashboard: unified traffic view with a 24-hour range",
+        "items": [
+          "The Server usage and Cloudflare sections now share one time-range selector — 24 hours / 7 days / 30 days / 90 days / All time — so the two bands always show the same window. The Cloudflare section was rebuilt in the style of Cloudflare's own overview: the selected date range on top, then four long, low sparkline graphs stacked one above the other covering unique visitors, total requests, percent cached and total data served. Picking a range (say 24 hours) updates every graph at once, and the 90-day / All-time options show Cloudflare's 30-day retention window with a note.",
+          "The server usage and Cloudflare graphs now show axis labels — dates or times along the bottom and scaled values (1.2k, 3.4M, %, MB/GB) along the side — so the shape of each graph is readable at a glance.",
+          "The Server usage charts were restyled to match the Cloudflare overview — each graph now spans the full width of the page, stacked one above the other with its headline figure on the left.",
+          "The logged-in activity log now sits permanently beside the server graphs as a right-hand pane (graphs take two-thirds of the width, the log the last third) instead of hiding behind a button — its filters, auto-refresh, paging and clear buttons all still work inline.",
+          "The Cloudflare graphs now sit in the same left column as the server usage graphs, and the logged-in activity log stretches the full height of both — so the whole dashboard reads as one column of charts beside a tall activity stream.",
+          "The Errors figure on the dashboard is now a button — clicking it opens a dialog listing every error (4xx/5xx) request in the selected range, with its user, time, method, path and response time.",
+          "Activity and error timestamps are now always shown in your local time — they were being read as if the UTC time was already your timezone, so they could appear a few hours off.",
+          "The Top users chart no longer shows the built-in admin account, so other users' activity isn't dwarfed by the site owner's."
+        ]
+      },
+      {
         "title": "Two-day meets now split their apparatus-finals day out of the all-around",
         "items": [
           "Some competitions (like the 2026 Tri Star Senior Champs) run their finals day as separate per-apparatus tables with no 'Final' marker, so both days used to collapse into a single all-around round — which could inflate a gymnast's score (e.g. an 89.198 all-around for an athlete who actually withdrew from most of the all-around). These finals tables are now recognised as their own 'Apparatus Finals' round, so each day shows separately and rankings use the gymnast's true best. Tri Star has been re-imported with the corrected data."

@@ -5,6 +5,7 @@
   import type { ActivitySummary } from "$lib/api";
 
   const RANGES = [
+    { days: 1, label: "24 hours" },
     { days: 7, label: "7 days" },
     { days: 30, label: "30 days" },
     { days: 90, label: "90 days" },
@@ -13,8 +14,10 @@
 
   let {
     onData,
+    onErrorsClick,
   }: {
     onData?: (data: { summary: ActivitySummary | null; chartColors: Record<string, string> | null; rangeDays: number }) => void;
+    onErrorsClick?: () => void;
   } = $props();
 
   let rangeDays = $state(30);
@@ -70,13 +73,6 @@
   });
 
   const totals = $derived(summary?.totals ?? null);
-  const errorRate = $derived.by(() => {
-    const t = totals;
-    if (!t) return null;
-    const total = t.page_views + t.api_requests;
-    return total > 0 ? (t.errors / total) * 100 : 0;
-  });
-
   const rangeDaysCount = $derived(rangeDays === 0 ? null : rangeDays);
 </script>
 
@@ -128,8 +124,11 @@
       icon="error"
       label="Errors"
       value={totals.errors.toLocaleString()}
-      sub={errorRate !== null ? `${errorRate.toFixed(1)}% of requests` : "no requests"}
+      sub={totals.auth_errors > 0 ? `${totals.auth_errors} logged-in · ${totals.anon_errors} anonymous` : `${totals.anon_errors} anonymous`}
       valueClass="text-lg text-error"
+      onclick={onErrorsClick}
+      buttonClass="text-error"
+      iconClass="text-error"
     />
     <StatTile
       icon="timer"

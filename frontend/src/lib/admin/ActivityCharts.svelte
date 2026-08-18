@@ -18,11 +18,66 @@
     return trimmed;
   }
 
+  function fmtCompact(n: number): string {
+    if (n >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
+    if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+    if (n >= 1e3) return `${(n / 1e3).toFixed(1)}k`;
+    return `${n}`;
+  }
+
+  function fmtDateTick(iso: string): string {
+    const parts = iso.split("-");
+    if (parts.length !== 3) return iso.slice(5);
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${Number(parts[2])} ${months[Number(parts[1]) - 1] ?? parts[1]}`;
+  }
+
+  function chartOptions(opts?: {
+    yCallback?: (value: number | string) => string;
+    legend?: boolean;
+    horizontal?: boolean;
+    stacked?: boolean;
+  }) {
+    const c = chartColors ?? { text: "#374151", grid: "#e5e7eb" };
+    const axisTicks = { color: c.text, maxTicksLimit: 6, maxRotation: 0, font: { size: 10 } };
+    const valTicks = {
+      color: c.text,
+      precision: 0,
+      maxTicksLimit: 5,
+      ...(opts?.yCallback ? { callback: opts.yCallback } : {}),
+    };
+    const stack = opts?.stacked ? { stacked: true } : {};
+    return {
+      interaction: { mode: "index" as const, intersect: false },
+      ...(opts?.horizontal ? { indexAxis: "y" as const } : {}),
+      plugins: {
+        legend: { display: opts?.legend ?? true, position: "top" as const, labels: { color: c.text } },
+        tooltip: { mode: "index" as const, intersect: false },
+      },
+      scales: opts?.horizontal
+        ? {
+            x: { beginAtZero: true, grid: { color: c.grid }, ticks: valTicks, ...stack },
+            y: { grid: { display: false }, ticks: axisTicks, ...stack },
+          }
+        : {
+            x: { grid: { display: false }, ticks: axisTicks, ...stack },
+            y: { beginAtZero: true, grid: { color: c.grid }, ticks: valTicks, ...stack },
+          },
+    };
+  }
+
+  const totals = $derived(summary?.totals ?? null);
+
+  const trafficOptions = $derived(chartOptions({ yCallback: (v) => fmtCompact(Number(v)) }));
+  const hourOptions = $derived(chartOptions({ yCallback: (v) => fmtCompact(Number(v)), stacked: true }));
+  const topPagesOptions = $derived(chartOptions({ yCallback: (v) => fmtCompact(Number(v)), legend: false, horizontal: true }));
+  const topUsersOptions = $derived(chartOptions({ yCallback: (v) => fmtCompact(Number(v)), legend: false, horizontal: true }));
+
   const trafficChart = $derived.by(() => {
     const c = chartColors;
     if (!c || !summary || summary.daily_series.length === 0) return null;
     return {
-      labels: summary.daily_series.map((p) => p.date.slice(5)),
+      labels: summary.daily_series.map((p) => fmtDateTick(p.date)),
       datasets: [
         {
           label: "Page views",
@@ -97,102 +152,126 @@
       ],
     };
   });
+
+  const peakHour = $derived.by(() => {
+    const hs = summary?.hourly_series ?? [];
+    if (hs.length === 0) return null;
+    let best = hs[0];
+    for (const h of hs) {
+      if (h.page_views + h.api_requests > best.page_views + best.api_requests) best = h;
+    }
+    return best;
+  });
+
+  const peakLabel = $derived.by(() => {
+    if (!peakHour) return "—";
+    const h = peakHour.hour;
+    const hour12 = h % 12 === 0 ? 12 : h % 12;
+    return `${hour12} ${h < 12 ? "AM" : "PM"}`;
+  });
+
+  const topPage = $derived(summary?.top_pages[0] ?? null);
+  const topUser = $derived(summary?.top_users[0] ?? null);
 </script>
 
+<div class="space-y-3">
   <div class="card bg-base-200 border border-base-300">
-    <div class="card-body">
-      <h3 class="card-title text-base">Traffic over time</h3>
-      {#if trafficChart}
-        <ChartJs
-          type="line"
-          data={trafficChart}
-          heightClass="h-44"
-          options={{
-            interaction: { mode: "index", intersect: false },
-            plugins: {
-              legend: { position: "top", labels: { color: chartColors?.text } },
-              tooltip: { mode: "index", intersect: false },
-            },
-            scales: {
-              x: { grid: { color: chartColors?.grid }, ticks: { color: chartColors?.text, maxTicksLimit: 8, maxRotation: 0 } },
-              y: { beginAtZero: true, grid: { color: chartColors?.grid }, ticks: { color: chartColors?.text, precision: 0 } },
-            },
-          }}
-          label={`Page views and API requests per day over the last ${rangeDays || "all-time"} period`}
-          fallbackText={`Daily page views and API requests: ${summary?.daily_series.map((p) => `${p.date}: ${p.page_views} page views, ${p.api_requests} API requests`).join("; ")}`}
-        />
-      {:else}
-        <p class="text-sm text-base-content/70">No traffic data yet — it starts accumulating from when this dashboard is first used.</p>
-      {/if}
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-2 p-4">
+      <div class="min-w-44">
+        <span class="material-symbols-outlined text-primary" aria-hidden="true">visibility</span>
+        <span class="block text-2xl font-bold leading-tight">{fmtCompact(totals?.page_views ?? 0)}</span>
+        <span class="block text-sm font-semibold text-secondary leading-tight">{fmtCompact(totals?.api_requests ?? 0)} API</span>
+        <span class="block text-xs text-base-content/70">Traffic over time</span>
+      </div>
+      <div class="flex-1 min-w-64">
+        {#if trafficChart}
+          <ChartJs
+            type="line"
+            data={trafficChart}
+            heightClass="h-28"
+            options={trafficOptions}
+            label={`Page views and API requests per day over the last ${rangeDays || "all-time"} period`}
+            fallbackText={`Daily page views and API requests: ${summary?.daily_series.map((p) => `${p.date}: ${p.page_views} page views, ${p.api_requests} API requests`).join("; ")}`}
+          />
+        {:else}
+          <p class="text-sm text-base-content/70 py-4">No traffic data yet — it starts accumulating from when this dashboard is first used.</p>
+        {/if}
+      </div>
     </div>
   </div>
 
   <div class="card bg-base-200 border border-base-300">
-    <div class="card-body">
-      <h3 class="card-title text-base">Hour of day</h3>
-      <ChartJs
-        type="bar"
-        data={hourChart ?? { labels: [], datasets: [] }}
-        heightClass="h-44"
-        options={{
-          plugins: { legend: { position: "top", labels: { color: chartColors?.text } } },
-          scales: {
-            x: { stacked: true, grid: { display: false }, ticks: { color: chartColors?.text, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
-            y: { stacked: true, beginAtZero: true, grid: { color: chartColors?.grid }, ticks: { color: chartColors?.text, precision: 0 } },
-          },
-        }}
-        label="Requests per hour of day"
-        fallbackText={`Requests by hour of day: ${summary?.hourly_series.map((h) => `${h.hour}:00 — ${h.page_views} page views, ${h.api_requests} API requests`).join("; ")}`}
-      />
-    </div>
-  </div>
-
-  <div class="card bg-base-200 border border-base-300">
-    <div class="card-body">
-      <h3 class="card-title text-base">Top pages</h3>
-      {#if topPagesChart}
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-2 p-4">
+      <div class="min-w-44">
+        <span class="material-symbols-outlined text-primary" aria-hidden="true">schedule</span>
+        <span class="block text-2xl font-bold leading-tight">{peakLabel}</span>
+        <span class="block text-xs text-base-content/70">Peak hour</span>
+        {#if peakHour}
+          <span class="block text-xs text-base-content/60">{fmtCompact(peakHour.page_views + peakHour.api_requests)} requests</span>
+        {/if}
+      </div>
+      <div class="flex-1 min-w-64">
         <ChartJs
           type="bar"
-          data={topPagesChart}
-          heightClass="h-44"
-          options={{
-            indexAxis: "y",
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { beginAtZero: true, grid: { color: chartColors?.grid }, ticks: { color: chartColors?.text, precision: 0 } },
-              y: { grid: { display: false }, ticks: { color: chartColors?.text } },
-            },
-          }}
-          label="Most-viewed pages"
-          fallbackText={`Most viewed pages: ${summary?.top_pages.map((p) => `${p.path} (${p.count})`).join(", ")}`}
+          data={hourChart ?? { labels: [], datasets: [] }}
+          heightClass="h-28"
+          options={hourOptions}
+          label="Requests per hour of day"
+          fallbackText={`Requests by hour of day: ${summary?.hourly_series.map((h) => `${h.hour}:00 — ${h.page_views} page views, ${h.api_requests} API requests`).join("; ")}`}
         />
-      {:else}
-        <p class="text-sm text-base-content/70">No page views recorded in this range.</p>
-      {/if}
+      </div>
     </div>
   </div>
 
   <div class="card bg-base-200 border border-base-300">
-    <div class="card-body">
-      <h3 class="card-title text-base">Top users</h3>
-      {#if topUsersChart}
-        <ChartJs
-          type="bar"
-          data={topUsersChart}
-          heightClass="h-44"
-          options={{
-            indexAxis: "y",
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { beginAtZero: true, grid: { color: chartColors?.grid }, ticks: { color: chartColors?.text, precision: 0 } },
-              y: { grid: { display: false }, ticks: { color: chartColors?.text } },
-            },
-          }}
-          label="Most active logged-in users"
-          fallbackText={`Most active users: ${summary?.top_users.map((u) => `${u.username} (${u.page_views + u.api_requests})`).join(", ")}`}
-        />
-      {:else}
-        <p class="text-sm text-base-content/70">No logged-in activity in this range.</p>
-      {/if}
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-2 p-4">
+      <div class="min-w-44">
+        <span class="material-symbols-outlined text-primary" aria-hidden="true">link</span>
+        <span class="block text-2xl font-bold leading-tight truncate max-w-44" title={topPage?.path}>{topPage?.path ?? "—"}</span>
+        <span class="block text-xs text-base-content/70">
+          Top page{#if topPage} · {fmtCompact(topPage.count)} views{/if}
+        </span>
+      </div>
+      <div class="flex-1 min-w-64">
+        {#if topPagesChart}
+          <ChartJs
+            type="bar"
+            data={topPagesChart}
+            heightClass="h-40"
+            options={topPagesOptions}
+            label="Most-viewed pages"
+            fallbackText={`Most viewed pages: ${summary?.top_pages.map((p) => `${p.path} (${p.count})`).join(", ")}`}
+          />
+        {:else}
+          <p class="text-sm text-base-content/70 py-4">No page views recorded in this range.</p>
+        {/if}
+      </div>
     </div>
   </div>
+
+  <div class="card bg-base-200 border border-base-300">
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-2 p-4">
+      <div class="min-w-44">
+        <span class="material-symbols-outlined text-primary" aria-hidden="true">group</span>
+        <span class="block text-2xl font-bold leading-tight truncate max-w-44" title={topUser?.username}>{topUser?.username ?? "—"}</span>
+        <span class="block text-xs text-base-content/70">
+          Top user{#if topUser} · {fmtCompact(topUser.page_views + topUser.api_requests)} requests{/if}
+        </span>
+      </div>
+      <div class="flex-1 min-w-64">
+        {#if topUsersChart}
+          <ChartJs
+            type="bar"
+            data={topUsersChart}
+            heightClass="h-40"
+            options={topUsersOptions}
+            label="Most active logged-in users"
+            fallbackText={`Most active users: ${summary?.top_users.map((u) => `${u.username} (${u.page_views + u.api_requests})`).join(", ")}`}
+          />
+        {:else}
+          <p class="text-sm text-base-content/70 py-4">No logged-in activity in this range.</p>
+        {/if}
+      </div>
+    </div>
+  </div>
+</div>

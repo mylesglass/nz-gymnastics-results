@@ -8,23 +8,23 @@
   import Overview from "$lib/admin/Overview.svelte";
   import Activity from "$lib/admin/Activity.svelte";
   import ActivityCharts from "$lib/admin/ActivityCharts.svelte";
-  import CloudflareCharts from "$lib/admin/CloudflareCharts.svelte";
+  import CloudflareOverview from "$lib/admin/CloudflareOverview.svelte";
   import ActivityLog from "$lib/admin/ActivityLog.svelte";
+  import ActivityErrors from "$lib/admin/ActivityErrors.svelte";
   import Upload from "$lib/admin/Upload.svelte";
   import Users from "$lib/admin/Users.svelte";
   import IdentityReview from "$lib/admin/IdentityReview.svelte";
-  import StatTile from "$lib/admin/StatTile.svelte";
 
-  type DialogKey = "upload" | "users" | "identity" | "log" | null;
+  type DialogKey = "upload" | "users" | "identity" | null;
 
   const DIALOG_HASHES: Record<string, DialogKey> = {
     upload: "upload",
     users: "users",
     identity: "identity",
-    log: "log",
   };
 
   let openDialog = $state<DialogKey>(null);
+  let openErrors = $state(false);
 
   $effect(() => {
     const key = $page.url.hash.replace("#", "");
@@ -55,29 +55,19 @@
   let cfError = $state<string | null>(null);
   let cfColors = $state<Record<string, string> | null>(null);
 
-  // Cloudflare only supports 7/30-day windows; follow the shared Usage range
-  // (clamping 90/all-time to the 30-day maximum the API retains).
-  const cloudflareRange = $derived.by(() => {
-    const rd = chartData?.rangeDays ?? 30;
-    return rd === 0 || rd > 30 ? 30 : rd;
-  });
+  // Cloudflare follows the shared Usage range; the backend clamps 90/all-time
+  // to its 30-day retention (the overview shows a "retention" badge).
+  const cfRange = $derived(chartData?.rangeDays ?? 30);
 
   function cssVar(name: string, fallback: string): string {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
-  }
-
-  function fmtBytes(bytes: number): string {
-    if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(1)} GB`;
-    if (bytes >= 1e6) return `${(bytes / 1e6).toFixed(1)} MB`;
-    if (bytes >= 1e3) return `${(bytes / 1e3).toFixed(1)} KB`;
-    return `${bytes} B`;
   }
 
   async function loadCloudflare() {
     cfLoading = true;
     cfError = null;
     try {
-      const s = await getCloudflareSummary(cloudflareRange);
+      const s = await getCloudflareSummary(cfRange);
       cfData = s;
       if (s.error) cfError = s.error;
     } catch (e) {
@@ -110,14 +100,26 @@
     await loadCloudflare();
   });
 
-  let prevCfRange = cloudflareRange;
+  let prevCfRange = cfRange;
   $effect(() => {
-    if (cloudflareRange === prevCfRange) return;
-    prevCfRange = cloudflareRange;
+    if (cfRange === prevCfRange) return;
+    prevCfRange = cfRange;
     loadCloudflare();
   });
 
-  const cfTotals = $derived(cfData?.totals ?? null);
+  let leftColEl = $state<HTMLDivElement | null>(null);
+  let leftHeight = $state(0);
+
+  onMount(() => {
+    if (!leftColEl) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const e of entries) {
+        leftHeight = e.contentRect.height;
+      }
+    });
+    ro.observe(leftColEl);
+    return () => ro.disconnect();
+  });
 </script>
 
 <svelte:head>
@@ -155,67 +157,48 @@
               <span class="badge badge-warning badge-sm">{identityCount}</span>
             {/if}
           </button>
-          <button class="btn btn-outline btn-sm gap-1" onclick={() => openDialogKey("log")}>
-            <span class="material-symbols-outlined" aria-hidden="true">history</span>
-            Logged-in activity
-          </button>
         </div>
       </div>
     </div>
   </section>
 
-  <section aria-labelledby="band-server" id="activity">
-    <h2 id="band-server" class="text-xs font-semibold uppercase tracking-wider text-base-content/50 mb-2">Server usage</h2>
-    <Activity onData={(d) => (chartData = d)} />
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+      <div class="lg:col-span-2 min-w-0 space-y-6" bind:this={leftColEl}>
+      <section aria-labelledby="band-server" id="activity">
+        <h2 id="band-server" class="text-xs font-semibold uppercase tracking-wider text-base-content/50 mb-2">Server usage</h2>
+        <Activity onData={(d) => (chartData = d)} onErrorsClick={() => (openErrors = true)} />
+        {#if chartData}
+          <ActivityCharts
+            summary={chartData.summary}
+            chartColors={chartData.chartColors}
+            rangeDays={chartData.rangeDays}
+          />
+        {/if}
+      </section>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-4">
-      {#if chartData}
-        <ActivityCharts
-          summary={chartData.summary}
-          chartColors={chartData.chartColors}
-          rangeDays={chartData.rangeDays}
-        />
-      {/if}
+      <section aria-labelledby="band-cloudflare">
+        <h2 id="band-cloudflare" class="text-xs font-semibold uppercase tracking-wider text-base-content/50 mb-2">Cloudflare</h2>
+        {#if cfError}
+          <div role="alert" class="alert alert-error">
+            <span>{cfError}</span>
+          </div>
+        {:else if cfLoading && !cfData}
+          <span class="loading loading-spinner loading-sm"></span>
+        {:else if cfData && !cfData.configured}
+          <p class="text-sm text-base-content/70">
+            Cloudflare analytics aren't configured — set <code class="font-mono">CLOUDFLARE_ZONE_ID</code>
+            and <code class="font-mono">CLOUDFLARE_API_TOKEN</code> on the backend to show edge traffic.
+          </p>
+        {:else if cfData}
+          <CloudflareOverview summary={cfData} chartColors={cfColors} rangeDays={cfRange} />
+        {/if}
+      </section>
     </div>
-  </section>
 
-  <section aria-labelledby="band-cloudflare">
-    <h2 id="band-cloudflare" class="text-xs font-semibold uppercase tracking-wider text-base-content/50 mb-2">Cloudflare</h2>
-    {#if cfError}
-      <div role="alert" class="alert alert-error">
-        <span>{cfError}</span>
-      </div>
-    {:else if cfLoading && !cfData}
-      <span class="loading loading-spinner loading-sm"></span>
-    {:else if cfData && !cfData.configured}
-      <p class="text-sm text-base-content/70">
-        Cloudflare analytics aren't configured — set <code class="font-mono">CLOUDFLARE_ZONE_ID</code>
-        and <code class="font-mono">CLOUDFLARE_API_TOKEN</code> on the backend to show edge traffic.
-      </p>
-    {:else if cfTotals}
-      <div class="flex flex-wrap items-center gap-x-6 gap-y-4 bg-base-200/50 rounded-2xl p-4">
-        <StatTile icon="http" label="Requests" value={cfTotals.requests.toLocaleString()} />
-        <StatTile icon="data_usage" label="Bandwidth" value={fmtBytes(cfTotals.bytes)} />
-        <StatTile icon="person" label="Unique visitors" value={cfTotals.unique_visitors.toLocaleString()} />
-        <StatTile icon="security" label="Threats" value={cfTotals.threats.toLocaleString()} />
-        <StatTile
-          icon="cached"
-          label="Cache hit"
-          value={cfTotals.cache_hit_ratio !== null ? `${(cfTotals.cache_hit_ratio * 100).toFixed(0)}%` : "—"}
-        />
-      </div>
-      <p class="text-xs text-base-content/60 mt-2">
-        Status codes and top countries always cover the last 24 hours — Cloudflare's breakdown
-        API only allows a one-day window. The other figures follow the range selected above.
-      </p>
-    {/if}
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-4">
-      {#if cfData?.configured && !cfError}
-        <CloudflareCharts summary={cfData} chartColors={cfColors} />
-      {/if}
+    <div class="lg:col-span-1 min-w-0" style={leftHeight ? `max-height:${leftHeight}px` : ""}>
+      <ActivityLog />
     </div>
-  </section>
+  </div>
 </div>
 
 {#if openDialog === "upload"}
@@ -230,9 +213,11 @@
   <Dialog title="Identity Review" onClose={closeDialog} maxWidth="max-w-5xl">
     <IdentityReview onCount={(n) => (identityCount = n)} />
   </Dialog>
-{:else if openDialog === "log"}
-  <Dialog title="Logged-in activity" onClose={closeDialog} maxWidth="max-w-4xl">
-    <ActivityLog />
+{/if}
+
+{#if openErrors}
+  <Dialog title="Request errors" onClose={() => (openErrors = false)} maxWidth="max-w-3xl">
+    <ActivityErrors days={chartData?.rangeDays ?? 30} onClose={() => (openErrors = false)} />
   </Dialog>
 {/if}
 

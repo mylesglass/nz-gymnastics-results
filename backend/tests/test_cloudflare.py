@@ -2,6 +2,7 @@
 
 import os
 import tempfile
+from datetime import datetime, timezone
 
 import pytest
 from fastapi.testclient import TestClient
@@ -10,9 +11,12 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.auth import seed_admin_user
 from app.cloudflare import (
+    _build_daily_series,
     _parse_breakdown,
+    _parse_hourly_series,
     build_breakdown_query,
     build_daily_query,
+    build_hourly_series_query,
     is_configured,
     parse_zone_response,
 )
@@ -121,6 +125,21 @@ class TestCloudflareQueries:
         assert "hourly" in q
         assert "datetimeHour" in q
 
+    def test_hourly_series_query_uses_rolling_window(self):
+        q = build_hourly_series_query("zone123")
+        assert "httpRequestsAdaptiveGroups" in q
+        assert "datetimeHour_geq" in q
+        assert "datetimeHour_lt" in q
+        assert "uniq { uniques }" in q
+        assert "cachedBytes" in q
+        assert "cachedRequests" in q
+        assert "hourlySeries" in q
+
+    def test_hourly_series_query_can_drop_uniques(self):
+        q = build_hourly_series_query("zone123", with_uniques=False)
+        assert "uniq" not in q
+        assert "sum { requests bytes cachedBytes cachedRequests }" in q
+
 
 class TestCloudflareParse:
     def test_parse_zone_response(self):
@@ -198,6 +217,54 @@ class TestCloudflareParse:
         assert b["hourly"][9]["requests"] == 100
         assert b["hourly"][14]["requests"] == 10
 
+    def test_parse_hourly_series_zero_fills_24_points(self):
+        now = datetime(2026, 8, 18, 9, 0, tzinfo=timezone.utc)
+        groups = [
+            {"sum": {"requests": 60, "bytes": 1000, "cachedBytes": 800,
+                     "cachedRequests": 50},
+             "uniq": {"uniques": 5},
+             "dimensions": {"datetimeHour": "2026-08-18T09:00:00Z"}},
+        ]
+        series = _parse_hourly_series(groups, has_uniques=True, now=now)
+        assert len(series) == 24
+        assert series[-1]["datetime"] == "2026-08-18T09:00:00+00:00"
+        assert series[-1]["requests"] == 60
+        assert series[-1]["unique_visitors"] == 5
+        assert series[-1]["cached_percent"] == pytest.approx(0.8)
+        assert all(p["requests"] == 0 for p in series[:-1])
+
+    def test_parse_hourly_series_without_uniques(self):
+        now = datetime(2026, 8, 18, 9, 0, tzinfo=timezone.utc)
+        groups = [
+            {"sum": {"requests": 10, "bytes": 500, "cachedBytes": 100,
+                     "cachedRequests": 2},
+             "dimensions": {"datetimeHour": "2026-08-18T09:00:00Z"}},
+        ]
+        series = _parse_hourly_series(groups, has_uniques=False, now=now)
+        assert len(series) == 24
+        assert all(p["unique_visitors"] is None for p in series)
+        assert series[-1]["requests"] == 10
+        assert series[-1]["cached_percent"] == pytest.approx(0.2)
+
+    def test_build_daily_series(self):
+        daily = [
+            {"date": "2026-08-13", "requests": 100, "bytes": 50000,
+             "cached_bytes": 40000, "cached_requests": 80,
+             "unique_visitors": 30},
+        ]
+        series = _build_daily_series(daily)
+        assert series[0]["label"] == "2026-08-13"
+        assert series[0]["datetime"] == "2026-08-13"
+        assert series[0]["cached_percent"] == pytest.approx(0.8)
+        assert series[0]["unique_visitors"] == 30
+
+    def test_build_daily_series_no_bytes_gives_null_cached(self):
+        series = _build_daily_series([
+            {"date": "2026-08-13", "requests": 0, "bytes": 0, "cached_bytes": 0,
+             "cached_requests": 0, "unique_visitors": 0},
+        ])
+        assert series[0]["cached_percent"] is None
+
 
 class TestCloudflareAPI:
     @pytest.fixture(autouse=True)
@@ -220,7 +287,8 @@ class TestCloudflareAPI:
         assert data["configured"] is False
         assert data["days"] == 30
         assert data["totals"] is None
-        assert data["daily"] == [] and data["top_countries"] == [] and data["status_codes"] == []
+        assert data["daily"] == [] and data["series"] == [] and data["top_countries"] == []
+        assert data["status_codes"] == []
         assert data["top_paths"] == [] and data["cache_status"] == [] and data["device_type"] == []
         assert data["hourly"] == []
 
@@ -242,3 +310,13 @@ class TestCloudflareAPI:
         )
         assert resp.status_code == 200
         assert resp.json()["days"] == 30
+
+    def test_summary_accepts_24_hours(self):
+        token = _admin_token()
+        resp = client.get(
+            "/api/admin/cloudflare/summary",
+            params={"days": 1},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["days"] == 1

@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
 
 
 class LoginRequest(BaseModel):
@@ -498,6 +498,18 @@ class ActivityLogItem(BaseModel):
     duration_ms: float | None = None
     created_at: datetime
 
+    @field_serializer("created_at")
+    def _serialize_created_at(self, value: datetime) -> str:
+        """Emit the timestamp as UTC (``...Z``) so browsers display local time.
+
+        SQLite stores a naive UTC datetime, which FastAPI would otherwise
+        serialize without a timezone suffix — the browser then reads it as local
+        time and shows the wrong time.
+        """
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.isoformat().replace("+00:00", "Z")
+
 
 class ActivityLogResponse(BaseModel):
     items: list[ActivityLogItem]
@@ -540,6 +552,8 @@ class ActivityTotals(BaseModel):
     auth_page_views: int
     anon_api_requests: int
     auth_api_requests: int
+    anon_errors: int = 0
+    auth_errors: int = 0
 
 
 class ActivitySummaryResponse(BaseModel):
@@ -590,12 +604,24 @@ class CloudflareTotals(BaseModel):
     cache_hit_ratio: float | None
 
 
+class CloudflareSeriesPoint(BaseModel):
+    label: str
+    datetime: str
+    requests: int = 0
+    bytes: int = 0
+    cached_bytes: int = 0
+    cached_requests: int = 0
+    unique_visitors: int | None = None
+    cached_percent: float | None = None
+
+
 class CloudflareSummaryResponse(BaseModel):
     configured: bool
     days: int
     error: str | None = None
     totals: CloudflareTotals | None = None
     daily: list[CloudflareDay] = []
+    series: list[CloudflareSeriesPoint] = []
     top_countries: list[CloudflareTopCountry] = []
     status_codes: list[CloudflareStatusCode] = []
     top_paths: list[CloudflareNamedCount] = []

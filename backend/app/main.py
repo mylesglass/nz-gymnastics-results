@@ -2005,6 +2005,7 @@ def list_activity(
     limit: int = 100,
     offset: int = 0,
     days: int = None,
+    errors: bool = False,
     _auth=Depends(require_role("admin")),
 ):
     flush_activity()
@@ -2017,6 +2018,8 @@ def list_activity(
             query = query.filter(ActivityLog.username == user)
         if type:
             query = query.filter(ActivityLog.type == type)
+        if errors:
+            query = query.filter(ActivityLog.status_code >= 400)
         if days:
             days = max(1, min(days, 3650))
             cutoff = datetime.now(timezone.utc) - timedelta(days=days)
@@ -2057,13 +2060,13 @@ def activity_summary(
 ):
     """Aggregate traffic analytics for the admin usage dashboard.
 
-    ``days`` of 7/30/90 select a trailing window (0 = all time). Totals, daily
+    ``days`` of 1/7/30/90 select a trailing window (0 = all time). Totals, daily
     and hourly series, top pages/API paths and top users are computed from the
     ``traffic_daily`` counters (all traffic) plus the ``activity_logs`` table
     (authenticated history, so logged-in trends are visible immediately).
     """
     flush_activity()
-    if days not in (0, 7, 30, 90):
+    if days not in (0, 1, 7, 30, 90):
         days = 30
     session = get_session()
     try:
@@ -2089,6 +2092,7 @@ def activity_summary(
             "page_views": 0, "api_requests": 0, "errors": 0,
             "anon_page_views": 0, "auth_page_views": 0,
             "anon_api_requests": 0, "auth_api_requests": 0,
+            "anon_errors": 0, "auth_errors": 0,
         }
         active_days: set[str] = set()
         for date, kind, count, errors, anonymous in rows:
@@ -2097,6 +2101,10 @@ def activity_summary(
             bucket = daily.setdefault(date_s, {"page_views": 0, "api_requests": 0, "errors": 0})
             bucket["errors"] += errors or 0
             totals["errors"] += errors or 0
+            if anonymous:
+                totals["anon_errors"] += errors or 0
+            else:
+                totals["auth_errors"] += errors or 0
             if kind == "page":
                 bucket["page_views"] += count
                 totals["page_views"] += count
@@ -2172,7 +2180,8 @@ def activity_summary(
             else:
                 bucket["api_requests"] += count
 
-        # Top users from the detail log.
+        # Top users from the detail log (the built-in admin account is excluded
+        # so it can't dominate the chart).
         user_q = session.query(
             ActivityLog.username,
             ActivityLog.role,
@@ -2181,7 +2190,11 @@ def activity_summary(
         )
         if start:
             user_q = user_q.filter(ActivityLog.created_at >= datetime.combine(start, datetime.min.time()))
-        user_rows = user_q.group_by(ActivityLog.username, ActivityLog.role).all()
+        user_rows = (
+            user_q.filter(ActivityLog.username != "admin")
+            .group_by(ActivityLog.username, ActivityLog.role)
+            .all()
+        )
         top_users = [
             TopUser(username=username, role=role, page_views=page_views, api_requests=api_requests)
             for username, role, page_views, api_requests in user_rows
@@ -2250,13 +2263,14 @@ def cloudflare_summary(
     """Cloudflare edge HTTP traffic analytics for the admin dashboard.
 
     Pulls per-day rollups (requests, bytes, threats, cached bytes, unique
-    visitors) from the Cloudflare GraphQL Analytics API, plus top-country and
-    status-code breakdowns from the adaptive dataset (clamped to the last 7
-    days, matching its retention). Returns ``configured: False`` when the
+    visitors) from the Cloudflare GraphQL Analytics API, plus a unified time
+    series (hourly for the 24-hour view, daily otherwise) and top-country /
+    status-code breakdowns from the adaptive dataset (clamped to the last 24
+    hours, matching its retention). Returns ``configured: False`` when the
     ``CLOUDFLARE_ZONE_ID``/``CLOUDFLARE_API_TOKEN`` env vars are missing, and
     a ``configured: True`` payload with an ``error`` field on fetch failures.
     """
-    if days not in (7, 30):
+    if days not in (1, 7, 30):
         days = 30
     if not cloudflare_is_configured():
         return CloudflareSummaryResponse(configured=False, days=days)

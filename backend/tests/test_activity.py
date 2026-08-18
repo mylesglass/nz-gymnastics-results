@@ -248,6 +248,9 @@ class TestActivityAPI:
         item = resp.json()["items"][0]
         for field in ("client_ip", "user_agent"):
             assert field not in item
+        # created_at is serialized as UTC (Z suffix) so the browser renders the
+        # viewer's local time, not a naive local-time misread.
+        assert item["created_at"].endswith("Z")
 
     def test_activity_list_days_filter(self):
         token = _admin_token()
@@ -264,6 +267,25 @@ class TestActivityAPI:
         assert resp.status_code == 200
         assert any(item["path"] == "/results" for item in resp.json()["items"])
 
+    def test_activity_list_errors_filter(self):
+        token = _admin_token()
+        client.get("/api/events", headers={"Authorization": f"Bearer {token}"})
+        client.get("/api/nonexistent-route", headers={"Authorization": f"Bearer {token}"})
+        resp = client.get(
+            "/api/admin/activity",
+            params={"errors": "true"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["items"], "expected at least one error row"
+        assert all(item["status_code"] >= 400 for item in data["items"])
+        assert any(item["path"] == "/api/nonexistent-route" for item in data["items"])
+        # Without the flag, the same endpoint returns all rows (incl. 2xx).
+        resp2 = client.get("/api/admin/activity", headers={"Authorization": f"Bearer {token}"})
+        assert resp2.json()["total"] > data["total"]
+        assert any(item["status_code"] < 400 for item in resp2.json()["items"])
+
     def test_activity_summary_requires_admin(self):
         token = _member_token()
         resp = client.get("/api/admin/activity/summary", headers={"Authorization": f"Bearer {token}"})
@@ -275,12 +297,14 @@ class TestActivityAPI:
 
     def test_activity_summary_shape_and_totals(self):
         token = _admin_token()
+        member = _member_token()
         client.post(
             "/api/track/page",
             json={"path": "/results"},
             headers={"Authorization": f"Bearer {token}"},
         )
         client.get("/api/events")
+        client.get("/api/events", headers={"Authorization": f"Bearer {member}"})
         resp = client.get(
             "/api/admin/activity/summary",
             params={"days": 7},
@@ -299,7 +323,10 @@ class TestActivityAPI:
         assert 1 <= len(data["hourly_series"]) <= 24
         assert all(0 <= h["hour"] <= 23 for h in data["hourly_series"])
         assert any(p["path"] == "/results" for p in data["top_pages"])
-        assert any(u["username"] == "admin" for u in data["top_users"])
+        # The built-in admin account is excluded from the top-users chart so it
+        # can't dominate; other users still appear.
+        assert all(u["username"] != "admin" for u in data["top_users"])
+        assert any(u["username"] == "alice" for u in data["top_users"])
         # Errors are computed but zero in this happy path.
         assert totals["errors"] >= 0
 

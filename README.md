@@ -337,7 +337,7 @@ conditionally skipped when the reference data‑collection JSON files are not pr
 │   │   │   ├── charts/ChartJs.svelte        # Lazy-loaded Chart.js wrapper
 │   │   │   ├── admin/                       # Admin dashboard components
 │   │   │   │   ├── Overview.svelte, Activity.svelte, ActivityCharts.svelte,
-│   │   │   │   ├── CloudflareCharts.svelte, ActivityLog.svelte, Upload.svelte,
+│   │   │   │   ├── CloudflareOverview.svelte, ActivityLog.svelte, Upload.svelte,
 │   │   │   │   ├── Users.svelte, IdentityReview.svelte, StatTile.svelte
 │   │   │   └── utils/
 │   │   └── routes/

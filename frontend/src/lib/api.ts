@@ -166,7 +166,9 @@ export interface RebuildStatus {
 }
 
 export async function getRebuildStatus(): Promise<RebuildStatus> {
-  const res = await fetch(`${API_BASE}/api/admin/rebuild/status`);
+  const res = await fetch(`${API_BASE}/api/admin/rebuild/status`, {
+    headers: authHeaders(),
+  });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
@@ -804,6 +806,7 @@ export async function getActivityLogs(params?: {
   limit?: number;
   offset?: number;
   days?: number;
+  errors?: boolean;
 }): Promise<{ items: ActivityLogItem[]; total: number }> {
   const qp = new URLSearchParams();
   if (params?.user) qp.set("user", params.user);
@@ -811,6 +814,7 @@ export async function getActivityLogs(params?: {
   if (params?.limit !== undefined) qp.set("limit", String(params.limit));
   if (params?.offset !== undefined) qp.set("offset", String(params.offset));
   if (params?.days !== undefined) qp.set("days", String(params.days));
+  if (params?.errors) qp.set("errors", "true");
   const qs = qp.toString();
   const res = await fetch(`${API_BASE}/api/admin/activity?${qs}`, {
     headers: authHeaders(),
@@ -865,6 +869,8 @@ export interface ActivityTotals {
   auth_page_views: number;
   anon_api_requests: number;
   auth_api_requests: number;
+  anon_errors: number;
+  auth_errors: number;
 }
 
 export interface ActivitySummary {
@@ -915,6 +921,17 @@ export interface CloudflareHourPoint {
   requests: number;
 }
 
+export interface CloudflareSeriesPoint {
+  label: string;
+  datetime: string;
+  requests: number;
+  bytes: number;
+  cached_bytes: number;
+  cached_requests: number;
+  unique_visitors: number | null;
+  cached_percent: number | null;
+}
+
 export interface CloudflareTotals {
   requests: number;
   bytes: number;
@@ -929,6 +946,7 @@ export interface CloudflareSummary {
   error: string | null;
   totals: CloudflareTotals | null;
   daily: CloudflareDay[];
+  series: CloudflareSeriesPoint[];
   top_countries: CloudflareTopCountry[];
   status_codes: CloudflareStatusCode[];
   top_paths: CloudflareNamedCount[];
