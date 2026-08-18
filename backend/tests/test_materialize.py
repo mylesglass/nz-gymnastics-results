@@ -107,6 +107,18 @@ def _seed(db_env) -> dict:
     for app in ("FX", "PH", "SR", "VT", "PB", "HB"):
         _score(session, ev2, "Jack Moore", "2001", "Auckland", "Level 4", "MAG", "",
                app, 12.0, d_score=5.5, aa_score=60.0, athlete_id=jack.id)
+
+    # MAG Level 4 — a second gymnast with two passes per apparatus and no
+    # official AA (two-attempt format), so the ranking-mark fallback must use
+    # the best pass per apparatus (12.0 + 11.0 = 23.0), not the summed passes.
+    multi = Athlete(slug="a-multi", signature_hash="h5", canonical_name="Multi Pass", gnz_id="2002")
+    session.add(multi)
+    session.flush()
+    for app, (p1, p2) in {"FX": (11.5, 12.0), "PB": (11.0, 10.5)}.items():
+        _score(session, ev2, "Multi Pass", "2002", "Auckland", "Level 4", "MAG", "",
+               app, p1, d_score=5.0, aa_score=None, athlete_id=multi.id)
+        _score(session, ev2, "Multi Pass", "2002", "Auckland", "Level 4", "MAG", "",
+               app, p2, d_score=5.5, aa_score=None, athlete_id=multi.id)
     session.commit()
     ids = {"ev1": ev1.id, "ev2": ev2.id, "eva_id": eva.id, "eva_slug": eva.slug}
     session.close()
@@ -390,6 +402,17 @@ class TestStoreBackedEndpoints:
             store = client.get("/api/rankings", params=params).json()
             live = self._live(monkeypatch, lambda: client.get("/api/rankings", params=params).json())
             assert store == live, extra
+
+    def test_ranking_marks_multi_pass_uses_best_per_apparatus(self, db_env):
+        _seed(db_env)
+        materialize.init_materialized()
+        materialize.rebuild_all()
+        marks = materialize.get_ranking_marks(2025, "MAG", "Level 4", "")
+        assert marks is not None
+        per_event = marks["per_event"]  # already flattened by get_ranking_marks
+        multi = [e["score"] for (k, eid), e in per_event.items()
+                 if e.get("gnz_id") == "2002"]
+        assert multi and round(max(multi), 3) == 23.0
 
     def test_apparatus_store_equals_live(self, db_env, monkeypatch):
         _seed(db_env)

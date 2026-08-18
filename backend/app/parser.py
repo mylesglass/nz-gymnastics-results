@@ -551,6 +551,57 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                     "resultTableId": prt.get("resultTableId"),
                 }
 
+    # -- Detect single-set per-apparatus tables that are a separate Apparatus
+    # Finals round -- e.g. two-day meets whose finals tables carry plain
+    # apparatus names with no "Final"/"Day 2" marker (Tri Star 2026). A
+    # single-set apparatus table is finals-only when it shares NO score with
+    # the unit's multi-set All-around table (the All Around day's passes);
+    # vault second attempts and duplicate qualification/preliminary tables
+    # share passes with that table and are excluded, so only genuinely
+    # separate rounds are relabelled.
+    _APPARATUS_NODE_NAMES = frozenset({
+        "Floor", "Pommel Horse", "Still Rings", "Vault",
+        "Parallel Bars", "Horizontal Bar", "High Bar",
+        "Uneven Bars", "Balance Beam",
+    })
+    _ROUND_MARKERS = ("final", "day", "qualification", "preliminary")
+    unit_aa_score_ids: dict[str, set[str]] = {}
+    for prt in data.get("performanceResultTables", []):
+        if len(prt.get("resultSets", [])) <= 1:
+            continue
+        uid = prt.get("unitId")
+        for rs in prt.get("resultSets", []):
+            name = (apparatus_map.get(rs.get("id"), "") or "").lower()
+            if not name.startswith("all-around"):
+                continue
+            ids = unit_aa_score_ids.setdefault(uid, set())
+            for rank in rs.get("primaryRanking", []):
+                for si in rank.get("sourceItems", []):
+                    if si.get("itemType") == "score":
+                        ids.add(si.get("itemId"))
+
+    finals_override_rs: set[str] = set()
+    for prt in data.get("performanceResultTables", []):
+        uid = prt.get("unitId")
+        aa_ids = unit_aa_score_ids.get(uid, set())
+        if not aa_ids or len(prt.get("resultSets", [])) != 1:
+            continue
+        for rs in prt.get("resultSets", []):
+            rs_id = rs.get("id")
+            name = apparatus_map.get(rs_id, "")
+            base = name.split(" >")[0].strip()
+            if base not in _APPARATUS_NODE_NAMES:
+                continue
+            if any(m in name.lower() for m in _ROUND_MARKERS):
+                continue
+            ids = set()
+            for rank in rs.get("primaryRanking", []):
+                for si in rank.get("sourceItems", []):
+                    if si.get("itemType") == "score":
+                        ids.add(si.get("itemId"))
+            if ids and not (ids & aa_ids):
+                finals_override_rs.add(rs_id)
+
     # -- Process result tables --
     # Strategy:
     #   1-set tables -> individual apparatus rankings (emit rows with score + rank)
@@ -658,7 +709,11 @@ def parse_json(data: dict) -> tuple[dict, list[dict]]:
                             division = _extract_division(unit_name)
                     if level_category and "International" in level_category:
                         division = None
-                    round_type = _infer_round_type(unit_info.get("name", ""), node_name_map.get(rs_id, rs_name))
+                    round_type = (
+                        "Apparatus Finals"
+                        if rs_id in finals_override_rs
+                        else _infer_round_type(unit_info.get("name", ""), node_name_map.get(rs_id, rs_name))
+                    )
                     aa = aa_scores.get((entity_id, round_type), {})
 
                     row = {

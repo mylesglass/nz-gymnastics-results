@@ -329,7 +329,14 @@ def _compute_competition_score(
                 total += sum(vals) / len(vals)
             else:
                 total += max(vals)
+        elif app in STANDARD_APPARATUS:
+            # Best pass per real apparatus (matches the national-ranking rule):
+            # a multi-pass apparatus (e.g. MAG two-attempt formats) must not be
+            # summed or the fallback AA inflates.
+            total += max(vals)
         else:
+            # Unresolvable "All-around" passes are distinct apparatus from an
+            # AA day, so they still sum into the fallback total.
             total += sum(vals)
     return total
 

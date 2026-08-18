@@ -1025,7 +1025,16 @@ def _build_event_marks(rows, step: str, athletes: dict[int, Athlete] | None = No
                         comp_score += sum(app_scores) / len(app_scores)
                     else:
                         comp_score += max(app_scores)
+                elif app in _STANDARD_APPARATUS:
+                    # Best pass per real apparatus: some exports carry multiple
+                    # passes per apparatus (e.g. MAG two-attempt formats), and
+                    # summing them inflates the fallback AA. Matches the
+                    # per-apparatus ``event_app_scores`` rule above.
+                    comp_score += max(app_scores)
                 else:
+                    # Unresolvable "All-around" passes are genuinely distinct
+                    # apparatus from an AA day, so they still sum into the
+                    # fallback total (never treated as a real apparatus).
                     comp_score += sum(app_scores)
 
         key2 = (a_key, eid)
@@ -1272,11 +1281,17 @@ def _build_rankings_response(year: int, step: str, discipline: str, quota: bool,
         for entry in ranking_list:
             entry["region"] = _find_region(entry["club"] or "")
 
+    # Ranks are continuous down the displayed list. In quota mode the display
+    # (first 4 per region, then the rest) is not score-sorted at the boundary —
+    # a region's 5th+ gymnast can outrank another region's quota entry shown
+    # earlier — so rank advances by position and only collapses genuine ties
+    # (equal scores), never by score comparison. On the plain score-sorted list
+    # this reduces to standard competition ranking.
     rank = 1
     prev_val = None
     for i, entry in enumerate(ranking_list):
         val = entry[rank_key]
-        if prev_val is not None and val < prev_val:
+        if prev_val is not None and val != prev_val:
             rank = i + 1
         entry["rank"] = rank
         prev_val = val

@@ -78,7 +78,8 @@ def _add_score(
     ))
 
 
-def _rank(year: int, step: str, discipline: str, qualifier: bool = False, division: str | None = None) -> dict:
+def _rank(year: int, step: str, discipline: str, qualifier: bool = False,
+          division: str | None = None, quota: bool = False) -> dict:
     resp = client.get(
         "/api/rankings",
         params={
@@ -87,6 +88,7 @@ def _rank(year: int, step: str, discipline: str, qualifier: bool = False, divisi
             "discipline": discipline,
             "qualifier": "true" if qualifier else "false",
             "division": division or "",
+            "quota": "true" if quota else "false",
         },
     )
     assert resp.status_code == 200
@@ -461,3 +463,120 @@ class TestDivisionFilter:
 
         body = _rank(2025, "STEP 5", "WAG", division="INTERNATIONAL")
         assert body["rankings"] == []
+
+
+class TestRegionQuota:
+    """Quota mode caps each region at 4 in the initial pass, then fills the
+    remaining places. Ranks are continuous down the displayed list: the quota
+    gymnasts take the top positions and the rest fill the places below, even
+    though the boundary reorder is not score-sorted."""
+
+    def _seed(self, session, welly_scores=(50.0, 49.0, 48.0, 47.0, 46.5),
+              chch_scores=(45.0, 44.0, 43.0, 42.0)) -> None:
+        ev_a = _add_event(session, "Wellington Champs", "Capital Gymnastics")
+        ev_b = _add_event(session, "Canterbury Champs", "Christchurch School of Gymnastics")
+        for i, score in enumerate(welly_scores):
+            _add_score(session, ev_a, "Wellington Champs", f"Welly {i}", f"W-{i:03d}",
+                       "Capital Gymnastics", score, level_category="STEP 6")
+        for i, score in enumerate(chch_scores):
+            _add_score(session, ev_b, "Canterbury Champs", f"Chch {i}", f"C-{i:03d}",
+                       "Christchurch School of Gymnastics", score, level_category="STEP 6")
+        session.commit()
+
+    def test_continuous_rank_at_quota_boundary(self):
+        from app.database import SessionLocal
+
+        session = SessionLocal()
+        try:
+            self._seed(session)
+        finally:
+            session.close()
+
+        body = _rank(2025, "STEP 6", "WAG", quota=True)
+        rows = body["rankings"]
+        # Welly 4 (46.5) outscores every Chch gymnast but is displayed last
+        # because Wellington already filled its quota of 4 — the quota ranking
+        # is positional, so it still gets the final continuous rank (no repeats,
+        # no skips like the buggy 44 → 48 jumps).
+        assert [r["name"] for r in rows] == [
+            "Welly 0", "Welly 1", "Welly 2", "Welly 3",
+            "Chch 0", "Chch 1", "Chch 2", "Chch 3", "Welly 4",
+        ]
+        assert [r["rank"] for r in rows] == ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+
+    def test_tie_at_quota_boundary_gets_t_mark(self):
+        from app.database import SessionLocal
+
+        session = SessionLocal()
+        try:
+            # Chch 3 (4th Canterbury, quota) and Welly 4 (5th Wellington,
+            # remaining) both score 44.0 and are adjacent at the boundary,
+            # so they share the rank with a T mark.
+            self._seed(session,
+                       welly_scores=(50.0, 49.0, 48.0, 47.0, 44.0),
+                       chch_scores=(46.0, 45.0, 44.5, 44.0))
+        finally:
+            session.close()
+
+        body = _rank(2025, "STEP 6", "WAG", quota=True)
+        rows = body["rankings"]
+        by_name = {r["name"]: r for r in rows}
+        assert [r["rank"] for r in rows] == ["1", "2", "3", "4", "5", "6", "7", "T8", "T8"]
+        assert by_name["Chch 3"]["rank"] == "T8"
+        assert by_name["Welly 4"]["rank"] == "T8"
+
+
+class TestApparatusSumFallback:
+    """Multi-pass non-vault apparatus must not be summed in the no-AA fallback.
+
+    Some exports (e.g. MAG two-attempt formats) carry 2 passes per apparatus in
+    the same round; summing them inflates the fallback AA (e.g. 89.198 for a
+    gymnast whose real best is 73.3). The fallback uses the best pass per
+    apparatus instead."""
+
+    def _add(self, session, event_id, event_name, name, gnz_id, club, app,
+             score, level_category, aa_score=None) -> None:
+        session.add(LongScore(
+            event_id=event_id,
+            event_name=event_name,
+            gymnast_name=name,
+            gnz_id=gnz_id,
+            club_name=club,
+            discipline="MAG",
+            level_category=level_category,
+            apparatus=app,
+            pass_number=1,
+            pass_final_score=score,
+            aa_score=aa_score,
+            round_type="All Around",
+        ))
+
+    def test_multi_pass_fallback_uses_best_per_apparatus(self):
+        from app.database import SessionLocal
+
+        session = SessionLocal()
+        try:
+            ev = _add_event(session, "Tri Star Champs", "Tri Star Gymnastics", year=2026, discipline="MAG")
+            # Taiyo: 2 scored passes on 4 apparatus (FX + VT DNS), no official AA.
+            self._add(session, ev, "Tri Star Champs", "Taiyo", "T-001", "Tri Star Gymnastics", "HB", 12.15, "Level 7")
+            self._add(session, ev, "Tri Star Champs", "Taiyo", "T-001", "Tri Star Gymnastics", "HB", 12.033, "Level 7")
+            self._add(session, ev, "Tri Star Champs", "Taiyo", "T-001", "Tri Star Gymnastics", "PB", 11.2, "Level 7")
+            self._add(session, ev, "Tri Star Champs", "Taiyo", "T-001", "Tri Star Gymnastics", "PB", 12.3, "Level 7")
+            self._add(session, ev, "Tri Star Champs", "Taiyo", "T-001", "Tri Star Gymnastics", "PH", 10.866, "Level 7")
+            self._add(session, ev, "Tri Star Champs", "Taiyo", "T-001", "Tri Star Gymnastics", "PH", 9.366, "Level 7")
+            self._add(session, ev, "Tri Star Champs", "Taiyo", "T-001", "Tri Star Gymnastics", "SR", 10.65, "Level 7")
+            self._add(session, ev, "Tri Star Champs", "Taiyo", "T-001", "Tri Star Gymnastics", "SR", 10.633, "Level 7")
+            # Abel: has an official AA, so the AA path is used, not the fallback.
+            self._add(session, ev, "Tri Star Champs", "Abel", "A-001", "Tri Star Gymnastics",
+                      "HB", 8.4, "Level 7", aa_score=65.931)
+            session.commit()
+        finally:
+            session.close()
+
+        body = _rank(2026, "Level 7", "MAG")
+        rows = body["rankings"]
+        taiyo = next(r for r in rows if r["name"] == "Taiyo")
+        abel = next(r for r in rows if r["name"] == "Abel")
+        # Best per apparatus: 12.15 + 12.3 + 10.866 + 10.65 = 45.966 (not 89.198)
+        assert round(taiyo["total"], 3) == 45.966
+        assert round(abel["total"], 3) == 65.931

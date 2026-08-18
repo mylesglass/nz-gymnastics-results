@@ -335,6 +335,35 @@ class TestParseRealData:
         wags = set(r["gymnast_name"] for r in rows if r["discipline"] == "WAG")
         assert len(wags) > 0
 
+    def test_tristar_two_day_splits_apparatus_finals(self):
+        """Tri Star 2026 runs a two-day format whose apparatus-finals tables
+        carry plain apparatus names (no 'Final'/'Day 2' marker). The parser must
+        split them into an 'Apparatus Finals' round instead of merging both days
+        into one 'All Around' round with two passes per apparatus."""
+        data = load("tri-sen.json")
+        _, rows = parse_json(data)
+        # MAG Level 7: two clean rounds, one pass per apparatus per round.
+        lv7 = [r for r in rows if r["discipline"] == "MAG" and r["level_category"] == "Level 7"]
+        assert len(lv7) > 0
+        by_round = set(r["round_type"] for r in lv7)
+        assert by_round == {"All Around", "Apparatus Finals"}
+        # No merged round: a (gymnast, round, apparatus) has at most one pass.
+        seen = set()
+        for r in lv7:
+            key = (r["gymnast_name"], r["round_type"], r["apparatus"])
+            assert key not in seen, f"merged round detected: {key}"
+            seen.add(key)
+        # Finals rows must never carry the Day-1 AA score.
+        for r in lv7:
+            if r["round_type"] == "Apparatus Finals":
+                assert r["aa_score"] is None, (
+                    f"{r['gymnast_name']} finals {r['apparatus']} has aa_score={r['aa_score']}"
+                )
+        # WAG Youth International is also a two-day split format here.
+        yi = [r for r in rows if r["discipline"] == "WAG" and r["level_category"] == "Youth International"]
+        if yi:
+            assert "Apparatus Finals" in {r["round_type"] for r in yi}
+
 
 class TestSkipDnsRows:
     """DNS (Did Not Start) score items must not be stored as long_score rows.

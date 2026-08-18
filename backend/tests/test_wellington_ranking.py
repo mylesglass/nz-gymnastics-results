@@ -2,6 +2,7 @@
 
 import os
 import tempfile
+from types import SimpleNamespace
 
 import pytest
 from sqlalchemy import create_engine
@@ -651,3 +652,42 @@ class TestInternational:
         assert specialists["UB Specialist"]["apparatus"][0]["app"] == "UB"
         assert specialists["UB Specialist"]["apparatus"][0]["best"] == 10.6
         assert "Too Low" not in specialists
+
+
+class TestApparatusSumFallback:
+    """Multi-pass non-vault apparatus must use the best pass, not the sum,
+    when the competition has no official AA (matches the national-ranking rule)."""
+
+    def _score(self, app, total, aa=None):
+        return SimpleNamespace(
+            apparatus=app, pass_final_score=total, aa_score=aa,
+            round_type="All Around",
+        )
+
+    def test_multi_pass_uses_best_per_apparatus(self):
+        from app.wellington_ranking import _compute_competition_score
+
+        scores = [
+            self._score("HB", 12.15), self._score("HB", 12.033),
+            self._score("PB", 11.2), self._score("PB", 12.3),
+            self._score("PH", 10.866), self._score("PH", 9.366),
+            self._score("SR", 10.65), self._score("SR", 10.633),
+        ]
+        # 12.15 + 12.3 + 10.866 + 10.65 = 45.966, not the summed 89.198.
+        assert round(_compute_competition_score(scores, "Level 7"), 3) == 45.966
+
+    def test_official_aa_wins(self):
+        from app.wellington_ranking import _compute_competition_score
+
+        scores = [
+            self._score("HB", 8.4, aa=65.931),
+            self._score("HB", 9.8, aa=65.931),
+            self._score("VT", 11.1, aa=65.931),
+        ]
+        assert _compute_competition_score(scores, "Level 7") == 65.931
+
+    def test_single_pass_unchanged(self):
+        from app.wellington_ranking import _compute_competition_score
+
+        scores = [self._score("FX", 12.0), self._score("HB", 10.0)]
+        assert _compute_competition_score(scores, "Level 7") == 22.0
