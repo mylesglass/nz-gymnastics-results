@@ -71,7 +71,6 @@
   const trafficOptions = $derived(chartOptions({ yCallback: (v) => fmtCompact(Number(v)) }));
   const hourOptions = $derived(chartOptions({ yCallback: (v) => fmtCompact(Number(v)), stacked: true }));
   const topPagesOptions = $derived(chartOptions({ yCallback: (v) => fmtCompact(Number(v)), legend: false, horizontal: true }));
-  const topUsersOptions = $derived(chartOptions({ yCallback: (v) => fmtCompact(Number(v)), legend: false, horizontal: true }));
 
   const trafficChart = $derived.by(() => {
     const c = chartColors;
@@ -137,22 +136,6 @@
     };
   });
 
-  const topUsersChart = $derived.by(() => {
-    const c = chartColors;
-    if (!c || !summary || summary.top_users.length === 0) return null;
-    const rows = summary.top_users.slice().reverse();
-    return {
-      labels: rows.map((u) => u.username),
-      datasets: [
-        {
-          label: "Requests",
-          data: rows.map((u) => u.page_views + u.api_requests),
-          backgroundColor: c.primary,
-        },
-      ],
-    };
-  });
-
   const peakHour = $derived.by(() => {
     const hs = summary?.hourly_series ?? [];
     if (hs.length === 0) return null;
@@ -171,7 +154,6 @@
   });
 
   const topPage = $derived(summary?.top_pages[0] ?? null);
-  const topUser = $derived(summary?.top_users[0] ?? null);
 </script>
 
 <div class="space-y-3">
@@ -250,28 +232,42 @@
   </div>
 
   <div class="card bg-base-200 border border-base-300">
-    <div class="flex flex-wrap items-center gap-x-6 gap-y-2 p-4">
-      <div class="min-w-44">
+    <div class="p-4">
+      <div class="flex items-center gap-2 mb-3">
         <span class="material-symbols-outlined text-primary" aria-hidden="true">group</span>
-        <span class="block text-2xl font-bold leading-tight truncate max-w-44" title={topUser?.username}>{topUser?.username ?? "—"}</span>
-        <span class="block text-xs text-base-content/70">
-          Top user{#if topUser} · {fmtCompact(topUser.page_views + topUser.api_requests)} requests{/if}
-        </span>
+        <span class="text-sm font-semibold">Top users</span>
+        <span class="text-xs text-base-content/70">({summary?.top_users.length ?? 0})</span>
       </div>
-      <div class="flex-1 min-w-64">
-        {#if topUsersChart}
-          <ChartJs
-            type="bar"
-            data={topUsersChart}
-            heightClass="h-40"
-            options={topUsersOptions}
-            label="Most active logged-in users"
-            fallbackText={`Most active users: ${summary?.top_users.map((u) => `${u.username} (${u.page_views + u.api_requests})`).join(", ")}`}
-          />
-        {:else}
-          <p class="text-sm text-base-content/70 py-4">No logged-in activity in this range.</p>
-        {/if}
-      </div>
+      {#if summary && summary.top_users.length > 0}
+        <div class="overflow-x-auto">
+          <table class="table table-xs table-zebra w-full">
+            <thead>
+              <tr>
+                <th class="text-base-content/70">#</th>
+                <th class="text-base-content/70">User</th>
+                <th class="text-base-content/70">Role</th>
+                <th class="text-base-content/70 text-right">Page views</th>
+                <th class="text-base-content/70 text-right">API</th>
+                <th class="text-base-content/70 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each summary.top_users as u, i}
+                <tr>
+                  <td class="text-base-content/50">{i + 1}</td>
+                  <td class="font-medium">{u.username}</td>
+                  <td><span class="badge badge-ghost badge-xs">{u.role}</span></td>
+                  <td class="text-right font-mono">{u.page_views.toLocaleString()}</td>
+                  <td class="text-right font-mono">{u.api_requests.toLocaleString()}</td>
+                  <td class="text-right font-mono font-semibold">{(u.page_views + u.api_requests).toLocaleString()}</td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
+      {:else}
+        <p class="text-sm text-base-content/70 py-4">No logged-in activity in this range.</p>
+      {/if}
     </div>
   </div>
 </div>
